@@ -1,0 +1,11 @@
+URI: index.html.en
+Content-language: en
+Content-type: text/html
+
+URI: index.html.en
+Content-language: en-us
+Content-type: text/html
+
+URI: index.html.ja
+Content-language: ja
+Content-type: text/html;charset=utf-8

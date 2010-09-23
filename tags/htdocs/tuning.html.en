@@ -1,0 +1,341 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Install manual</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="tuning.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Phase 4: Tuning policy for your system.</h1>
+
+<p>This page describes how to tune AKARI's policy.</p>
+
+<hr>
+
+<h2>Step 1: Patterning File Access Permissions</h2>
+
+<p>Append access permissions for files that are not necessarily accessed in the learning mode such as WWW contents for WWW service.</p>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read /var/www/html/index.html<br>
+file read /var/www/html/alice/index.html<br>
+file read /var/www/html/alice/page1.html<br>
+file read /var/www/html/alice/page2.html<br>
+file read /var/www/html/alice/image1.jpg<br>
+file read /var/www/html/alice/image2.jpg<br>
+file read /var/www/html/alice/archive/page1.html<br>
+file read /var/www/html/alice/archive/image1.jpg<br>
+file read /var/www/html/alice/archive/page2.html<br>
+file read /var/www/html/alice/archive/image2.jpg<br>
+file read /var/www/html/bob/index.html<br>
+file read /var/www/html/bob/page1.html<br>
+file read /var/www/html/bob/page2.html<br>
+file read /var/www/html/bob/image1.jpg<br>
+file read /var/www/html/bob/image2.jpg<br>
+file read /var/www/html/bob/archive/page1.html<br>
+file read /var/www/html/bob/archive/image1.jpg<br>
+file read /var/www/html/bob/archive/page2.html<br>
+file read /var/www/html/bob/archive/image2.jpg
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read /var/www/html/\*.html<br>
+file read /var/www/html/\{\*\}/\*.html<br>
+file read /var/www/html/\{\*\}/\*.jpg<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>If you define</p>
+
+<table border="1">
+<tr><td>
+path_group WEB-CONTENTS /var/www/html/\*.html<br>
+path_group WEB-CONTENTS /var/www/html/\{\*\}/\*.html<br>
+path_group WEB-CONTENTS /var/www/html/\{\*\}/\*.jpg<br>
+</td></tr>
+</table>
+
+<p>in the exception policy, you can simplify like</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read @WEB-CONTENTS
+</td></tr>
+</table>
+
+<p>in the domain policy.</p>
+
+<hr>
+
+<h2>Step 2: Handling temporary files</h2>
+
+<p>You can not handle temporary files by simply using "learning mode" and "permissive mode". You need to interactively handle temporary files using <a href="tool-editpolicy.html.en#acl_editor">To remove redundant ACL entries</a>.<br>
+But if you want to convert temporary files into patterns non-interactively, you can do it as shown below.</p>
+
+<p>List up pathnames that can be temporary files.</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# /usr/sbin/akari-findtemp &lt; /proc/akari/domain_policy<br>
+/etc/mtab.tmp<br>
+/etc/mtab~<br>
+/etc/mtab~2302<br>
+/etc/mtab~2328<br>
+/etc/mtab~2329<br>
+/etc/mtab~2330<br>
+/etc/mtab~2331<br>
+/etc/mtab~2332<br>
+/etc/mtab~2339<br>
+/etc/mtab~2383<br>
+/halt<br>
+/selinux/disable<br>
+/selinux/enforce<br>
+/selinux/policyvers<br>
+/tmp/sh-thd-1163110572<br>
+/tmp/sh-thd-1163113704<br>
+/var/cache/samba/browse.dat.<br>
+/var/lib/nfs/etab.tmp<br>
+/var/lib/nfs/xtab.tmp<br>
+/var/lock/mrtg/mrtg_l<br>
+</td></tr>
+</table>
+
+<p>We can consider that "/etc/mtab~numeric" and "/tmp/sh-thd-numeric" are temporary files, thus we make patterns for these pathnames. First, we need to consider what patterns to use. In these examples, numeric seems decimal digits. Thus, we use \$ pattern which matches one or more repetitions of decimal digits.</p>
+
+<p>Append patterns to the exception policy.</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# echo 'file_pattern /etc/mtab~\$' | /usr/sbin/akari-loadpolicy -e<br>
+[root@akari ~]# echo 'file_pattern /tmp/sh-thd-\$' | /usr/sbin/akari-loadpolicy -e
+</td></tr>
+</table>
+
+<p>Replace "/etc/mtab~numeric" and "/tmp/sh-thd-numeric" in the domain policy with '/etc/mtab~\$' and '/tmp/sh-thd-\$'</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# /usr/sbin/akari-savepolicy -d | /usr/sbin/akari-patternize '/etc/mtab~\$' '/tmp/sh-thd-\$' | /usr/sbin/akari-loadpolicy -d
+</td></tr>
+</table>
+
+<hr>
+
+<h2>Step 3: Patterning Numeric Permissions</h2>
+
+<p>Make patterns for numeric parameters such as file's create mode and network's port numbers.<br>
+The following example permits /usr/sbin/httpd to accept connections from client's port 1024-65535.</a>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3810<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3829<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3829
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 1024-65535<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>If you define</p>
+
+<table border="1">
+<tr><td>
+number_group WEB-CLIENT-PORTS 1024-65535
+</td></tr>
+</table>
+
+<p>in the exception policy, you can simplify like</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 @WEB-CLIENT-PORTS<br>
+</td></tr>
+</table>
+
+<p>in the domain policy.</p>
+
+<hr>
+
+<h2>Step 4: Patterning Network Access Permissions</h2>
+
+<p>Similarly, make patterns for IP addresses. Don't copy the following permissions.</a>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:0:0:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:a1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.10 @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.200 @WEB-CLIENT-PORTS
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:0:0:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:1-0:0:0:0:0:ffff:a00:ff @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.1-10.0.0.255 @WEB-CLIENT-PORTS<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>If you define</p>
+
+<table border="1">
+<tr><td>
+address_group WEB-CLIENT-ADDRESS 0:0:0:0:0:0:0:1<br>
+address_group WEB-CLIENT-ADDRESS 0:0:0:0:0:ffff:a00:1-0:0:0:0:0:ffff:a00:ff<br>
+address_group WEB-CLIENT-ADDRESS 10.0.0.1-10.0.0.255
+</td></tr>
+</table>
+
+<p>in the exception policy, you can simplify like</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept @WEB-CLIENT-ADDRESS @WEB-CLIENT-PORTS
+</td></tr>
+</table>
+
+<p>in the domain policy.</p>
+
+<hr>
+
+<h2>Step 5: Adding conditions to ACLs (Optional)</h2>
+
+<p>You can add conditions to individual ACLs if necessary. By using this feature, you can enforce system's user ID based access control.</p>
+
+<p>You can define the following path_group in the exception policy.</p>
+
+<table border="1">
+<tr><td>
+path_group HOME-FTP-FILE /home/\*/ftp/\*<br>
+path_group HOME-FTP-FILE /home/\*/ftp/\{\*\}/\*<br>
+path_group HOME-FTP-DIR  /home/\*/ftp/\*/<br>
+path_group HOME-FTP-DIR  /home/\*/ftp/\{\*\}/<br>
+path_group HOME-SMB-FILE /home/\*/samba/\*<br>
+path_group HOME-SMB-FILE /home/\*/samba/\{\*\}/\*<br>
+path_group HOME-SMB-DIR  /home/\*/samba/\*/<br>
+path_group HOME-SMB-DIR  /home/\*/samba/\{\*\}/
+</td></tr>
+</table>
+
+<p>If you want to protect non-anonymous FTP service, by adding conditions in the following manner, you can forbid access to directories outside the user's home directory. To reduce damages when it is cracked, it is recommended that you should expose directories only under specific (such as "ftp") directory rather than exposing whole of home directories. If you use vsftpd, you can give like the following way.</p>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/vsftpd<br>
+<br>
+file read/write @HOME-FTP-FILE<br>
+file mkdir @HOME-FTP-DIR 0755<br>
+file rmdir @HOME-FTP-DIR<br>
+file create @HOME-FTP-FILE 0644<br>
+file truncate @HOME-FTP-FILE<br>
+file unlink @HOME-FTP-FILE<br>
+file rename @HOME-FTP-FILE @HOME-FTP-FILE<br>
+file rename @HOME-FTP-DIR @HOME-FTP-DIR
+</td><td>
+&lt;kernel&gt; /usr/sbin/vsftpd<br>
+<br>
+file read/write @HOME-FTP-FILE task.uid=path1.uid<br>
+file mkdir @HOME-FTP-DIR 0755 task.uid=path1.parent.uid<br>
+file rmdir @HOME-FTP-DIR task.uid=path1.uid<br>
+file create @HOME-FTP-FILE 0644 task.uid=path1.parent.uid<br>
+file truncate @HOME-FTP-FILE task.uid=path1.uid<br>
+file unlink @HOME-FTP-FILE task.uid=path1.uid<br>
+file rename @HOME-FTP-FILE @HOME-FTP-FILE task.uid=path1.parent.uid task.uid=path2.parent.uid<br>
+file rename @HOME-FTP-DIR @HOME-FTP-DIR task.uid=path1.parent.uid task.uid=path2.parent.uid
+</td></tr>
+</table>
+
+<p>If you want to protect Samba service, by adding conditions in the following manner, you can forbid access to directories outside the user's home directory. To reduce damages when it is cracked, it is recommended that you should expose directories only under specific (such as "samba") directory rather than exposing whole of home directories.</p>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/smbd<br>
+<br>
+file read/write @HOME-SMB-FILE<br>
+file mkdir @HOME-SMB-DIR 0755<br>
+file rmdir @HOME-SMB-DIR<br>
+file create @HOME-SMB-FILE 0644<br>
+file truncate @HOME-SMB-FILE<br>
+file unlink @HOME-SMB-FILE<br>
+file rename @HOME-SMB-FILE @HOME-SMB-FILE<br>
+file rename @HOME-SMB-DIR @HOME-SMB-DIR
+</td><td>
+&lt;kernel&gt; /usr/sbin/smbd<br>
+<br>
+file read/write @HOME-SMB-FILE task.euid=path1.uid<br>
+file mkdir @HOME-SMB-DIR 0755 task.euid=path1.parent.uid<br>
+file rmdir @HOME-SMB-DIR task.euid=path1.uid<br>
+file create @HOME-SMB-FILE 0644 task.euid=path1.parent.uid<br>
+file truncate @HOME-SMB-FILE task.euid=path1.uid<br>
+file unlink @HOME-SMB-FILE task.euid=path1.uid<br>
+file rename @HOME-SMB-FILE @HOME-SMB-FILE task.euid=path1.parent.uid task.euid=path2.parent.uid<br>
+file rename @HOME-SMB-DIR @HOME-SMB-DIR task.euid=path1.parent.uid task.euid=path2.parent.uid<br>
+</td></tr>
+</table>
+
+<p>If you want to protect SSH service, by adding conditions in the following manner, you can forbid login as user "root".</p>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+<br>
+file execute /bin/bash exec.realpath="/bin/bash" exec.argv[0]="-bash"
+</td><td>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+<br>
+file execute /bin/bash exec.realpath="/bin/bash" exec.argv[0]="-bash" task.uid!=0 task.euid!=0
+</td></tr>
+</table>
+
+<p>Various conditions are supported. Please see <a href="policy-reference.html.en#conditional_acl">Using conditional ACL.</a> for details.</p>
+
+<hr>
+
+<p><a href="index.html.en">Return to index page.</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

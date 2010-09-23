@@ -1,0 +1,1321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>Policy Specifications of AKARI</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="policy-reference.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1 style="text-align:center;">Policy Specifications of AKARI</h1>
+<h1><a name="index">Index</a></h1>
+<h2>1. <a href="#Keyword_Index">Keywords Index</a></h2>
+<h2>2. <a href="#Common_Rules">Introduction</a></h2>
+<p>2.1 <a href="#word_expression_rules">Word Expression Rules</a></p>
+<p>2.2 <a href="#wildcard_expression_rules">Wildcard Expression Rules</a></p>
+<p>2.3 <a href="#memory_usage_infomation">Memory Usage Information</a></p>
+<h2>3. <a href="#Policy_Files">Policy Files</a></h2>
+<p>3.1 <a href="#policy_file_locations">Policy File's Location</a></p>
+<p>3.2 <a href="#policy_file_modifiers">Policy File's Modification</a></p>
+<h2>4. <a href="#Domain_Rules">Domain Rules</a></h2>
+<p>4.1 <a href="#domain_definition">Domain Definition</a></p>
+<p>4.2 <a href="#domain_transition">Domain Transition</a></p>
+<p>4.3 <a href="#access_logs">Access Logs</a></p>
+<h2>5. <a href="#Syntax_Details">Syntax Details</a></h2>
+<h2>6. <a href="#Advanced_Features">Advanced Features</a></h2>
+<p>6.1 <a href="#non_root_policy_update">Allowing policy modification by non root user.</a></p>
+<p>6.2 <a href="#conditional_acl">Using conditional ACL.</a></p>
+<p>6.3 <a href="#transit_on_match">Domain transition upon ACL match.</a></p>
+<p>6.4 <a href="#sleep_penalty">Sleep penalty for policy violation.</a></p>
+<hr>
+
+<h1>1. <a name="Keyword_Index">Keywords Index</a></h1>
+
+<p>Used by /proc/akari/profile and /etc/akari/profile.conf</p>
+
+<ul>
+<li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
+<li><a href="#profile_CONFIG::file::open">CONFIG::file::open</a></li>
+<li><a href="#profile_CONFIG::file::create">CONFIG::file::create</a></li>
+<li><a href="#profile_CONFIG::file::unlink">CONFIG::file::unlink</a></li>
+<li><a href="#profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></li>
+<li><a href="#profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></li>
+<li><a href="#profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></li>
+<li><a href="#profile_CONFIG::file::mksock">CONFIG::file::mksock</a></li>
+<li><a href="#profile_CONFIG::file::truncate">CONFIG::file::truncate</a></li>
+<li><a href="#profile_CONFIG::file::symlink">CONFIG::file::symlink</a></li>
+<li><a href="#profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></li>
+<li><a href="#profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></li>
+<li><a href="#profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></li>
+<li><a href="#profile_CONFIG::file::link">CONFIG::file::link</a></li>
+<li><a href="#profile_CONFIG::file::rename">CONFIG::file::rename</a></li>
+<li><a href="#profile_CONFIG::file::chmod">CONFIG::file::chmod</a></li>
+<li><a href="#profile_CONFIG::file::chown">CONFIG::file::chown</a></li>
+<li><a href="#profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></li>
+<li><a href="#profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></li>
+<li><a href="#profile_CONFIG::file::chroot">CONFIG::file::chroot</a></li>
+<li><a href="#profile_CONFIG::file::mount">CONFIG::file::mount</a></li>
+<li><a href="#profile_CONFIG::file::unmount">CONFIG::file::unmount</a></li>
+<li><a href="#profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></li>
+<li><a href="#profile_CONFIG::misc::env">CONFIG::misc::env</a></li>
+<li><a href="#profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
+<li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
+<li><a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a></li>
+<li><a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></li>
+<li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
+</ul>
+
+<p>Used by /proc/akari/exception_policy and /etc/akari/exception_policy.conf</p>
+
+<ul>
+<li><a href="#exception_policy_acl_group">acl_group</a></li>
+<li><a href="#exception_policy_aggregator">aggregator</a></li>
+<li><a href="#exception_policy_initialize_domain">initialize_domain</a></li>
+<li><a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></li>
+<li><a href="#exception_policy_keep_domain">keep_domain</a></li>
+<li><a href="#exception_policy_no_keep_domain">no_keep_domain</a></li>
+<li><a href="#exception_policy_file_pattern">file_pattern</a></li>
+<li><a href="#exception_policy_path_group">path_group</a></li>
+<li><a href="#exception_policy_number_group">number_group</a></li>
+<li><a href="#exception_policy_address_group">address_group</a></li>
+</ul>
+
+<p>Used by /proc/akari/domain_policy and /etc/akari/domain_policy.conf</p>
+
+<ul>
+<li><a href="#domain_policy_file_execute">file execute</a></li>
+<li><a href="#domain_policy_file_read">file read</a></li>
+<li><a href="#domain_policy_file_write">file write</a></li>
+<li><a href="#domain_policy_file_append">file append</a></li>
+<li><a href="#domain_policy_file_create">file create</a></li>
+<li><a href="#domain_policy_file_unlink">file unlink</a></li>
+<li><a href="#domain_policy_file_mkdir">file mkdir</a></li>
+<li><a href="#domain_policy_file_rmdir">file rmdir</a></li>
+<li><a href="#domain_policy_file_mkfifo">file mkfifo</a></li>
+<li><a href="#domain_policy_file_mksock">file mksock</a></li>
+<li><a href="#domain_policy_file_mkblock">file mkblock</a></li>
+<li><a href="#domain_policy_file_mkchar">file mkchar</a></li>
+<li><a href="#domain_policy_file_truncate">file truncate</a></li>
+<li><a href="#domain_policy_file_symlink">file symlink</a></li>
+<li><a href="#domain_policy_file_link">file link</a></li>
+<li><a href="#domain_policy_file_rename">file rename</a></li>
+<li><a href="#domain_policy_file_ioctl">file ioctl</a></li>
+<li><a href="#domain_policy_file_mount">file mount</a></li>
+<li><a href="#domain_policy_file_unmount">file unmount</a></li>
+<li><a href="#domain_policy_file_chroot">file chroot</a></li>
+<li><a href="#domain_policy_file_pivot_root">file pivot_root</a></li>
+<li><a href="#domain_policy_misc_env">misc env</a></li>
+<li><a href="#domain_policy_network">network</a></li>
+<li><a href="#domain_policy_use_profile">use_profile</a></li>
+<li><a href="#domain_policy_use_group">use_group</a></li>
+<li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
+<li><a href="#domain_policy_transition_failed">transition_failed</a></li>
+</ul>
+
+<p>Used by /proc/akari/manager and /etc/akari/manager.conf</p>
+
+<ul>
+<li><a href="#manager_manage_by_non_root">manage_by_non_root</a></li>
+</ul>
+
+<h1>2. <a name="Common_Rules">Introduction</a></h1>
+
+<h2>2.1 <a name="word_expression_rules">Word Expression Rules</a></h2>
+
+<p>AKARI performs pathname based access control. A pathname may contain not only alphabet and number but also space and carriage return and multibyte  (e.g. kanji) characters. Thus, to be able to handle any characters correctly,
+AKARI follows the rules shown below to represent a word. A word means all tokens that are treated as string data, such as pathnames, comments, environment variable's names, parameters for program execution.</p>
+
+<ul>
+<li>\ character (0x5C) is used for indicating octal expression. Thus, you need to use \\ to represent a \.</li>
+<li>Characters 0x00 - 0x20 and 0x7F - 0xFF are represented using octal expression \ooo .</li>
+<li>The rest characters (i.e. 0x21 - 0x5B and 0x5D - 0x7E) are represented as is.</li>
+</ul>
+
+<table border="1">
+<tr><td><table><tr><td></td><td>Lower 4 bits</td></tr><tr><td>Higher 4 bits</td><td></td></tr></table></td><td>0x0</td><td>0x1</td><td>0x2</td><td>0x3</td><td>0x4</td><td>0x5</td><td>0x6</td><td>0x7</td><td>0x8</td><td>0x9</td><td>0xA</td><td>0xB</td><td>0xC</td><td>0xD</td><td>0xE</td><td>0xF</td></tr>
+<tr><td>0x0</td><td>\000</td><td>\001</td><td>\002</td><td>\003</td><td>\004</td><td>\005</td><td>\006</td><td>\007</td><td>\010</td><td>\011</td><td>\012</td><td>\013</td><td>\014</td><td>\015</td><td>\016</td><td>\017</td></tr>
+<tr><td>0x1</td><td>\020</td><td>\021</td><td>\022</td><td>\023</td><td>\024</td><td>\025</td><td>\026</td><td>\027</td><td>\030</td><td>\031</td><td>\032</td><td>\033</td><td>\034</td><td>\035</td><td>\036</td><td>\037</td></tr>
+<tr><td>0x2</td><td>\040</td><td>!</td><td>"</td><td>#</td><td>$</td><td>%</td><td>&amp;</td><td>'</td><td>(</td><td>)</td><td>*</td><td>+</td><td>,</td><td>-</td><td>.</td><td>/</td></tr>
+<tr><td>0x3</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>:</td><td>;</td><td>&lt;</td><td>=</td><td>&gt;</td><td>?</td></tr>
+<tr><td>0x4</td><td>@</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td><td>N</td><td>O</td></tr>
+<tr><td>0x5</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td><td>[</td><td>\\</td><td>]</td><td>^</td><td>_</td></tr>
+<tr><td>0x6</td><td>`</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td><td>g</td><td>h</td><td>i</td><td>j</td><td>k</td><td>l</td><td>m</td><td>n</td><td>o</td></tr>
+<tr><td>0x7</td><td>p</td><td>q</td><td>r</td><td>s</td><td>t</td><td>u</td><td>v</td><td>w</td><td>x</td><td>y</td><td>z</td><td>{</td><td>|</td><td>}</td><td>~</td><td>\177</td></tr>
+<tr><td>0x8</td><td>\200</td><td>\201</td><td>\202</td><td>\203</td><td>\204</td><td>\205</td><td>\206</td><td>\207</td><td>\210</td><td>\211</td><td>\212</td><td>\213</td><td>\214</td><td>\215</td><td>\216</td><td>\217</td></tr>
+<tr><td>0x9</td><td>\220</td><td>\221</td><td>\222</td><td>\223</td><td>\224</td><td>\225</td><td>\226</td><td>\227</td><td>\230</td><td>\231</td><td>\232</td><td>\233</td><td>\234</td><td>\235</td><td>\236</td><td>\237</td></tr>
+<tr><td>0xA</td><td>\240</td><td>\241</td><td>\242</td><td>\243</td><td>\244</td><td>\245</td><td>\246</td><td>\247</td><td>\250</td><td>\251</td><td>\252</td><td>\253</td><td>\254</td><td>\255</td><td>\256</td><td>\257</td></tr>
+<tr><td>0xB</td><td>\260</td><td>\261</td><td>\262</td><td>\263</td><td>\264</td><td>\265</td><td>\266</td><td>\267</td><td>\270</td><td>\271</td><td>\272</td><td>\273</td><td>\274</td><td>\275</td><td>\276</td><td>\277</td></tr>
+<tr><td>0xC</td><td>\300</td><td>\301</td><td>\302</td><td>\303</td><td>\304</td><td>\305</td><td>\306</td><td>\307</td><td>\310</td><td>\311</td><td>\312</td><td>\313</td><td>\314</td><td>\315</td><td>\316</td><td>\317</td></tr>
+<tr><td>0xD</td><td>\320</td><td>\321</td><td>\322</td><td>\323</td><td>\324</td><td>\325</td><td>\326</td><td>\327</td><td>\330</td><td>\331</td><td>\332</td><td>\333</td><td>\334</td><td>\335</td><td>\336</td><td>\337</td></tr>
+<tr><td>0xE</td><td>\340</td><td>\341</td><td>\342</td><td>\343</td><td>\344</td><td>\345</td><td>\346</td><td>\347</td><td>\350</td><td>\351</td><td>\352</td><td>\353</td><td>\354</td><td>\355</td><td>\356</td><td>\357</td></tr>
+<tr><td>0xF</td><td>\360</td><td>\361</td><td>\362</td><td>\363</td><td>\364</td><td>\365</td><td>\366</td><td>\367</td><td>\370</td><td>\371</td><td>\372</td><td>\373</td><td>\374</td><td>\375</td><td>\376</td><td>\377</td></tr>
+</table>
+
+<ul>
+<li>Space character (0x20) is used as a delimiter that separates words. Line feed character (0x0A) is used as a delimiter that separates lines.</li>
+<li>Only words that follow the rule above and the delimiters (i.e. space character and line feed characters) are valid. All other characters are regarded as space character. Multiple spaces are automatically compressed into one space. Leading and trailing spaces are automatically deleted.</li>
+</ul>
+
+<p>Some examples are shown below.</p>
+
+<table border="1">
+<tr><td>Word</td><td>Correct expression</td><td>Wrong expression</td></tr>
+<tr><td>Hello world!</td><td>Hello\040world!</td><td>"Hello world!"</td></tr>
+<tr><td>/home/user/Documents and Settings/</td><td>/home/user/Documents\040and\040Settings/</td><td>/home/user/Documents and Settings/</td></tr>
+</table>
+
+<h2>2.2 <a name="wildcard_expression_rules">Wildcard Expression Rules</a></h2>
+
+<p>Like temporary files, pathnames may contain randomly selected characters. Thus, you often need to define pathnames using wildcards. AKARI supports wildcards shown below.</p>
+
+<table border="1">
+<tr><td>Wildcard</td><td>Meaning</td><td>Example</td></tr>
+<tr><td>\*</td><td>Zero or more repetitions of characters other than '/'.</td><td>/var/log/samba/\*</td></tr>
+<tr><td>\@</td><td>Zero or more repetitions of characters other than '/' or '.'.</td><td>/var/www/html/\@.html</td></tr>
+<tr><td>\?</td><td>1 byte character other than '/'.</td><td>/tmp/mail.\?\?\?\?\?\?</td></tr>
+<tr><td>\$</td><td>One or more repetitions of decimal digits.</td><td>/proc/\$/cmdline</td></tr>
+<tr><td>\+</td><td>1 decimal digit.</td><td>/var/tmp/my_work.\+</td></tr>
+<tr><td>\X</td><td>One or more repetitions of hexadecimal digits.</td><td>/var/tmp/my-work.\X</td></tr>
+<tr><td>\x</td><td>1 hexadecimal digit.</td><td>/tmp/my-work.\x</td></tr>
+<tr><td>\A</td><td>One or more repetitions of alphabet characters.</td><td>/var/log/my-work/\$-\A-\$.log</td></tr>
+<tr><td>\a</td><td>1 alphabet character.</td><td>/home/users/\a/\*/public_html/\*.html</td></tr>
+<tr><td>\-</td><td>Pathname subtraction operator.</td><td>
+ <ul>
+ <li>/etc/\* for all files in /etc/ directory.</li>
+ <li>/etc/\*\-\*shadow\* for /etc/\* other than /etc/\*shadow\*</li>
+ <li>/\*\-proc\-sys/ for /\*/ other than /proc/ /sys/</li>
+ </ul>
+</td></tr>
+<tr><td>/\{dir\}/</td><td>Recursive directory matching operator which matches '/' + one or more repetitions of 'dir/'.</td><td>
+ <ul>
+  <li>/var/www/html/\{\*\}/\*.html for /var/www/html/\*/\*.html /var/www/html/\*/\*/\*.html /var/www/html/\*/\*/\*/\*.html etc.</li>
+  <li>/home/\*/\{\*\-.\*\}/\* for /home/\*/\*\-.\*/\* /home/\*/\*\-.\*/\*\-.\*/\* /home/\*/\*\-.\*/\*\-.\*/\*\-.\*/\* etc.</li>
+ </ul>
+</td></tr>
+</table>
+
+<h2>2.3 <a name="memory_usage_infomation">Memory Usage Information</a></h2>
+
+<p>The memory used by AKARI can be obtained via /proc/akari/meminfo . The unit is byte.</p>
+
+<table border="1">
+<tr><td>
+# cat /proc/akari/meminfo<br>
+Policy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376<br>
+Audit&nbsp;logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+Query&nbsp;lists:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376
+</td></tr>
+</table>
+
+<ul>
+<li>Policy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Memory used for holding access permissions.</li>
+<li>Audit logs:&nbsp;&nbsp;&nbsp;Memory used for holding access logs.</li>
+<li>Query lists:&nbsp;&nbsp;Memory used for handling policy violation in enforcing mode.</li>
+</ul>
+
+<p>AKARI supports memory quota for limiting maximum memory used by AKARI.</p>
+
+<p>You can set memory quota by writing to /etc/akari/meminfo.conf .</p>
+
+<table border="1">
+<tr><td>
+# cat /etc/akari/meminfo.conf<br>
+Policy:     16777216<br>
+Audit logs:  1048576<br>
+Query lists: 1048576
+</td></tr>
+</table>
+
+<h1>3. <a name="Policy_Files">Policy Files</a></h1>
+
+<h2>3.1 <a name="policy_file_locations">Policy File's Location</a></h2>
+
+<p>Policy files are files that contain access permissions. These files are automatically loaded into the kernel upon boot.</p>
+
+<p>When a system boots, /sbin/init is executed. When the execution of /sbin/init is requested and if /sbin/akari-init exists, /sbin/akari-init is executed, and /sbin/init is executed after /sbin/akari-init terminates.</p>
+
+<p> /sbin/akari-init loads policy files in /etc/akari/ directory via the kernel's /proc/akari/ interface.</p>
+
+<table border="1">
+<tr><td>The kernel's interface</td><td>Policy file</td><td>Contents</td></tr>
+<tr><td><a href="#profile">/proc/akari/profile</a></td><td>/etc/akari/profile.conf</td><td>Profiles (Collection of access control levels)</td></tr>
+<tr><td><a href="#manager">/proc/akari/manager</a></td><td>/etc/akari/manager.conf</td><td>Managers (Programs that can modify policy via /proc/akari/ interface)</td></tr>
+<tr><td><a href="#exception_policy">/proc/akari/exception_policy</a></td><td>/etc/akari/exception_policy.conf</td><td>Exception policy (Collection of exceptions for domain policy)</td></tr>
+<tr><td><a href="#domain_policy">/proc/akari/domain_policy</a></td><td>/etc/akari/domain_policy.conf</td><td>Domain policy (Access permissions given to individual domains)</td></tr>
+<tr><td><a href="#meminfo">/proc/akari/meminfo</a></td><td>/etc/akari/meminfo.conf</td><td>Memory usage and quota.</td></tr>
+</table>
+
+<p>There are more interfaces for obtaining information. These interfaces don't have corresponding policy files.</p>
+
+<table border="1">
+<tr><td>The kernel's interface</td><td>Meaning</td></tr>
+<tr><td><a href="#query">/proc/akari/query</a></td><td>Access requests that are waiting for administrator's decision.</td></tr>
+<tr><td><a href="#.domain_status">/proc/akari/.domain_status</a></td><td>The list of domainnames and profile numbers currently defined in domain policy.</td></tr>
+<tr><td><a href="#grant_log">/proc/akari/grant_log</a></td><td>Access requests that didn't violate domain policy.</td></tr>
+<tr><td><a href="#reject_log">/proc/akari/reject_log</a></td><td>Access requests that violated domain policy.</td></tr>
+<tr><td><a href="#self_domain">/proc/akari/self_domain</a></td><td>The name of domain the current process belongs to.</td></tr>
+<tr><td><a href="#.process_status">/proc/akari/.process_status</a></td><td>The list of domainnames and profile numbers currently running processes belongs to.</td></tr>
+<tr><td><a href="#version">/proc/akari/version</a></td><td>Version of AKARI.</td></tr>
+</table>
+
+<h2>3.2 <a name="policy_file_modifiers">Policy File's Modification</a></h2>
+
+<p>Register the name of programs or domains that can modify policy via the kernel's /proc/akari/ interface. Only</p>
+
+<ul>
+<li>Processes with programs listed in /proc/akari/manager</li>
+<li>Processes with domainnames listed in /proc/akari/manager</li>
+</ul>
+
+<p>can modify policy via the kernel's /proc/akari/ interface. Some examples are show below.</p>
+
+<table border="1">
+<tr><td>
+# cat /proc/akari/manager<br>
+/usr/sbin/akari-loadpolicy<br>
+/usr/sbin/akari-editpolicy<br>
+/usr/sbin/akari-setlevel<br>
+/usr/sbin/akari-setprofile<br>
+/usr/sbin/akari-ld-watch<br>
+/usr/sbin/akari-queryd<br>
+&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash
+</td></tr>
+</table>
+
+<p>By default, only processes with UID = 0 and EUID = 0 can modify policy via this interface. But by doing configurations described in <a href="#non_root_policy_update">Allowing policy modification by non root user.</a>, non root user can modify policy via this interface.</p>
+
+<p>Exception is, processes that belong to domains with profiles for learning mode can append access permissions to <a href="#domain_policy">/proc/akari/domain_policy</a> by simply requesting the access.</p>
+
+<h1>4. <a name="Domain_Rules">Domain Rules</a></h1>
+
+<h2>4.1 <a name="domain_definition">Domain Definition</a></h2>
+
+<p>AKARI gives access permissions as per a domain. It is managed via <a href="#domain_policy">/proc/akari/domain_policy</a>.</p>
+
+<p>In AKARI, every process belongs to a single domain, and all programs belong to different domain. Even the two processes are executing the same program, if their previous domains differ, they belong to different domain.</p>
+
+<p>All domains are defined originating from "&lt;kernel&gt;" domain, which the kernel process belongs to. Since /sbin/init is invoked by the "&lt;kernel&gt;" domain, the domain for /sbin/init is defined as "&lt;kernel&gt; /sbin/init". Since /etc/rc.d/rc is invoked by /sbin/init invoked by the kernel, the domain for /etc/rc.d/rc is defined as "&lt;kernel&gt; /sbin/init /etc/rc.d/rc".</p>
+
+<h2>4.2 <a name="domain_transition">Domain Transition</a></h2>
+
+<p>When a process tries to execute a program, the steps shown below are performed.</p>
+
+<table border="1">
+<tr><td>Step</td><td>Procedure</td></tr>
+<tr><td>Getting program's name</td><td>
+<p>Get the name of program that the process is going to execute and keep it as "Candidate". This procedure does not solve symbolic link if the program is a symbolic link.</p>
+</td></tr>
+<tr><td>Aggregating similar programs</td><td>
+<p>Search exception policy for</p>
+
+<ul>
+<li>aggregator "Candidate" "aggregated name"
+</ul>
+
+<p>and if found one, replace "Candidate" with "aggregated name".</p>
+</td></tr>
+<tr><td><a name="exec_stage_check_execute">Checking permission</a></td><td>
+<p>Search domain policy for</p>
+
+<ul>
+<li>file execute "Candidate"
+<li>file execute @"a pathname group containing Candidate"
+</ul>
+
+<p>and deny the execute request if not found one.</p>
+</td></tr>
+<tr><td><a name="exec_stage_check_destination">Deciding destination domain</a></td><td>
+
+<p>(1) Search exception policy for</p>
+
+<ul>
+<li>no_initialize_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>no_initialize_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>no_initialize_domain "Candidate" from any
+<li>no_initialize_domain any from any
+</ul>
+
+<p>and if found one, jump to (3).</p>
+
+<p>(2) Search exception policy for</p>
+
+<ul>
+<li>initialize_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>initialize_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>initialize_domain "Candidate" from any
+<li>initialize_domain any from any
+</ul>
+
+<p>and if found one, concatenate "the name of the domain that the kernel belongs to (i.e. &lt;kernel&gt;)" and "Candidate" and keep the result as destination domain, then jump to (6).</p>
+
+<p>(3) Search exception policy for</p>
+
+<ul>
+<li>no_keep_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>no_keep_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>no_keep_domain any from "the name of the domain the current process belongs to"
+<li>no_keep_domain any from "the last part of the name of the domain the current process belongs to"
+<li>no_keep_domain any from any
+</ul>
+
+<p>and if found one, jump to (5).</p>
+
+<p>(4) Search exception policy for</p>
+
+<ul>
+<li>keep_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>keep_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>keep_domain any from "the name of the domain the current process belongs to"
+<li>keep_domain any from "the last part of the name of the domain the current process belongs to"
+<li>keep_domain any from any
+</ul>
+
+<p>and if found one, set "the name of the domain the current process belongs to" as destination domain, then jump to (6).</p>
+
+<p>(5) Concatenate "the name of the domain the current process belongs to" and "Candidate" and keep the result as destination domain.</p>
+
+<p>(6) Check whether the destination domain is defined, and deny the execute request if not.</p>
+
+</td></tr>
+<tr><td>Checking environment variable names</td><td>
+
+<p>(1) Examine all environment variables' names are granted in the destination domain, and deny the execute request if more than one of them are not granted.</p>
+
+<p>(2) Perform regular steps for executing program. If successfully completed, the process transits to destination domain.</p>
+</td></tr>
+</table>
+
+<h2>4.3 <a name="access_logs">Access Logs</a></h2>
+
+<p>AKARI generates two types of access logs. One contains access requests that didn't violate domain policy. The other contains access requests that violated domain policy. The former is called grant log and is readable via /proc/akari/grant_log . The latter is called reject log and is readable via /proc/akari/reject_log . A utility program /usr/sbin/akari-auditd is included for reading these logs and saving the logs as files.</p>
+
+<p>Some examples are shown below. The first log is generated by execute request.</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat
+</td></tr>
+</table>
+
+<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain attempted to execute /bin/cat , and the arguments were "cat" and "/etc/fstab", environment variables were "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". Also, process information such as PID, UID are shown.</p>
+
+<p>The next log is generated by opening a file for reading.</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat<br>
+file read /etc/fstab
+</td></tr>
+</table>
+
+<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat" domain opened /etc/fstab for reading.</p>
+
+<p>The next log is generated when a new domain is created.</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat<br>
+use_profile 1
+</td></tr>
+</table>
+
+<p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. AKARI automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
+
+<p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/akari-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/akari/diff.txt) and you can add to domain policy by doing</p>
+
+<table border="1">
+<tr><td>
+# /usr/sbin/akari-loadpolicy -d &lt; /var/log/akari/diff.txt
+</td></tr>
+</table>
+
+<p>Therefore, you don't need to use "learning mode" from the beginning. If you wish, you can use "permissive mode" from the beginning and let reject logs generated, then edit reject logs and append to domain policy when developing domain policy. When domain policy is generated by "learning mode", process state (the first line of an access logs) is not taken into account. But when domain policy is generated from reject logs, you can use <a href="#conditional_acl">Using conditional ACL.</a> from the beginning. For example, generate a reject log by not using "learning mode" and append like</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat exec.argc=2 exec.realpath="/bin/cat" exec.argv[0]="cat" exec.argv[1]="/etc/fstab"
+</td></tr>
+</table>
+
+<p>then, you can give more precise permission compared to the permission appended by "learning mode"'s log (shown below).</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
+</td></tr>
+</table>
+
+<h1>5. <a name="Syntax_Details">Syntax Details</a></h1>
+
+<h2><a name="profile">/proc/akari/profile</a></h2>
+
+<p>AKARI can perform several MACs besides MAC for files, but to reduce the load of policy managements, you can disable MACs you think unnecessary.</p>
+
+<p>List up functions and their modes in "$number-$variable=$value" format. The $number is profile number between 0 and 255. To modify profile, use "akari-setlevel" or "akari-loadpolicy" commands.</p>
+
+<p>Each domain is assigned one profile. To assign profile to domains, use "setprofile" or "akari-editpolicy" or "akari-loadpolicy" commands.</p>
+
+<p>You can see profiles currently assigned to domains using "akari-editpolicy" command.<br>
+You can see profiles currently assigned to processes using "akari-pstree" command.<br>
+If you saved current policy using "akari-savepolicy" command, the currently assigned profile number is saved as <a href="#domain_policy_use_profile">use_profile</a> line of domain policy.</p>
+
+<p>To read or modify current profiles, operate like below.</p>
+
+<p>(Example)<br>
+cat /proc/akari/profile<br>
+akari-savepolicy -p<br>
+akari-setlevel 1-CONFIG::file::execute=learning<br>
+echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
+
+<p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
+
+<p>You can specify one of modes shown below for functionalities that start with "CONFIG".</p>
+
+<table border="1">
+<tr><td>Configuration</td><td>Meaning</td></tr>
+<tr><td>mode=disabled</td><td>Disabled. Works as if regular kernel.</td></tr>
+<tr><td>mode=learning</td><td>Learning mode. An access request is not rejected even if the request violates policy. Also, the permission to allow the request is automatically added to policy so that the same request no longer violates policy.</td></tr>
+<tr><td>mode=permissive</td><td>Permissive mode. An access request is not rejected even if the request violates policy. But, the permission to allow the request is not added to policy.</td></tr>
+<tr><td>mode=enforcing</td><td>Enforcing mode. An access request is rejected if the request violates policy.</td></tr>
+<tr><td>grant_log=yes</td><td>Generate grant logs. The max entries are controlled via "max_grant_log=" parameter of "<a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a>" line.</td></tr>
+<tr><td>grant_log=no</td><td>Don't generate grant logs.</td></tr>
+<tr><td>reject_log=yes</td><td>Generate reject logs. The max entries are controlled via "max_reject_log=" parameter of "<a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a>" line.</td></tr>
+<tr><td>reject_log=no</td><td>Don't generate reject logs.</td></tr>
+</table>
+
+<h3><a name="profile_CONFIG::file::execute">CONFIG::file::execute</a></h3>
+
+<p>Specifies access control level regarding program execution and domain transition.</p>
+
+<h3><a name="profile_CONFIG::file::open">CONFIG::file::open</a></h3>
+
+<p>Specifies access control level regarding file open for reading and/or writing.</p>
+
+<h3><a name="profile_CONFIG::file::create">CONFIG::file::create</a></h3>
+
+<p>Specifies access control level regarding file create.</p>
+
+<h3><a name="profile_CONFIG::file::unlink">CONFIG::file::unlink</a></h3>
+
+<p>Specifies access control level regarding file delete.</p>
+
+<h3><a name="profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></h3>
+
+<p>Specifies access control level regarding directory create.</p>
+
+<h3><a name="profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></h3>
+
+<p>Specifies access control level regarding directory delete.</p>
+
+<h3><a name="profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></h3>
+
+<p>Specifies access control level regarding fifo create.</p>
+
+<h3><a name="profile_CONFIG::file::mksock">CONFIG::file::mksock</a></h3>
+
+<p>Specifies access control level regarding UNIX domain socket create.</p>
+
+<h3><a name="profile_CONFIG::file::truncate">CONFIG::file::truncate</a></h3>
+
+<p>Specifies access control level regarding file truncate.</p>
+
+<h3><a name="profile_CONFIG::file::symlink">CONFIG::file::symlink</a></h3>
+
+<p>Specifies access control level regarding symlink create.</p>
+
+<h3><a name="profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></h3>
+
+<p>Specifies access control level regarding file overwrite.</p>
+
+<h3><a name="profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></h3>
+
+<p>Specifies access control level regarding block device file create.</p>
+
+<h3><a name="profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></h3>
+
+<p>Specifies access control level regarding character device file create.</p>
+
+<h3><a name="profile_CONFIG::file::link">CONFIG::file::link</a></h3>
+
+<p>Specifies access control level regarding link create.</p>
+
+<h3><a name="profile_CONFIG::file::rename">CONFIG::file::rename</a></h3>
+
+<p>Specifies access control level regarding rename.</p>
+
+<h3><a name="profile_CONFIG::file::chmod">CONFIG::file::chmod</a></h3>
+
+<p>Specifies access control level regarding chmod.</p>
+
+<h3><a name="profile_CONFIG::file::chown">CONFIG::file::chown</a></h3>
+
+<p>Specifies access control level regarding chown.</p>
+
+<h3><a name="profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></h3>
+
+<p>Specifies access control level regarding chgrp.</p>
+
+<h3><a name="profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></h3>
+
+<p>Specifies access control level regarding ioctl.</p>
+
+<h3><a name="profile_CONFIG::file::chroot">CONFIG::file::chroot</a></h3>
+
+<p>Specifies access control level regarding chroot.</p>
+
+<h3><a name="profile_CONFIG::file::mount">CONFIG::file::mount</a></h3>
+
+<p>Specifies access control level regarding mount.</p>
+
+<h3><a name="profile_CONFIG::file::unmount">CONFIG::file::unmount</a></h3>
+
+<p>Specifies access control level regarding unmount.</p>
+
+<h3><a name="profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></h3>
+
+<p>Specifies access control level regarding pivot_root.</p>
+
+<h3><a name="profile_CONFIG::misc::env">CONFIG::misc::env</a></h3>
+
+<p>Specifies access control level regarding environment variable names (a.k.a. envp[]).</p>
+
+<h3><a name="profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></h3>
+
+<p>Specifies access control level regarding UDP socket's local address restriction.</p>
+
+<h3><a name="profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></h3>
+
+<p>Specifies access control level regarding UDP socket's remote address restriction for outgoing packets.</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></h3>
+
+<p>Specifies access control level regarding TCP socket's bind() operation.</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></h3>
+
+<p>Specifies access control level regarding TCP socket's listen() operation.</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></h3>
+
+<p>Specifies access control level regarding TCP socket's connect() operation.</p>
+
+<h3><a name="profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></h3>
+
+<p>Specifies access control level regarding RAW socket's local address restriction.</p>
+
+<h3><a name="profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></h3>
+
+<p>Specifies access control level regarding RAW socket's remote address restriction for outgoing packets.</p>
+
+<h3><a name="profile_PREFERENCE::audit">PREFERENCE::audit</a></h3>
+
+<p>Specifies preference on auditing.</p>
+
+<p>"max_grant_log=" limits the max number of grant logs that the kernel can hold. </p>
+
+<p>"max_reject_log=" limits the max number of reject logs that the kernel can hold. </p>
+
+<h3><a name="profile_PREFERENCE::learning">PREFERENCE::learning</a></h3>
+
+<p>Specifies preference on learning mode.</p>
+
+<p>"max_entry=" controls the max number of ACL entries that are automatically appended.</p>
+
+<p>"exec.realpath=" controls whether the dereferenced pathname of the requested program should be learned when adding an "file execute" entry.</p>
+
+<p>"exec.argv0=" controls whether the invocation name should be learned when adding an "file execute" entry.</p>
+
+<p>"symlink.target=" controls whether the content of the symbolic link should be learned when adding an "file symlink" entry.</p>
+
+<h3><a name="profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></h3>
+
+<p>Specifies preference on enforcing mode.</p>
+
+<p>"penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for.</p>
+
+<h2><a name="domain_policy">/proc/akari/domain_policy</a></h2>
+
+<p>This file contains definition of all domains and permissions that are granted to each domain.</p>
+
+<p>Lines from the next line to a domain definition ( any lines starting with "&lt;kernel&gt;") to the previous line to the next domain definitions are interpreted as access permissions for that domain.</p>
+
+<p>You can specify additional conditions as needed. The syntax for specifying additional conditions are described in <a href="#conditional_acl">Using conditional ACL.</a> Also, how to perform domain transition upon ACL match as needed is described in <a href="#transit_on_match">Domain transition upon ACL match.</a></p>
+
+<p>To read or modify current domain policy, operate like below.</p>
+<p>(Example) Selecting specific domain and appending ACLs. The domain will be created if nonexistent.<br>
+printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+<p>(Example) Selecting specific domain and appending ACLs. The domain won't be created if nonexistent.<br>
+printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+<p>(Example) Selecting specific domain and removing ACLs.<br>
+printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | akari-loadpolicy -d</p>
+<p>(Example) Deleting specific domain.<br>
+printf "delete &lt;kernel&gt; /sbin/init\n" | akari-loadpolicy -d</p>
+<p>(Example) Reading current domain policy.<br>
+cat /proc/akari/domain_policy</p>
+
+<p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
+
+<h3><a name="domain_policy_file_execute">file execute</a></h3>
+<p>This keyword grants execution of the specified pathname.</p>
+<p>(Example) file execute /bin/ls</p>
+<p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_aggregator">aggregator</a></p>
+
+<h3><a name="domain_policy_file_write">file write</a></h3>
+<p>This keyword grants the specified pathname to be opened for writing.</p>
+<p>(Example) file write /dev/null</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_read">file read</a></h3>
+<p>This keyword grants the specified pathname to be opened for reading.</p>
+<p>(Example) file read /proc/meminfo</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_append">file append</a></h3>
+<p>This keyword grants the specified pathname to be opened for appending.</p>
+<p>(Example) file append /dev/null</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_create">file create</a></h3>
+<p>This keyword grants the specified pathname to be created.</p>
+<p>(Example) file create /var/lock/subsys/crond</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_unlink">file unlink</a></h3>
+<p>This keyword grants the specified pathname to be deleted.</p>
+<p>(Example) file unlink /var/lock/subsys/crond</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkdir">file mkdir</a></h3>
+<p>This keyword grants the specified pathname to be created. The pathname must be a directory.</p>
+<p>(Example) file mkdir /tmp/logwatch.\*/</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_rmdir">file rmdir</a></h3>
+<p>This keyword grants the specified pathname to be deleted. The pathname must be a directory.</p>
+<p>(Example) file rmdir /tmp/logwatch.\*/</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkfifo">file mkfifo</a></h3>
+<p>This keyword grants creation of FIFO by the specified pathname.</p>
+<p>(Example) file mkfifo /dev/initctl</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mksock">file mksock</a></h3>
+<p>This keyword grants creation of UNIX domain socket by the specified pathname.</p>
+<p>(Example) file mksock /dev/log</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkblock">file mkblock</a></h3>
+<p>This keyword grants creation of block device file by the specified pathname.</p>
+<p>(Example) file mkblock /dev/\*</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkchar">file mkchar</a></h3>
+<p>This keyword grants creation of character device file by the specified pathname.</p>
+<p>(Example) file mkchar /dev/\*</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_truncate">file truncate</a></h3>
+<p>This keyword grants the specified pathname to be truncated or extended.</p>
+<p>(Example) file truncate /etc/mtab</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_symlink">file symlink</a></h3>
+<p>This keyword grants creation of symbolic link by the specified pathname.</p>
+<p>(Example) file symlink /dev/cdrom</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_link">file link</a></h3>
+<p>This keyword grants creation of hard link by the specified pathnames.</p>
+<p>(Example) file link /etc/mtab~\$ /etc/mtab~</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_rename">file rename</a></h3>
+<p>This keyword grants renaming of the specified pathnames.</p>
+<p>(Example) file rename /etc/mtab.tmp /etc/mtab</p>
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_ioctl">file ioctl</a></h3>
+
+<p>This keyword grants doing IOCTL request with the specified command numbers and the specified pathnames.</p>
+
+<table border="1">
+<tr><td>Example</td><td>Permitted access</td></tr>
+<tr><td>file ioctl socket:[family=2:type=2:protocol=17] 35093</td><td>Allow sockets with protocol family 2, type 2, protocol 17 to do IOCTL request with command number 35093.</td></tr>
+<tr><td>file ioctl /dev/null 10000-20000</td><td>Allow /dev/null to do IOCTL request with command number between 10000 and 20000.</td></tr>
+</table>
+
+<p>Regarding the meaning of IOCTL request's command numbers, please refer manuals provided by each module with IOCTL functionality. For example, IOCTL request with command number 21585 means, on i386 platform, FIOCLEX command which turns on the file's close-on-exec flag. For example, IOCTL request with command number 35088 means SIOCGIFNAME command which retrieves the name of network interface.</p>
+
+<p>See also:  <a href="#conditional_acl">Using conditional ACL.</a></p>
+
+<h3><a name="domain_policy_file_mount">file mount</a></h3>
+<p>To grant mount permission, use file mount keyword followed by "$devicefile $mountpoint $filesystem $options". The $devicefile need to be a canonicalized file if the $filesystem requires device file. The $mountpoint must be a canonicalized file. The $options is a hexadecimal integer expression.</p>
+
+<p>To grant "mount -o remount $mountpoint" permission, use file mount keyword followed by "any $mountpoint --remount $options".</p>
+
+<p>To grant "mount --bind $source_dir $dest_dir", use "file mount $source_dir $dest_dir --bind $options".<br>
+To grant "mount --move $source_dir $dest_dir" permission, use "file mount $source_dir $dest_dir --move $options".<br>
+The $source_dir and $dest_dir must be canonicalized directory.</p>
+
+<p>Kernel 2.6.15 and later supports "Shared Subtree" functionality.<br>
+To grant "mount --make-unbindable $mountpoint" permission, use file mount keyword followed by "any $mountpoint --make-unbindable $options".<br>
+To grant "mount --make-private $mountpoint" permission, use file mount keyword followed by "any $mountpoint --make-private $options".<br>
+To grant "mount --make-slave $mountpoint" permission, use file mount keyword followed by "any $mountpoint --make-slave $options".<br>
+To grant "mount --make-shared $mountpoint" permission, use file mount keyword followed by "any $mountpoint --make-shared $options".</p>
+
+<p>(Example)<br>
+file mount none /dev/pts/ devpts 0x0<br>
+file mount /proc /proc/ proc 0x0<br>
+file mount usbdevfs /proc/bus/usb/ usbdevfs 0x0<br>
+file mount none /data/ tmpfs 0xE<br>
+file mount none /dev/shm/ tmpfs 0xE<br>
+file mount /dev/hdc /var/www/ ext2 0xF<br>
+file mount any / --remount 0x0</p>
+
+<h3><a name="domain_policy_file_unmount">file unmount</a></h3>
+<p>To grant unmount request, use file unmount keyword followed by a canonicalized directory.</p>
+
+<p>(Example)<br>
+file unmount /mnt/cdrom/</p>
+
+<h3><a name="domain_policy_file_chroot">file chroot</a></h3>
+<p>To grant chroot permission, use file chroot keyword followed by a canonicalized directory.<br>
+Usually, grant /var/empty/sshd/ that sshd uses. In addition, if you have applications that runs in the chroot'ed environment or applications that uses chroot (for example, /usr/share/empty/ is used by vsftpd), grant such directories too.</p>
+
+<p>(Example)<br>
+file chroot /var/empty/sshd/<br>
+file chroot /usr/share/empty/<br>
+file chroot /var/www/html/<br>
+file chroot /</p>
+
+<h3><a name="domain_policy_file_pivot_root">file pivot_root</a></h3>
+<p>To grant pivot_root permission, use file pivot_root keyword followed by the new root's canonicalized directory and the previous root's canonicalized directory.<br>
+Usually, you don't need this keyword.</p>
+
+<h3><a name="domain_policy_misc_env">misc env</a></h3>
+
+<p>To restrict the name of environment variables, use misc env keyword followed by "the name of environment variable".</p>
+
+<p>The execve() system call, which is used to execute a program, accepts filename and argv[] and envp[]. Many programs behave differently depending on envp[].</p>
+<p>The purpose of this keyword is to restrict the environment variables passed to an executed programs.</p>
+
+<h3><a name="domain_policy_network">network</a></h3>
+
+<p>To grant permission for socket operations, use network keyword followed by protocol(TCP or UDP or RAW) and IP address and port number (for TCP or UDP) / protocol number (for RAW). This permission is applicable to IPv4 and IPv6.</p>
+<table border="1">
+<tr><td>Keyword</td><td>Permitted operation</td><td>Example</td></tr>
+<tr><td>network inet stream bind</td><td>	Bind to local TCP address/port.</td><td>network inet stream bind 0.0.0.0 80</td></tr>
+<tr><td>network inet stream listen</td><td>Listen to local TCP address/port.</td><td>network inet stream listen 0.0.0.0 80</td></tr>
+<tr><td>network inet stream connect</td><td>Connect to and communicate with remote TCP address/port.</td><td>network inet stream connect 127.0.0.1 1024-65535</td></tr>
+<tr><td>network inet dgram bind</td><td>Bind to local UDP address/port.</td><td>network inet dgram bind 0.0.0.0 53</td></tr>
+
+<tr><td>network inet dgram send</td><td>Sending UDP packets to remote address/port.</td><td>network inet dgram send 127.0.0.1 53</td></tr>
+<tr><td>network inet raw bind</td><td>Bind to local IP address/protocol.</td><td>network inet raw bind 127.0.0.1 255</td></tr>
+<tr><td>network inet raw send</td><td>Sending IP packets to remote address/protocol.</td><td>network inet raw send 10.0.0.1 1</td></tr>
+</table>
+<p>Use of "::" for IPv6 address representation is not supported. You need to use "0:0:0:0:0:0:0:1" for "::1".</p>
+
+<p>To reduce the labor of repeating same IP addresses, you can define groups like pathnames.</p>
+
+<p>See also:  <a href="#exception_policy_address_group">address_group</a></p>
+
+<h3><a name="domain_policy_use_profile">use_profile</a></h3>
+
+<p>This keyword indicates the profile number currently assigned to this domain. The profile number is an integer between 0 and 255.</p>
+
+<h3><a name="domain_policy_use_group">use_group</a></h3>
+
+<p>This keyword indicates the group number currently assigned to this domain. The group number is an integer between 0 and 255.</p>
+
+<h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
+
+<p>This keyword indicates that this domain has failed to append entry in learning mode since the number of entries reached to the limit specified by <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a> keyword. You need to reduce the number of entries for this domain by tuning policy.</p>
+
+<p>See also:  <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></p>
+
+<h3><a name="domain_policy_transition_failed">transition_failed</a></h3>
+
+<p>This keyword indicates that some process in this domain was not able to transit to new domain when processing the execute request.</p>
+
+<p>If this domain was assigned a profile with <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing , the execute request was rejected.</p>
+
+<p>Otherwise, the execute request was not rejected. In that case, the process continued execution without domain transition. Since the reason of transition failure is either "the name of the domain was too long" or "the kernel was unable to allocate memory", you need to consider "suppressing domain transitions" or "increasing memory quota" if you are planning to assign a profile with <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing to this domain.</p>
+
+<p>See also:  <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">Memory Usage Information</a></p>
+
+<h2><a name="exception_policy">/proc/akari/exception_policy</a></h2>
+
+<p>To read or modify current exception policy, operate like below.</p>
+<p>(Example)<br>
+echo 'file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
+echo 'delete file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
+cat /proc/akari/exception_policy</p>
+
+<p>See also:  <a href="#policy_file_modifiers">Policy File's Modification</a></p>
+
+<h3><a name="exception_policy_file_pattern">file_pattern</a></h3>
+
+<p>To declare pathname pattern, use file_pattern keyword followed by pathname pattern. The pathname pattern must be a canonicalized Pathname. This keyword is not applicable to neither granting execute permissions nor domain definitions.<br>
+For example, canonicalized pathname that contains a process ID (i.e. /proc/PID/ files) needs to be grouped in order to make access control work well.</p>
+
+<h3><a name="exception_policy_path_group">path_group</a></h3>
+
+<p>To declare pathname group, use path_group keyword followed by name of the group and pathname pattern.<br>
+For example, if you want to group all files under home directory, you can define</p>
+
+<table border="1">
+<tr><td>
+path_group HOME-DIR-FILE /home/\*/\*<br>
+path_group HOME-DIR-FILE /home/\*/\{\*\}/\*
+</td></tr>
+</table>
+
+<p>in the exception policy and use like</p>
+
+<table border="1">
+<tr><td>
+file read @HOME-DIR-FILE
+</td></tr>
+</table>
+
+<p>to grant file access permission.</p>
+
+<h3><a name="exception_policy_number_group">number_group</a></h3>
+
+<p>To declare number group, use number_group keyword followed by name of the group and number ranges.<br>
+For example, if you want to group 0644 and 0664, you can define</p>
+
+<table border="1">
+<tr><td>
+number_group CREATE_MODES 0644<br>
+number_group CREATE_MODES 0664
+</td></tr>
+</table>
+
+<p>in the exception policy and use like</p>
+
+<table border="1">
+<tr><td>
+file create /tmp/file @CREATE_MODES
+</td></tr>
+</table>
+
+<p>to grant access permission.</p>
+
+<h3><a name="exception_policy_address_group">address_group</a></h3>
+
+<p>To declare address group, use address_group keyword followed by name of the group and IP address pattern.<br>
+For example, if you want to group all local addresses, you can define</p>
+
+<table border="1">
+<tr><td>
+address_group local-address 10.0.0.0-10.255.255.255<br>
+address_group local-address 172.16.0.0-172.31.255.255<br>
+address_group local-address 192.168.0.0-192.168.255.255
+</td></tr>
+</table>
+
+<p>in the exception policy and use like</p>
+
+<table border="1">
+<tr><td>
+network inet stream accept @local-address 1024-65535
+</td></tr>
+</table>
+
+<p>to grant network access permission.</p>
+
+<h3><a name="exception_policy_acl_group">acl_group</a></h3>
+
+<p>To specify group entry which is referenced by domain policy's use_group keyword, use acl_group keyword followed by group number and entry which can be used in domain policy.</p>
+<p>For example, "acl_group 0 file read /dev/null" will allow domains with "use_group 0" to open /dev/null for reading.</p>
+
+<h3><a name="exception_policy_aggregator">aggregator</a></h3>
+
+<p>To deal multiple programs as a single program, use aggregator keyword followed by name of original program and aggregated program. This keyword is intended to aggregate similar programs.</p>
+<p>For example, /usr/bin/tac and /bin/cat are similar. By specifying "aggregator /usr/bin/tac /bin/cat", you can run /usr/bin/tac in the domain for /bin/cat .</p>
+
+<p>See also:  <a href="#domain_policy_file_execute">file execute</a></p>
+
+<h3><a name="exception_policy_initialize_domain">initialize_domain</a></h3>
+
+<p>To initialize domain transition when specific program is executed, use initialize_domain directive.</p>
+
+<ul>
+<li>initialize_domain "program" from "domain"
+<li>initialize_domain "program" from "the last program part of domain"
+<li>initialize_domain "program" from any
+</ul>
+
+<p>If the "domain" doesn't start with "&lt;kernel&gt;", the entry is applied to all domain whose domainname ends with "the last program part of domain".</p>
+
+<p>This directive is intended to aggregate domain transitions for daemon program and program that are invoked by the kernel on demand, by transiting to different domain.</p>
+
+<p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></p>
+
+<h3><a name="exception_policy_no_initialize_domain">no_initialize_domain</a></h3>
+
+<p>To deny the effect of "initialize_domain" directive, use "no_initialize_domain" directive.</p>
+
+<ul>
+<li>no_initialize_domain "program" from "domain"
+<li>no_initialize_domain "program" from "the last program part of domain"
+<li>no_initialize_domain "program" from any
+</ul>
+
+<p>Use this directive when you don't want to initialize domain transition.</p>
+
+<p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_initialize_domain">initialize_domain</a></p>
+
+<h3><a name="exception_policy_keep_domain">keep_domain</a></h3>
+
+<p>To prevent domain transition when program is executed from specific domain, use keep_domain directive.</p>
+
+<ul>
+<li>keep_domain "program" from "domain"
+<li>keep_domain "program" from "the last program part of domain"
+<li>keep_domain any from "domain"
+<li>keep_domain any from "the last program part of domain"
+</ul>
+
+<p>If the "domain" doesn't start with "&lt;kernel&gt;", the entry is applied to all domain whose domainname ends with "the last program part of domain".</p>
+
+<p>This directive is intended to reduce total number of domains and memory usage by suppressing unneeded domain transitions.</p>
+
+<p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_no_keep_domain">no_keep_domain</a></p>
+
+<h3><a name="exception_policy_no_keep_domain">no_keep_domain</a></h3>
+
+<p>To deny the effect of "keep_domain" directive, use "no_keep_domain" directive.</p>
+
+<ul>
+<li>no_keep_domain "program" from "domain"
+<li>no_keep_domain "program" from "the last program part of domain"
+<li>no_keep_domain any from "domain"
+<li>no_keep_domain any from "the last program part of domain"
+</ul>
+
+<p>Use this directive when you want to escape from a domain that is kept by "keep_domain" directive.</p>
+
+<p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
+
+<h2><a name="query">/proc/akari/query</a></h2>
+
+<p>This file is used to manually grant or reject individual access requests when the policy violation occurs in enforcing mode. If a policy violation occur in a process whose domain is assigned a profile for enforcing mode, the administrator can judge interactively using "akari-queryd" command.</p>
+
+<h2><a name="manager">/proc/akari/manager</a></h2>
+
+<p>This file is used to read or append the list of programs or domains that can write to /proc/akari/ interface.</p>
+
+<h3><a name="manager_manage_by_non_root">manage_by_non_root</a></h3>
+
+<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/akari/ interface. You can use this keyword to allow policy modification by non root user.</p>
+
+<h2><a name=".domain_status">/proc/akari/.domain_status</a></h2>
+
+<p>This is a view (of a DBMS) that contains only profile number and domainnames of domain so that "setprofile" command can do line-oriented processing easily.</p>
+
+<h2><a name="meminfo">/proc/akari/meminfo</a></h2>
+
+<p>This file is to show the total RAM used to keep policy in the kernel by AKARI.</p>
+<p>(Example)<br>
+cat /proc/akari/meminfo<br></p>
+
+<h2><a name="grant_log">/proc/akari/grant_log</a></h2>
+
+<p>This file holds the granted log. The reader process returns immediately if no granted logs exists. To wait until a granted log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_grant_log parameter of PREFERENCE::audit, so read out timely.</p>
+<p>(Example)<br>
+cat /proc/akari/grant_log</p>
+
+<h2><a name="reject_log">/proc/akari/reject_log</a></h2>
+
+<p>This file holds the rejected log. The reader process returns immediately if no violation logs exists. To wait until a violation log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_reject_log parameter of PREFERENCE::audit, so read out timely.</p>
+<p>(Example)<br>
+cat /proc/akari/reject_log</p>
+
+<h2><a name="self_domain">/proc/akari/self_domain</a></h2>
+
+<p>This file is to show the name of domain the caller process belongs to.</p>
+<p>(Example)<br>
+cat /proc/akari/self_domain</p>
+
+<h2><a name=".process_status">/proc/akari/.process_status</a></h2>
+
+<p>This file is used by "akari-pstree" command to show "list of processes currently running" and "domains which each process belongs to" and "profile number which the domain is currently assigned" like "pstree" command. This file is writable by programs that aren't registered as policy manager.</p>
+
+<h2><a name="version">/proc/akari/version</a></h2>
+
+<p>This file is used for getting AKARI's version.</p>
+<p>(Example)<br>
+cat /proc/akari/version</p>
+
+<h1>6. <a name="Advanced_Features">Advanced Features</a></h1>
+
+<h2>6.1 <a name="non_root_policy_update">Allowing policy modification by non root user.</a></h2>
+
+<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/akari/ interface. But if you want to permit policy modification via /proc/akari/ interface by non root user, you can write this keyword like</p>
+
+<table border="1">
+<tr><td>
+# echo manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+</td></tr>
+</table>
+
+<p>to disable UID and EUID checks. Also, you can write this keyword like</p>
+
+<table border="1">
+<tr><td>
+# echo delete manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+</td></tr>
+</table>
+
+<p>to enable UID and EUID checks again. Use chown/chmod as needed since the owner of /proc/akari/ interface is root.<br>
+To be able to do this steps, /sbin/akari-init also executes /etc/akari/akari-post-init if /etc/akari/akari-post-init is executable. Therefore, to allow access to /proc/akari/ interface by user demo, create /etc/akari/akari-post-init with</p>
+
+<table border="1">
+<tr><td>
+#! /bin/sh<br>
+echo manage_by_non_root &gt; /proc/akari/manager<br>
+chown -R demo /proc/akari/
+</td></tr>
+</table>
+
+<p>and initialize like</p>
+
+<table border="1">
+<tr><td>
+# chmod 755 /etc/akari/akari-post-init<br>
+# chown -R demo /etc/akari/
+</td></tr>
+</table>
+
+<p>Then, user demo will be able to access policy directories and policy editors.</p>
+
+<h2>6.2 <a name="conditional_acl">Using conditional ACL.</a></h2>
+
+<p>You can add conditions (e.g. UID and GID) as needed. The condition clause are appended to the tail of each permission.</p>
+
+<table border="1">
+<tr><td>Example</td><td>Meaning</td></tr>
+<tr><td>file read /etc/passwd</td><td>Allow opening /etc/passwd for reading.</td></tr>
+<tr><td>file read /etc/passwd task.uid=0</td><td>Allow opening /etc/passwd for reading only if the process's UID is 0.</td></tr>
+<tr><td>file read /etc/passwd task.uid!=0</td><td>Allow opening /etc/passwd for reading only if the process's UID is not 0.</td></tr>
+<tr><td>network inet stream connect 10.0.0.1 80</td><td>Allow connecting TCP socket to 10.0.0.1 port 80.</td></tr>
+<tr><td>network inet stream connect 10.0.0.1 80 task.uid=100</td><td>Allow connecting TCP socket to 10.0.0.1 port 80 only if the process's UID is 100.</td></tr>
+</table>
+
+<p>The following variables are available.</p>
+
+<table border="1">
+<tr><td>Variable</td><td>Meaning</td></tr>
+<tr><td>task.uid</td><td>UID of current process</td></tr>
+<tr><td>task.euid</td><td>Effective UID of current process</td></tr>
+<tr><td>task.suid</td><td>Saved UID of current process</td></tr>
+<tr><td>task.fsuid</td><td>File System UID of current process</td></tr>
+<tr><td>task.gid</td><td>GID of current process</td></tr>
+<tr><td>task.egid</td><td>Effective GID of current process</td></tr>
+<tr><td>task.sgid</td><td>Saved GID of current process</td></tr>
+<tr><td>task.fsgid</td><td>File System GID of current process</td></tr>
+<tr><td>task.pid</td><td>PID of current process</td></tr>
+<tr><td>task.ppid</td><td>PID of parent process</td></tr>
+<tr><td>path1.uid</td><td>UID of object.</td></tr>
+<tr><td>path1.gid</td><td>GID of object.</td></tr>
+<tr><td>path1.ino</td><td>i-node number of object.</td></tr>
+<tr><td>path1.parent.uid</td><td>UID of object's parent directory.</td></tr>
+<tr><td>path1.parent.gid</td><td>GID of object's parent directory.</td></tr>
+<tr><td>path1.parent.ino</td><td>i-node number of object's parent directory.</td></tr>
+<tr><td>path2.parent.uid</td><td>UID of object's parent directory.</td></tr>
+<tr><td>path2.parent.gid</td><td>GID of object's parent directory.</td></tr>
+<tr><td>path2.parent.ino</td><td>i-node number of object's parent directory.</td></tr>
+</table>
+
+<p>"path1" corresponds to the first pathname of operations that requires pathnames, and "path2" corresponds to the second pathname of operations that requires pathnames. For example, the case of "<a href="#domain_policy_file_rename">file rename</a> file1 file2", path1 corresponds to file1 and path2 corresponds to file2.</p>
+
+<p>"path1" except "path1.parent" is not available for pathnames that don't exist. Thus, you can't use when creating pathnames (such as <a href="#domain_policy_file_create">file create</a> keyword).</p>
+
+<p>"path1.parent" is always available.</p>
+
+<p>"path2.parent" is available only for operations that require 2 pathnames (i.e. <a href="#domain_policy_file_link">file link</a> and <a href="#domain_policy_file_rename">file rename</a> keywords).</p>
+
+<p>"path2" is available only for mount operations.</p>
+
+<p>"path1" is not supported when accessing via "sysctl" (i.e. accessing files under /proc/sys/ directories using "sysctl" instead for "open").</p>
+
+<h3>The following variables and conditions are available for <a href="#domain_policy_file_execute">file execute</a> keyword.</h3>
+
+<table border="1">
+<tr><td>Variable</td><td>Meaning</td></tr>
+<tr><td>exec.realpath</td><td>Dereferenced pathname of the requested program.</td></tr>
+<tr><td>exec.argc</td><td>Number of argv[] passed for execute request.</td></tr>
+<tr><td>exec.envc</td><td>Number of envp[] passed for execute request.</td></tr></table>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>exec.realpath="value"</td><td>Dereferenced pathname of the requested program matches "value".</td></tr>
+<tr><td>exec.realpath!="value"</td><td>Dereferenced pathname of the requested program does not match "value".</td></tr>
+<tr><td>exec.argv[index]="value"</td><td>argv[index] (where 0 &lt;= index &lt; exec.argc) matches "value".</td></tr>
+<tr><td>exec.argv[index]!="value"</td><td>argv[index] (where 0 &lt;= index &lt; exec.argc) does not match "value".</td></tr>
+<tr><td>exec.envp["name"]="value"</td><td>Environment variable "name" is defined and matches "value".</td></tr>
+<tr><td>exec.envp["name"]!="value"</td><td>Environment variable "name" is not defined or does not match "value".</td></tr>
+<tr><td>exec.envp["name"]!=NULL</td><td>Environment variable "name" is defined.</td></tr>
+<tr><td>exec.envp["name"]=NULL</td><td>Environment variable "name" is not defined.</td></tr>
+</table>
+
+<h3>The following conditions are also available.</h3>
+
+<h4>Type of file.</h4>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>path1.type=file</td><td>path1 is a regular file.</td></tr>
+<tr><td>path1.type=directory</td><td>path1 is a directory.</td></tr>
+<tr><td>path1.type=fifo</td><td>path1 is a FIFO.</td></tr>
+<tr><td>path1.type=socket</td><td>path1 is a socket.</td></tr>
+<tr><td>path1.type=symlink</td><td>path1 is a symbolic link.</td></tr>
+<tr><td>path1.type=block</td><td>path1 is a block device file.</td></tr>
+<tr><td>path1.type=char</td><td>path1 is a character device file.</td></tr>
+<tr><td>path1.type!=file</td><td>path1 is not a regular file.</td></tr>
+<tr><td>path1.type!=directory</td><td>path1 is not a directory.</td></tr>
+<tr><td>path1.type!=fifo</td><td>path1 is not a FIFO.</td></tr>
+<tr><td>path1.type!=socket</td><td>path1 is not a socket.</td></tr>
+<tr><td>path1.type!=symlink</td><td>path1 is not a symbolic link.</td></tr>
+<tr><td>path1.type!=block</td><td>path1 is not a block device file.</td></tr>
+<tr><td>path1.type!=char</td><td>path1 is not a character device file.</td></tr></table>
+
+<p>Since path1.parent and path2.parent are always directory, AKARI does not support path1.parent and path2.parent for type of file.</p>
+
+<h4>Device numbers of a device file where the file resides.</h4>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>path1.major=num1-num2</td><td>Device major number of a device file which path1 resides is between num1 and num2.</td></tr>
+<tr><td>path1.minor=num1-num2</td><td>Device minor number of a device file which path1 resides is between num1 and num2.</td></tr>
+<tr><td>path1.major!=num1-num2</td><td>Device major number of a device file which path1 resides is not between num1 and num2.</td></tr>
+<tr><td>path1.minor!=num1-num2</td><td>Device minor number of a device file which path1 resides is not between num1 and num2.</td></tr>
+</table>
+
+<p>Since a device file where path1.parent and path2.parent reside is always same as the device file where path1 resides (because cross device operation is not permitted), AKARI does not support path1.parent and path2.parent for device numbers.</p>
+
+<p>If num1 and num2 is the same value, you can omit -num2 part.</p>
+
+<h4>Device numbers of the device file itself.</h4>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>path1.dev_major=num1-num2</td><td>Device file's major number is between num1 and num2.</td></tr>
+<tr><td>path1.dev_minor=num1-num2</td><td>Device file's minor number is between num1 and num2.</td></tr>
+<tr><td>path1.dev_major!=num1-num2</td><td>Device file's major number is not between num1 and num2.</td></tr>
+<tr><td>path1.dev_minor!=num1-num2</td><td>Device file's minor number is not between num1 and num2.</td></tr>
+</table>
+
+<p>These conditions are valid only for path1.type=block or path1.type=char cases.</p>
+
+<p>If num1 and num2 is the same value, you can omit -num2 part.</p>
+
+<h4>DAC's permissions</h4>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>path1.perm=num1-num2</td><td>path1's permission is between num1 and num2.</td></tr>
+<tr><td>path1.perm!=num1-num2</td><td>path1's permission is not between num1 and num2.</td></tr>
+<tr><td>path1.perm=setuid</td><td>path1's setuid bit is on.</td></tr>
+<tr><td>path1.perm!=setuid</td><td>path1's setuid bit is off.</td></tr>
+<tr><td>path1.perm=setgid</td><td>path1's setgid bit is on.</td></tr>
+<tr><td>path1.perm!=setgid</td><td>path1's setgid bit is off.</td></tr>
+<tr><td>path1.perm=sticky</td><td>path1's sticky bit is on.</td></tr>
+<tr><td>path1.perm!=sticky</td><td>path1's sticky bit is off.</td></tr>
+<tr><td>path1.perm=owner_read</td><td>path1's owner read bit is on.</td></tr>
+<tr><td>path1.perm!=owner_read</td><td>path1's owner read bit is off.</td></tr>
+<tr><td>path1.perm=owner_write</td><td>path1's owner write bit is on.</td></tr>
+<tr><td>path1.perm!=owner_write</td><td>path1's owner write bit is off.</td></tr>
+<tr><td>path1.perm=owner_execute</td><td>path1's owner execute bit is on.</td></tr>
+<tr><td>path1.perm!=owner_execute</td><td>path1's owner execute bit is off.</td></tr>
+<tr><td>path1.perm=group_read</td><td>path1's group read bit is on.</td></tr>
+<tr><td>path1.perm!=group_read</td><td>path1's group read bit is off.</td></tr>
+<tr><td>path1.perm=group_write</td><td>path1's group write bit is on.</td></tr>
+<tr><td>path1.perm!=group_write</td><td>path1's group write bit is off.</td></tr>
+<tr><td>path1.perm=group_execute</td><td>path1's group execute bit is on.</td></tr>
+<tr><td>path1.perm!=group_execute</td><td>path1's group execute bit is off.</td></tr>
+<tr><td>path1.perm=others_read</td><td>path1's others read bit is on.</td></tr>
+<tr><td>path1.perm!=others_read</td><td>path1's others read bit is off.</td></tr>
+<tr><td>path1.perm=others_write</td><td>path1's others write bit is on.</td></tr>
+<tr><td>path1.perm!=others_write</td><td>path1's others write bit is off.</td></tr>
+<tr><td>path1.perm=others_execute</td><td>path1's others execute bit is on.</td></tr>
+<tr><td>path1.perm!=others_execute</td><td>path1's others execute bit is off.</td></tr>
+</table>
+
+<p>These conditions are applicable for path1.parent and path2.parent as well as path1 .</p>
+
+<p>If num1 and num2 is the same value, you can omit -num2 part.</p>
+
+<p>To specify value in octal format, start from 0 (e.g. path1.perm=0644 ).</p>
+
+<h4>Example:</h4>
+
+<ul>
+<li>file append /dev/null path1.type=char path1.major=1 path1.minor=3 path1.perm=0666
+</ul>
+
+<p>will allow opening /dev/null for reading and writing only if /dev/null's type is character device file and /dev/null's major number is 1 and /dev/null's minor number is 3 and /dev/null's permission is 0666.</p>
+
+<h3>The following conditions for <a href="#domain_policy_file_symlink">file symlink</a> keyword are also available.</h3>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>symlink.target="value"</td><td>The content of a symlink to be created matches "value".</td></tr>
+<tr><td>symlink.target!="value"</td><td>The content of a symlink to be created does not match "value".</td></tr>
+</table>
+
+<h2>6.3 <a name="transit_on_match">Domain transition upon ACL match.</a></h2>
+
+<p>There are cases you wish to change the range of accessible resources depending on the client's IP address. To support such cases, you can perform domain transition automatically when an access request matched an ACL entry.</a></p>
+
+<p>To perform domain transition upon match, append auto_domain_transition= part after an ACL.</p>
+
+<table border="1">
+<tr><td>Example</td><td>Meaning</td></tr>
+<tr><td>network inet stream accept @TRUSTED_HOSTS 1024-65535 auto_domain_transition="//trusted_hosts"</td><td>If a TCP connection is accepted from an IP address included in an address group @TRUSTED_HOSTS, transit to a domain which the domainnname is concatenation of current domain's domainname + "//trusted_hosts".</td></tr>
+<tr><td>network inet stream accept @UNTRUSTED_HOSTS 1024-65535 auto_domain_transition="//untrusted_hosts"</td><td>If a TCP connection is accepted from an IP address included in an address group @UNTRUSTED_HOSTS, transit to a domain which the domainnname is concatenation of current domain's domainname + "//untrusted_hosts".</td></tr>
+</table>
+
+<p>When using the auto_domain_transition= part, please be careful with the following points.</p>
+
+<ul>
+<li>If the domain transition to a domain specified by auto_domain_transition= part failed, the process will be forcibly terminated.</li>
+<li>The domain transition specified by auto_domain_transition= part is performed when the access request is permitted by the policy. Thus, situations that the access request was not processed although the domain transition was performed can happen because of errors after checking the policy (e.g. out of memory).</li>
+<li>If an IP address is included in both @TRUSTED_HOSTS and @UNTRUSTED_HOSTS, the permission which matched first is used. So, be careful with using order dependent policy.</li>
+</ul>
+
+<h2>6.4 <a name="sleep_penalty">Sleep penalty for policy violation.</a></h2>
+
+<p>You can make the process which violated policy in enforcing mode sleep for specified period.</p>
+
+<table border="1">
+<tr><td>Example of /proc/akari/profile</td><td>Meaning</td></tr>
+<tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 3 sleep for 0.1 second.</td></tr>
+<tr><td>4-PREFERENCE::enforcing={ penalty = 10 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 4 sleep for 1 second.</td></tr>
+</table>
+
+<p>This feature is a safeguard to avoid that the CPU usage remains 100% when policy violation occurs in an infinite loop. Usually, making processes sleep for 0.1 second is enough.</p>
+
+<hr>
+
+<p><a href="index.html.en">Return to index page.</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

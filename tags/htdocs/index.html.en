@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Project</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="index.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>AKARI : Access Keeping And Regulating Instrument</h1>
+<table border="0" summary="What is AKARI?">
+<tr><td>AKARI is a security module which focuses on behavior of a system. A process is created to achieve something. AKARI lets each process declare behaviors and resources needed to achieve its purpose (like an immigration officer) and permits only declared behaviors and resources (like an operation watchdog). This approach made it possible for users to understand how a Linux system works. You can use AKARI as a system analysis tool as well as an access restriction tool.</td></tr>
+</table>
+
+<h2>How to use</h2>
+
+<ul>
+<li><a href="install.html.en">Phase 1: Installing kernel module and tools.</a></li>
+<li><a href="initialize.html.en">Phase 2: Initializing configuration.</a></li>
+<li><a href="learning.html.en">Phase 3: Analyzing your system's behavior.</a></li>
+<li><a href="tuning.html.en">Phase 4: Tuning policy for your system.</a></li>
+<li><a href="enforcing.html.en">Phase 5: Restricting your system's behavior.</a></li>
+</ul>
+
+<h2>Documentation</h2>
+
+<ul>
+<li><a href="tools-doc.html.en">Tools Documentation</a></li>
+<li><a href="tool-editpolicy.html.en">Policy Editor</a></li>
+<li><a href="policy-reference.html.en">Policy Specifications</a></li>
+</ul>
+
+<hr>
+
+<address><!--#include virtual="/cgi-bin/counter.pl" --></address>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

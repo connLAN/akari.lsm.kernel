@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="install.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第１章：カーネルモジュールとツールのインストール</h1>
+
+<p>このページでは、 AKARI カーネルモジュールとツールをインストールする手順について説明します。</p>
+
+<hr>
+
+<h2>ステップ１：カーネルモジュールのインストール</h2>
+
+<p>LSM (Linux Security Modules) のサポートが有効な状態（ CONFIG_SECURITY=y ）でコンパイルされているカーネルの開発用パッケージをインストールして、そのディレクトリに移動してください。</p>
+
+<table border="1">
+<tr><td>RedHat 系の場合</td><td>
+# VERSION=`uname -r`<br>
+# yum -y install kernel-devel-${VERSION}<br>
+# cd /usr/src/kernels/linux-headers-${VERSION}*/
+</td></tr>
+<tr><td>Debian 系の場合</td><td>
+# VERSION=`uname -r`<br>
+# apt-get -y install linux-headers-${VERSION}<br>
+# cd /usr/src/linux-headers-${VERSION}/
+</td></tr>
+</table>
+
+<p>次に、以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください。</p>
+
+<table border="1">
+<tr><td>
+# wget -O akari.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/akari.tar.gz?root=akari&amp;view=tar'<br>
+# tar -zxf akari.tar.gz<br>
+# make SUBDIRS=akari modules<br>
+# make SUBDIRS=akari modules_install<br>
+# depmod ${VERSION}
+</td></tr>
+</table>
+
+<hr>
+
+<h2>ステップ２：ツールのインストール</h2>
+
+<p>以下のコマンドを実行してツールをインストールしてください。</p>
+
+<table border="1">
+<tr><td>
+# wget -O tools.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/tools.tar.gz?root=akari&amp;view=tar'<br>
+# tar -zxf tools.tar.gz<br>
+# cd tools/<br>
+# make -s<br>
+# make -s install
+</td></tr>
+</table>
+
+<hr>
+
+<h2>ステップ３：起動設定のアップデート</h2>
+
+<p>init=/sbin/akari-init というパラメータをカーネル起動時のコマンドラインに追加してください。以下に例を示します。</p>
+
+<table border="1">
+<tr><td>変更前</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+<tr><td>変更後</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ init=/sbin/akari-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+</table>
+
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを /sbin/init が無効化してしまうためです。</p>
+
+<table border="1">
+<tr><td>変更前</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+<tr><td>変更後</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ selinux=0 init=/sbin/akari-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+</table>
+
+<p>AKARI をアンインストールしたい場合、 init=/sbin/akari-init というパラメータをカーネル起動時のコマンドラインから削除して再起動してください。</p>
+
+<hr>
+
+<p><a href="index.html.ja">目次へ戻る</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

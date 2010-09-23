@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>各種ツールのドキュメント</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="tools-doc.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>各種ツールのドキュメント</h1>
+
+<hr>
+
+<h3><a name="akari-editpolicy">＜ポリシーエディタ　akari-editpolicy＞</a></h3>
+<p>現在のポリシーを /proc/akari/ ディレクトリから読み込み、編集を行う。</p>
+<p>コマンドラインパラメータとして e d p m u のいずれかの文字を指定することで最初に表示される画面を指定できる。省略すると最初にドメイン一覧表示画面が表示される。</p>
+<p>以下のキーを使用して操作する。</p>
+
+<p>＜カーソル移動＞</p>
+<table border="1">
+<tr><td>↑</td><td>１行上へ移動する。</td></tr>
+<tr><td>↓</td><td>１行下へ移動する。</td></tr>
+<tr><td>→</td><td>１列右へ移動する。</td></tr>
+<tr><td>←</td><td>１列左へ移動する。</td></tr>
+<tr><td>PageUp</td><td>１画面上へ移動する。</td></tr>
+<tr><td>PageDown</td><td>１画面下へ移動する。</td></tr>
+<tr><td>Home</td><td>行頭へ移動する。</td></tr>
+<tr><td>End</td><td>行末へ移動する。</td></tr>
+</table>
+
+<p>＜検索＞</p>
+<table border="1">
+<tr><td>f/F</td><td>文字列を指定して検索する。</td></tr>
+<tr><td>n/N</td><td>逆方向へ指定された文字列を検索する。</td></tr>
+<tr><td>p/P</td><td>順方向へ指定された文字列を検索する。</td></tr>
+</table>
+
+<p>＜編集＞</p>
+<table border="1">
+<tr><td>a/A</td><td>エントリを追加する。</td></tr>
+<tr><td>Enter</td><td>カーソル行のドメインに対するアクセス許可編集画面へ移動する。（ドメイン一覧表示画面でのみ有効）</td></tr>
+<tr><td>Space</td><td>カーソル行の選択状態を反転する。</td></tr>
+<tr><td>c/C</td><td>カーソル行の選択状態をカーソル行以下の全エントリに適用する。</td></tr>
+<tr><td>d/D</td><td>選択されたエントリを削除する。</td></tr>
+<tr><td>s/S</td><td>選択されたドメインのプロファイルを変更する。（ドメイン一覧表示画面でのみ有効）<br>
+選択されたプロファイルの設定を変更する。（プロファイル編集画面でのみ有効）<br>
+選択された項目のクォータを変更する。（メモリ使用量表示画面でのみ有効）</td></tr>
+<tr><td>Insert</td><td>選択されたエントリをヒストリバッファに追加する。</td></tr>
+</table>
+
+<p>＜その他＞</p>
+<table border="1">
+<tr><td>q/Q</td><td>終了する。</td></tr>
+<tr><td>r/R</td><td>最新の情報に更新する。</td></tr>
+<tr><td>w/W</td><td>ウィンドウ選択画面を表示する。</td></tr>
+</table>
+
+<p><a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a>に説明があります。</p>
+
+<h3><a name="akari-loadpolicy">＜ポリシー再読み込みプログラム　akari-loadpolicy＞</a></h3>
+<p>ディスク上のポリシーをカーネルに読み込む。</p>
+<p>以下のコマンドラインオプションを指定可能である。</p>
+<ul>
+<li>e ・・・例外用ポリシーを再読み込みする。
+<li>d ・・・ドメイン用ポリシーを再読み込みする。
+<li>a ・・・上記２種類のポリシーを再読み込みする。
+<li>f ・・・ディスク上のポリシーを再読み込みする前に、メモリ上のポリシーを消去する。
+<li>p ・・・プロファイル用ポリシーを再読み込みする。 f は指定できない。
+<li>m ・・・マネージャ用ポリシーを再読み込みする。 f は指定できない。
+<li>u ・・・メモリ使用量の上限を設定する。 f は指定できない。 
+<li>- ・・・標準入力から読み込む。 e d p m u のいずれか１個のみ指定できる。
+</ul>
+
+<h3><a name="akari-setlevel">＜制御レベル変更プログラム　akari-setlevel＞</a></h3>
+<p>プロファイルの内容を変更する。</p>
+<p>コマンドラインパラメータで制御レベルを指定する。コマンドラインパラメータの有無に関係なく現在の制御レベルを表示する。</p>
+
+<h3><a name="akari-setprofile">＜プロファイル割り当てプログラム　akari-setprofile＞</a></h3>
+<p>ドメインに対してプロファイル番号を割り当てる。</p>
+<p>コマンドラインパラメータでプロファイル番号とドメイン名を指定する。プロファイル番号が変更されたドメイン名が表示される。</p>
+
+<h3><a name="akari-pstree">＜プロセス一覧表示プログラム　akari-pstree＞</a></h3>
+<p>現在実行中のプロセスが属しているドメインとそのドメインに割り当てられているプロファイルを表示する。</p>
+<p>プロファイル番号、プロセス名、プロセスＩＤ、ドメイン名の順番で pstree のように出力される。</p>
+
+<h3><a name="akari-savepolicy">＜ポリシー保存プログラム　akari-savepolicy＞</a></h3>
+<p>カーネル内のポリシーをディスクに保存する。</p>
+<p>以下のコマンドラインオプションを指定可能である。</p>
+<ul>
+<li>e ・・・例外用ポリシーを保存する。
+<li>d ・・・ドメイン用ポリシーを保存する。
+<li>a ・・・上記２種類のポリシーを保存する。
+<li>f ・・・ディスク上のポリシーとメモリ上のポリシーが同一内容であっても保存する。
+<li>p ・・・プロファイル用ポリシーを保存する。
+<li>m ・・・マネージャ用ポリシーを保存する。
+<li>u ・・・メモリ使用量を標準出力へ書き出す。 
+<li>- ・・・標準出力へ書き出す。 e d p m u のいずれか１個のみ指定できる。
+</ul>
+
+<h3><a name="akari-auditd">＜アクセスログ保存デーモン　akari-auditd＞</a></h3>
+<p>/proc/akari/grant_log および /proc/akari/reject_log の内容をコマンドラインで指定された場所に保存する。</p>
+<p>コマンドラインの最初のパラメータがアクセス許可ログを保存するファイル名、２番目のパラメータがアクセス拒否ログを保存するファイル名である。ファイル名として /dev/null を指定しても良い。アクセスログをファイルに保存する必要が無い場合は実行する必要はない。</p>
+<p>デーモンとして動作するので、 RedHat Linux の場合、 /etc/rc.d/rc.local で起動すればよい。 /proc/akari/grant_log および /proc/akari/reject_log に保持できる件数は、プロファイルの PREFERENCE::audit={ max_grant_log=件数 max_reject_log=件数 } で指定できる。</p>
+
+<h3><a name="akari-sortpolicy">＜ポリシー圧縮プログラム　akari-sortpolicy＞</a></h3>
+<p>akari-auditd により保存されたログから重複を除去する。</p>
+<p>akari-auditd により保存されたログを標準入力から読み込み、ドメイン単位で sort と uniq を行った結果を標準出力へ書き出す。</p>
+
+<h3><a name="akari-findtemp">＜テンポラリパス検出プログラム　akari-findtemp＞</a></h3>
+<p>標準入力からパス名の一覧を受け取り、全ての存在しないパス名を表示する。</p>
+<p>存在しなかったパス名はテンポラリなパス名として使用されている可能性が高いので、同様のパス名から規則性を判断して /etc/akari/exception_policy.conf および /proc/akari/exception_policy にパターン化したパス名を追加していく。</p>
+<p>/etc/akari/domain_policy.conf または /proc/akari/domain_policy の内容をリダイレクトまたはパイプを使用して標準入力へ渡せばよい。</p>
+
+<h3><a name="akari-queryd">＜遅延強制モード用アクセス承認プログラム　akari-queryd＞</a></h3>
+<p>ポリシー違反を検出し、要求されたアクセスの内容を表示する。管理者は、その内容の妥当性を判断して許可（あるいは許可およびポリシーへの追加）あるいは拒否をシステムに伝えることができる。</p>
+<p>このプログラムをソフトウェアのアップデート時に実行しておくことで、アクセス許可の不足によるエラーを回避することができる。</p>
+<p>無条件に要求されたアクセスを許可しないこと。ポリシー違反の原因はパッケージの更新によって発生するものとは限らず、攻撃者による悪意ある要求の可能性もある。もし、攻撃者による悪意ある要求に対して許可を与えてしまった場合、システムに侵入されることになる。</p>
+
+<h3><a name="akari-notifyd">＜ポリシー違反通知デーモン　akari-notifyd＞</a></h3>
+<p>ポリシー違反を検出し、（メールを送信するなどの）指定された処理を行うことにより、管理者に通知する。</p>
+<p>このデーモンを /etc/crontab から起動するように設定しておくことで、強制モードにおけるポリシー違反の発生をできるだけ早く知ることができるようになる。</p>
+
+<h3><a name="akari-checkpolicy">＜ポリシー構文検査プログラム　akari-checkpolicy＞</a></h3>
+<p>標準入力からポリシーファイルの内容を読み込み、構文をチェックする。</p>
+<p>問題があれば行番号と共にエラーの内容を表示する。</p>
+
+<h3><a name="akari-init">＜ポリシーローダー　akari-init＞</a></h3>
+<p> /etc/akari/ ディレクトリからポリシーファイルを読み込む。</p>
+<p>/sbin/akari-init に置き、カーネル起動時のコマンドラインに init=/sbin/akari-init を指定して実行する。</p>
+
+<h3><a name="akari-domainmatch">＜アクセス許可検索ツール　akari-domainmatch＞</a></h3>
+<p> /proc/akari/domain_policy からドメイン単位で fgrep を行う。</p>
+
+<h3><a name="akari-patternize">＜パス名パターン化ツール　akari-patternize＞</a></h3>
+<p>ドメイン用ポリシーを標準入力から受け取り、コマンドラインに与えられたパス名のパターンと一致した場合はパターン化してから標準出力へ送る。実行許可を含むファイルへのアクセス許可とドメイン名はパターン化されない。</p>
+
+<h3><a name="init_policy">＜ポリシー初期化ツール　init_policy＞</a></h3>
+<p>ポリシーの雛型を生成する。自動生成された結果には余計なものや危険なものが含まれているかもしれないため、随時見直しを行うこと。</p>
+
+<hr>
+
+<p><a href="index.html.ja">目次へ戻る</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

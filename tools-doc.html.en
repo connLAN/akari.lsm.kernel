@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>Tools Documentation</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="tools-doc.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Tools Documentation</h1>
+
+<hr>
+
+<h3><a name="akari-editpolicy">&lt;Policy Editor "akari-editpolicy"&gt;</a></h3>
+<p>Edits the current policy in /proc/akari/ directory.</p>
+<p>You may give one of 'e' 'd' 'p' 'm' 'u' to the commandline to choose the initial screen. If not given, screen for domain listing is shown.</p>
+<p>You can use keys listed below.</p>
+
+<p>&lt;Scroll&gt;</p>
+<table border="1">
+<tr><td>Up-arrow</td><td>Scroll 1 line up.</td></tr>
+<tr><td>Down-arrow</td><td>Scroll 1 line down.</td></tr>
+<tr><td>PageUp</td><td>Scroll 1 page up.</td></tr>
+<tr><td>PageDown</td><td>Scroll 1 page down.</td></tr>
+<tr><td>Right-arrow</td><td>Scroll 1 column right.</td></tr>
+<tr><td>Left-arrow</td><td>Scroll 1 column left.</td></tr>
+<tr><td>Home</td><td>Move to the top of line.</td></tr>
+<tr><td>End</td><td>Move to the bottom of line.</td></tr>
+</table>
+
+<p>&lt;Search&gt;</p>
+<table border="1">
+<tr><td>f/F</td><td>Find First</td></tr>
+<tr><td>n/N</td><td>Find Next</td></tr>
+<tr><td>p/P</td><td>Find Previous</td></tr>
+</table>
+
+<p>&lt;Edit&gt;</p>
+<table border="1">
+<tr><td>a/A</td><td>Add an entry.</td></tr>
+<tr><td>Enter</td><td>Edit ACLs of a domain at the cursor position. (Valid only for screen for domain listing.)</td></tr>
+<tr><td>Space</td><td>Invert selection state of an entry at the cursor position.</td></tr>
+<tr><td>c/C</td><td>Copy selection state of an entry at the cursor position to all entries below the cursor position.</td></tr>
+<tr><td>d/D</td><td>Delete selected entries.</td></tr>
+<tr><td>s/S</td><td>Set profile number of selected entries. (Valid only for screen for domain listing.)<br>
+Set profile value for selected entries. (Valid only for screen for profile editing)<br>
+Set new quota value for selected entries. (Valid only for screen for memory usage)</td></tr>
+<tr><td>Insert</td><td>Copy an entry at the cursor position to history buffer.</td></tr>
+</table>
+
+<p>&lt;Misc&gt;</p>
+<table border="1">
+<tr><td>q/Q</td><td>Quit</td></tr>
+<tr><td>r/R</td><td>Refresh</td></tr>
+<tr><td>w/W</td><td>Switch to window list.</td></tr>
+</table>
+
+<p>A tutorial is available at <a href="tool-editpolicy.html.en">How to use Policy Editor</a>.</p>
+
+<h3><a name="akari-loadpolicy">&lt;Policy Loader "akari-loadpolicy"&gt;</a></h3>
+<p>Reloads the on-disk policy onto memory.</p>
+<p>There are the following commandline parameters.</p>
+<ul>
+<li>e --- Reload exception policy.
+<li>d --- Reload domain policy.
+<li>a --- Reload the above two policies.
+<li>f --- Erase on-memory policy before loading.
+<li>p --- Reload profile. 'f' option is not supported.
+<li>m --- Reload manager policy. 'f' option is not supported.
+<li>u --- Set memory quota. 'f' option is not supported.
+<li>- --- Read from stdin. Only one of 'e' 'd' 'p' 'm' 'u' is possible when using this option.
+</ul>
+
+<h3><a name="akari-setlevel">&lt;Control Level Changer "akari-setlevel"&gt;</a></h3>
+<p>Changes the current control level (i.e. writing to /proc/akari/profile ) and displays the new control level.</p>
+<p>You can give the new control level from commandline parameter.</p>
+
+<h3><a name="akari-setprofile">&lt;Profile Selector "akari-setprofile"&gt;</a></h3>
+<p>Assigns a profile to domains.</p>
+<p>You can give the new profile number and domainnames from the commandline parameter. The list of domainnames that the profile number assigned to has changed is printed.</p>
+
+<h3><a name="akari-pstree">&lt;Process Info Viewer "akari-pstree"&gt;</a></h3>
+<p>Lists the domainnames of currently running processes belong to and the profile numbers the domains currently assigned to.</p>
+<p>This program shows the profile number, the name of process, PID, the domainname like "pstree" command.</p>
+
+<h3><a name="akari-savepolicy">&lt;Policy Saver "akari-savepolicy"&gt;</a></h3>
+<p>Saves the on-memory policy onto disk.</p>
+<p>There are the following commandline parameters.</p>
+<ul>
+<li>e --- Save exception policy.
+<li>d --- Save domain policy.
+<li>a --- Save the above two policies.
+<li>f --- Save even if on-memory policy and on-disk policy are same.
+<li>p --- Save profile.
+<li>m --- Save manager policy.
+<li>u --- Write memory usage on stdout. Implies '-' option.
+<li>- --- Write to stdout. Only one of 'e' 'd' 'p' 'm' 'u' is possible when using this option.
+</ul>
+
+<h3><a name="akari-auditd">&lt;Access Log Reading Daemon "akari-auditd"&gt;</a></h3>
+<p>Reads from /proc/akari/grant_log and /proc/akari/reject_log and writes to the location given in the commandline parameters.</p>
+<p>The first commandline parameter is the location of access granted log. The second one is the location of access rejected log. You may give /dev/null as the location. If you needn't to save access logs, you needn't to run this program.</p>
+<p>This program runs as a daemon. You can start from /etc/rc.d/rc.local if you are using RedHat Linux. The number of logs that the kernel will keep is given using profile's PREFERENCE::audit={ max_grant_log=integer max_reject_log=integer } lines.</p>
+
+<h3><a name="akari-sortpolicy">&lt;Access Log Compressor "akari-sortpolicy"&gt;</a></h3>
+<p>Remove duplicated entry from logs written by "akari-auditd".</p>
+<p>Reads logs written by "akari-auditd" from standard input and sorts by domains and removes duplicated entries and writes to standard output.</p>
+
+<h3><a name="akari-findtemp">&lt;Temporal Pathnames Detector "akari-findtemp"&gt;</a></h3>
+<p>Reads domain policy from standard input and checks the existence of pathnames, and dumps the nonexistent pathnames.</p>
+<p>The nonexistent pathnames are likely used as temporary pathnames. So find the naming rules from similar nonexistent pathnames and append the pattern to /etc/akari/exception_policy.conf and /proc/akari/exception_policy .</p>
+<p>You can pass the content of /etc/akari/domain_policy.conf or /proc/akari/domain_policy using redirection or pipes to the standard input of this program.</p>
+
+<h3><a name="akari-queryd">&lt;Delayed Enforcing Mode Handler "akari-queryd"&gt;</a></h3>
+<p>Detects policy violation and displays the access request. You can tell the system whether the access request should be granted (or granted and policy should be appended to grant the access request) or rejected after you validate the access request.</p>
+<p>By running this program while updating packages, you can avoid errors due to insufficient permissions.</p>
+<p>Never grant access requests unconditionally. The cause of policy violation is not always updating packages, but may by malicious requests by attackers. If you grant access requests caused by malicious requests by attackers, the system gets intruded.</p>
+
+<h3><a name="akari-notifyd">&lt;Policy Violation Notifyier "akari-notifyd"&gt;</a></h3>
+<p>Detects policy violation and take some actions (e.g. send a mail) to notify it to the administrator.</p>
+<p>By running this program from /etc/crontab , you can know the occurrence of policy violation in enforcing mode as soon as possible.</p>
+
+<h3><a name="akari-checkpolicy">&lt;Policy Syntax Checker "akari-checkpolicy"&gt;</a></h3>
+<p>Reads policy files from standard input and checks syntaxes.</p>
+<p>Prints errors with line numbers if any.</p>
+
+<h3><a name="akari-init">&lt;Initial Policy Loader "akari-init"&gt;</a></h3>
+<p>Loads policy files from /etc/akari/ directory.</p>
+<p>Put this program as /sbin/akari-init and execute this program by passing init=/sbin/akari-init to the kernel's boot parameter.</p>
+
+<h3><a name="akari-domainmatch">&lt;ACL Searcher "akari-domainmatch"&gt;</a></h3>
+<p>This is a "fgrep" for /proc/akari/domain_policy .</p>
+
+<h3><a name="akari-patternize">&lt;Pathname Pattern Replacer "akari-patternize"&gt;</a></h3>
+<p>Reads domain policy from standard input and replaces pathnames with patterns if the pathname matches to patterns given at commandline and writes to standard output. Pathnames that contains execute permission and domainnames won't be patterned.</p>
+
+<h3><a name="init_policy">&lt;Policy Template Generator "init_policy"&gt;</a></h3>
+<p>Generates templates for policy. You need to review the output because automatically generated policy may contain redundant or dangerous entries.</p>
+
+<hr>
+
+<p><a href="index.html.en">Return to index page.</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

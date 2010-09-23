@@ -1,3 +1,0 @@
-#! /bin/sh
-echo "This command is not implemented."
-exit 1

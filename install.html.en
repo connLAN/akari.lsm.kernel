@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Install manual</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="install.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Phase 1: Installing kernel module and tools.</h1>
+
+<p>This page describes how to install AKARI's kernel module and userland tools.</p>
+
+<hr>
+
+<h2>Step 1: Installing kernel module</h2>
+
+<p>Install a kernel development package which was configured with LSM (Linux Security Modules) support enabled (i.e. CONFIG_SECURITY=y ), and goto the extracted directory.</p>
+
+<table border="1">
+<tr><td>RedHat distributions</td><td>
+# VERSION=`uname -r`<br>
+# yum -y install kernel-devel-${VERSION}<br>
+# cd /usr/src/kernels/linux-headers-${VERSION}*/
+</td></tr>
+<tr><td>Debian distributions</td><td>
+# VERSION=`uname -r`<br>
+# apt-get -y install linux-headers-${VERSION}<br>
+# cd /usr/src/linux-headers-${VERSION}/
+</td></tr>
+</table>
+
+<p>Next, run the following commands in order to install AKARI's kernel module.</p>
+
+<table border="1">
+<tr><td>
+# wget -O akari.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/akari.tar.gz?root=akari&amp;view=tar'<br>
+# tar -zxf akari.tar.gz<br>
+# make SUBDIRS=akari modules<br>
+# make SUBDIRS=akari modules_install<br>
+# depmod ${VERSION}
+</td></tr>
+</table>
+
+<hr>
+
+<h2>Step 2: Installing tools</h2>
+
+<p>Run the following commands in order to install tools.</p>
+
+<table border="1">
+<tr><td>
+# wget -O tools.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/tools.tar.gz?root=akari&amp;view=tar'<br>
+# tar -zxf tools.tar.gz<br>
+# cd tools/<br>
+# make -s<br>
+# make -s install
+</td></tr>
+</table>
+
+<hr>
+
+<h2>Step 3: Updating boot configuration</h2>
+
+<p>Add init=/sbin/akari-init parameter to the kernel command line. An example is shown below.</p>
+
+<table border="1">
+<tr><td>Before</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+<tr><td>After</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ init=/sbin/akari-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+</table>
+
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. But you need to add selinux=0 like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because /sbin/init unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config .</p>
+
+<table border="1">
+<tr><td>Before</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+<tr><td>After</td><td>
+title CentOS (2.6.18-194.11.4.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ selinux=0 init=/sbin/akari-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+</td></tr>
+</table>
+
+<p>To uninstall AKARI, remove init=/sbin/akari-init parameter from the kernel command line and reboot the system.</p>
+
+<hr>
+
+<p><a href="index.html.en">Return to index page.</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

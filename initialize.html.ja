@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="initialize.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第２章：設定の初期化</h1>
+
+<p>このページでは、 AKARI を使うために必要となる基本操作について説明します。</p>
+
+<hr>
+
+<h2>ステップ１：ポリシーの初期化</h2>
+
+<p>以下のコマンドを実行してポリシーを初期化してください。</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# /usr/lib/akari/init_policy
+</td></tr>
+</table>
+
+<p>AKARI のポリシーファイルが /etc/akari/ ディレクトリの中に作成されます。</p>
+
+<hr>
+
+<h2>ステップ２：ポリシーエディタの使い方を学習する</h2>
+
+<p>/etc/akari/ というオプションと一緒に、 AKARI のポリシーエディタである akari-editpolicy を実行すると、以下のような画面が表示されます。</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# /usr/sbin/akari-editpolicy /etc/akari/
+</td></tr>
+</table>
+
+<p><img src="editpolicy-domain-list1.png" width="720" height="400"></p>
+
+<p>この画面には、ドメインツリーが表示されています。現時点では、 &lt;kernel&gt; ドメインだけが定義されています。しかし、システムが動作するにつれて、 AKARI は新しいドメインを作成してこのツリーに追加していきます。以下の画面ではたくさんのドメインが定義されています。</p>
+
+<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
+
+<p>AKARI における強制アクセス制御はドメインを単位として適用されます。全てのプロセスは１個のドメインに属しており、原則としてプログラムが実行される度に異なるドメインへと遷移します。ドメインの名前はプロセスの実行履歴として連結された文字列です。例えば、カーネルが属するドメインの名前は &lt;kernel&gt; 、カーネルから起動された /sbin/init が属するドメインの名前は &lt;kernel&gt; /sbin/init 、 /sbin/init から起動された /etc/rc.d/rc が属するドメインの名前は &lt;kernel&gt; /sbin/init /etc/rc.d/rc となります。この遷移規則の例外については後述します。</p>
+
+<p>各行の２番目の数字に注目してください。</p>
+
+<p><img src="editpolicy-domain-profile-number.png" width="720" height="400"></p>
+
+<p>この数字はプロファイル番号と呼ばれるものです。プロファイル番号は０～２５５の整数値をとります。</p>
+
+<p>w キーを押すと、選択肢が表示されます。</p>
+
+<p><img src="editpolicy-window-list.png" width="720" height="400"></p>
+
+<p>p キーを押すと、プロファイルの一覧が表示されます。</p>
+
+<p><img src="editpolicy-profile-list.png" width="720" height="400"></p>
+
+<table border="1">
+<tr><td>項目</td><td>内容</td></tr>
+<tr>
+<td>PREFERENCE::audit</td>
+<td>アクセスログの取得方法に関する設定。</td>
+</tr>
+<tr>
+<td>PREFERENCE::learning</td>
+<td>学習モードに関する設定。</td>
+</tr>
+<tr>
+<td>PREFERENCE::permissive</td>
+<td>確認モードに関する設定。</td>
+</tr>
+<tr>
+<td>PREFERENCE::enforcing</td>
+<td>強制モードに関する設定。</td>
+</tr>
+<tr>
+<td>COMMENT</td>
+<td>プロファイルの内容を説明するための１行コメント。</td>
+</tr>
+<tr>
+<td>CONFIG</td>
+<td>強制アクセス制御のモード設定。</td>
+</tr>
+</table>
+<p>PREFERENCE::learning PREFERENCE::permissive PREFERENCE::enforcing の verbose については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>no</td>
+<td>ポリシー違反のメッセージを表示しない。</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>ポリシー違反のメッセージを表示する。</td>
+</tr>
+</table>
+<p>CONFIG 行で指定されている mode については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>disabled</td>
+<td>無効。通常のカーネルと同様に動作する。</td>
+</tr>
+<tr>
+<td>learning</td>
+<td>学習モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加する。</td>
+</tr>
+<tr>
+<td>permissive</td>
+<td>確認モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加しない。</td>
+</tr>
+<tr>
+<td>enforcing</td>
+<td>強制モード。アクセス要求がポリシーに違反したら拒否する。アクセス要求をポリシーへ追加しない。</td>
+</tr>
+</table>
+
+<p>w キー、 e キーの順に押すことで、以下の画面が表示されます。</p>
+
+<p><a href="editpolicy-exception-full.png">（クリックすると全体を表示します。）<br><img src="editpolicy-exception-list1.png" width="720" height="400"></a></p>
+
+<p>矢印キーや Home/End/PageUp/PageDown キーを使ってスクロールすることができます。</p>
+
+<p>この画面には以下のマクロと例外設定が表示されます。</p>
+
+<table border="1">
+<tr><td>
+(1) パス名のパターン
+</td><td>
+<p>file_pattern というキーワードを使用して、パス名のパターンを指定することができます。ファイルに対する操作が行われた際に、要求されたパス名が file_pattern というキーワードを使用して指定されたパス名のパターンと一致した場合、パターン化されたパス名でポリシーが生成されます。</p>
+</td></tr><tr><td>
+(2) パス名のグループ
+</td><td>
+<p>path_group というキーワードを使用して、パス名のグループを指定することができます。これは、複数のパス名を集約することでポリシーの記述量を減らすためのマクロです。</p>
+</td></tr><tr><td>
+(3) 数値のグループ
+</td><td>
+<p>number_group というキーワードを使用して、数値のグループを指定することができます。これは、複数の数値を集約することでポリシーの記述量を減らすためのマクロです。</p>
+</td></tr><tr><td>
+(4) アドレスのグループ
+</td><td>
+<p>address_group というキーワードを使用して、 IPv4 または IPv6 アドレスのグループを指定することができます。これは、複数の IP アドレスを集約することでポリシーの記述量を減らすためのマクロです。<br>
+</td></tr><tr><td>
+(5) アクセス許可のグループ
+</td><td>
+<p>acl_group というキーワードに続けてグループ番号およびそのグループに与えられるアクセス許可を指定することができます。ドメインポリシーの中から use_group というキーワードで参照されます。これは、共通して与えられるパーミッションをグループ化することでポリシーの記述量を減らすためのマクロです。</p>
+</td></tr><tr><td>
+(6) プログラム名の集約
+</td><td>
+<p>AKARI では個々のプログラムのパス名をドメイン遷移を行う際に使用しますが、 aggregator というキーワードを使用することで必要に応じて複数のプログラムのパス名を１個のプログラムのパス名に集約して扱うことができます。</p>
+</td></tr><tr><td>
+(7) ドメイン遷移の例外
+</td><td>
+<p>AKARI では原則としてプログラムが実行されるたびにドメイン遷移が発生しますが、必要に応じてドメイン遷移を抑制したり初期化したりすることができます。</p>
+<p>initialize_domain というキーワードを使用して、ドメイン遷移履歴をリセットするプログラムを指定することができます。例えば、 initialize_domain /usr/sbin/sshd という指定が行われている場合、 /usr/sbin/sshd は &lt;kernel&gt; /usr/sbin/sshd というドメインで動作するようになります。</p>
+<p>no_initialize_domain というキーワードを使うことで、 initialize_domain キーワードの効果を打ち消すことができます。特定の条件下ではドメイン遷移を初期化させたくない場合に使用します。</p>
+<p>keep_domain というキーワードを使用して、ドメイン遷移を行わないドメインを指定することができます。例えば、 keep_domain &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh という指定が行われている場合、 &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh というドメインに属しているプロセスは、 initialize_domain または no_keep_domain というキーワードで指定されたプログラムが実行されない限り、そのドメインに留まります。</p>
+<p>no_keep_domain というキーワードを使うことで、 keep_domain キーワードの効果を打ち消すことができます。特定の条件下でドメイン遷移を行わせたい場合に使用します。</p>
+</td></tr>
+</table>
+
+<p>q キーを押してポリシーエディタを終了してください。</p>
+
+<p>以後、必要に応じてポリシーエディタのチュートリアルページである<a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a>を参照してください。</p>
+
+<hr>
+
+<h2><a name="configure_audit_daemon">ステップ３：アクセスログ取得の設定（省略可）</a></h2>
+
+<p>AKARI は、「アクセス許可ログ」（ポリシーに違反しなかったアクセス要求のログ）と「アクセス拒否ログ」（ポリシーに違反したアクセス要求のログ）を記録することができます。<br>
+アクセスログはドメインポリシーの形式と同じであり、そのままドメインポリシーへと追加することができます。「アクセス拒否ログ」に記録された要求の中で、許可すべきものと判断したものをドメインポリシーに追加してください。</p>
+
+<p>プロファイルの CONFIG 行で指定されている grant_log については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>no</td>
+<td>アクセス許可ログを生成しない。ただし、個別のアクセス許可で grant_log=yes と指定されている場合には生成する。</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>アクセス許可ログを生成する。ただし、個別のアクセス許可で grant_log=no と指定されている場合には生成しない。</td>
+</tr>
+</table>
+<p>プロファイルの CONFIG 行で指定されている reject_log については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>no</td>
+<td>アクセス拒否ログを生成しない。</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>アクセス拒否ログを生成する。</td>
+</tr>
+</table>
+
+<p>アクセス許可ログ /proc/akari/grant_log とアクセス拒否ログ /proc/akari/reject_log をカーネルから読み出してファイルに保存する為に、 akari-auditd というデーモンプログラムを利用できます。以下のコマンドを /etc/rc.local 等から実行するようにしてください。</p>
+
+<table border="1">
+<tr><td>
+/usr/sbin/akari-auditd アクセス許可ログの保存場所 アクセス拒否ログの保存場所
+</td></tr>
+</table>
+
+<p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 akari-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
+
+<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/akari/reject_log.conf に保存するものとします。</p>
+
+<table border="1">
+<tr><td>
+/usr/sbin/akari-auditd /dev/null /var/log/akari/reject_log.conf
+</td></tr>
+</table>
+
+<p>アクセスログを保存するディレクトリは予め作成しておいてください。</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# mkdir -p /var/log/akari
+</td></tr>
+</table>
+
+<p>logrotate によるローテーションを行わせたい場合は、以下のような内容のファイルを /etc/logrotate.d/akari に作成してください。なお、 nocreate オプションを必ず指定してください。 nocreate オプションを忘れると、最初のローテーションが実行されて以降のログが保存されなくなってしまいます。</p>
+
+<table border="1">
+<tr><td>
+/var/log/akari/reject_log.conf {<br>
+&nbsp;&nbsp;weekly<br>
+&nbsp;&nbsp;rotate 9<br>
+&nbsp;&nbsp;missingok<br>
+&nbsp;&nbsp;notifempty<br>
+&nbsp;&nbsp;nocreate<br>
+}
+</td></tr>
+</table>
+
+<p>アクセス許可ログ・アクセス拒否ログのどちらも保存しない場合には akari-auditd を実行する必要はありません。また、プロファイルで PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } を指定しておくことで、消費メモリの節約と応答速度の向上が期待できます。</p>
+
+<hr>
+
+<h2>ステップ４：システムの再起動</h2>
+
+<p>システムを再起動してください。</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# reboot
+</td></tr>
+</table>
+
+<hr>
+
+<p><a href="index.html.ja">目次へ戻る</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

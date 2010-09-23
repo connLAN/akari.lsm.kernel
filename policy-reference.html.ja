@@ -1,0 +1,1321 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI ポリシー解説書</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="policy-reference.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1 style="text-align:center;">AKARI ポリシー解説書</h1>
+<h1><a name="index">目次</a></h1>
+<h2>1. <a href="#Keyword_Index">キーワード一覧</a></h2>
+<h2>2. <a href="#Common_Rules">はじめに</a></h2>
+<p>2.1 <a href="#word_expression_rules">単語の表記規則</a></p>
+<p>2.2 <a href="#wildcard_expression_rules">パターンの表記規則</a></p>
+<p>2.3 <a href="#memory_usage_infomation">メモリ使用量に関する情報</a></p>
+<h2>3. <a href="#Policy_Files">ポリシーファイルに関して</a></h2>
+<p>3.1 <a href="#policy_file_locations">所在について</a></p>
+<p>3.2 <a href="#policy_file_modifiers">変更について</a></p>
+<h2>4. <a href="#Domain_Rules">ドメインに関して</a></h2>
+<p>4.1 <a href="#domain_definition">ドメインとは</a></p>
+<p>4.2 <a href="#domain_transition">ドメイン遷移とは</a></p>
+<p>4.3 <a href="#access_logs">アクセスログについて</a></p>
+<h2>5. <a href="#Syntax_Details">キーワード詳細</a></h2>
+<h2>6. <a href="#Advanced_Features">便利な機能</a></h2>
+<p>6.1 <a href="#non_root_policy_update">root 以外のユーザによるポリシーの変更を許可</a></p>
+<p>6.2 <a href="#conditional_acl">条件付きアクセス許可の指定</a></p>
+<p>6.3 <a href="#transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a></p>
+<p>6.4 <a href="#sleep_penalty">ポリシー違反時のペナルティ指定</a></p>
+<hr>
+
+<h1>1. <a name="Keyword_Index">キーワード一覧</a></h1>
+
+<p>/proc/akari/profile および /etc/akari/profile.conf で使われるもの</p>
+
+<ul>
+<li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
+<li><a href="#profile_CONFIG::file::open">CONFIG::file::open</a></li>
+<li><a href="#profile_CONFIG::file::create">CONFIG::file::create</a></li>
+<li><a href="#profile_CONFIG::file::unlink">CONFIG::file::unlink</a></li>
+<li><a href="#profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></li>
+<li><a href="#profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></li>
+<li><a href="#profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></li>
+<li><a href="#profile_CONFIG::file::mksock">CONFIG::file::mksock</a></li>
+<li><a href="#profile_CONFIG::file::truncate">CONFIG::file::truncate</a></li>
+<li><a href="#profile_CONFIG::file::symlink">CONFIG::file::symlink</a></li>
+<li><a href="#profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></li>
+<li><a href="#profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></li>
+<li><a href="#profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></li>
+<li><a href="#profile_CONFIG::file::link">CONFIG::file::link</a></li>
+<li><a href="#profile_CONFIG::file::rename">CONFIG::file::rename</a></li>
+<li><a href="#profile_CONFIG::file::chmod">CONFIG::file::chmod</a></li>
+<li><a href="#profile_CONFIG::file::chown">CONFIG::file::chown</a></li>
+<li><a href="#profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></li>
+<li><a href="#profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></li>
+<li><a href="#profile_CONFIG::file::chroot">CONFIG::file::chroot</a></li>
+<li><a href="#profile_CONFIG::file::mount">CONFIG::file::mount</a></li>
+<li><a href="#profile_CONFIG::file::unmount">CONFIG::file::unmount</a></li>
+<li><a href="#profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></li>
+<li><a href="#profile_CONFIG::misc::env">CONFIG::misc::env</a></li>
+<li><a href="#profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></li>
+<li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
+<li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
+<li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
+<li><a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a></li>
+<li><a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></li>
+<li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
+</ul>
+
+<p>/proc/akari/exception_policy および /etc/akari/exception_policy.conf で使われるもの</p>
+
+<ul>
+<li><a href="#exception_policy_acl_group">acl_group</a></li>
+<li><a href="#exception_policy_aggregator">aggregator</a></li>
+<li><a href="#exception_policy_initialize_domain">initialize_domain</a></li>
+<li><a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></li>
+<li><a href="#exception_policy_keep_domain">keep_domain</a></li>
+<li><a href="#exception_policy_no_keep_domain">no_keep_domain</a></li>
+<li><a href="#exception_policy_file_pattern">file_pattern</a></li>
+<li><a href="#exception_policy_path_group">path_group</a></li>
+<li><a href="#exception_policy_number_group">number_group</a></li>
+<li><a href="#exception_policy_address_group">address_group</a></li>
+</ul>
+
+<p>/proc/akari/domain_policy および /etc/akari/domain_policy.conf で使われるもの</p>
+
+<ul>
+<li><a href="#domain_policy_file_execute">file execute</a></li>
+<li><a href="#domain_policy_file_read">file read</a></li>
+<li><a href="#domain_policy_file_write">file write</a></li>
+<li><a href="#domain_policy_file_append">file append</a></li>
+<li><a href="#domain_policy_file_create">file create</a></li>
+<li><a href="#domain_policy_file_unlink">file unlink</a></li>
+<li><a href="#domain_policy_file_unlinkmkdir">file mkdir</a></li>
+<li><a href="#domain_policy_file_rmdir">file rmdir</a></li>
+<li><a href="#domain_policy_file_mkfifo">file mkfifo</a></li>
+<li><a href="#domain_policy_file_mksock">file mksock</a></li>
+<li><a href="#domain_policy_file_mkblock">file mkblock</a></li>
+<li><a href="#domain_policy_file_mkchar">file mkchar</a></li>
+<li><a href="#domain_policy_file_truncate">file truncate</a></li>
+<li><a href="#domain_policy_file_symlink">file symlink</a></li>
+<li><a href="#domain_policy_file_link">file link</a></li>
+<li><a href="#domain_policy_file_rename">file rename</a></li>
+<li><a href="#domain_policy_file_ioctl">file ioctl</a></li>
+<li><a href="#domain_policy_file_mount">file mount</a></li>
+<li><a href="#domain_policy_file_unmount">file unmount</a></li>
+<li><a href="#domain_policy_file_chroot">file chroot</a></li>
+<li><a href="#domain_policy_file_pivot_root">file pivot_root</a></li>
+<li><a href="#domain_policy_misc_env">misc env</a></li>
+<li><a href="#domain_policy_network">network</a></li>
+<li><a href="#domain_policy_use_profile">use_profile</a></li>
+<li><a href="#domain_policy_use_group">use_group</a></li>
+<li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
+<li><a href="#domain_policy_transition_failed">transition_failed</a></li>
+</ul>
+
+<p>/proc/akari/manager および /etc/akari/manager.conf で使われるもの</p>
+
+<ul>
+<li><a href="#manager_manage_by_non_root">manage_by_non_root</a></li>
+</ul>
+
+<h1>2. <a name="Common_Rules">はじめに</a></h1>
+
+<h2>2.1 <a name="word_expression_rules">単語の表記規則</a></h2>
+
+<p>AKARI はパス名を用いたアクセス制御を行います。パス名には英数字だけでなく空白や改行などの文字、漢字のような複数バイトで構成される文字などが含まれる可能性があります。そのため、いかなる文字でも正しく処理できるようにするために、 AKARI に於いては以下の規則に従って単語を表記します。単語とは、パス名だけでなくコメントや環境変数の名前やプログラム実行時のパラメータなど、文字列として扱う全ての情報を指します。</p>
+
+<ul>
+<li>\ 文字（ 0x5C ）は 8 進数表記であることを示すために使用されるため、 \\ のように 2 個続けます。</li>
+<li>0x00 ～ 0x20 および 0x7F ～ 0xFF は \ooo という形式の 8 進数で表記します。</li>
+<li>残りの 0x21 ～ 0x5B および 0x5D ～ 0x7E はそのままの文字で表記します。</li>
+</ul>
+
+<table border="1">
+<tr><td><table><tr><td></td><td>下位 4 ビット</td></tr><tr><td>上位 4 ビット</td><td></td></tr></table></td><td>0x0</td><td>0x1</td><td>0x2</td><td>0x3</td><td>0x4</td><td>0x5</td><td>0x6</td><td>0x7</td><td>0x8</td><td>0x9</td><td>0xA</td><td>0xB</td><td>0xC</td><td>0xD</td><td>0xE</td><td>0xF</td></tr>
+<tr><td>0x0</td><td>\000</td><td>\001</td><td>\002</td><td>\003</td><td>\004</td><td>\005</td><td>\006</td><td>\007</td><td>\010</td><td>\011</td><td>\012</td><td>\013</td><td>\014</td><td>\015</td><td>\016</td><td>\017</td></tr>
+<tr><td>0x1</td><td>\020</td><td>\021</td><td>\022</td><td>\023</td><td>\024</td><td>\025</td><td>\026</td><td>\027</td><td>\030</td><td>\031</td><td>\032</td><td>\033</td><td>\034</td><td>\035</td><td>\036</td><td>\037</td></tr>
+<tr><td>0x2</td><td>\040</td><td>!</td><td>"</td><td>#</td><td>$</td><td>%</td><td>&amp;</td><td>'</td><td>(</td><td>)</td><td>*</td><td>+</td><td>,</td><td>-</td><td>.</td><td>/</td></tr>
+<tr><td>0x3</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>:</td><td>;</td><td>&lt;</td><td>=</td><td>&gt;</td><td>?</td></tr>
+<tr><td>0x4</td><td>@</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td><td>G</td><td>H</td><td>I</td><td>J</td><td>K</td><td>L</td><td>M</td><td>N</td><td>O</td></tr>
+<tr><td>0x5</td><td>P</td><td>Q</td><td>R</td><td>S</td><td>T</td><td>U</td><td>V</td><td>W</td><td>X</td><td>Y</td><td>Z</td><td>[</td><td>\\</td><td>]</td><td>^</td><td>_</td></tr>
+<tr><td>0x6</td><td>`</td><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td><td>g</td><td>h</td><td>i</td><td>j</td><td>k</td><td>l</td><td>m</td><td>n</td><td>o</td></tr>
+<tr><td>0x7</td><td>p</td><td>q</td><td>r</td><td>s</td><td>t</td><td>u</td><td>v</td><td>w</td><td>x</td><td>y</td><td>z</td><td>{</td><td>|</td><td>}</td><td>~</td><td>\177</td></tr>
+<tr><td>0x8</td><td>\200</td><td>\201</td><td>\202</td><td>\203</td><td>\204</td><td>\205</td><td>\206</td><td>\207</td><td>\210</td><td>\211</td><td>\212</td><td>\213</td><td>\214</td><td>\215</td><td>\216</td><td>\217</td></tr>
+<tr><td>0x9</td><td>\220</td><td>\221</td><td>\222</td><td>\223</td><td>\224</td><td>\225</td><td>\226</td><td>\227</td><td>\230</td><td>\231</td><td>\232</td><td>\233</td><td>\234</td><td>\235</td><td>\236</td><td>\237</td></tr>
+<tr><td>0xA</td><td>\240</td><td>\241</td><td>\242</td><td>\243</td><td>\244</td><td>\245</td><td>\246</td><td>\247</td><td>\250</td><td>\251</td><td>\252</td><td>\253</td><td>\254</td><td>\255</td><td>\256</td><td>\257</td></tr>
+<tr><td>0xB</td><td>\260</td><td>\261</td><td>\262</td><td>\263</td><td>\264</td><td>\265</td><td>\266</td><td>\267</td><td>\270</td><td>\271</td><td>\272</td><td>\273</td><td>\274</td><td>\275</td><td>\276</td><td>\277</td></tr>
+<tr><td>0xC</td><td>\300</td><td>\301</td><td>\302</td><td>\303</td><td>\304</td><td>\305</td><td>\306</td><td>\307</td><td>\310</td><td>\311</td><td>\312</td><td>\313</td><td>\314</td><td>\315</td><td>\316</td><td>\317</td></tr>
+<tr><td>0xD</td><td>\320</td><td>\321</td><td>\322</td><td>\323</td><td>\324</td><td>\325</td><td>\326</td><td>\327</td><td>\330</td><td>\331</td><td>\332</td><td>\333</td><td>\334</td><td>\335</td><td>\336</td><td>\337</td></tr>
+<tr><td>0xE</td><td>\340</td><td>\341</td><td>\342</td><td>\343</td><td>\344</td><td>\345</td><td>\346</td><td>\347</td><td>\350</td><td>\351</td><td>\352</td><td>\353</td><td>\354</td><td>\355</td><td>\356</td><td>\357</td></tr>
+<tr><td>0xF</td><td>\360</td><td>\361</td><td>\362</td><td>\363</td><td>\364</td><td>\365</td><td>\366</td><td>\367</td><td>\370</td><td>\371</td><td>\372</td><td>\373</td><td>\374</td><td>\375</td><td>\376</td><td>\377</td></tr>
+</table>
+
+<ul>
+<li>単語と単語を区切るデリミタとして空白文字（ 0x20 ）を、行と行を区切るデリミタとして改行文字（ 0x0A ）を使用します。</li>
+<li>上記の規則に従って表記された単語と、デリミタとして使われる空白文字および改行文字のみが有効です。それ以外の文字は空白文字とみなされます。連続する空白文字は自動的に 1 個の空白文字に圧縮されます。行頭及び行末の空白文字は自動的に削除されます。</li>
+</ul>
+
+<p>以下に表記例を示します。</p>
+
+<table border="1">
+<tr><td>単語</td><td>正しい表記</td><td>誤った表記</td></tr>
+<tr><td>Hello world!</td><td>Hello\040world!</td><td>"Hello world!"</td></tr>
+<tr><td>/home/user/Documents and Settings/</td><td>/home/user/Documents\040and\040Settings/</td><td>/home/user/Documents and Settings/</td></tr>
+<tr><td>コメント (UTF-8 の場合)</td><td>\343\202\263\343\203\241\343\203\263\343\203\210\040(UTF-8\040\343\201\256\345\240\264\345\220\210)</td><td>コメント\040(UTF-8\040の場合)</td></tr>
+</table>
+
+<h2>2.2 <a name="wildcard_expression_rules">パターンの表記規則</a></h2>
+
+<p>パス名にはテンポラリファイルのように、毎回異なる文字が使われる場合があります。そのため、ワイルドカードを用いたパターン化を行うことが必要になります。 AKARI に於いては以下のワイルドカードをサポートしています。</p>
+
+<table border="1">
+<tr><td>ワイルドカード</td><td>意味</td><td>使用例</td></tr>
+<tr><td>\*</td><td>/ 以外の 0 文字以上</td><td>/var/log/samba/\*</td></tr>
+<tr><td>\@</td><td>/ と . 以外の 0 文字以上</td><td>/var/www/html/\@.html</td></tr>
+<tr><td>\?</td><td>/ 以外の 1 文字</td><td>/tmp/mail.\?\?\?\?\?\?</td></tr>
+<tr><td>\$</td><td>1 桁以上の 10 進数</td><td>/proc/\$/cmdline</td></tr>
+<tr><td>\+</td><td>10 進数 1 桁</td><td>/var/tmp/my_work.\+</td></tr>
+<tr><td>\X</td><td>1 桁以上の 16 進数</td><td>/var/tmp/my-work.\X</td></tr>
+<tr><td>\x</td><td>16 進数 1 桁</td><td>/tmp/my-work.\x</td></tr>
+<tr><td>\A</td><td>1 文字以上のアルファベット</td><td>/var/log/my-work/\$-\A-\$.log</td></tr>
+<tr><td>\a</td><td>アルファベット 1 文字</td><td>/home/users/\a/\*/public_html/\*.html</td></tr>
+<tr><td>\-</td><td>パス名を除外する演算子</td><td>
+ <ul>
+ <li>/etc/\* ・・・ /etc/ 直下の全ファイル</li>
+ <li>/etc/\*\-\*shadow\* ・・・ /etc/\*shadow\* 以外の /etc/\*</li>
+ <li>/\*\-proc\-sys/ ・・・ /proc/ と /sys/ 以外の /\*/</li>
+ </ul>
+</td></tr>
+<tr><td>/\{dir\}/</td><td>/ ＋１回以上の dir/ の繰り返しに一致する演算子</td><td>
+ <ul>
+ <li>/var/www/html/\{\*\}/\*.html ・・・ /var/www/html/\*/\*.html /var/www/html/\*/\*/\*.html /var/www/html/\*/\*/\*/\*.html など</li>
+ <li>/home/\*/\{\*\-.\*\}/\* ・・・ /home/\*/\*\-.\*/\* /home/\*/\*\-.\*/\*\-.\*/\* /home/\*/\*\-.\*/\*\-.\*/\*\-.\*/\* など</li>
+ </ul>
+</td></tr>
+</table>
+
+<h2>2.3 <a name="memory_usage_infomation">メモリ使用量に関する情報</a></h2>
+
+<p>AKARI が現在使用中のメモリ消費量は、 /proc/akari/meminfo から確認できます。単位はバイトです。</p>
+
+<table border="1">
+<tr><td>
+# cat /proc/akari/meminfo<br>
+Policy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376<br>
+Audit&nbsp;logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+Query&nbsp;lists:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
+Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376
+</td></tr>
+</table>
+
+<ul>
+<li>Policy: ・・・アクセス許可を記憶するために使用されている量</li>
+<li>Audit logs: ・・・アクセスログを保持するために使用されている量</li>
+<li>Query lists: ・・・強制モードでのポリシー違反を対話的に処理するために使用されている量</li>
+</ul>
+
+<p>AKARI が使用するメモリの量を制限するためにメモリクォータがサポートされています。</p>
+
+<p>/etc/akari/meminfo.conf に以下のように指定しておくことで設定できます。</p>
+
+<table border="1">
+<tr><td>
+# cat /etc/akari/meminfo.conf<br>
+Policy:     16777216<br>
+Audit logs:  1048576<br>
+Query lists: 1048576
+</td></tr>
+</table>
+
+<h1>3. <a name="Policy_Files">ポリシーファイルに関して</a></h1>
+
+<h2>3.1 <a name="policy_file_locations">所在について</a></h2>
+
+<p>ポリシーファイルとは、アクセスの可否を定義したファイルです。システムの起動時に自動的にカーネルへと読み込まれます。</p>
+
+<p>システムの起動時には、 /sbin/init というプログラムが実行されます。 /sbin/init の実行が要求されたときに、 /sbin/akari-init というプログラムが存在していた場合、 /sbin/akari-init が実行され、 /sbin/akari-init の処理が終了してから /sbin/init の実行が開始されます。</p>
+
+<p> /sbin/akari-init は /etc/akari/ ディレクトリにあるポリシーファイルを /proc/akari/ ディレクトリを通じてカーネルへと読み込みます。</p>
+
+<table border="1">
+<tr><td>カーネルとのインタフェース</td><td>ポリシーファイル</td><td>定義されている内容</td></tr>
+<tr><td><a href="#profile">/proc/akari/profile</a></td><td>/etc/akari/profile.conf</td><td>プロファイル（制御レベルを定義したもの）</td></tr>
+<tr><td><a href="#manager">/proc/akari/manager</a></td><td>/etc/akari/manager.conf</td><td>マネージャ（ポリシーの変更ができるプログラムを定義したもの）</td></tr>
+<tr><td><a href="#exception_policy">/proc/akari/exception_policy</a></td><td>/etc/akari/exception_policy.conf</td><td>例外ポリシー（ドメインポリシーの例外を定義したもの）</td></tr>
+<tr><td><a href="#domain_policy">/proc/akari/domain_policy</a></td><td>/etc/akari/domain_policy.conf</td><td>ドメインポリシー（ドメイン単位で適用される設定）</td></tr>
+<tr><td><a href="#meminfo">/proc/akari/meminfo</a></td><td>/etc/akari/meminfo.conf</td><td>メモリ使用状況およびクォータ</td></tr>
+</table>
+
+<p>そのほかの情報を取得するためのインタフェースもあります。対応するポリシーファイルはありません。</p>
+
+<table border="1">
+<tr><td>カーネルとのインタフェース</td><td>内容</td></tr>
+<tr><td><a href="#query">/proc/akari/query</a></td><td>管理者の指示待ちとなっているアクセス要求</td></tr>
+<tr><td><a href="#.domain_status">/proc/akari/.domain_status</a></td><td>定義されているドメイン名とプロファイル番号</td></tr>
+<tr><td><a href="#grant_log">/proc/akari/grant_log</a></td><td>ポリシーに違反しなかったアクセス要求のログ</td></tr>
+<tr><td><a href="#reject_log">/proc/akari/reject_log</a></td><td>ポリシーに違反したアクセス要求のログ</td></tr>
+<tr><td><a href="#self_domain">/proc/akari/self_domain</a></td><td>自分が属しているドメインのドメイン名</td></tr>
+<tr><td><a href="#.process_status">/proc/akari/.process_status</a></td><td>プロセスが属しているドメイン名とプロファイル番号</td></tr>
+<tr><td><a href="#version">/proc/akari/version</a></td><td>AKARI のバージョン</td></tr>
+</table>
+
+<h2>3.2 <a name="policy_file_modifiers">変更について</a></h2>
+
+<p>カーネルとのインタフェースである /proc/akari/ ディレクトリを経由してポリシーを変更することができるプログラム名を /proc/akari/manager に登録します。プログラム名ではなくドメイン名で登録することもできます。</p>
+
+<ul>
+<li>/proc/akari/manager に登録されているプログラム名を持つプロセス</li>
+<li>/proc/akari/manager に登録されているドメイン名を持つプロセス</li>
+</ul>
+
+<p>だけがカーネルとのインタフェースである /proc/akari/ ディレクトリを経由してポリシーを変更できます。以下に例を示します。</p>
+
+<table border="1">
+<tr><td>
+# cat /proc/akari/manager<br>
+/usr/sbin/akari-loadpolicy<br>
+/usr/sbin/akari-editpolicy<br>
+/usr/sbin/akari-setlevel<br>
+/usr/sbin/akari-setprofile<br>
+/usr/sbin/akari-ld-watch<br>
+/usr/sbin/akari-queryd<br>
+&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash
+</td></tr>
+</table>
+
+<p>デフォルトではユーザＩＤと実効ユーザＩＤの両方が 0 であるプロセスだけがポリシーを変更できますが、 <a href="#non_root_policy_update">root 以外のユーザによるポリシーの変更を許可</a>の設定を行えば、非 root ユーザによるポリシーの変更も可能です。</p>
+
+<p>なお、学習モード用のプロファイルが割り当てられているプロセスは、アクセスを要求するだけで <a href="#domain_policy">/proc/akari/domain_policy</a> へと自動的にアクセス許可が追加されていきます。</p>
+
+<h1>4. <a name="Domain_Rules">ドメインに関して</a></h1>
+
+<h2>4.1 <a name="domain_definition">ドメインとは</a></h2>
+
+<p>AKARI では、ドメインを単位としてアクセス許可を定義します。 <a href="#domain_policy">/proc/akari/domain_policy</a> を通じてアクセス許可を定義します。</p>
+
+<p>AKARI においては、全てのプロセスがそれぞれ 1 つのドメインに属し、全てのプログラムがそれぞれ異なるドメインに属します。現在実行されている 2 つのプロセスが同一のプログラムであっても、それぞれのプロセスの直前のドメインが異なっていれば異なるドメインに属します。</p>
+
+<p>全てのドメインはカーネルが属するドメイン「 &lt;kernel&gt; 」を基点として定義されます。 /sbin/init はカーネルの属するドメインから起動されますので、 /sbin/init のドメインは「 &lt;kernel&gt; /sbin/init 」と定義されます。 /etc/rc.d/rc はカーネルから起動された /sbin/init の属するドメインから起動されますので、 /etc/rc.d/rc のドメインは「 &lt;kernel&gt; /sbin/init /etc/rc.d/rc 」と定義されます。</p>
+
+<h2>4.2 <a name="domain_transition">ドメイン遷移とは</a></h2>
+
+<p>プロセスがプログラムを実行しようとすると、以下の処理が行われます。</p>
+
+<table border="1">
+<tr><td>Step</td><td>内容</td></tr>
+<tr><td>プログラム名の取得</td><td>
+<p>実行しようとするプログラムの絶対パス名を取得して「パス名候補」とします。ただし、実行しようとするプログラムがシンボリックリンクの場合は、シンボリックリンクを解決する前のパス名を取得します。</p>
+</td></tr>
+<tr><td>類似するプログラムの集約</td><td>
+<p>例外ポリシーから</p>
+
+<ul>
+<li>aggregator 「パス名候補」 「集約されたパス名」
+</ul>
+
+<p>というエントリを探します。見つかった場合は、「集約されたパス名」を「パス名候補」とします。</p>
+</td></tr>
+<tr><td><a name="exec_stage_check_execute">権限のチェック</a></td><td>
+<p>ドメインポリシーから</p>
+
+<ul>
+<li>file execute 「パス名候補」
+<li>file execute @「パス名候補」を含むグループ名
+</ul>
+
+<p>というエントリを探します。見つからなければプログラムの実行要求は拒否されます。</p>
+</td></tr>
+<tr><td><a name="exec_stage_check_destination">遷移先の決定</a></td><td>
+
+<p>(1) 例外ポリシーから</p>
+
+<ul>
+<li>no_initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_initialize_domain 「パス名候補」 from any
+<li>no_initialize_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は (3) へ進みます。</p>
+
+<p>(2) 例外ポリシーから</p>
+
+<ul>
+<li>initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>initialize_domain 「パス名候補」 from any
+<li>initialize_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は「カーネルが属しているドメインのドメイン名（ &lt;kernel&gt; ）」と「パス名候補」とを連結して「遷移先ドメイン」として (6) へ進みます。</p>
+
+<p>(3) 例外ポリシーから</p>
+
+<ul>
+<li>no_keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_keep_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は (5) へ進みます。</p>
+
+<p>(4) 例外ポリシーから</p>
+
+<ul>
+<li>keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」
+<li>keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>keep_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は「現在のプロセスが属しているドメインのドメイン名」を「遷移先ドメイン」とし、 (6) へ進みます。</p>
+
+<p>(5) 「現在のプロセスが属しているドメインのドメイン名」と「パス名候補」とを連結して「遷移先ドメイン」とし、 (6) へ進みます。</p>
+
+<p>(6) ドメインポリシーから「遷移先ドメイン」を探します。見つからなければプログラムの実行要求は拒否されます。</p>
+
+</td></tr>
+<tr><td>環境変数のチェック</td><td>
+
+<p>(1) 全ての環境変数名が「遷移先ドメイン」で許可されているかどうかを検査します。 1 つでも許可されていないものが見つかった場合は、プログラムの実行要求は拒否されます。</p>
+
+<p>(2) 通常のプログラム実行処理を行い、正常に終了した場合は「遷移先ドメイン」に遷移します。</p>
+</td></tr>
+</table>
+
+<h2>4.3 <a name="access_logs">アクセスログについて</a></h2>
+
+<p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、 /proc/akari/grant_log から取得することができます。後者は拒否ログと呼ばれ、 /proc/akari/reject_log から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/akari-auditd というプログラムが付属しています。</p>
+
+<p>以下に例を示します。最初の例はプログラムを実行しようとしたときのログです。</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat
+</td></tr>
+</table>
+
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash というドメインに属しているプロセスが /bin/cat というプログラムを実行しようとし、そのときの引数の内容は "cat" "/etc/fstab" 、環境変数の内容は "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。また、プロセスＩＤやユーザＩＤなど、プロセスに関する情報も一緒に出力されます。</p>
+
+<p>次の例は、ファイルを読み込みモードでオープンしようとしたときのログです。</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat<br>
+file read /etc/fstab
+</td></tr>
+</table>
+
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat というドメインに属しているプロセスが /etc/fstab というファイルをオープンしようとしたことを示しています。</p>
+
+<p>次の例は、ドメインが新規作成されたときのログです。</p>
+
+<table border="1">
+<tr><td>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat<br>
+use_profile 1
+</td></tr>
+</table>
+
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 AKARI では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
+
+<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/akari-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/akari/diff.txt という名前で保存した後、</p>
+
+<table border="1">
+<tr><td>
+# /usr/sbin/akari-loadpolicy -d &lt; /var/log/akari/diff.txt
+</td></tr>
+</table>
+
+<p>という操作を行うことで、ドメインポリシーに追加することができます。そのため、「学習モード」を使わなくても、最初から「確認モード」を使って拒否ログを出力させ、拒否ログの内容を編集するというアプローチでもドメインポリシーを定義していくことができます。「学習モード」でドメインポリシーを作成する場合にはプロセスの状態（アクセスログの先頭行の内容）は加味されませんが、アクセス拒否ログからドメインポリシーを生成すると、最初から<a href="#conditional_acl">条件付きアクセス許可の指定</a>を行うことができます。例えば、「学習モード」を使わずにログを生成し、</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat exec.argc=2 exec.realpath="/bin/cat" exec.argv[0]="cat" exec.argv[1]="/etc/fstab"
+</td></tr>
+</table>
+
+<p>としてドメインポリシーを追加した場合、「学習モード」で追加される以下の内容よりも細かい指定を行うことができるようになります。</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
+file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
+</td></tr>
+</table>
+
+<h1>5. <a name="Syntax_Details">キーワード詳細</a></h1>
+
+<h2><a name="profile">/proc/akari/profile</a></h2>
+
+<p>AKARI では、ファイル以外にもいくつかの項目について強制アクセス制御を行うことができますが、ポリシー管理の負担を減らすために、必要の無い機能を無効化できるようになっています。</p>
+
+<p>有効にしたい機能とそのモードを「 プロファイル番号-項目=値 」という形式で定義します。プロファイル番号は 0 ～ 255 が指定可能です。プロファイルの内容を変更するには akari-setlevel コマンドまたは akari-loadpolicy コマンドを使用します。</p>
+
+<p>各ドメインには 1 個のプロファイルが割り当てられます。ドメインにプロファイルを割り当てるには setprofile コマンドまたは akari-editpolicy コマンドまたは akari-loadpolicy コマンドを使用します。</p>
+
+<p>現在ドメインに割り当てられているプロファイル番号は akari-editpolicy コマンドで確認できます。<br>
+現在動作中のプロセスに割り当てられているプロファイル番号は akari-pstree コマンドで確認できます。<br>
+現在のポリシーを akari-savepolicy コマンドで保存した場合、 <a href="#domain_policy_use_profile">use_profile</a> というキーワードに保持されます。</p>
+
+<p>現在のプロファイルを読み出しまたは追加するには以下のように操作します。</p>
+
+<p>（例）<br>
+cat /proc/akari/profile<br>
+akari-savepolicy -p<br>
+akari-setlevel 1-CONFIG::file::execute=learning<br>
+echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
+
+<p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
+
+<p>CONFIG で始まる項目に対しては以下の値を指定できます。</p>
+
+<table border="1">
+<tr><td>設定</td><td>内容</td></tr>
+<tr><td>mode=disabled</td><td>無効。通常のカーネルと同様に動作します。</td></tr>
+<tr><td>mode=learning</td><td>学習モード。ポリシーに違反してもアクセス要求を拒否することはせず、再度同じアクセス要求が発生した場合にポリシー違反とならないようにするために、ポリシーへの自動追加を行います。</td></tr>
+<tr><td>mode=permissive</td><td>確認モード。ポリシーに違反してもアクセス要求を拒否することはしませんが、ポリシーへの自動追加も行いません。</td></tr>
+<tr><td>mode=enforcing</td><td>強制モード。ポリシーに違反するアクセス要求を拒否します。</td></tr>
+<tr><td>grant_log=yes</td><td>アクセス許可ログを取得する。上限は <a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a> の max_grant_log= で指定する。</td></tr>
+<tr><td>grant_log=no</td><td>アクセス許可ログを取得しない。</td></tr>
+<tr><td>reject_log=yes</td><td>アクセス拒否ログを取得する。上限は <a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a> の max_reject_log= で指定する。</td></tr>
+<tr><td>reject_log=no</td><td>アクセス拒否ログを取得しない。</td></tr>
+</table>
+
+<h3><a name="profile_CONFIG::file::execute">CONFIG::file::execute</a></h3>
+
+<p>プログラムの実行およびドメイン遷移に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::open">CONFIG::file::open</a></h3>
+
+<p>読み込みまたは書き込みモードでのファイルのオープンに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::create">CONFIG::file::create</a></h3>
+
+<p>ファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::unlink">CONFIG::file::unlink</a></h3>
+
+<p>ファイルの削除に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></h3>
+
+<p>ディレクトリの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></h3>
+
+<p>ディレクトリの削除に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></h3>
+
+<p>名前付きパイプの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mksock">CONFIG::file::mksock</a></h3>
+
+<p>ＵＮＩＸドメインソケットの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::truncate">CONFIG::file::truncate</a></h3>
+
+<p>ファイルの切り詰めに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::symlink">CONFIG::file::symlink</a></h3>
+
+<p>シンボリックリンクの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></h3>
+
+<p>ファイルの上書きに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></h3>
+
+<p>ブロック型デバイスファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></h3>
+
+<p>キャラクタ型デバイスファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::link">CONFIG::file::link</a></h3>
+
+<p>ハードリンクの作成に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::rename">CONFIG::file::rename</a></h3>
+
+<p>名称変更に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::chmod">CONFIG::file::chmod</a></h3>
+
+<p>ファイルのモードの変更に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::chown">CONFIG::file::chown</a></h3>
+
+<p>ファイルの所有者の変更に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></h3>
+
+<p>ファイルのグループの変更に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></h3>
+
+<p>IOCTL に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::chroot">CONFIG::file::chroot</a></h3>
+
+<p>ルートディレクトリの変更に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::mount">CONFIG::file::mount</a></h3>
+
+<p>マウントに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::unmount">CONFIG::file::unmount</a></h3>
+
+<p>アンマウントに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></h3>
+
+<p>ルートディレクトリの交換に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::misc::env">CONFIG::misc::env</a></h3>
+
+<p>プログラム実行時の環境変数名に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></h3>
+
+<p>UDP ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></h3>
+
+<p>UDP ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></h3>
+
+<p>TCP ソケットの bind() 操作に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></h3>
+
+<p>TCP ソケットの listen() 操作に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></h3>
+
+<p>TCP ソケットの connect() 操作に対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></h3>
+
+<p>RAW ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></h3>
+
+<p>RAW ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_PREFERENCE::audit">PREFERENCE::audit</a></h3>
+
+<p>アクセスログの取得方法に関する設定を指定します。</p>
+
+<p>max_grant_log= にはカーネル内に保持する、ポリシーによって許可されたアクセス要求のログの件数を指定します。</p>
+
+<p>max_reject_log= にはカーネル内に保持する、ポリシーによって許可されなかったアクセス要求のログの件数を指定します。</p>
+
+<h3><a name="profile_PREFERENCE::learning">PREFERENCE::learning</a></h3>
+
+<p>学習モードに関する設定を指定します。</p>
+
+<p>max_entry= には自動的に追加されるアクセス許可の上限を指定します。</p>
+
+<p>exec.realpath= にはプログラムの実行許可を追加するときに、プログラムの実体のパス名も学習するかどうかを指定します。</p>
+
+<p>exec.argv0= にはプログラムの実行許可を追加するときに、最初の引数も学習するかどうかを指定します。</p>
+
+<p>symlink.target= にはシンボリックリンクの作成許可を追加するときに、シンボリックリンクの内容も学習するかどうかを指定します。</p>
+
+<h3><a name="profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></h3>
+
+<p>強制モードに関する設定を指定します。</p>
+
+<p>penalty= にはポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
+
+<h2><a name="domain_policy">/proc/akari/domain_policy</a></h2>
+
+<p>このファイルでは、全てのドメインを定義し、各ドメインに対して与えるアクセス許可を定義します。</p>
+
+<p>ドメインを定義している行（ &lt;kernel&gt; で始まる行）の次行から次のドメインを定義している行の前行までが、そのドメインに対するアクセス許可です。</p>
+
+<p>それぞれのアクセス許可について、必要に応じて追加の条件を指定することができます。そのための構文は<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明します。さらに、必要に応じてアクセスを許可するのと同時にドメイン遷移を行うための方法を<a href="#transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a>で説明します。</p>
+
+<p>現在のドメインポリシーを読み出しまたは追加または削除するには、以下のように操作します。</p>
+<p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されます）<br>
+printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+<p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されません）<br>
+printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+<p>（例）ドメインを選択してアクセス許可を削除<br>
+printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | akari-loadpolicy -d</p>
+<p>（例）特定のドメインを削除<br>
+printf "delete &lt;kernel&gt; /sbin/init\n" | akari-loadpolicy -d</p>
+<p>（例）ドメインポリシーの読み出し<br>
+cat /proc/akari/domain_policy</p>
+
+<p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
+
+<h3><a name="domain_policy_file_execute">file execute</a></h3>
+<p>指定されたパス名を実行することを許可します。</p>
+<p>（例） file execute /bin/ls</p>
+<p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_aggregator">aggregator</a></p>
+
+<h3><a name="domain_policy_file_write">file write</a></h3>
+<p>指定されたパス名を書き込みモードでオープンすることを許可します。</p>
+<p>（例） file write /dev/null</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_read">file read</a></h3>
+<p>指定されたパス名を読み込みモードでオープンすることを許可します。</p>
+<p>（例） file read /proc/meminfo</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_append">file append</a></h3>
+<p>指定されたパス名を追記モードでオープンすることを許可します。</p>
+<p>（例） file append /dev/null</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_create">file create</a></h3>
+<p>指定されたパス名のファイルを新規作成することを許可します。</p>
+<p>（例） file create /var/lock/subsys/crond</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_unlink">file unlink</a></h3>
+<p>指定されたパス名を削除することを許可します。</p>
+<p>（例） file unlink /var/lock/subsys/crond</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkdir">file mkdir</a></h3>
+<p>パス名で指定されたディレクトリを作成することを許可します。</p>
+<p>（例） file mkdir /tmp/logwatch.\*/</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_rmdir">file rmdir</a></h3>
+<p>ディレクトリの削除を許可します。</p>
+<p>（例） file rmdir /tmp/logwatch.\*/</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkfifo">file mkfifo</a></h3>
+<p>FIFO の作成を許可します。</p>
+<p>（例） file mkfifo /dev/initctl</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mksock">file mksock</a></h3>
+<p>UNIX ドメインソケットの作成を許可します。</p>
+<p>（例） file mksock /dev/log</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkblock">file mkblock</a></h3>
+<p>ブロック型デバイスファイルの作成を許可します。</p>
+<p>（例） file mkblock /dev/\*</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_mkchar">file mkchar</a></h3>
+<p>キャラクタ型デバイスファイルの作成を許可します。</p>
+<p>（例） file mkchar /dev/\*</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_truncate">file truncate</a></h3>
+<p>ファイルの切り詰めと伸長を許可します。</p>
+<p>（例） file truncate /etc/mtab</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_symlink">file symlink</a></h3>
+<p>シンボリックリンクの作成を許可します。</p>
+<p>（例） file symlink /dev/cdrom</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_link">file link</a></h3>
+<p>ハードリンクの作成を許可します。</p>
+<p>（例） file link /etc/mtab~\$ /etc/mtab~</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_rename">file rename</a></h3>
+<p>ファイル名の変更を許可します。</p>
+<p>（例） file rename /etc/mtab.tmp /etc/mtab</p>
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
+<h3><a name="domain_policy_file_ioctl">file ioctl</a></h3>
+
+<p>IOCTL 要求で指定可能なコマンド番号を指定するには、 file ioctl というキーワードに続けて、パス名とコマンド番号を指定します。パス名にはパターンおよびパス名のグループも使用できます。</p>
+
+<p>関連項目： <a href="#conditional_acl">条件付きアクセス許可の指定</a></p>
+
+<table border="1">
+<tr><td>指定例</td><td>許可されるアクセス</td></tr>
+<tr><td>file ioctl socket:[family=2:type=2:protocol=17] 35093</td><td>アドレスファミリーが 2 、種別が 2 、プロトコルが 17 のソケットに対して 35093 番の IOCTL 要求を許可</td></tr>
+<tr><td>file ioctl /dev/null 10000-20000</td><td>/dev/null に対して 10000 ～ 20000 番の IOCTL 要求を許可</td></tr>
+</table>
+
+<p>IOCTL 要求のコマンド番号の意味については、 IOCTL 機能を提供しているモジュールの説明を参照してください。例えば、 i386 環境において 21585 番の IOCTL 要求は close-on-exec フラグをセットするための FIOCLEX コマンドを指します。例えば、ソケットに対する 35088 番の IOCTL 要求は、ネットワークインターフェースの名前を取得する SIOCGIFNAME コマンドを指します。</p>
+
+<h3><a name="domain_policy_file_mount">file mount</a></h3>
+<p>マウント許可を指定するには、 file mount というキーワードに続けて、「デバイスファイル マウントポイント ファイルシステム オプション」を指定します。 デバイスファイルを必要とするファイルシステムを指定する場合は、デバイスファイルは正規化されたファイル名でなければいけません。マウントポイントは正規化されたファイル名でなければいけません。オプションは 16 進数の数値で指定します。</p>
+
+<p>「 any マウントポイント --remount オプション」と指定すると、「 mount -o remount マウントポイント」が許可されます。</p>
+
+<p>「複製元 複製先 --bind オプション」と指定すると、「 mount --bind 複製元 複製先」が許可されます。<br>
+「移動元 移動先 --move オプション」と指定すると、「 mount --move 移動元 移動先」が許可されます。<br>
+複製元／複製先／移動元／移動先は正規化されたディレクトリ名でなければなりません。</p>
+
+<p>カーネル 2.6.15 以降では、 Shared Subtree という機能が利用できます。<br>
+「 any マウントポイント --make-unbindable オプション」と指定すると、「 mount --make-unbindable マウントポイント」が許可されます。<br>
+「 any マウントポイント --make-private オプション」と指定すると、「 mount --make-private マウントポイント」が許可されます。<br>
+「 any マウントポイント --make-slave オプション」と指定すると、「 mount --make-slave マウントポイント」が許可されます。<br>
+「 any マウントポイント --make-shared オプション」と指定すると、「 mount --make-shared マウントポイント」が許可されます。</p>
+
+<p>（例）<br>
+file mount none /dev/pts/ devpts 0x0<br>
+file mount /proc /proc/ proc 0x0<br>
+file mount usbdevfs /proc/bus/usb/ usbdevfs 0x0<br>
+file mount none /data/ tmpfs 0xE<br>
+file mount none /dev/shm/ tmpfs 0xE<br>
+file mount /dev/hdc /var/www/ ext2 0xF<br>
+file mount any / --remount 0x0</p>
+
+<h3><a name="domain_policy_file_unmount">file unmount</a></h3>
+<p>アンマウント許可を指定するには、 file unmount というキーワードに続けて、アンマウントを許可する正規化されたディレクトリ名を指定します。</p>
+
+<p>（例）<br>
+file unmount /mnt/cdrom/</p>
+
+<h3><a name="domain_policy_file_chroot">file chroot</a></h3>
+<p>chroot 許可を指定するには、 file chroot というキーワードに続けて、 chroot で移動することを許可したい正規化されたディレクトリ名を指定します。<br>
+通常、 sshd が使用する /var/empty/sshd/ を指定します。 その他に chroot 環境で動かしたいアプリケーションや、 chroot を行うアプリケーション（ vsftpd の場合 /usr/share/empty/ ）が存在する場合は、それらも指定します。</p>
+
+<p>（例）<br>
+file chroot /var/empty/sshd/<br>
+file chroot /usr/share/empty/<br>
+file chroot /var/www/html/<br>
+file chroot /</p>
+
+<h3><a name="domain_policy_file_pivot_root">file pivot_root</a></h3>
+<p>pivot_root 許可を指定するには、 file pivot_root というキーワードに続けて、新しいルートとなる正規化されたディレクトリ名と古いルートディレクトリとなる正規化されたディレクトリ名を指定します。<br>
+通常、このキーワードを使う必要はありません。</p>
+
+<h3><a name="domain_policy_misc_env">misc env</a></h3>
+
+<p>環境変数名を制限するには、 misc env というキーワードに続けて、「環境変数名」を指定します。</p>
+
+<p>プログラムを実行する関数である execve() には filename と argv[] と envp[] を渡すことができます。多くのプログラムは envp[] の内容によって振る舞いを変化させます。</p>
+<p>このキーワードの目的は、実行されるプログラムに渡される環境変数を制限することです。</p>
+
+<h3><a name="domain_policy_network">network</a></h3>
+
+<p>ネットワークのアクセス許可を指定するには、 network というキーワードに続けて、プロトコル（ TCP UDP RAW の何れか）、 IP アドレス、ポート番号（ TCP UDP の場合）またはプロトコル番号（ RAW の場合）を指定します。 IPv4 プロトコルおよび IPv6 プロトコルで使用するローカルポート番号が対象です。</p>
+<table border="1">
+<tr><td>キーワード</td><td>許可されるアクセス</td><td>指定例</td></tr>
+<tr><td>network inet stream bind</td><td>ローカルの TCP アドレス／ポートの割り当て</td><td>network inet stream bind 0.0.0.0 80</td></tr>
+<tr><td>network inet stream listen</td><td>ローカルの TCP アドレス／ポートでの待機</td><td>network inet stream listen 0.0.0.0 80</td></tr>
+<tr><td>network inet stream connect</td><td>リモートの TCP アドレス／ポートへの接続および通信</td><td>network inet stream connect 127.0.0.1 1024-65535</td></tr>
+<tr><td>network inet dgram bind</td><td>ローカルの UDP アドレス／ポートの割り当て</td><td>network inet dgram bind 0.0.0.0 53</td></tr>
+
+<tr><td>network inet dgram send</td><td>指定されたアドレス／ポート番号への UDP パケットの送信</td><td>network inet dgram send 127.0.0.1 53</td></tr>
+<tr><td>network inet raw bind</td><td>ローカルの IP アドレス／プロトコルの割り当て</td><td>network inet raw bind 127.0.0.1 255</td></tr>
+<tr><td>network inet raw send</td><td>指定されたアドレス／ポート番号への IP パケットの送信</td><td>network inet raw send 10.0.0.1 1</td></tr>
+</table>
+<p>IPv6 で使われる "::" という表記はサポートされていません。 "::1" ではなく "0:0:0:0:0:0:0:1" のように表記する必要があります。</p>
+
+<p>同じＩＰアドレスを繰り返し指定する手間を避けるために、パス名と同様にグループ化を行うことができます。</p>
+
+<p>関連項目： <a href="#exception_policy_address_group">address_group</a></p>
+
+<h3><a name="domain_policy_use_profile">use_profile</a></h3>
+
+<p>これは、このドメインに対して割り当てられているプロファイル番号を示しています。プロファイル番号は 0 ～ 255 の値をとります。</p>
+
+<h3><a name="domain_policy_use_group">use_group</a></h3>
+
+<p>これは、このドメインに対して割り当てられているグループ番号を示しています。グループ番号は 0 ～ 255 の値をとります。</p>
+
+<h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
+
+<p>これは、学習モードで動作中にアクセス許可の数が <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a> で指定された値に到達したため、このドメインに対してはアクセス許可を学習しきれなかったことを示しています。チューニングを行うなどしてアクセス許可の数を減らすようにしてください。</p>
+
+<p>関連項目： <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></p>
+
+<h3><a name="domain_policy_transition_failed">transition_failed</a></h3>
+
+<p>これは、このドメインに属しているプロセスが、プログラムの実行時にドメイン遷移をすることができなかったことを示しています。</p>
+
+<p>このドメインに対して <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing のプロファイルが割り当てられていた場合、プログラムの実行要求は拒否されます。</p>
+
+<p>そうではない場合、プログラムの実行要求は拒否されません。そのため、ドメイン遷移をせずにプログラムが実行されます。ドメイン遷移が失敗した理由は「遷移先ドメインのドメイン名が長すぎる」または「遷移先ドメインのためのメモリを割り当てることができなかった」のどちらかであるため、このドメインに対して <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing のプロファイルを割り当てる予定がある場合には、「ドメイン遷移を抑制する」または「メモリ割り当て量を増やす」ようにしてください。</p>
+
+<p>関連項目： <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">メモリ使用量に関する情報</a></p>
+
+<h2><a name="exception_policy">/proc/akari/exception_policy</a></h2>
+
+<p>現在の例外ポリシーを読み出しまたは追加または削除するには以下のように操作します。</p>
+<p>（例）<br>
+echo 'file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
+echo 'delete file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
+cat /proc/akari/exception_policy</p>
+
+<p>関連項目： <a href="#policy_file_modifiers">変更について</a></p>
+
+<h3><a name="exception_policy_file_pattern">file_pattern</a></h3>
+
+<p>パス名のパターン化を指示するには、 file_pattern というキーワードに続けて、パス名のパターンを指定します。パス名は正規化されたパス名でなければなりません。このキーワードは実行許可を与える場合とドメイン定義には適用されません。<br>
+例えば、プロセスＩＤを含む正規化されたパス名（ /proc/PID/ ）は、アクセス制御が正しく行われるようにグループ化されなければなりません。</p>
+
+<h3><a name="exception_policy_path_group">path_group</a></h3>
+
+<p>パス名のグループを定義するには、 path_group というキーワードに続けて、グループ名とパス名のパターンを指定します。<br>
+　例えば、ホームディレクトリ以下の全ファイルをまとめたい場合、</p>
+
+<table border="1">
+<tr><td>
+path_group HOME-DIR-FILE /home/\*/\*<br>
+path_group HOME-DIR-FILE /home/\*/\{\*\}/\*
+</td></tr>
+</table>
+
+<p>のように定義しておくことで、ドメインポリシーのファイルに対するアクセス許可を指定する際に</p>
+
+<table border="1">
+<tr><td>
+file read @HOME-DIR-FILE
+</td></tr>
+</table>
+
+<p>のように指定できます。</p>
+
+<h3><a name="exception_policy_number_group">number_group</a></h3>
+
+<p>数値のグループを定義するには、 number_group というキーワードに続けて、グループ名と数値の範囲を指定します。<br>
+　例えば、 0644 と 0664 をまとめたい場合、</p>
+
+<table border="1">
+<tr><td>
+number_group CREATE_MODES 0644<br>
+number_group CREATE_MODES 0664
+</td></tr>
+</table>
+
+<p>のように定義しておくことで、ドメインポリシーのアクセス許可を指定する際に</p>
+
+<table border="1">
+<tr><td>
+file create /tmp/file @CREATE_MODES
+</td></tr>
+</table>
+
+<p>のように指定できます。</p>
+
+<h3><a name="exception_policy_address_group">address_group</a></h3>
+
+<p>アドレスのグループを定義するには、 address_group というキーワードに続けて、グループ名と IP アドレスのパターンを指定します。<br>
+　例えば、ローカルアドレスをまとめたい場合、</p>
+
+<table border="1">
+<tr><td>
+address_group local-address 10.0.0.0-10.255.255.255<br>
+address_group local-address 172.16.0.0-172.31.255.255<br>
+address_group local-address 192.168.0.0-192.168.255.255
+</td></tr>
+</table>
+
+<p>のように定義しておくことで、ドメインポリシーのネットワークに対するアクセス許可を指定する際に</p>
+
+<table border="1">
+<tr><td>
+network inet stream accept @local-address 1024-65535
+</td></tr>
+</table>
+
+<p>のように指定できます。</p>
+
+<h3><a name="exception_policy_acl_group">acl_group</a></h3>
+
+<p>ドメイン用ポリシーの use_group キーワードにより参照されるアクセス許可を指定するには、 acl_group というキーワードに続けてグループ番号およびドメイン用ポリシーで指定可能なアクセス許可を指定します。</p>
+<p>例えば、 acl_group 0 file read /dev/null という指定をすると、 use_group 0 という指定がされているドメインに対しては file read /dev/null というアクセス許可が与えられた状態になります。</p>
+
+<h3><a name="exception_policy_aggregator">aggregator</a></h3>
+
+<p>複数のプログラムを単一のプログラム名で扱うには、 aggregator というキーワードに続けて集約前のプログラム名と集約後のプログラム名を指定します。このキーワードの目的は、同様のプログラムを集約することです。</p>
+<p>例えば、 /usr/bin/tac と /bin/cat は似ているので、 aggregator /usr/bin/tac /bin/cat という指定をすることで /usr/bin/tac を /bin/cat のドメインで実行することができるようになります。</p>
+
+<p>関連項目： <a href="#domain_policy_file_execute">file execute</a></p>
+
+<h3><a name="exception_policy_initialize_domain">initialize_domain</a></h3>
+
+<p>特定のプログラムが実行された場合にドメイン遷移を初期化させるには、 initialize_domain というキーワードを使用します。</p>
+
+<ul>
+<li>initialize_domain プログラム名 from ドメイン名
+<li>initialize_domain プログラム名 from ドメイン名の最後のプログラム名
+<li>initialize_domain プログラム名 from any
+</ul>
+
+<p>ドメイン名が &lt;kernel&gt; で始まらない場合は、ドメイン名の最後のプログラム名が一致する全てのドメインに適用されます。</p>
+
+<p>このキーワードの目的は、常駐型プログラムや必要に応じてカーネルから起動されるプログラムを、通常とは異なるドメインに遷移させることで、ドメイン遷移を集約することです。</p>
+
+<p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></p>
+
+<h3><a name="exception_policy_no_initialize_domain">no_initialize_domain</a></h3>
+
+<p>initialize_domain の効力を打ち消すには、 no_initialize_domain というキーワードを指定します。</p>
+
+<ul>
+<li>no_initialize_domain プログラム名 from ドメイン名
+<li>no_initialize_domain プログラム名 from ドメイン名の最後のプログラム名
+<li>no_initialize_domain プログラム名 from any
+</ul>
+
+<p>このキーワードはドメイン遷移を初期化させたくない場合に使用します。</p>
+
+<p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_initialize_domain">initialize_domain</a></p>
+
+<h3><a name="exception_policy_keep_domain">keep_domain</a></h3>
+
+<p>特定のドメインからプログラムが実行されてもドメイン遷移を行わないようにするには、 keep_domain というキーワードを使用します。</p>
+
+<ul>
+<li>keep_domain プログラム名 from ドメイン名
+<li>keep_domain プログラム名 from ドメイン名の最後のプログラム名
+<li>keep_domain any from ドメイン名
+<li>keep_domain any from ドメイン名の最後のプログラム名
+</ul>
+
+<p>ドメイン名が &lt;kernel&gt; で始まらない場合は、ドメイン名の最後のプログラム名が一致する全てのドメインに適用されます。</p>
+
+<p>このキーワードの目的は、不要なドメイン遷移の発生を抑制することでドメイン数とメモリ消費を抑えることです。</p>
+
+<p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_no_keep_domain">no_keep_domain</a></p>
+
+<h3><a name="exception_policy_no_keep_domain">no_keep_domain</a></h3>
+
+<p>keep_domain の効力を打ち消すには、 no_keep_domain というキーワードを指定します。</p>
+
+<ul>
+<li>no_keep_domain プログラム名 from ドメイン名
+<li>no_keep_domain プログラム名 from ドメイン名の最後のプログラム名
+<li>no_keep_domain any from ドメイン名
+<li>no_keep_domain any from ドメイン名の最後のプログラム名
+</ul>
+
+<p>このキーワードはドメイン遷移を行わせたい場合に使用します。</p>
+
+<p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
+
+<h2><a name="query">/proc/akari/query</a></h2>
+
+<p>強制モードで動作中にポリシー違反が発生した場合に、そのアクセス要求を個別に許可するかどうかの指定を行うために使用します。強制モードでポリシー違反が発生した場合、 akari-queryd を用いて対話的に諾否を指定できます。</p>
+
+<h2><a name="manager">/proc/akari/manager</a></h2>
+
+<p>ポリシーの読み書きを行えるプログラムまたはドメインの一覧を取得または追加します。</p>
+
+<h3><a name="manager_manage_by_non_root">manage_by_non_root</a></h3>
+
+<p>デフォルトではユーザＩＤと実効ユーザＩＤの両方が 0 であるプロセスだけがポリシーを変更できますが、非 root ユーザによる変更を認めたい場合に使用します。</p>
+
+<h2><a name=".domain_status">/proc/akari/.domain_status</a></h2>
+
+<p>setprofile コマンドが行単位での処理を行いやすくするために domain_policy の内容からプロファイル番号とドメイン名の部分だけを抽出したもの。ＤＢＭＳのビューに相当する機能を提供します。</p>
+
+<h2><a name="meminfo">/proc/akari/meminfo</a></h2>
+
+<p>AKARI がポリシーを保持するために使用しているカーネルのメモリ情報を取得します。</p>
+<p>（例）<br>
+cat /proc/akari/meminfo<br></p>
+
+<h2><a name="grant_log">/proc/akari/grant_log</a></h2>
+
+<p>ドメインポリシーに対するアクセス許可ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_grant_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
+<p>（例）<br>
+cat /proc/akari/grant_log</p>
+
+<h2><a name="reject_log">/proc/akari/reject_log</a></h2>
+
+<p>ドメインポリシーに対するアクセス拒否ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_reject_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
+<p>（例）<br>
+cat /proc/akari/reject_log</p>
+
+<h2><a name="self_domain">/proc/akari/self_domain</a></h2>
+
+<p>呼び出し元プロセスが属しているドメインの名前を取得します。</p>
+<p>（例）<br>
+cat /proc/akari/self_domain</p>
+
+<h2><a name=".process_status">/proc/akari/.process_status</a></h2>
+
+<p>akari-pstree コマンド（「現在動作中のプロセス」と「そのプロセスが属しているドメイン」と「そのドメインに割り当てられているプロファイル番号」を pstree のように一覧表示する）のためのインタフェース。例外的にポリシーマネージャとして登録されていないプログラムでも書き込みを行える。</p>
+
+<h2><a name="version">/proc/akari/version</a></h2>
+
+<p>AKARI のバージョン番号を取得するためのインタフェースです。</p>
+<p>（例）<br>
+cat /proc/akari/version</p>
+
+<h1>6. <a name="Advanced_Features">便利な機能</a></h1>
+
+<h2>6.1 <a name="non_root_policy_update">root 以外のユーザによるポリシーの変更を許可</a></h2>
+
+<p>デフォルトではユーザＩＤと実効ユーザＩＤの両方が 0 であるプロセスだけがポリシーを変更できますが、非 root ユーザによる変更を認めたい場合には</p>
+
+<table border="1">
+<tr><td>
+# echo manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+</td></tr>
+</table>
+
+<p>のように manage_by_non_root というキーワードを書き込むことで、ユーザＩＤと実効ユーザＩＤのチェックを無効にすることができます。また、再びユーザＩＤと実効ユーザＩＤのチェックを有効にするには、</p>
+
+<table border="1">
+<tr><td>
+# echo delete manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+</td></tr>
+</table>
+
+<p>のように delete manage_by_non_root というキーワードを書き込んでください。 /proc/akari/ 以下のエントリの所有者は root なので、非 root ユーザによるアクセスを認めるためには必要に応じて chown/chmod を実行してください。<br>
+起動時に自動的にこの処理が行われるようにするために、 /sbin/akari-init は /etc/akari/akari-post-init というプログラムが存在する場合には /etc/akari/akari-post-init も実行するようになっています。よって、例えば demo ユーザが /proc/akari/ インタフェースへの読み書きができるように設定したい場合は、</p>
+
+<table border="1">
+<tr><td>
+#! /bin/sh<br>
+echo manage_by_non_root &gt; /proc/akari/manager<br>
+chown -R demo /proc/akari/
+</td></tr>
+</table>
+
+<p>という内容で /etc/akari/akari-post-init を作成し、</p>
+
+<table border="1">
+<tr><td>
+# chmod 755 /etc/akari/akari-post-init<br>
+# chown -R demo /etc/akari/
+</td></tr>
+</table>
+
+<p>を実行することで demo ユーザがポリシーのあるディレクトリへのアクセスとポリシーを編集するためのプログラムを実行できるようになります。</p>
+
+<h2>6.2 <a name="conditional_acl">条件付きアクセス許可の指定</a></h2>
+
+<p>アクセス許可にユーザＩＤ等に基づいた条件を付加することができます。条件は個々のアクセス許可の末尾に追加する形で指定します。</p>
+
+<table border="1">
+<tr><td>指定例</td><td>意味</td></tr>
+<tr><td>file read /etc/passwd</td><td>/etc/passwd の参照を許可</td></tr>
+<tr><td>file read /etc/passwd task.uid=0</td><td>プロセスのユーザＩＤが 0 の場合に限り、 /etc/passwd の参照を許可</td></tr>
+<tr><td>file read /etc/passwd task.uid!=0</td><td>プロセスのユーザＩＤが 0 ではない場合に限り、 /etc/passwd の参照を許可</td></tr>
+<tr><td>network inet stream connect 10.0.0.1 80</td><td>TCP プロトコルで 10.0.0.1 ポート 80 への接続を許可</td></tr>
+<tr><td>network inet stream connect 10.0.0.1 80 task.uid=100</td><td>プロセスのユーザＩＤが 100 の場合に限り、 TCP プロトコルで 10.0.0.1 ポート 80 への接続を許可</td></tr>
+</table>
+
+<p>以下の変数を指定できます。</p>
+
+<table border="1">
+<tr><td>変数</td><td>意味</td></tr>
+<tr><td>task.uid</td><td>呼び出したプロセスのユーザＩＤ</td></tr>
+<tr><td>task.euid</td><td>呼び出したプロセスの実効ユーザＩＤ</td></tr>
+<tr><td>task.suid</td><td>呼び出したプロセスの保存ユーザＩＤ</td></tr>
+<tr><td>task.fsuid</td><td>呼び出したプロセスのファイルシステムユーザＩＤ</td></tr>
+<tr><td>task.gid</td><td>呼び出したプロセスのグループＩＤ</td></tr>
+<tr><td>task.egid</td><td>呼び出したプロセスの実効グループＩＤ</td></tr>
+<tr><td>task.sgid</td><td>呼び出したプロセスの保存グループＩＤ</td></tr>
+<tr><td>task.fsgid</td><td>呼び出したプロセスのファイルシステムグループＩＤ</td></tr>
+<tr><td>task.pid</td><td>呼び出したプロセスのプロセスＩＤ</td></tr>
+<tr><td>task.ppid</td><td>呼び出したプロセスの親プロセスのプロセスＩＤ</td></tr>
+<tr><td>path1.uid</td><td>許可されるパス名の所有者ＩＤ</td></tr>
+<tr><td>path1.gid</td><td>許可されるパス名のグループＩＤ</td></tr>
+<tr><td>path1.ino</td><td>許可されるパス名のｉノード番号</td></tr>
+<tr><td>path1.parent.uid</td><td>許可されるパス名の親ディレクトリの所有者ＩＤ</td></tr>
+<tr><td>path1.parent.gid</td><td>許可されるパス名の親ディレクトリのグループＩＤ</td></tr>
+<tr><td>path1.parent.ino</td><td>許可されるパス名の親ディレクトリのｉノード番号</td></tr>
+<tr><td>path2.parent.uid</td><td>作成されるパス名の親ディレクトリの所有者ＩＤ</td></tr>
+<tr><td>path2.parent.gid</td><td>作成されるパス名の親ディレクトリのグループＩＤ</td></tr>
+<tr><td>path2.parent.ino</td><td>作成されるパス名の親ディレクトリのｉノード番号</td></tr>
+</table>
+
+<p>path1 はパス名を必要とする操作の 1 個目のパス名に対応し、 path2 はパス名を必要とする操作の 2 個目のパス名に対応します。
+例えば、「 file rename file1 file2 」というアクセス許可の場合、 path1 が file1 に、 path2 が file2 に対応します。</p>
+
+<p>path1.uid および path1.gid は存在しないパス名に対しては指定できません。つまり、ファイル等の作成時（ file create 等）には使用できません。</p>
+
+<p>path1.parent.uid および path1.parent.gid は常に指定可能です。</p>
+
+<p>path2.parent.uid および path2.parent.gid はパス名を 2 つ必要とする操作（つまり file link および file rename および file mount ）に限り指定できます。</p>
+
+<p>path2.uid および path2.gid は mount 操作に限り指定できます。</p>
+
+<p>sysctl による読み書き（ /proc/sys/ ディレクトリ以下のファイルを open ではなく sysctl を用いてアクセス）を行う場合については、 path1 path2 ともにサポートしていません。</p>
+
+<h3>プログラムの実行許可（<a href="#domain_policy_file_execute">file execute</a>）に対しては以下の変数と条件も指定できます。</h3>
+
+<table border="1">
+<tr><td>変数</td><td>意味</td></tr>
+<tr><td>exec.realpath</td><td>シンボリックリンクを解決後のプログラムの絶対パス名</td></tr>
+<tr><td>exec.argc</td><td>プログラム実行時の引数の数</td></tr>
+<tr><td>exec.envc</td><td>プログラム実行時の環境変数の数</td></tr>
+</table>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>exec.realpath="value"</td><td>シンボリックリンクを解決後のプログラムの絶対パス名が value である</td></tr>
+<tr><td>exec.realpath!="value"</td><td>シンボリックリンクを解決後のプログラムの絶対パス名が value ではない</td></tr>
+<tr><td>exec.argv[index]="value"</td><td>index （ 0 &lt;= index &lt; exec.argc ）番目の引数の値が value である</td></tr>
+<tr><td>exec.argv[index]!="value"</td><td>index （ 0 &lt;= index &lt; exec.argc ）番目の引数の値が value ではない</td></tr>
+<tr><td>exec.envp["name"]="value"</td><td>環境変数 name が定義されており、値が value である</td></tr>
+<tr><td>exec.envp["name"]!="value"</td><td>環境変数 name が定義されていないか、あるいは値が value ではない</td></tr>
+<tr><td>exec.envp["name"]!=NULL</td><td>環境変数 name が定義されている</td></tr>
+<tr><td>exec.envp["name"]=NULL</td><td>環境変数 name が定義されていない</td></tr>
+</table>
+
+<h4>ファイル種別の指定</h4>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>path1.type=file</td><td>path1 は通常のファイルである</td></tr>
+<tr><td>path1.type=directory</td><td>path1 はディレクトリである</td></tr>
+<tr><td>path1.type=fifo</td><td>path1 is a は FIFO である</td></tr>
+<tr><td>path1.type=socket</td><td>path1 はソケットである</td></tr>
+<tr><td>path1.type=symlink</td><td>path1 はシンボリックリンクである</td></tr>
+<tr><td>path1.type=block</td><td>path1 はブロックデバイスファイルである</td></tr>
+<tr><td>path1.type=char</td><td>path1 はキャラクタデバイスファイルである</td></tr>
+<tr><td>path1.type!=file</td><td>path1 は通常のファイルではない</td></tr>
+<tr><td>path1.type!=directory</td><td>path1 はディレクトリではない</td></tr>
+<tr><td>path1.type!=fifo</td><td>path1 は FIFO ではない</td></tr>
+<tr><td>path1.type!=socket</td><td>path1 はソケットではない</td></tr>
+<tr><td>path1.type!=symlink</td><td>path1 はシンボリックリンクではない</td></tr>
+<tr><td>path1.type!=block</td><td>path1 はブロックデバイスファイルではない</td></tr>
+<tr><td>path1.type!=char</td><td>path1 はキャラクタデバイスファイルではない</td></tr></table>
+
+<p>path1.parent や path2.parent は常にディレクトリなので、 path1.parent.type や path2.parent.type という指定はサポートしません。</p>
+
+<h4>ファイルの保存されているデバイス番号の指定</h4>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>path1.major=数値1-数値2</td><td>path1 のメジャー番号部分が「数値1～数値2」である</td></tr>
+<tr><td>path1.minor=数値1-数値2</td><td>path1 のマイナー番号部分が「数値1～数値2」である</td></tr>
+<tr><td>path1.major!=数値1-数値2</td><td>path1 のメジャー番号部分が「数値1～数値2」ではない</td></tr>
+<tr><td>path1.minor!=数値1-数値2</td><td>path1 のマイナー番号部分が「数値1～数値2」ではない</td></tr>
+</table>
+
+<p>path1.parent や path2.parent のデバイスは（デバイスを跨ぐ操作は認められていないため）常に path1 と同一なので、 path1.parent や path2.parent という指定はサポートしません。</p>
+
+<p>「数値1」と「数値2」が同じ値の場合、「-数値2」の部分は省略可能です。</p>
+
+<h4>デバイスファイル属性の指定</h4>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>path1.dev_major=数値1-数値2</td><td>path1 のデバイスメジャー番号部分が「数値1～数値2」である</td></tr>
+<tr><td>path1.dev_minor=数値1-数値2</td><td>path1 のデバイスマイナー番号部分が「数値1～数値2」である</td></tr>
+<tr><td>path1.dev_major!=数値1-数値2</td><td>path1 のデバイスメジャー番号部分が「数値1～数値2」ではない</td></tr>
+<tr><td>path1.dev_minor!=数値1-数値2</td><td>path1 のデバイスマイナー番号部分が「数値1～数値2」ではない</td></tr>
+</table>
+
+<p>path1.type=block または path1.type=char に対してのみ有効です。</p>
+
+<p>「数値1」と「数値2」が同じ値の場合、「-数値2」の部分は省略可能です。</p>
+
+<h4>DAC のパーミッション指定</h4>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>path1.perm=数値1-数値2</td><td>path1 のパーミッションが「数値1～数値2」である</td></tr>
+<tr><td>path1.perm!=数値1-数値2</td><td>path1 のパーミッションが「数値1～数値2」ではない</td></tr>
+<tr><td>path1.perm=setuid</td><td>path1 に関して setuid ビットが on である</td></tr>
+<tr><td>path1.perm!=setuid</td><td>path1 に関して setuid ビットが off である</td></tr>
+<tr><td>path1.perm=setgid</td><td>path1 に関して setgid ビットが on である</td></tr>
+<tr><td>path1.perm!=setgid</td><td>path1 に関して setgid ビットが off である</td></tr>
+<tr><td>path1.perm=sticky</td><td>path1 に関して sticky ビットが on である</td></tr>
+<tr><td>path1.perm!=sticky</td><td>path1 に関して sticky ビットが off である</td></tr>
+<tr><td>path1.perm=owner_read</td><td>path1 に関して owner に対する read ビットが on である</td></tr>
+<tr><td>path1.perm!=owner_read</td><td>path1 に関して owner に対する read ビットが off である</td></tr>
+<tr><td>path1.perm=owner_write</td><td>path1 に関して owner に対する write ビットが on である</td></tr>
+<tr><td>path1.perm!=owner_write</td><td>path1 に関して owner に対する write ビットが off である</td></tr>
+<tr><td>path1.perm=owner_execute</td><td>path1 に関して owner に対する execute ビットが on である</td></tr>
+<tr><td>path1.perm!=owner_execute</td><td>path1 に関して owner に対する execute ビットが off である</td></tr>
+<tr><td>path1.perm=group_read</td><td>path1 に関して group に対する read ビットが on である</td></tr>
+<tr><td>path1.perm!=group_read</td><td>path1 に関して group に対する read ビットが off である</td></tr>
+<tr><td>path1.perm=group_write</td><td>path1 に関して group に対する write ビットが on である</td></tr>
+<tr><td>path1.perm!=group_write</td><td>path1 に関して group に対する write ビットが off である</td></tr>
+<tr><td>path1.perm=group_execute</td><td>path1 に関して group に対する execute ビットが on である</td></tr>
+<tr><td>path1.perm!=group_execute</td><td>path1 に関して group に対する execute ビットが off である</td></tr>
+<tr><td>path1.perm=others_read</td><td>path1 に関して others に対する read ビットが on である</td></tr>
+<tr><td>path1.perm!=others_read</td><td>path1 に関して others に対する read ビットが off である</td></tr>
+<tr><td>path1.perm=others_write</td><td>path1 に関して others に対する write ビットが on である</td></tr>
+<tr><td>path1.perm!=others_write</td><td>path1 に関して others に対する write ビットが off である</td></tr>
+<tr><td>path1.perm=others_execute</td><td>path1 に関して others に対する execute ビットが on である</td></tr>
+<tr><td>path1.perm!=others_execute</td><td>path1 に関して others に対する execute ビットが off である</td></tr>
+</table>
+
+<p>path1 だけでなく path1.parent や path2.parent も指定可能です。</p>
+
+<p>「数値1」と「数値2」が同じ値の場合、「-数値2」の部分は省略可能です。</p>
+
+<p>数値を 8 進数で指定する場合には 0 から始まるようにしてください。（例： path1.perm=0644 ）</p>
+
+<h4>例</h4>
+
+<ul>
+<li>file append /dev/null path1.type=char path1.major=1 path1.minor=3 path1.perm=0666
+</ul>
+
+<p>「パス名が /dev/null 」「ファイル種別がキャラクタデバイスファイル」「デバイスメジャー番号が 1 」「デバイスマイナー番号が 3 」「パーミッションが 0666 」の場合のみ「読み書きモードでのオープンを許可する」という意味になります。</p>
+
+<h3>シンボリックリンクの作成許可（<a href="#domain_policy_file_symlink">file symlink</a>）に対しては以下の条件も指定できます。</h3>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>symlink.target="value"</td><td>作成されるシンボリックリンクの内容が value である</td></tr>
+<tr><td>symlink.target!="value"</td><td>作成されるシンボリックリンクの内容が value ではない</td></tr>
+</table>
+
+<h2>6.3 <a name="transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a></h2>
+
+<p>例えば接続元クライアントのＩＰアドレスによってアクセスの可否を切り替えたいという場合に対応するため、アクセスを許可するのと同時にドメイン遷移を行うことができるようになっています。</p>
+
+<p>アクセスを許可するのと同時にドメイン遷移を行うには、以下のようにアクセス許可の指定に続けて auto_domain_transition= という句を指定します。</p>
+
+<table border="1">
+<tr><td>使用例</td><td>意味</td></tr>
+<tr><td>network inet stream accept @TRUSTED_HOSTS 1024-65535 auto_domain_transition="//trusted_hosts"</td><td>クライアントが @TRUSTED_HOSTS である場合には、現在のドメイン名に //trusted_hosts を連結したドメインに自動的に遷移します。</td></tr>
+<tr><td>network inet stream accept @UNTRUSTED_HOSTS 1024-65535 auto_domain_transition="//untrusted_hosts"</td><td>クライアントが @UNTRUSTED_HOSTS である場合には、現在のドメイン名に //untrusted_hosts を連結したドメインに自動的に遷移します。</td></tr>
+</table>
+
+<p>auto_domain_transition= を使用する際には、以下の点に注意してください。</p>
+
+<ul>
+<li>auto_domain_transition= で指定したドメインへ遷移できなかった場合、そのプロセスは強制終了されます。</li>
+<li>auto_domain_transition= で指定したドメインへの遷移はポリシーのチェックにより許可された時点で行われます。そのため、メモリ不足などポリシーのチェック以降のエラーによって、アクセス要求は処理されなかったという状況が発生しえます。</li>
+<li>上記の @TRUSTED_HOSTS と @UNTRUSTED_HOSTS の両方に含まれていた場合、先に一致したほうのアクセス許可が使われます。そのため、順番に依存するアクセス許可を定義しないように注意してください。</li>
+</ul>
+
+<h2>6.4 <a name="sleep_penalty">ポリシー違反時のペナルティ指定</a></h2>
+
+<p>強制モードでポリシー違反が発生した場合に、ポリシー違反の原因となったプロセスを一定時間スリープ状態にさせることができます。</p>
+
+<table border="1">
+<tr><td>/proc/akari/profile での指定例</td><td>意味</td></tr>
+<tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>プロファイル 3 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 0.1 秒間スリープさせます。</td></tr>
+<tr><td>4-PREFERENCE::enforcing={ penalty=10 }</td><td>プロファイル 4 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 1 秒間スリープさせます。</td></tr>
+</table>
+
+<p>この機能は、無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するための安全装置です。通常は 0.1 秒間スリープさせるだけで充分です。</p>
+
+<hr>
+
+<p><a href="index.html.ja">目次へ戻る</a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

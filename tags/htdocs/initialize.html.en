@@ -25,17 +25,17 @@
 </td></tr>
 </table>
 
-<p>AKARI's policy files will be saved in /etc/akari/ directory.</p>
+<p>AKARI's policy files will be saved in /etc/ccs/ directory.</p>
 
 <hr>
 
 <h2>Step 2: Learning how to use AKARI's policy editor</h2>
 
-<p>Run AKARI's policy editor "akari-editpolicy" with "/etc/akari/" option, and you will see a picture shown below.</p>
+<p>Run AKARI's policy editor "ccs-editpolicy" with "/etc/ccs/" option, and you will see a picture shown below.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-editpolicy /etc/akari/
+[root@akari ~]# /usr/sbin/ccs-editpolicy /etc/ccs/
 </td></tr>
 </table>
 
@@ -213,21 +213,21 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </tr>
 </table>
 
-<p>You can use a daemon program that reads from /proc/akari/grant_log and /proc/akari/reject_log and writes to files. Run in the following way from (for example) /etc/rc.local .</p>
+<p>You can use a daemon program that reads from /proc/ccs/grant_log and /proc/ccs/reject_log and writes to files. Run in the following way from (for example) /etc/rc.local .</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/akari-auditd $location_to_store_access_granted_logs $location_to_store_access_rejected_logs
+/usr/sbin/ccs-auditd $location_to_store_access_granted_logs $location_to_store_access_rejected_logs
 </td></tr>
 </table>
 
-<p>You may give PREFERENCE::audit={ max_grant_log=0 } for profiles and give /dev/null for $location_to_store_access_granted_logs if you don't want "access granted logs". Since "akari-auditd" doesn't have filtering functions, be careful with the disk's free space if you want to save "access granted logs".</p>
+<p>You may give PREFERENCE::audit={ max_grant_log=0 } for profiles and give /dev/null for $location_to_store_access_granted_logs if you don't want "access granted logs". Since "ccs-auditd" doesn't have filtering functions, be careful with the disk's free space if you want to save "access granted logs".</p>
 
-<p>You may give PREFERENCE::audit={ max_reject_log=0 } for profiles and give /dev/null for $location_to_store_access_rejected_logs if you don't want "access rejected logs". But I recommend you to save "access rejected logs". This manual assumes that "access rejected logs" is saved in /var/log/akari/reject_log.conf .</p>
+<p>You may give PREFERENCE::audit={ max_reject_log=0 } for profiles and give /dev/null for $location_to_store_access_rejected_logs if you don't want "access rejected logs". But I recommend you to save "access rejected logs". This manual assumes that "access rejected logs" is saved in /var/log/ccs/reject_log.conf .</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/akari-auditd /dev/null /var/log/akari/reject_log.conf
+/usr/sbin/ccs-auditd /dev/null /var/log/ccs/reject_log.conf
 </td></tr>
 </table>
 
@@ -235,7 +235,7 @@ The logs are in the form of domain policy so that the logs can be directly appen
 
 <table border="1">
 <tr><td>
-[root@akari ~]# mkdir -p /var/log/akari
+[root@akari ~]# mkdir -p /var/log/ccs
 </td></tr>
 </table>
 
@@ -243,7 +243,7 @@ The logs are in the form of domain policy so that the logs can be directly appen
 
 <table border="1">
 <tr><td>
-/var/log/akari/reject_log.conf {<br>
+/var/log/ccs/reject_log.conf {<br>
 &nbsp;&nbsp;weekly<br>
 &nbsp;&nbsp;rotate 9<br>
 &nbsp;&nbsp;missingok<br>
@@ -253,7 +253,7 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </td></tr>
 </table>
 
-<p>If you don't want neither "access granted logs" nor "access rejected logs", you needn't to run "akari-auditd" and you can give PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } for profiles to save memory and improve performance.</p>
+<p>If you don't want neither "access granted logs" nor "access rejected logs", you needn't to run "ccs-auditd" and you can give PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } for profiles to save memory and improve performance.</p>
 
 <hr>
 

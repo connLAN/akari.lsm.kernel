@@ -33,7 +33,7 @@
 
 <h1>1. <a name="Keyword_Index">キーワード一覧</a></h1>
 
-<p>/proc/akari/profile および /etc/akari/profile.conf で使われるもの</p>
+<p>/proc/ccs/profile および /etc/ccs/profile.conf で使われるもの</p>
 
 <ul>
 <li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
@@ -72,7 +72,7 @@
 <li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
 </ul>
 
-<p>/proc/akari/exception_policy および /etc/akari/exception_policy.conf で使われるもの</p>
+<p>/proc/ccs/exception_policy および /etc/ccs/exception_policy.conf で使われるもの</p>
 
 <ul>
 <li><a href="#exception_policy_acl_group">acl_group</a></li>
@@ -87,7 +87,7 @@
 <li><a href="#exception_policy_address_group">address_group</a></li>
 </ul>
 
-<p>/proc/akari/domain_policy および /etc/akari/domain_policy.conf で使われるもの</p>
+<p>/proc/ccs/domain_policy および /etc/ccs/domain_policy.conf で使われるもの</p>
 
 <ul>
 <li><a href="#domain_policy_file_execute">file execute</a></li>
@@ -119,7 +119,7 @@
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
 
-<p>/proc/akari/manager および /etc/akari/manager.conf で使われるもの</p>
+<p>/proc/ccs/manager および /etc/ccs/manager.conf で使われるもの</p>
 
 <ul>
 <li><a href="#manager_manage_by_non_root">manage_by_non_root</a></li>
@@ -203,11 +203,11 @@
 
 <h2>2.3 <a name="memory_usage_infomation">メモリ使用量に関する情報</a></h2>
 
-<p>AKARI が現在使用中のメモリ消費量は、 /proc/akari/meminfo から確認できます。単位はバイトです。</p>
+<p>AKARI が現在使用中のメモリ消費量は、 /proc/ccs/meminfo から確認できます。単位はバイトです。</p>
 
 <table border="1">
 <tr><td>
-# cat /proc/akari/meminfo<br>
+# cat /proc/ccs/meminfo<br>
 Policy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376<br>
 Audit&nbsp;logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
 Query&nbsp;lists:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
@@ -223,11 +223,11 @@ Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376
 
 <p>AKARI が使用するメモリの量を制限するためにメモリクォータがサポートされています。</p>
 
-<p>/etc/akari/meminfo.conf に以下のように指定しておくことで設定できます。</p>
+<p>/etc/ccs/meminfo.conf に以下のように指定しておくことで設定できます。</p>
 
 <table border="1">
 <tr><td>
-# cat /etc/akari/meminfo.conf<br>
+# cat /etc/ccs/meminfo.conf<br>
 Policy:     16777216<br>
 Audit logs:  1048576<br>
 Query lists: 1048576
@@ -240,65 +240,65 @@ Query lists: 1048576
 
 <p>ポリシーファイルとは、アクセスの可否を定義したファイルです。システムの起動時に自動的にカーネルへと読み込まれます。</p>
 
-<p>システムの起動時には、 /sbin/init というプログラムが実行されます。 /sbin/init の実行が要求されたときに、 /sbin/akari-init というプログラムが存在していた場合、 /sbin/akari-init が実行され、 /sbin/akari-init の処理が終了してから /sbin/init の実行が開始されます。</p>
+<p>システムの起動時には、 /sbin/init というプログラムが実行されます。 /sbin/init の実行が要求されたときに、 /sbin/ccs-init というプログラムが存在していた場合、 /sbin/ccs-init が実行され、 /sbin/ccs-init の処理が終了してから /sbin/init の実行が開始されます。</p>
 
-<p> /sbin/akari-init は /etc/akari/ ディレクトリにあるポリシーファイルを /proc/akari/ ディレクトリを通じてカーネルへと読み込みます。</p>
+<p> /sbin/ccs-init は /etc/ccs/ ディレクトリにあるポリシーファイルを /proc/ccs/ ディレクトリを通じてカーネルへと読み込みます。</p>
 
 <table border="1">
 <tr><td>カーネルとのインタフェース</td><td>ポリシーファイル</td><td>定義されている内容</td></tr>
-<tr><td><a href="#profile">/proc/akari/profile</a></td><td>/etc/akari/profile.conf</td><td>プロファイル（制御レベルを定義したもの）</td></tr>
-<tr><td><a href="#manager">/proc/akari/manager</a></td><td>/etc/akari/manager.conf</td><td>マネージャ（ポリシーの変更ができるプログラムを定義したもの）</td></tr>
-<tr><td><a href="#exception_policy">/proc/akari/exception_policy</a></td><td>/etc/akari/exception_policy.conf</td><td>例外ポリシー（ドメインポリシーの例外を定義したもの）</td></tr>
-<tr><td><a href="#domain_policy">/proc/akari/domain_policy</a></td><td>/etc/akari/domain_policy.conf</td><td>ドメインポリシー（ドメイン単位で適用される設定）</td></tr>
-<tr><td><a href="#meminfo">/proc/akari/meminfo</a></td><td>/etc/akari/meminfo.conf</td><td>メモリ使用状況およびクォータ</td></tr>
+<tr><td><a href="#profile">/proc/ccs/profile</a></td><td>/etc/ccs/profile.conf</td><td>プロファイル（制御レベルを定義したもの）</td></tr>
+<tr><td><a href="#manager">/proc/ccs/manager</a></td><td>/etc/ccs/manager.conf</td><td>マネージャ（ポリシーの変更ができるプログラムを定義したもの）</td></tr>
+<tr><td><a href="#exception_policy">/proc/ccs/exception_policy</a></td><td>/etc/ccs/exception_policy.conf</td><td>例外ポリシー（ドメインポリシーの例外を定義したもの）</td></tr>
+<tr><td><a href="#domain_policy">/proc/ccs/domain_policy</a></td><td>/etc/ccs/domain_policy.conf</td><td>ドメインポリシー（ドメイン単位で適用される設定）</td></tr>
+<tr><td><a href="#meminfo">/proc/ccs/meminfo</a></td><td>/etc/ccs/meminfo.conf</td><td>メモリ使用状況およびクォータ</td></tr>
 </table>
 
 <p>そのほかの情報を取得するためのインタフェースもあります。対応するポリシーファイルはありません。</p>
 
 <table border="1">
 <tr><td>カーネルとのインタフェース</td><td>内容</td></tr>
-<tr><td><a href="#query">/proc/akari/query</a></td><td>管理者の指示待ちとなっているアクセス要求</td></tr>
-<tr><td><a href="#.domain_status">/proc/akari/.domain_status</a></td><td>定義されているドメイン名とプロファイル番号</td></tr>
-<tr><td><a href="#grant_log">/proc/akari/grant_log</a></td><td>ポリシーに違反しなかったアクセス要求のログ</td></tr>
-<tr><td><a href="#reject_log">/proc/akari/reject_log</a></td><td>ポリシーに違反したアクセス要求のログ</td></tr>
-<tr><td><a href="#self_domain">/proc/akari/self_domain</a></td><td>自分が属しているドメインのドメイン名</td></tr>
-<tr><td><a href="#.process_status">/proc/akari/.process_status</a></td><td>プロセスが属しているドメイン名とプロファイル番号</td></tr>
-<tr><td><a href="#version">/proc/akari/version</a></td><td>AKARI のバージョン</td></tr>
+<tr><td><a href="#query">/proc/ccs/query</a></td><td>管理者の指示待ちとなっているアクセス要求</td></tr>
+<tr><td><a href="#.domain_status">/proc/ccs/.domain_status</a></td><td>定義されているドメイン名とプロファイル番号</td></tr>
+<tr><td><a href="#grant_log">/proc/ccs/grant_log</a></td><td>ポリシーに違反しなかったアクセス要求のログ</td></tr>
+<tr><td><a href="#reject_log">/proc/ccs/reject_log</a></td><td>ポリシーに違反したアクセス要求のログ</td></tr>
+<tr><td><a href="#self_domain">/proc/ccs/self_domain</a></td><td>自分が属しているドメインのドメイン名</td></tr>
+<tr><td><a href="#.process_status">/proc/ccs/.process_status</a></td><td>プロセスが属しているドメイン名とプロファイル番号</td></tr>
+<tr><td><a href="#version">/proc/ccs/version</a></td><td>AKARI のバージョン</td></tr>
 </table>
 
 <h2>3.2 <a name="policy_file_modifiers">変更について</a></h2>
 
-<p>カーネルとのインタフェースである /proc/akari/ ディレクトリを経由してポリシーを変更することができるプログラム名を /proc/akari/manager に登録します。プログラム名ではなくドメイン名で登録することもできます。</p>
+<p>カーネルとのインタフェースである /proc/ccs/ ディレクトリを経由してポリシーを変更することができるプログラム名を /proc/ccs/manager に登録します。プログラム名ではなくドメイン名で登録することもできます。</p>
 
 <ul>
-<li>/proc/akari/manager に登録されているプログラム名を持つプロセス</li>
-<li>/proc/akari/manager に登録されているドメイン名を持つプロセス</li>
+<li>/proc/ccs/manager に登録されているプログラム名を持つプロセス</li>
+<li>/proc/ccs/manager に登録されているドメイン名を持つプロセス</li>
 </ul>
 
-<p>だけがカーネルとのインタフェースである /proc/akari/ ディレクトリを経由してポリシーを変更できます。以下に例を示します。</p>
+<p>だけがカーネルとのインタフェースである /proc/ccs/ ディレクトリを経由してポリシーを変更できます。以下に例を示します。</p>
 
 <table border="1">
 <tr><td>
-# cat /proc/akari/manager<br>
-/usr/sbin/akari-loadpolicy<br>
-/usr/sbin/akari-editpolicy<br>
-/usr/sbin/akari-setlevel<br>
-/usr/sbin/akari-setprofile<br>
-/usr/sbin/akari-ld-watch<br>
-/usr/sbin/akari-queryd<br>
+# cat /proc/ccs/manager<br>
+/usr/sbin/ccs-loadpolicy<br>
+/usr/sbin/ccs-editpolicy<br>
+/usr/sbin/ccs-setlevel<br>
+/usr/sbin/ccs-setprofile<br>
+/usr/sbin/ccs-ld-watch<br>
+/usr/sbin/ccs-queryd<br>
 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash
 </td></tr>
 </table>
 
 <p>デフォルトではユーザＩＤと実効ユーザＩＤの両方が 0 であるプロセスだけがポリシーを変更できますが、 <a href="#non_root_policy_update">root 以外のユーザによるポリシーの変更を許可</a>の設定を行えば、非 root ユーザによるポリシーの変更も可能です。</p>
 
-<p>なお、学習モード用のプロファイルが割り当てられているプロセスは、アクセスを要求するだけで <a href="#domain_policy">/proc/akari/domain_policy</a> へと自動的にアクセス許可が追加されていきます。</p>
+<p>なお、学習モード用のプロファイルが割り当てられているプロセスは、アクセスを要求するだけで <a href="#domain_policy">/proc/ccs/domain_policy</a> へと自動的にアクセス許可が追加されていきます。</p>
 
 <h1>4. <a name="Domain_Rules">ドメインに関して</a></h1>
 
 <h2>4.1 <a name="domain_definition">ドメインとは</a></h2>
 
-<p>AKARI では、ドメインを単位としてアクセス許可を定義します。 <a href="#domain_policy">/proc/akari/domain_policy</a> を通じてアクセス許可を定義します。</p>
+<p>AKARI では、ドメインを単位としてアクセス許可を定義します。 <a href="#domain_policy">/proc/ccs/domain_policy</a> を通じてアクセス許可を定義します。</p>
 
 <p>AKARI においては、全てのプロセスがそれぞれ 1 つのドメインに属し、全てのプログラムがそれぞれ異なるドメインに属します。現在実行されている 2 つのプロセスが同一のプログラムであっても、それぞれのプロセスの直前のドメインが異なっていれば異なるドメインに属します。</p>
 
@@ -395,7 +395,7 @@ Query lists: 1048576
 
 <h2>4.3 <a name="access_logs">アクセスログについて</a></h2>
 
-<p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、 /proc/akari/grant_log から取得することができます。後者は拒否ログと呼ばれ、 /proc/akari/reject_log から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/akari-auditd というプログラムが付属しています。</p>
+<p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、 /proc/ccs/grant_log から取得することができます。後者は拒否ログと呼ばれ、 /proc/ccs/reject_log から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/ccs-auditd というプログラムが付属しています。</p>
 
 <p>以下に例を示します。最初の例はプログラムを実行しようとしたときのログです。</p>
 
@@ -433,11 +433,11 @@ use_profile 1
 
 <p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 AKARI では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
 
-<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/akari-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/akari/diff.txt という名前で保存した後、</p>
+<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/ccs/diff.txt という名前で保存した後、</p>
 
 <table border="1">
 <tr><td>
-# /usr/sbin/akari-loadpolicy -d &lt; /var/log/akari/diff.txt
+# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/ccs/diff.txt
 </td></tr>
 </table>
 
@@ -461,25 +461,25 @@ file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
 
 <h1>5. <a name="Syntax_Details">キーワード詳細</a></h1>
 
-<h2><a name="profile">/proc/akari/profile</a></h2>
+<h2><a name="profile">/proc/ccs/profile</a></h2>
 
 <p>AKARI では、ファイル以外にもいくつかの項目について強制アクセス制御を行うことができますが、ポリシー管理の負担を減らすために、必要の無い機能を無効化できるようになっています。</p>
 
-<p>有効にしたい機能とそのモードを「 プロファイル番号-項目=値 」という形式で定義します。プロファイル番号は 0 ～ 255 が指定可能です。プロファイルの内容を変更するには akari-setlevel コマンドまたは akari-loadpolicy コマンドを使用します。</p>
+<p>有効にしたい機能とそのモードを「 プロファイル番号-項目=値 」という形式で定義します。プロファイル番号は 0 ～ 255 が指定可能です。プロファイルの内容を変更するには ccs-setlevel コマンドまたは ccs-loadpolicy コマンドを使用します。</p>
 
-<p>各ドメインには 1 個のプロファイルが割り当てられます。ドメインにプロファイルを割り当てるには setprofile コマンドまたは akari-editpolicy コマンドまたは akari-loadpolicy コマンドを使用します。</p>
+<p>各ドメインには 1 個のプロファイルが割り当てられます。ドメインにプロファイルを割り当てるには setprofile コマンドまたは ccs-editpolicy コマンドまたは ccs-loadpolicy コマンドを使用します。</p>
 
-<p>現在ドメインに割り当てられているプロファイル番号は akari-editpolicy コマンドで確認できます。<br>
-現在動作中のプロセスに割り当てられているプロファイル番号は akari-pstree コマンドで確認できます。<br>
-現在のポリシーを akari-savepolicy コマンドで保存した場合、 <a href="#domain_policy_use_profile">use_profile</a> というキーワードに保持されます。</p>
+<p>現在ドメインに割り当てられているプロファイル番号は ccs-editpolicy コマンドで確認できます。<br>
+現在動作中のプロセスに割り当てられているプロファイル番号は ccs-pstree コマンドで確認できます。<br>
+現在のポリシーを ccs-savepolicy コマンドで保存した場合、 <a href="#domain_policy_use_profile">use_profile</a> というキーワードに保持されます。</p>
 
 <p>現在のプロファイルを読み出しまたは追加するには以下のように操作します。</p>
 
 <p>（例）<br>
-cat /proc/akari/profile<br>
-akari-savepolicy -p<br>
-akari-setlevel 1-CONFIG::file::execute=learning<br>
-echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
+cat /proc/ccs/profile<br>
+ccs-savepolicy -p<br>
+ccs-setlevel 1-CONFIG::file::execute=learning<br>
+echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
 
@@ -647,7 +647,7 @@ echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
 
 <p>penalty= にはポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
 
-<h2><a name="domain_policy">/proc/akari/domain_policy</a></h2>
+<h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
 <p>このファイルでは、全てのドメインを定義し、各ドメインに対して与えるアクセス許可を定義します。</p>
 
@@ -657,15 +657,15 @@ echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
 
 <p>現在のドメインポリシーを読み出しまたは追加または削除するには、以下のように操作します。</p>
 <p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されます）<br>
-printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | ccs-loadpolicy -d</p>
 <p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されません）<br>
-printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | ccs-loadpolicy -d</p>
 <p>（例）ドメインを選択してアクセス許可を削除<br>
-printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | akari-loadpolicy -d</p>
+printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | ccs-loadpolicy -d</p>
 <p>（例）特定のドメインを削除<br>
-printf "delete &lt;kernel&gt; /sbin/init\n" | akari-loadpolicy -d</p>
+printf "delete &lt;kernel&gt; /sbin/init\n" | ccs-loadpolicy -d</p>
 <p>（例）ドメインポリシーの読み出し<br>
-cat /proc/akari/domain_policy</p>
+cat /proc/ccs/domain_policy</p>
 
 <p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
 
@@ -858,13 +858,13 @@ file chroot /</p>
 
 <p>関連項目： <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">メモリ使用量に関する情報</a></p>
 
-<h2><a name="exception_policy">/proc/akari/exception_policy</a></h2>
+<h2><a name="exception_policy">/proc/ccs/exception_policy</a></h2>
 
 <p>現在の例外ポリシーを読み出しまたは追加または削除するには以下のように操作します。</p>
 <p>（例）<br>
-echo 'file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
-echo 'delete file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
-cat /proc/akari/exception_policy</p>
+echo 'file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+echo 'delete file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+cat /proc/ccs/exception_policy</p>
 
 <p>関連項目： <a href="#policy_file_modifiers">変更について</a></p>
 
@@ -1014,11 +1014,11 @@ network inet stream accept @local-address 1024-65535
 
 <p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
 
-<h2><a name="query">/proc/akari/query</a></h2>
+<h2><a name="query">/proc/ccs/query</a></h2>
 
-<p>強制モードで動作中にポリシー違反が発生した場合に、そのアクセス要求を個別に許可するかどうかの指定を行うために使用します。強制モードでポリシー違反が発生した場合、 akari-queryd を用いて対話的に諾否を指定できます。</p>
+<p>強制モードで動作中にポリシー違反が発生した場合に、そのアクセス要求を個別に許可するかどうかの指定を行うために使用します。強制モードでポリシー違反が発生した場合、 ccs-queryd を用いて対話的に諾否を指定できます。</p>
 
-<h2><a name="manager">/proc/akari/manager</a></h2>
+<h2><a name="manager">/proc/ccs/manager</a></h2>
 
 <p>ポリシーの読み書きを行えるプログラムまたはドメインの一覧を取得または追加します。</p>
 
@@ -1026,43 +1026,43 @@ network inet stream accept @local-address 1024-65535
 
 <p>デフォルトではユーザＩＤと実効ユーザＩＤの両方が 0 であるプロセスだけがポリシーを変更できますが、非 root ユーザによる変更を認めたい場合に使用します。</p>
 
-<h2><a name=".domain_status">/proc/akari/.domain_status</a></h2>
+<h2><a name=".domain_status">/proc/ccs/.domain_status</a></h2>
 
 <p>setprofile コマンドが行単位での処理を行いやすくするために domain_policy の内容からプロファイル番号とドメイン名の部分だけを抽出したもの。ＤＢＭＳのビューに相当する機能を提供します。</p>
 
-<h2><a name="meminfo">/proc/akari/meminfo</a></h2>
+<h2><a name="meminfo">/proc/ccs/meminfo</a></h2>
 
 <p>AKARI がポリシーを保持するために使用しているカーネルのメモリ情報を取得します。</p>
 <p>（例）<br>
-cat /proc/akari/meminfo<br></p>
+cat /proc/ccs/meminfo<br></p>
 
-<h2><a name="grant_log">/proc/akari/grant_log</a></h2>
+<h2><a name="grant_log">/proc/ccs/grant_log</a></h2>
 
 <p>ドメインポリシーに対するアクセス許可ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_grant_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
 <p>（例）<br>
-cat /proc/akari/grant_log</p>
+cat /proc/ccs/grant_log</p>
 
-<h2><a name="reject_log">/proc/akari/reject_log</a></h2>
+<h2><a name="reject_log">/proc/ccs/reject_log</a></h2>
 
 <p>ドメインポリシーに対するアクセス拒否ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_reject_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
 <p>（例）<br>
-cat /proc/akari/reject_log</p>
+cat /proc/ccs/reject_log</p>
 
-<h2><a name="self_domain">/proc/akari/self_domain</a></h2>
+<h2><a name="self_domain">/proc/ccs/self_domain</a></h2>
 
 <p>呼び出し元プロセスが属しているドメインの名前を取得します。</p>
 <p>（例）<br>
-cat /proc/akari/self_domain</p>
+cat /proc/ccs/self_domain</p>
 
-<h2><a name=".process_status">/proc/akari/.process_status</a></h2>
+<h2><a name=".process_status">/proc/ccs/.process_status</a></h2>
 
-<p>akari-pstree コマンド（「現在動作中のプロセス」と「そのプロセスが属しているドメイン」と「そのドメインに割り当てられているプロファイル番号」を pstree のように一覧表示する）のためのインタフェース。例外的にポリシーマネージャとして登録されていないプログラムでも書き込みを行える。</p>
+<p>ccs-pstree コマンド（「現在動作中のプロセス」と「そのプロセスが属しているドメイン」と「そのドメインに割り当てられているプロファイル番号」を pstree のように一覧表示する）のためのインタフェース。例外的にポリシーマネージャとして登録されていないプログラムでも書き込みを行える。</p>
 
-<h2><a name="version">/proc/akari/version</a></h2>
+<h2><a name="version">/proc/ccs/version</a></h2>
 
 <p>AKARI のバージョン番号を取得するためのインタフェースです。</p>
 <p>（例）<br>
-cat /proc/akari/version</p>
+cat /proc/ccs/version</p>
 
 <h1>6. <a name="Advanced_Features">便利な機能</a></h1>
 
@@ -1072,7 +1072,7 @@ cat /proc/akari/version</p>
 
 <table border="1">
 <tr><td>
-# echo manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+# echo manage_by_non_root | /usr/sbin/ccs-loadpolicy -m
 </td></tr>
 </table>
 
@@ -1080,27 +1080,27 @@ cat /proc/akari/version</p>
 
 <table border="1">
 <tr><td>
-# echo delete manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+# echo delete manage_by_non_root | /usr/sbin/ccs-loadpolicy -m
 </td></tr>
 </table>
 
-<p>のように delete manage_by_non_root というキーワードを書き込んでください。 /proc/akari/ 以下のエントリの所有者は root なので、非 root ユーザによるアクセスを認めるためには必要に応じて chown/chmod を実行してください。<br>
-起動時に自動的にこの処理が行われるようにするために、 /sbin/akari-init は /etc/akari/akari-post-init というプログラムが存在する場合には /etc/akari/akari-post-init も実行するようになっています。よって、例えば demo ユーザが /proc/akari/ インタフェースへの読み書きができるように設定したい場合は、</p>
+<p>のように delete manage_by_non_root というキーワードを書き込んでください。 /proc/ccs/ 以下のエントリの所有者は root なので、非 root ユーザによるアクセスを認めるためには必要に応じて chown/chmod を実行してください。<br>
+起動時に自動的にこの処理が行われるようにするために、 /sbin/ccs-init は /etc/ccs/ccs-post-init というプログラムが存在する場合には /etc/ccs/ccs-post-init も実行するようになっています。よって、例えば demo ユーザが /proc/ccs/ インタフェースへの読み書きができるように設定したい場合は、</p>
 
 <table border="1">
 <tr><td>
 #! /bin/sh<br>
-echo manage_by_non_root &gt; /proc/akari/manager<br>
-chown -R demo /proc/akari/
+echo manage_by_non_root &gt; /proc/ccs/manager<br>
+chown -R demo /proc/ccs/
 </td></tr>
 </table>
 
-<p>という内容で /etc/akari/akari-post-init を作成し、</p>
+<p>という内容で /etc/ccs/ccs-post-init を作成し、</p>
 
 <table border="1">
 <tr><td>
-# chmod 755 /etc/akari/akari-post-init<br>
-# chown -R demo /etc/akari/
+# chmod 755 /etc/ccs/ccs-post-init<br>
+# chown -R demo /etc/ccs/
 </td></tr>
 </table>
 
@@ -1306,7 +1306,7 @@ chown -R demo /proc/akari/
 <p>強制モードでポリシー違反が発生した場合に、ポリシー違反の原因となったプロセスを一定時間スリープ状態にさせることができます。</p>
 
 <table border="1">
-<tr><td>/proc/akari/profile での指定例</td><td>意味</td></tr>
+<tr><td>/proc/ccs/profile での指定例</td><td>意味</td></tr>
 <tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>プロファイル 3 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 0.1 秒間スリープさせます。</td></tr>
 <tr><td>4-PREFERENCE::enforcing={ penalty=10 }</td><td>プロファイル 4 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 1 秒間スリープさせます。</td></tr>
 </table>

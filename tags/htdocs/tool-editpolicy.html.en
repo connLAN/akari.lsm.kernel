@@ -17,9 +17,9 @@
 
 <p>AKARI includes a CUI based Policy Editor.</p>
 
-<p>You need to register either "the domainname that this editor belongs to" or "the pathname of this editor (usually /usr/sbin/akari-editpolicy)" with /proc/akari/manager before you use this editor.</p>
+<p>You need to register either "the domainname that this editor belongs to" or "the pathname of this editor (usually /usr/sbin/ccs-editpolicy)" with /proc/ccs/manager before you use this editor.</p>
 
-<p>You can start this editor by typing "/usr/sbin/akari-editpolicy" at the prompt.</p>
+<p>You can start this editor by typing "/usr/sbin/ccs-editpolicy" at the prompt.</p>
 
 <h2>(1) To quit policy editor</h2>
 

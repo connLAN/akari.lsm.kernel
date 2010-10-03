@@ -31,7 +31,7 @@
 </td></tr>
 </table>
 
-<p>AKARI のポリシーエディタを実行してください。今回は現在カーネル内に存在しているポリシーを直接編集するので、 /etc/akari/ というコマンドラインオプションを指定していないことに注意してください。</p>
+<p>AKARI のポリシーエディタを実行してください。今回は現在カーネル内に存在しているポリシーを直接編集するので、 /etc/ccs/ というコマンドラインオプションを指定していないことに注意してください。</p>
 
 <p>CentOS 5.5 では、 Apache プログラムパス名は /usr/sbin/httpd です。<br>
 矢印キーや Home/End/PageUp/PageDown キーを使ってカーソルをスクロールして、 /usr/sbin/httpd の行を見つけてください。この絵では 398 行目です。</p>
@@ -78,21 +78,21 @@
 
 <p>収集されたアクセス許可はカーネル内のメモリにしか存在しないため、時々ポリシーファイルとしてディスク上に保存することを忘れないでください。システムを再起動した場合、カーネル内のメモリに存在しているアクセス許可は失われます。</p>
 
-<p>現在カーネル内のメモリに存在しているポリシーをディスク上に保存するには、 akari-savepolicy コマンドを利用します。</p>
+<p>現在カーネル内のメモリに存在しているポリシーをディスク上に保存するには、 ccs-savepolicy コマンドを利用します。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy
+[root@akari ~]# /usr/sbin/ccs-savepolicy
 </td></tr>
 </table>
 
-<p>akari-savepolicy コマンドを実行することにより、２個のファイル（ exception_policy.conf domain_policy.conf ）が /etc/akari/ ディレクトリ内に作成されます。より正確に言うと、これらは作成時刻をファイル名の中に含んだ通常ファイルへのシンボリックリンクとして作成されます。</p>
+<p>ccs-savepolicy コマンドを実行することにより、２個のファイル（ exception_policy.conf domain_policy.conf ）が /etc/ccs/ ディレクトリ内に作成されます。より正確に言うと、これらは作成時刻をファイル名の中に含んだ通常ファイルへのシンボリックリンクとして作成されます。</p>
 
-<p>現在ディスク上に保存されているポリシーをカーネル内のメモリに読み込ませるには、 akari-loadpolicy コマンドを利用します。</p>
+<p>現在ディスク上に保存されているポリシーをカーネル内のメモリに読み込ませるには、 ccs-loadpolicy コマンドを利用します。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-loadpolicy af
+[root@akari ~]# /usr/sbin/ccs-loadpolicy af
 </td></tr>
 </table>
 
@@ -124,7 +124,7 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf<br>
 #2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3057) task={ pid=3057 ppid=3049 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878<br>
@@ -223,11 +223,11 @@ file read /etc/group
 </td></tr>
 </table>
 
-<p>これらのログは、 akari-sortpolicy コマンドを使って圧縮することができます。</p>
+<p>これらのログは、 ccs-sortpolicy コマンドを使って圧縮することができます。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/akari-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
 #2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
@@ -269,11 +269,11 @@ network unix stream connect /var/run/setrans/.setrans-unix
 </td></tr>
 </table>
 
-<p>アクセスログを akari-sortpolicy に通す前に convert-audit-log に通すことにより、最も詳細なアクセスログに変換することができます。</p>
+<p>アクセスログを ccs-sortpolicy に通す前に convert-audit-log に通すことにより、最も詳細なアクセスログに変換することができます。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/lib/akari/convert-audit-log | /usr/sbin/akari-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/lib/akari/convert-audit-log | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878 task.pid=3057 task.ppid=3049 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48<br>
@@ -303,21 +303,21 @@ network unix stream connect /var/run/setrans/.setrans-unix task.pid=3392 task.pp
 </td></tr>
 </table>
 
-<p>圧縮したログを、テンポラリファイルに保存してください。そして、このテンポラリファイルを必要に応じて編集後、 akari-loadpolicy コマンドを使ってカーネル内にあるポリシーに追加することができます。 akari-loadpolicy の - オプションは標準入力から読み込むことを、 d オプションは domain_policy.conf の内容であることを意味します。</p>
+<p>圧縮したログを、テンポラリファイルに保存してください。そして、このテンポラリファイルを必要に応じて編集後、 ccs-loadpolicy コマンドを使ってカーネル内にあるポリシーに追加することができます。 ccs-loadpolicy の - オプションは標準入力から読み込むことを、 d オプションは domain_policy.conf の内容であることを意味します。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/akari-sortpolicy &gt; ~/rejected.log<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy &gt; ~/rejected.log<br>
 [root@akari ~]# emacs ~/rejected.log<br>
-[root@akari ~]# /usr/sbin/akari-loadpolicy -d &lt; ~/rejected.log
+[root@akari ~]# /usr/sbin/ccs-loadpolicy -d &lt; ~/rejected.log
 </td></tr>
 </table>
 
-<p>メモリ上のポリシーを編集したため、このままではシャットダウンすると失われてしまいます。 akari-savepolicy コマンドを使って exception_policy.conf と domain_poilicy.conf を保存するようにしてください。</p>
+<p>メモリ上のポリシーを編集したため、このままではシャットダウンすると失われてしまいます。 ccs-savepolicy コマンドを使って exception_policy.conf と domain_poilicy.conf を保存するようにしてください。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy a
+[root@akari ~]# /usr/sbin/ccs-savepolicy a
 </td></tr>
 </table>
 

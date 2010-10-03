@@ -33,7 +33,7 @@
 
 <h1>1. <a name="Keyword_Index">Keywords Index</a></h1>
 
-<p>Used by /proc/akari/profile and /etc/akari/profile.conf</p>
+<p>Used by /proc/ccs/profile and /etc/ccs/profile.conf</p>
 
 <ul>
 <li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
@@ -72,7 +72,7 @@
 <li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
 </ul>
 
-<p>Used by /proc/akari/exception_policy and /etc/akari/exception_policy.conf</p>
+<p>Used by /proc/ccs/exception_policy and /etc/ccs/exception_policy.conf</p>
 
 <ul>
 <li><a href="#exception_policy_acl_group">acl_group</a></li>
@@ -87,7 +87,7 @@
 <li><a href="#exception_policy_address_group">address_group</a></li>
 </ul>
 
-<p>Used by /proc/akari/domain_policy and /etc/akari/domain_policy.conf</p>
+<p>Used by /proc/ccs/domain_policy and /etc/ccs/domain_policy.conf</p>
 
 <ul>
 <li><a href="#domain_policy_file_execute">file execute</a></li>
@@ -119,7 +119,7 @@
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
 
-<p>Used by /proc/akari/manager and /etc/akari/manager.conf</p>
+<p>Used by /proc/ccs/manager and /etc/ccs/manager.conf</p>
 
 <ul>
 <li><a href="#manager_manage_by_non_root">manage_by_non_root</a></li>
@@ -203,11 +203,11 @@ AKARI follows the rules shown below to represent a word. A word means all tokens
 
 <h2>2.3 <a name="memory_usage_infomation">Memory Usage Information</a></h2>
 
-<p>The memory used by AKARI can be obtained via /proc/akari/meminfo . The unit is byte.</p>
+<p>The memory used by AKARI can be obtained via /proc/ccs/meminfo . The unit is byte.</p>
 
 <table border="1">
 <tr><td>
-# cat /proc/akari/meminfo<br>
+# cat /proc/ccs/meminfo<br>
 Policy:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376<br>
 Audit&nbsp;logs:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
 Query&nbsp;lists:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0<br>
@@ -223,11 +223,11 @@ Total:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;377376
 
 <p>AKARI supports memory quota for limiting maximum memory used by AKARI.</p>
 
-<p>You can set memory quota by writing to /etc/akari/meminfo.conf .</p>
+<p>You can set memory quota by writing to /etc/ccs/meminfo.conf .</p>
 
 <table border="1">
 <tr><td>
-# cat /etc/akari/meminfo.conf<br>
+# cat /etc/ccs/meminfo.conf<br>
 Policy:     16777216<br>
 Audit logs:  1048576<br>
 Query lists: 1048576
@@ -240,65 +240,65 @@ Query lists: 1048576
 
 <p>Policy files are files that contain access permissions. These files are automatically loaded into the kernel upon boot.</p>
 
-<p>When a system boots, /sbin/init is executed. When the execution of /sbin/init is requested and if /sbin/akari-init exists, /sbin/akari-init is executed, and /sbin/init is executed after /sbin/akari-init terminates.</p>
+<p>When a system boots, /sbin/init is executed. When the execution of /sbin/init is requested and if /sbin/ccs-init exists, /sbin/ccs-init is executed, and /sbin/init is executed after /sbin/ccs-init terminates.</p>
 
-<p> /sbin/akari-init loads policy files in /etc/akari/ directory via the kernel's /proc/akari/ interface.</p>
+<p> /sbin/ccs-init loads policy files in /etc/ccs/ directory via the kernel's /proc/ccs/ interface.</p>
 
 <table border="1">
 <tr><td>The kernel's interface</td><td>Policy file</td><td>Contents</td></tr>
-<tr><td><a href="#profile">/proc/akari/profile</a></td><td>/etc/akari/profile.conf</td><td>Profiles (Collection of access control levels)</td></tr>
-<tr><td><a href="#manager">/proc/akari/manager</a></td><td>/etc/akari/manager.conf</td><td>Managers (Programs that can modify policy via /proc/akari/ interface)</td></tr>
-<tr><td><a href="#exception_policy">/proc/akari/exception_policy</a></td><td>/etc/akari/exception_policy.conf</td><td>Exception policy (Collection of exceptions for domain policy)</td></tr>
-<tr><td><a href="#domain_policy">/proc/akari/domain_policy</a></td><td>/etc/akari/domain_policy.conf</td><td>Domain policy (Access permissions given to individual domains)</td></tr>
-<tr><td><a href="#meminfo">/proc/akari/meminfo</a></td><td>/etc/akari/meminfo.conf</td><td>Memory usage and quota.</td></tr>
+<tr><td><a href="#profile">/proc/ccs/profile</a></td><td>/etc/ccs/profile.conf</td><td>Profiles (Collection of access control levels)</td></tr>
+<tr><td><a href="#manager">/proc/ccs/manager</a></td><td>/etc/ccs/manager.conf</td><td>Managers (Programs that can modify policy via /proc/ccs/ interface)</td></tr>
+<tr><td><a href="#exception_policy">/proc/ccs/exception_policy</a></td><td>/etc/ccs/exception_policy.conf</td><td>Exception policy (Collection of exceptions for domain policy)</td></tr>
+<tr><td><a href="#domain_policy">/proc/ccs/domain_policy</a></td><td>/etc/ccs/domain_policy.conf</td><td>Domain policy (Access permissions given to individual domains)</td></tr>
+<tr><td><a href="#meminfo">/proc/ccs/meminfo</a></td><td>/etc/ccs/meminfo.conf</td><td>Memory usage and quota.</td></tr>
 </table>
 
 <p>There are more interfaces for obtaining information. These interfaces don't have corresponding policy files.</p>
 
 <table border="1">
 <tr><td>The kernel's interface</td><td>Meaning</td></tr>
-<tr><td><a href="#query">/proc/akari/query</a></td><td>Access requests that are waiting for administrator's decision.</td></tr>
-<tr><td><a href="#.domain_status">/proc/akari/.domain_status</a></td><td>The list of domainnames and profile numbers currently defined in domain policy.</td></tr>
-<tr><td><a href="#grant_log">/proc/akari/grant_log</a></td><td>Access requests that didn't violate domain policy.</td></tr>
-<tr><td><a href="#reject_log">/proc/akari/reject_log</a></td><td>Access requests that violated domain policy.</td></tr>
-<tr><td><a href="#self_domain">/proc/akari/self_domain</a></td><td>The name of domain the current process belongs to.</td></tr>
-<tr><td><a href="#.process_status">/proc/akari/.process_status</a></td><td>The list of domainnames and profile numbers currently running processes belongs to.</td></tr>
-<tr><td><a href="#version">/proc/akari/version</a></td><td>Version of AKARI.</td></tr>
+<tr><td><a href="#query">/proc/ccs/query</a></td><td>Access requests that are waiting for administrator's decision.</td></tr>
+<tr><td><a href="#.domain_status">/proc/ccs/.domain_status</a></td><td>The list of domainnames and profile numbers currently defined in domain policy.</td></tr>
+<tr><td><a href="#grant_log">/proc/ccs/grant_log</a></td><td>Access requests that didn't violate domain policy.</td></tr>
+<tr><td><a href="#reject_log">/proc/ccs/reject_log</a></td><td>Access requests that violated domain policy.</td></tr>
+<tr><td><a href="#self_domain">/proc/ccs/self_domain</a></td><td>The name of domain the current process belongs to.</td></tr>
+<tr><td><a href="#.process_status">/proc/ccs/.process_status</a></td><td>The list of domainnames and profile numbers currently running processes belongs to.</td></tr>
+<tr><td><a href="#version">/proc/ccs/version</a></td><td>Version of AKARI.</td></tr>
 </table>
 
 <h2>3.2 <a name="policy_file_modifiers">Policy File's Modification</a></h2>
 
-<p>Register the name of programs or domains that can modify policy via the kernel's /proc/akari/ interface. Only</p>
+<p>Register the name of programs or domains that can modify policy via the kernel's /proc/ccs/ interface. Only</p>
 
 <ul>
-<li>Processes with programs listed in /proc/akari/manager</li>
-<li>Processes with domainnames listed in /proc/akari/manager</li>
+<li>Processes with programs listed in /proc/ccs/manager</li>
+<li>Processes with domainnames listed in /proc/ccs/manager</li>
 </ul>
 
-<p>can modify policy via the kernel's /proc/akari/ interface. Some examples are show below.</p>
+<p>can modify policy via the kernel's /proc/ccs/ interface. Some examples are show below.</p>
 
 <table border="1">
 <tr><td>
-# cat /proc/akari/manager<br>
-/usr/sbin/akari-loadpolicy<br>
-/usr/sbin/akari-editpolicy<br>
-/usr/sbin/akari-setlevel<br>
-/usr/sbin/akari-setprofile<br>
-/usr/sbin/akari-ld-watch<br>
-/usr/sbin/akari-queryd<br>
+# cat /proc/ccs/manager<br>
+/usr/sbin/ccs-loadpolicy<br>
+/usr/sbin/ccs-editpolicy<br>
+/usr/sbin/ccs-setlevel<br>
+/usr/sbin/ccs-setprofile<br>
+/usr/sbin/ccs-ld-watch<br>
+/usr/sbin/ccs-queryd<br>
 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash
 </td></tr>
 </table>
 
 <p>By default, only processes with UID = 0 and EUID = 0 can modify policy via this interface. But by doing configurations described in <a href="#non_root_policy_update">Allowing policy modification by non root user.</a>, non root user can modify policy via this interface.</p>
 
-<p>Exception is, processes that belong to domains with profiles for learning mode can append access permissions to <a href="#domain_policy">/proc/akari/domain_policy</a> by simply requesting the access.</p>
+<p>Exception is, processes that belong to domains with profiles for learning mode can append access permissions to <a href="#domain_policy">/proc/ccs/domain_policy</a> by simply requesting the access.</p>
 
 <h1>4. <a name="Domain_Rules">Domain Rules</a></h1>
 
 <h2>4.1 <a name="domain_definition">Domain Definition</a></h2>
 
-<p>AKARI gives access permissions as per a domain. It is managed via <a href="#domain_policy">/proc/akari/domain_policy</a>.</p>
+<p>AKARI gives access permissions as per a domain. It is managed via <a href="#domain_policy">/proc/ccs/domain_policy</a>.</p>
 
 <p>In AKARI, every process belongs to a single domain, and all programs belong to different domain. Even the two processes are executing the same program, if their previous domains differ, they belong to different domain.</p>
 
@@ -395,7 +395,7 @@ Query lists: 1048576
 
 <h2>4.3 <a name="access_logs">Access Logs</a></h2>
 
-<p>AKARI generates two types of access logs. One contains access requests that didn't violate domain policy. The other contains access requests that violated domain policy. The former is called grant log and is readable via /proc/akari/grant_log . The latter is called reject log and is readable via /proc/akari/reject_log . A utility program /usr/sbin/akari-auditd is included for reading these logs and saving the logs as files.</p>
+<p>AKARI generates two types of access logs. One contains access requests that didn't violate domain policy. The other contains access requests that violated domain policy. The former is called grant log and is readable via /proc/ccs/grant_log . The latter is called reject log and is readable via /proc/ccs/reject_log . A utility program /usr/sbin/ccs-auditd is included for reading these logs and saving the logs as files.</p>
 
 <p>Some examples are shown below. The first log is generated by execute request.</p>
 
@@ -433,11 +433,11 @@ use_profile 1
 
 <p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. AKARI automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
 
-<p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/akari-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/akari/diff.txt) and you can add to domain policy by doing</p>
+<p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/ccs-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/ccs/diff.txt) and you can add to domain policy by doing</p>
 
 <table border="1">
 <tr><td>
-# /usr/sbin/akari-loadpolicy -d &lt; /var/log/akari/diff.txt
+# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/ccs/diff.txt
 </td></tr>
 </table>
 
@@ -461,25 +461,25 @@ file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
 
 <h1>5. <a name="Syntax_Details">Syntax Details</a></h1>
 
-<h2><a name="profile">/proc/akari/profile</a></h2>
+<h2><a name="profile">/proc/ccs/profile</a></h2>
 
 <p>AKARI can perform several MACs besides MAC for files, but to reduce the load of policy managements, you can disable MACs you think unnecessary.</p>
 
-<p>List up functions and their modes in "$number-$variable=$value" format. The $number is profile number between 0 and 255. To modify profile, use "akari-setlevel" or "akari-loadpolicy" commands.</p>
+<p>List up functions and their modes in "$number-$variable=$value" format. The $number is profile number between 0 and 255. To modify profile, use "ccs-setlevel" or "ccs-loadpolicy" commands.</p>
 
-<p>Each domain is assigned one profile. To assign profile to domains, use "setprofile" or "akari-editpolicy" or "akari-loadpolicy" commands.</p>
+<p>Each domain is assigned one profile. To assign profile to domains, use "setprofile" or "ccs-editpolicy" or "ccs-loadpolicy" commands.</p>
 
-<p>You can see profiles currently assigned to domains using "akari-editpolicy" command.<br>
-You can see profiles currently assigned to processes using "akari-pstree" command.<br>
-If you saved current policy using "akari-savepolicy" command, the currently assigned profile number is saved as <a href="#domain_policy_use_profile">use_profile</a> line of domain policy.</p>
+<p>You can see profiles currently assigned to domains using "ccs-editpolicy" command.<br>
+You can see profiles currently assigned to processes using "ccs-pstree" command.<br>
+If you saved current policy using "ccs-savepolicy" command, the currently assigned profile number is saved as <a href="#domain_policy_use_profile">use_profile</a> line of domain policy.</p>
 
 <p>To read or modify current profiles, operate like below.</p>
 
 <p>(Example)<br>
-cat /proc/akari/profile<br>
-akari-savepolicy -p<br>
-akari-setlevel 1-CONFIG::file::execute=learning<br>
-echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
+cat /proc/ccs/profile<br>
+ccs-savepolicy -p<br>
+ccs-setlevel 1-CONFIG::file::execute=learning<br>
+echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
 
@@ -647,7 +647,7 @@ echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
 
 <p>"penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for.</p>
 
-<h2><a name="domain_policy">/proc/akari/domain_policy</a></h2>
+<h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
 <p>This file contains definition of all domains and permissions that are granted to each domain.</p>
 
@@ -657,15 +657,15 @@ echo 1-CONFIG::file::execute=learning | akari-loadpolicy -p</p>
 
 <p>To read or modify current domain policy, operate like below.</p>
 <p>(Example) Selecting specific domain and appending ACLs. The domain will be created if nonexistent.<br>
-printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+printf "&lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | ccs-loadpolicy -d</p>
 <p>(Example) Selecting specific domain and appending ACLs. The domain won't be created if nonexistent.<br>
-printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | akari-loadpolicy -d</p>
+printf "select &lt;kernel&gt; /sbin/init\nfile read /etc/passwd\n" | ccs-loadpolicy -d</p>
 <p>(Example) Selecting specific domain and removing ACLs.<br>
-printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | akari-loadpolicy -d</p>
+printf "select &lt;kernel&gt; /sbin/init\ndelete file read /etc/passwd\ndelete file read /etc/shadow\n" | ccs-loadpolicy -d</p>
 <p>(Example) Deleting specific domain.<br>
-printf "delete &lt;kernel&gt; /sbin/init\n" | akari-loadpolicy -d</p>
+printf "delete &lt;kernel&gt; /sbin/init\n" | ccs-loadpolicy -d</p>
 <p>(Example) Reading current domain policy.<br>
-cat /proc/akari/domain_policy</p>
+cat /proc/ccs/domain_policy</p>
 
 <p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
 
@@ -858,13 +858,13 @@ Usually, you don't need this keyword.</p>
 
 <p>See also:  <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">Memory Usage Information</a></p>
 
-<h2><a name="exception_policy">/proc/akari/exception_policy</a></h2>
+<h2><a name="exception_policy">/proc/ccs/exception_policy</a></h2>
 
 <p>To read or modify current exception policy, operate like below.</p>
 <p>(Example)<br>
-echo 'file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
-echo 'delete file_pattern /proc/\$/status' | akari-loadpolicy -e<br>
-cat /proc/akari/exception_policy</p>
+echo 'file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+echo 'delete file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+cat /proc/ccs/exception_policy</p>
 
 <p>See also:  <a href="#policy_file_modifiers">Policy File's Modification</a></p>
 
@@ -1014,65 +1014,65 @@ network inet stream accept @local-address 1024-65535
 
 <p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
 
-<h2><a name="query">/proc/akari/query</a></h2>
+<h2><a name="query">/proc/ccs/query</a></h2>
 
-<p>This file is used to manually grant or reject individual access requests when the policy violation occurs in enforcing mode. If a policy violation occur in a process whose domain is assigned a profile for enforcing mode, the administrator can judge interactively using "akari-queryd" command.</p>
+<p>This file is used to manually grant or reject individual access requests when the policy violation occurs in enforcing mode. If a policy violation occur in a process whose domain is assigned a profile for enforcing mode, the administrator can judge interactively using "ccs-queryd" command.</p>
 
-<h2><a name="manager">/proc/akari/manager</a></h2>
+<h2><a name="manager">/proc/ccs/manager</a></h2>
 
-<p>This file is used to read or append the list of programs or domains that can write to /proc/akari/ interface.</p>
+<p>This file is used to read or append the list of programs or domains that can write to /proc/ccs/ interface.</p>
 
 <h3><a name="manager_manage_by_non_root">manage_by_non_root</a></h3>
 
-<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/akari/ interface. You can use this keyword to allow policy modification by non root user.</p>
+<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/ccs/ interface. You can use this keyword to allow policy modification by non root user.</p>
 
-<h2><a name=".domain_status">/proc/akari/.domain_status</a></h2>
+<h2><a name=".domain_status">/proc/ccs/.domain_status</a></h2>
 
 <p>This is a view (of a DBMS) that contains only profile number and domainnames of domain so that "setprofile" command can do line-oriented processing easily.</p>
 
-<h2><a name="meminfo">/proc/akari/meminfo</a></h2>
+<h2><a name="meminfo">/proc/ccs/meminfo</a></h2>
 
 <p>This file is to show the total RAM used to keep policy in the kernel by AKARI.</p>
 <p>(Example)<br>
-cat /proc/akari/meminfo<br></p>
+cat /proc/ccs/meminfo<br></p>
 
-<h2><a name="grant_log">/proc/akari/grant_log</a></h2>
+<h2><a name="grant_log">/proc/ccs/grant_log</a></h2>
 
 <p>This file holds the granted log. The reader process returns immediately if no granted logs exists. To wait until a granted log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_grant_log parameter of PREFERENCE::audit, so read out timely.</p>
 <p>(Example)<br>
-cat /proc/akari/grant_log</p>
+cat /proc/ccs/grant_log</p>
 
-<h2><a name="reject_log">/proc/akari/reject_log</a></h2>
+<h2><a name="reject_log">/proc/ccs/reject_log</a></h2>
 
 <p>This file holds the rejected log. The reader process returns immediately if no violation logs exists. To wait until a violation log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_reject_log parameter of PREFERENCE::audit, so read out timely.</p>
 <p>(Example)<br>
-cat /proc/akari/reject_log</p>
+cat /proc/ccs/reject_log</p>
 
-<h2><a name="self_domain">/proc/akari/self_domain</a></h2>
+<h2><a name="self_domain">/proc/ccs/self_domain</a></h2>
 
 <p>This file is to show the name of domain the caller process belongs to.</p>
 <p>(Example)<br>
-cat /proc/akari/self_domain</p>
+cat /proc/ccs/self_domain</p>
 
-<h2><a name=".process_status">/proc/akari/.process_status</a></h2>
+<h2><a name=".process_status">/proc/ccs/.process_status</a></h2>
 
-<p>This file is used by "akari-pstree" command to show "list of processes currently running" and "domains which each process belongs to" and "profile number which the domain is currently assigned" like "pstree" command. This file is writable by programs that aren't registered as policy manager.</p>
+<p>This file is used by "ccs-pstree" command to show "list of processes currently running" and "domains which each process belongs to" and "profile number which the domain is currently assigned" like "pstree" command. This file is writable by programs that aren't registered as policy manager.</p>
 
-<h2><a name="version">/proc/akari/version</a></h2>
+<h2><a name="version">/proc/ccs/version</a></h2>
 
 <p>This file is used for getting AKARI's version.</p>
 <p>(Example)<br>
-cat /proc/akari/version</p>
+cat /proc/ccs/version</p>
 
 <h1>6. <a name="Advanced_Features">Advanced Features</a></h1>
 
 <h2>6.1 <a name="non_root_policy_update">Allowing policy modification by non root user.</a></h2>
 
-<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/akari/ interface. But if you want to permit policy modification via /proc/akari/ interface by non root user, you can write this keyword like</p>
+<p>By default, only processes with both UID = 0 and EUID = 0 can modify policy via /proc/ccs/ interface. But if you want to permit policy modification via /proc/ccs/ interface by non root user, you can write this keyword like</p>
 
 <table border="1">
 <tr><td>
-# echo manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+# echo manage_by_non_root | /usr/sbin/ccs-loadpolicy -m
 </td></tr>
 </table>
 
@@ -1080,18 +1080,18 @@ cat /proc/akari/version</p>
 
 <table border="1">
 <tr><td>
-# echo delete manage_by_non_root | /usr/sbin/akari-loadpolicy -m
+# echo delete manage_by_non_root | /usr/sbin/ccs-loadpolicy -m
 </td></tr>
 </table>
 
-<p>to enable UID and EUID checks again. Use chown/chmod as needed since the owner of /proc/akari/ interface is root.<br>
-To be able to do this steps, /sbin/akari-init also executes /etc/akari/akari-post-init if /etc/akari/akari-post-init is executable. Therefore, to allow access to /proc/akari/ interface by user demo, create /etc/akari/akari-post-init with</p>
+<p>to enable UID and EUID checks again. Use chown/chmod as needed since the owner of /proc/ccs/ interface is root.<br>
+To be able to do this steps, /sbin/ccs-init also executes /etc/ccs/ccs-post-init if /etc/ccs/ccs-post-init is executable. Therefore, to allow access to /proc/ccs/ interface by user demo, create /etc/ccs/ccs-post-init with</p>
 
 <table border="1">
 <tr><td>
 #! /bin/sh<br>
-echo manage_by_non_root &gt; /proc/akari/manager<br>
-chown -R demo /proc/akari/
+echo manage_by_non_root &gt; /proc/ccs/manager<br>
+chown -R demo /proc/ccs/
 </td></tr>
 </table>
 
@@ -1099,8 +1099,8 @@ chown -R demo /proc/akari/
 
 <table border="1">
 <tr><td>
-# chmod 755 /etc/akari/akari-post-init<br>
-# chown -R demo /etc/akari/
+# chmod 755 /etc/ccs/ccs-post-init<br>
+# chown -R demo /etc/ccs/
 </td></tr>
 </table>
 
@@ -1306,7 +1306,7 @@ chown -R demo /proc/akari/
 <p>You can make the process which violated policy in enforcing mode sleep for specified period.</p>
 
 <table border="1">
-<tr><td>Example of /proc/akari/profile</td><td>Meaning</td></tr>
+<tr><td>Example of /proc/ccs/profile</td><td>Meaning</td></tr>
 <tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 3 sleep for 0.1 second.</td></tr>
 <tr><td>4-PREFERENCE::enforcing={ penalty = 10 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 4 sleep for 1 second.</td></tr>
 </table>

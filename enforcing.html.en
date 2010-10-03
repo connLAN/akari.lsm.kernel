@@ -59,7 +59,7 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=3 mode=enforcing' /var/log/akari/reject_log.conf<br>
+[root@akari ~]# grep -A 3 -F 'profile=3 mode=enforcing' /var/log/ccs/reject_log.conf<br>
 #2010-09-09 20:43:43# profile=3 mode=enforcing (global-pid=3176) task={ pid=3176 ppid=3175 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=852009 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=15 argv[]={ "cat" "/etc/passwd" } envp[]={ "SELINUX_INIT=YES" "CONSOLE=/dev/console" "TERM=linux" "INIT_VERSION=sysvinit-2.86" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "RUNLEVEL=3" "runlevel=3" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "PREVLEVEL=N" "previous=N" "HOME=/" "SHLVL=4" "LANGUAGE=en_US.UTF-8" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
 file execute /bin/cat<br>
@@ -78,7 +78,7 @@ file read /bin/cat
 
 <table border="1">
 <tr><td>
-00 * * * * root /usr/lib/akari/akari-notifyd 0 'mail root@example.com'
+00 * * * * root /usr/lib/akari/ccs-notifyd 0 'mail root@example.com'
 </td></tr>
 </table>
 
@@ -132,8 +132,8 @@ file execute /bin/cat
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-queryd<br>
-Monitoring /proc/akari/query . Press Ctrl-C to terminate.<br>
+[root@akari ~]# /usr/sbin/ccs-queryd<br>
+Monitoring /proc/ccs/query . Press Ctrl-C to terminate.<br>
 <br>
 #2010-01-10 12:27:10# profile=3 mode=enforcing (global-pid=4210) task={ pid=4210 ppid=4205 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=1766 major=0 minor=17 perm=0666 type=char dev_major=1 dev_minor=3 } path1.parent={ uid=0 gid=0 ino=962 perm=0755 }<br>
 &lt;kernel&gt; /etc/rc.d/init.d/sshd<br>
@@ -206,7 +206,7 @@ Added 'file unlink /var/run/acpid.socket path1.type=socket'.
 </td></tr>
 </table>
 
-<p>Policy violation might occur while updating packages due to unusual behavior such as restarting daemons. When a policy violation occurs, a prompt appears in the "akari-queryd". The lines</p>
+<p>Policy violation might occur while updating packages due to unusual behavior such as restarting daemons. When a policy violation occurs, a prompt appears in the "ccs-queryd". The lines</p>
 
 <table border="1">
 <tr><td>
@@ -222,19 +222,19 @@ Validate whether or not to permit the request and tell the kernel your decision.
 
 <p>Never grant access requests unconditionally. The cause of policy violation is not always updating packages, but may be malicious requests by attackers. If you grant access requests caused by malicious requests by attackers, the system gets intruded.</p>
 
-<p>If "akari-queryd" is running, the access requests that violated policy are kept pending. To avoid sleeping forever because of pending access requests, never logout (for example, detaching from screen(1)) while "akari-queryd" is running.</p>
+<p>If "ccs-queryd" is running, the access requests that violated policy are kept pending. To avoid sleeping forever because of pending access requests, never logout (for example, detaching from screen(1)) while "ccs-queryd" is running.</p>
 
-<p>Do a series of operations to confirm that programs that are protected by MAC can run properly. If some access permissions are missing, the messages will be printed to "akari-queryd", so don't forget to monitor "akari-queryd".</p>
+<p>Do a series of operations to confirm that programs that are protected by MAC can run properly. If some access permissions are missing, the messages will be printed to "ccs-queryd", so don't forget to monitor "ccs-queryd".</p>
 
-<p>Note that "akari-queryd" directly edits the policy currently loaded into the kernel. Thus, the changes made by "akari-queryd" are lost by the system's shutdown. Be sure to run "akari-savepolicy" to save the latest policy.</p>
+<p>Note that "ccs-queryd" directly edits the policy currently loaded into the kernel. Thus, the changes made by "ccs-queryd" are lost by the system's shutdown. Be sure to run "ccs-savepolicy" to save the latest policy.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy
+[root@akari ~]# /usr/sbin/ccs-savepolicy
 </td></tr>
 </table>
 
-<p>You have finished updating policies. Close the console or terminal you executed "akari-queryd".</p>
+<p>You have finished updating policies. Close the console or terminal you executed "ccs-queryd".</p>
 
 <hr>
 

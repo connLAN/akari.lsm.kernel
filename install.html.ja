@@ -52,9 +52,9 @@
 
 <table border="1">
 <tr><td>
-# wget -O tools.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/tools.tar.gz?root=akari&amp;view=tar'<br>
-# tar -zxf tools.tar.gz<br>
-# cd tools/<br>
+# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
+# tar -zxf ccs-tools.tar.gz<br>
+# cd ccstools/<br>
 # make -s<br>
 # make -s install
 </td></tr>
@@ -64,20 +64,20 @@
 
 <h2>ステップ３：起動設定のアップデート</h2>
 
-<p>init=/sbin/akari-init というパラメータをカーネル起動時のコマンドラインに追加してください。以下に例を示します。</p>
+<p>init=/sbin/ccs-init というパラメータをカーネル起動時のコマンドラインに追加してください。以下に例を示します。</p>
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.11.4.el5)<br>
+title CentOS (2.6.18-194.17.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.17.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.17.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.11.4.el5)<br>
+title CentOS (2.6.18-194.17.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ init=/sbin/akari-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.17.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.17.1.el5.img
 </td></tr>
 </table>
 
@@ -85,20 +85,20 @@ title CentOS (2.6.18-194.11.4.el5)<br>
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.11.4.el5)<br>
+title CentOS (2.6.18-194.17.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.17.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.17.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.11.4.el5)<br>
+title CentOS (2.6.18-194.17.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.11.4.el5 ro root=LABEL=/ selinux=0 init=/sbin/akari-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.11.4.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.17.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.17.1.el5.img
 </td></tr>
 </table>
 
-<p>AKARI をアンインストールしたい場合、 init=/sbin/akari-init というパラメータをカーネル起動時のコマンドラインから削除して再起動してください。</p>
+<p>AKARI をアンインストールしたい場合、 init=/sbin/ccs-init というパラメータをカーネル起動時のコマンドラインから削除して再起動してください。</p>
 
 <hr>
 

@@ -25,17 +25,17 @@
 </td></tr>
 </table>
 
-<p>AKARI のポリシーファイルが /etc/akari/ ディレクトリの中に作成されます。</p>
+<p>AKARI のポリシーファイルが /etc/ccs/ ディレクトリの中に作成されます。</p>
 
 <hr>
 
 <h2>ステップ２：ポリシーエディタの使い方を学習する</h2>
 
-<p>/etc/akari/ というオプションと一緒に、 AKARI のポリシーエディタである akari-editpolicy を実行すると、以下のような画面が表示されます。</p>
+<p>/etc/ccs/ というオプションと一緒に、 AKARI のポリシーエディタである ccs-editpolicy を実行すると、以下のような画面が表示されます。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-editpolicy /etc/akari/
+[root@akari ~]# /usr/sbin/ccs-editpolicy /etc/ccs/
 </td></tr>
 </table>
 
@@ -213,21 +213,21 @@
 </tr>
 </table>
 
-<p>アクセス許可ログ /proc/akari/grant_log とアクセス拒否ログ /proc/akari/reject_log をカーネルから読み出してファイルに保存する為に、 akari-auditd というデーモンプログラムを利用できます。以下のコマンドを /etc/rc.local 等から実行するようにしてください。</p>
+<p>アクセス許可ログ /proc/ccs/grant_log とアクセス拒否ログ /proc/ccs/reject_log をカーネルから読み出してファイルに保存する為に、 ccs-auditd というデーモンプログラムを利用できます。以下のコマンドを /etc/rc.local 等から実行するようにしてください。</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/akari-auditd アクセス許可ログの保存場所 アクセス拒否ログの保存場所
+/usr/sbin/ccs-auditd アクセス許可ログの保存場所 アクセス拒否ログの保存場所
 </td></tr>
 </table>
 
-<p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 akari-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
+<p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 ccs-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
 
-<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/akari/reject_log.conf に保存するものとします。</p>
+<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/ccs/reject_log.conf に保存するものとします。</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/akari-auditd /dev/null /var/log/akari/reject_log.conf
+/usr/sbin/ccs-auditd /dev/null /var/log/ccs/reject_log.conf
 </td></tr>
 </table>
 
@@ -235,7 +235,7 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# mkdir -p /var/log/akari
+[root@akari ~]# mkdir -p /var/log/ccs
 </td></tr>
 </table>
 
@@ -243,7 +243,7 @@
 
 <table border="1">
 <tr><td>
-/var/log/akari/reject_log.conf {<br>
+/var/log/ccs/reject_log.conf {<br>
 &nbsp;&nbsp;weekly<br>
 &nbsp;&nbsp;rotate 9<br>
 &nbsp;&nbsp;missingok<br>
@@ -253,7 +253,7 @@
 </td></tr>
 </table>
 
-<p>アクセス許可ログ・アクセス拒否ログのどちらも保存しない場合には akari-auditd を実行する必要はありません。また、プロファイルで PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } を指定しておくことで、消費メモリの節約と応答速度の向上が期待できます。</p>
+<p>アクセス許可ログ・アクセス拒否ログのどちらも保存しない場合には ccs-auditd を実行する必要はありません。また、プロファイルで PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } を指定しておくことで、消費メモリの節約と応答速度の向上が期待できます。</p>
 
 <hr>
 

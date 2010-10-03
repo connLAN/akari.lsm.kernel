@@ -101,7 +101,7 @@ But if you want to convert temporary files into patterns non-interactively, you 
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-findtemp &lt; /proc/akari/domain_policy<br>
+[root@akari ~]# /usr/sbin/ccs-findtemp &lt; /proc/ccs/domain_policy<br>
 /etc/mtab.tmp<br>
 /etc/mtab~<br>
 /etc/mtab~2302<br>
@@ -131,8 +131,8 @@ But if you want to convert temporary files into patterns non-interactively, you 
 
 <table border="1">
 <tr><td>
-[root@akari ~]# echo 'file_pattern /etc/mtab~\$' | /usr/sbin/akari-loadpolicy -e<br>
-[root@akari ~]# echo 'file_pattern /tmp/sh-thd-\$' | /usr/sbin/akari-loadpolicy -e
+[root@akari ~]# echo 'file_pattern /etc/mtab~\$' | /usr/sbin/ccs-loadpolicy -e<br>
+[root@akari ~]# echo 'file_pattern /tmp/sh-thd-\$' | /usr/sbin/ccs-loadpolicy -e
 </td></tr>
 </table>
 
@@ -140,7 +140,7 @@ But if you want to convert temporary files into patterns non-interactively, you 
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy -d | /usr/sbin/akari-patternize '/etc/mtab~\$' '/tmp/sh-thd-\$' | /usr/sbin/akari-loadpolicy -d
+[root@akari ~]# /usr/sbin/ccs-savepolicy -d | /usr/sbin/ccs-patternize '/etc/mtab~\$' '/tmp/sh-thd-\$' | /usr/sbin/ccs-loadpolicy -d
 </td></tr>
 </table>
 

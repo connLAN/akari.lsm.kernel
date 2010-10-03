@@ -59,7 +59,7 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=3 mode=enforcing' /var/log/akari/reject_log.conf<br>
+[root@akari ~]# grep -A 3 -F 'profile=3 mode=enforcing' /var/log/ccs/reject_log.conf<br>
 #2010-09-09 20:43:43# profile=3 mode=enforcing (global-pid=3176) task={ pid=3176 ppid=3175 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=852009 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=15 argv[]={ "cat" "/etc/passwd" } envp[]={ "SELINUX_INIT=YES" "CONSOLE=/dev/console" "TERM=linux" "INIT_VERSION=sysvinit-2.86" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "RUNLEVEL=3" "runlevel=3" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "PREVLEVEL=N" "previous=N" "HOME=/" "SHLVL=4" "LANGUAGE=en_US.UTF-8" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
 file execute /bin/cat<br>
@@ -78,7 +78,7 @@ file read /bin/cat
 
 <table border="1">
 <tr><td>
-00 * * * * root /usr/lib/akari/akari-notifyd 0 'mail root@example.com'
+00 * * * * root /usr/lib/akari/ccs-notifyd 0 'mail root@example.com'
 </td></tr>
 </table>
 
@@ -132,8 +132,8 @@ file execute /bin/cat
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-queryd<br>
-Monitoring /proc/akari/query . Press Ctrl-C to terminate.<br>
+[root@akari ~]# /usr/sbin/ccs-queryd<br>
+Monitoring /proc/ccs/query . Press Ctrl-C to terminate.<br>
 <br>
 #2010-01-10 12:27:10# profile=3 mode=enforcing (global-pid=4210) task={ pid=4210 ppid=4205 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=1766 major=0 minor=17 perm=0666 type=char dev_major=1 dev_minor=3 } path1.parent={ uid=0 gid=0 ino=962 perm=0755 }<br>
 &lt;kernel&gt; /etc/rc.d/init.d/sshd<br>
@@ -206,7 +206,7 @@ Added 'file unlink /var/run/acpid.socket path1.type=socket'.
 </td></tr>
 </table>
 
-<p>パッケージをアップデート中に、デーモンの再起動などでポリシー違反が発生するかもしれません。ポリシー違反が発生した場合、 akari-queryd にプロンプトが表示されます。</p>
+<p>パッケージをアップデート中に、デーモンの再起動などでポリシー違反が発生するかもしれません。ポリシー違反が発生した場合、 ccs-queryd にプロンプトが表示されます。</p>
 
 <table border="1">
 <tr><td>
@@ -222,19 +222,19 @@ Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):
 
 <p>無条件にアクセス要求を許可しないようにしてください。ポリシー違反の原因がパッケージのアップデートによるものとは限らず、侵入者の攻撃によるものである可能性があるからです。もし、侵入者の攻撃によって発生したアクセス要求に対してアクセスを許可してしまった場合、侵入されてしまいます。</p>
 
-<p>akari-queryd が動作している場合、ポリシーによって拒否されたアクセス要求は、あなたが応答するまで保留状態となります。そのため、 akari-queryd を動作させたままログアウトしないでください。</p>
+<p>ccs-queryd が動作している場合、ポリシーによって拒否されたアクセス要求は、あなたが応答するまで保留状態となります。そのため、 ccs-queryd を動作させたままログアウトしないでください。</p>
 
-<p>次に、強制アクセス制御の対象となっているプログラムの動作を確認するために、一通りの操作を試してください。もし、アクセス許可の不足が検出された場合は akari-queryd に表示されますので、 akari-queryd の監視を忘れないようにしてください。</p>
+<p>次に、強制アクセス制御の対象となっているプログラムの動作を確認するために、一通りの操作を試してください。もし、アクセス許可の不足が検出された場合は ccs-queryd に表示されますので、 ccs-queryd の監視を忘れないようにしてください。</p>
 
-<p>なお、 akari-queryd はメモリ上のポリシーを直接編集します。シャットダウンすると失われてしまいますので、忘れずに akari-savepolicy を実行してポリシーを保存してください。</p>
+<p>なお、 ccs-queryd はメモリ上のポリシーを直接編集します。シャットダウンすると失われてしまいますので、忘れずに ccs-savepolicy を実行してポリシーを保存してください。</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy
+[root@akari ~]# /usr/sbin/ccs-savepolicy
 </td></tr>
 </table>
 
-<p>以上でパッケージの更新作業は完了です。 akari-queryd を実行していたコンソールまたはターミナルを閉じてください。</p>
+<p>以上でパッケージの更新作業は完了です。 ccs-queryd を実行していたコンソールまたはターミナルを閉じてください。</p>
 
 <hr>
 

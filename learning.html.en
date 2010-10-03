@@ -31,7 +31,7 @@
 </td></tr>
 </table>
 
-<p>Let's start AKARI's policy editor. Please note that this time, you don't need to pass /etc/akari/ to the command line, for we directly edits AKARI's policy currently used by the kernel.</p>
+<p>Let's start AKARI's policy editor. Please note that this time, you don't need to pass /etc/ccs/ to the command line, for we directly edits AKARI's policy currently used by the kernel.</p>
 
 <p>In the CentOS 5.5 , Apache's program's location is /usr/sbin/httpd .<br>
 Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line /usr/sbin/httpd . In this picture, it is line 398.</p>
@@ -78,21 +78,21 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <p>Be sure to sometimes save policy, for necessary permissions are accumulated on only kernel memory. If you reboot the system, all gathered permissions will be lost.</p>
 
-<p>To save the policy currently in the kernel onto the disk, use "akari-savepolicy" command.</p>
+<p>To save the policy currently in the kernel onto the disk, use "ccs-savepolicy" command.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy
+[root@akari ~]# /usr/sbin/ccs-savepolicy
 </td></tr>
 </table>
 
-<p>By executing "akari-savepolicy", two files ("exception_policy.conf", "domain_policy.conf") are created in the /etc/akari/ directory. To be accurate, they are symbolic links to text files whose filenames contain the creation time.</p>
+<p>By executing "ccs-savepolicy", two files ("exception_policy.conf", "domain_policy.conf") are created in the /etc/ccs/ directory. To be accurate, they are symbolic links to text files whose filenames contain the creation time.</p>
 
-<p>To load the policy currently on the disk into the kernel, use "akari-loadpolicy" command.</p>
+<p>To load the policy currently on the disk into the kernel, use "ccs-loadpolicy" command.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-loadpolicy af
+[root@akari ~]# /usr/sbin/ccs-loadpolicy af
 </td></tr>
 </table>
 
@@ -124,7 +124,7 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf<br>
 #2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3057) task={ pid=3057 ppid=3049 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878<br>
@@ -223,11 +223,11 @@ file read /etc/group
 </td></tr>
 </table>
 
-<p>You can compress these logs using "akari-sortpolicy" command.</p>
+<p>You can compress these logs using "ccs-sortpolicy" command.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/akari-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
 #2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
@@ -269,11 +269,11 @@ network unix stream connect /var/run/setrans/.setrans-unix
 </td></tr>
 </table>
 
-<p>You can generate finest grained access logs by applying "convert-audit-log" command before applying "akari-sortpolicy" command.</p>
+<p>You can generate finest grained access logs by applying "convert-audit-log" command before applying "ccs-sortpolicy" command.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/lib/akari/convert-audit-log | /usr/sbin/akari-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/lib/akari/convert-audit-log | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878 task.pid=3057 task.ppid=3049 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48<br>
@@ -303,21 +303,21 @@ network unix stream connect /var/run/setrans/.setrans-unix task.pid=3392 task.pp
 </td></tr>
 </table>
 
-<p>You can save the compressed logs into a temporary file. Then, you can edit as you need and append to currently used policy in the kernel using "akari-loadpolicy" command. akari-loadpolicy's "-" option means read from stdin, "d" option means domain_policy.conf .</p>
+<p>You can save the compressed logs into a temporary file. Then, you can edit as you need and append to currently used policy in the kernel using "ccs-loadpolicy" command. ccs-loadpolicy's "-" option means read from stdin, "d" option means domain_policy.conf .</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/akari-sortpolicy &gt; ~/rejected.log<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy &gt; ~/rejected.log<br>
 [root@akari ~]# emacs ~/rejected.log<br>
-[root@akari ~]# /usr/sbin/akari-loadpolicy -d &lt; ~/rejected.log
+[root@akari ~]# /usr/sbin/ccs-loadpolicy -d &lt; ~/rejected.log
 </td></tr>
 </table>
 
-<p>Since you are editing policy currently loaded into the kernel, changes will be lost if you shutdown the system without saving. Save exception_policy.conf and domain_poilicy.conf using "akari-savepolicy" command.</p>
+<p>Since you are editing policy currently loaded into the kernel, changes will be lost if you shutdown the system without saving. Save exception_policy.conf and domain_poilicy.conf using "ccs-savepolicy" command.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/akari-savepolicy a
+[root@akari ~]# /usr/sbin/ccs-savepolicy a
 </td></tr>
 </table>
 

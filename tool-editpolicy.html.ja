@@ -17,9 +17,9 @@
 
 <p>AKARI には、 CUI で動作するポリシーエディタが付属しています。</p>
 
-<p>予め /proc/akari/manager に「 akari-editpolicy が動作するドメインのドメイン名」または「 akari-editpolicy へのパス名（通常は /usr/sbin/akari-editpolicy ）」が登録されている必要があります。</p>
+<p>予め /proc/ccs/manager に「 ccs-editpolicy が動作するドメインのドメイン名」または「 ccs-editpolicy へのパス名（通常は /usr/sbin/ccs-editpolicy ）」が登録されている必要があります。</p>
 
-<p>シェルプロンプトから akari-editpolicy と入力すると、ポリシーエディタを実行することができます。</p>
+<p>シェルプロンプトから ccs-editpolicy と入力すると、ポリシーエディタを実行することができます。</p>
 
 <h2>（１）ポリシーエディタを終了するには</h2>
 

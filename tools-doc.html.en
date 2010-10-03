@@ -13,8 +13,8 @@
 
 <hr>
 
-<h3><a name="akari-editpolicy">&lt;Policy Editor "akari-editpolicy"&gt;</a></h3>
-<p>Edits the current policy in /proc/akari/ directory.</p>
+<h3><a name="ccs-editpolicy">&lt;Policy Editor "ccs-editpolicy"&gt;</a></h3>
+<p>Edits the current policy in /proc/ccs/ directory.</p>
 <p>You may give one of 'e' 'd' 'p' 'm' 'u' to the commandline to choose the initial screen. If not given, screen for domain listing is shown.</p>
 <p>You can use keys listed below.</p>
 
@@ -59,7 +59,7 @@ Set new quota value for selected entries. (Valid only for screen for memory usag
 
 <p>A tutorial is available at <a href="tool-editpolicy.html.en">How to use Policy Editor</a>.</p>
 
-<h3><a name="akari-loadpolicy">&lt;Policy Loader "akari-loadpolicy"&gt;</a></h3>
+<h3><a name="ccs-loadpolicy">&lt;Policy Loader "ccs-loadpolicy"&gt;</a></h3>
 <p>Reloads the on-disk policy onto memory.</p>
 <p>There are the following commandline parameters.</p>
 <ul>
@@ -73,19 +73,19 @@ Set new quota value for selected entries. (Valid only for screen for memory usag
 <li>- --- Read from stdin. Only one of 'e' 'd' 'p' 'm' 'u' is possible when using this option.
 </ul>
 
-<h3><a name="akari-setlevel">&lt;Control Level Changer "akari-setlevel"&gt;</a></h3>
-<p>Changes the current control level (i.e. writing to /proc/akari/profile ) and displays the new control level.</p>
+<h3><a name="ccs-setlevel">&lt;Control Level Changer "ccs-setlevel"&gt;</a></h3>
+<p>Changes the current control level (i.e. writing to /proc/ccs/profile ) and displays the new control level.</p>
 <p>You can give the new control level from commandline parameter.</p>
 
-<h3><a name="akari-setprofile">&lt;Profile Selector "akari-setprofile"&gt;</a></h3>
+<h3><a name="ccs-setprofile">&lt;Profile Selector "ccs-setprofile"&gt;</a></h3>
 <p>Assigns a profile to domains.</p>
 <p>You can give the new profile number and domainnames from the commandline parameter. The list of domainnames that the profile number assigned to has changed is printed.</p>
 
-<h3><a name="akari-pstree">&lt;Process Info Viewer "akari-pstree"&gt;</a></h3>
+<h3><a name="ccs-pstree">&lt;Process Info Viewer "ccs-pstree"&gt;</a></h3>
 <p>Lists the domainnames of currently running processes belong to and the profile numbers the domains currently assigned to.</p>
 <p>This program shows the profile number, the name of process, PID, the domainname like "pstree" command.</p>
 
-<h3><a name="akari-savepolicy">&lt;Policy Saver "akari-savepolicy"&gt;</a></h3>
+<h3><a name="ccs-savepolicy">&lt;Policy Saver "ccs-savepolicy"&gt;</a></h3>
 <p>Saves the on-memory policy onto disk.</p>
 <p>There are the following commandline parameters.</p>
 <ul>
@@ -99,41 +99,41 @@ Set new quota value for selected entries. (Valid only for screen for memory usag
 <li>- --- Write to stdout. Only one of 'e' 'd' 'p' 'm' 'u' is possible when using this option.
 </ul>
 
-<h3><a name="akari-auditd">&lt;Access Log Reading Daemon "akari-auditd"&gt;</a></h3>
-<p>Reads from /proc/akari/grant_log and /proc/akari/reject_log and writes to the location given in the commandline parameters.</p>
+<h3><a name="ccs-auditd">&lt;Access Log Reading Daemon "ccs-auditd"&gt;</a></h3>
+<p>Reads from /proc/ccs/grant_log and /proc/ccs/reject_log and writes to the location given in the commandline parameters.</p>
 <p>The first commandline parameter is the location of access granted log. The second one is the location of access rejected log. You may give /dev/null as the location. If you needn't to save access logs, you needn't to run this program.</p>
 <p>This program runs as a daemon. You can start from /etc/rc.d/rc.local if you are using RedHat Linux. The number of logs that the kernel will keep is given using profile's PREFERENCE::audit={ max_grant_log=integer max_reject_log=integer } lines.</p>
 
-<h3><a name="akari-sortpolicy">&lt;Access Log Compressor "akari-sortpolicy"&gt;</a></h3>
-<p>Remove duplicated entry from logs written by "akari-auditd".</p>
-<p>Reads logs written by "akari-auditd" from standard input and sorts by domains and removes duplicated entries and writes to standard output.</p>
+<h3><a name="ccs-sortpolicy">&lt;Access Log Compressor "ccs-sortpolicy"&gt;</a></h3>
+<p>Remove duplicated entry from logs written by "ccs-auditd".</p>
+<p>Reads logs written by "ccs-auditd" from standard input and sorts by domains and removes duplicated entries and writes to standard output.</p>
 
-<h3><a name="akari-findtemp">&lt;Temporal Pathnames Detector "akari-findtemp"&gt;</a></h3>
+<h3><a name="ccs-findtemp">&lt;Temporal Pathnames Detector "ccs-findtemp"&gt;</a></h3>
 <p>Reads domain policy from standard input and checks the existence of pathnames, and dumps the nonexistent pathnames.</p>
-<p>The nonexistent pathnames are likely used as temporary pathnames. So find the naming rules from similar nonexistent pathnames and append the pattern to /etc/akari/exception_policy.conf and /proc/akari/exception_policy .</p>
-<p>You can pass the content of /etc/akari/domain_policy.conf or /proc/akari/domain_policy using redirection or pipes to the standard input of this program.</p>
+<p>The nonexistent pathnames are likely used as temporary pathnames. So find the naming rules from similar nonexistent pathnames and append the pattern to /etc/ccs/exception_policy.conf and /proc/ccs/exception_policy .</p>
+<p>You can pass the content of /etc/ccs/domain_policy.conf or /proc/ccs/domain_policy using redirection or pipes to the standard input of this program.</p>
 
-<h3><a name="akari-queryd">&lt;Delayed Enforcing Mode Handler "akari-queryd"&gt;</a></h3>
+<h3><a name="ccs-queryd">&lt;Delayed Enforcing Mode Handler "ccs-queryd"&gt;</a></h3>
 <p>Detects policy violation and displays the access request. You can tell the system whether the access request should be granted (or granted and policy should be appended to grant the access request) or rejected after you validate the access request.</p>
 <p>By running this program while updating packages, you can avoid errors due to insufficient permissions.</p>
 <p>Never grant access requests unconditionally. The cause of policy violation is not always updating packages, but may by malicious requests by attackers. If you grant access requests caused by malicious requests by attackers, the system gets intruded.</p>
 
-<h3><a name="akari-notifyd">&lt;Policy Violation Notifyier "akari-notifyd"&gt;</a></h3>
+<h3><a name="ccs-notifyd">&lt;Policy Violation Notifyier "ccs-notifyd"&gt;</a></h3>
 <p>Detects policy violation and take some actions (e.g. send a mail) to notify it to the administrator.</p>
 <p>By running this program from /etc/crontab , you can know the occurrence of policy violation in enforcing mode as soon as possible.</p>
 
-<h3><a name="akari-checkpolicy">&lt;Policy Syntax Checker "akari-checkpolicy"&gt;</a></h3>
+<h3><a name="ccs-checkpolicy">&lt;Policy Syntax Checker "ccs-checkpolicy"&gt;</a></h3>
 <p>Reads policy files from standard input and checks syntaxes.</p>
 <p>Prints errors with line numbers if any.</p>
 
-<h3><a name="akari-init">&lt;Initial Policy Loader "akari-init"&gt;</a></h3>
-<p>Loads policy files from /etc/akari/ directory.</p>
-<p>Put this program as /sbin/akari-init and execute this program by passing init=/sbin/akari-init to the kernel's boot parameter.</p>
+<h3><a name="ccs-init">&lt;Initial Policy Loader "ccs-init"&gt;</a></h3>
+<p>Loads policy files from /etc/ccs/ directory.</p>
+<p>Put this program as /sbin/ccs-init and execute this program by passing init=/sbin/ccs-init to the kernel's boot parameter.</p>
 
-<h3><a name="akari-domainmatch">&lt;ACL Searcher "akari-domainmatch"&gt;</a></h3>
-<p>This is a "fgrep" for /proc/akari/domain_policy .</p>
+<h3><a name="ccs-domainmatch">&lt;ACL Searcher "ccs-domainmatch"&gt;</a></h3>
+<p>This is a "fgrep" for /proc/ccs/domain_policy .</p>
 
-<h3><a name="akari-patternize">&lt;Pathname Pattern Replacer "akari-patternize"&gt;</a></h3>
+<h3><a name="ccs-patternize">&lt;Pathname Pattern Replacer "ccs-patternize"&gt;</a></h3>
 <p>Reads domain policy from standard input and replaces pathnames with patterns if the pathname matches to patterns given at commandline and writes to standard output. Pathnames that contains execute permission and domainnames won't be patterned.</p>
 
 <h3><a name="init_policy">&lt;Policy Template Generator "init_policy"&gt;</a></h3>

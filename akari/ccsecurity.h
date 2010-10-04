@@ -116,12 +116,8 @@ struct ccsecurity_operations {
 				     struct vfsmount *mnt);
 	int (*uselib_permission) (struct dentry *dentry, struct vfsmount *mnt);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	int (*fcntl_permission) (struct file *file, unsigned int cmd,
 				 unsigned long arg);
-#else
-	int (*rewrite_permission) (struct file *filp);
-#endif
 	int (*kill_permission) (pid_t pid, int sig);
 	int (*tgkill_permission) (pid_t tgid, pid_t pid, int sig);
 	int (*tkill_permission) (pid_t pid, int sig);
@@ -253,7 +249,6 @@ static inline int ccs_open_permission(struct file *filp)
 }
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 static inline int ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				       unsigned long arg)
 {
@@ -261,13 +256,6 @@ static inline int ccs_fcntl_permission(struct file *file, unsigned int cmd,
 		= ccsecurity_ops.fcntl_permission;
 	return func ? func(file, cmd, arg) : 0;
 }
-#else
-static inline int ccs_rewrite_permission(struct file *filp)
-{
-	int (*func) (struct file *) = ccsecurity_ops.rewrite_permission;
-	return func ? func(filp) : 0;
-}
-#endif
 
 static inline int ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 				       unsigned long arg)
@@ -636,11 +624,6 @@ static inline int ccs_open_permission(struct file *filp)
 	return 0;
 }
 #endif
-
-static inline int ccs_rewrite_permission(struct file *filp)
-{
-	return 0;
-}
 
 static inline int ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 				       unsigned long arg)

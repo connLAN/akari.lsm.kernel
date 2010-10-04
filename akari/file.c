@@ -967,7 +967,7 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 					     01);
 	return 0;
 }
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+#else
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg)
 {
@@ -976,12 +976,6 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 		return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
 					     02);
 	return 0;
-}
-#else
-static int __ccs_rewrite_permission(struct file *filp)
-{
-	/* 02 means "write". */
-	return __ccs_open_permission(filp->f_dentry, filp->f_vfsmnt, 02);
 }
 #endif
 
@@ -1318,17 +1312,11 @@ void __init ccs_file_init(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
 	ccsecurity_ops.save_open_mode = __ccs_save_open_mode;
 	ccsecurity_ops.clear_open_mode = __ccs_clear_open_mode;
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
-	ccsecurity_ops.open_permission = ccs_new_open_permission;
-#else
 	ccsecurity_ops.open_permission = __ccs_open_permission;
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	ccsecurity_ops.fcntl_permission = __ccs_fcntl_permission;
 #else
-	ccsecurity_ops.rewrite_permission = __ccs_rewrite_permission;
+	ccsecurity_ops.open_permission = ccs_new_open_permission;
 #endif
+	ccsecurity_ops.fcntl_permission = __ccs_fcntl_permission;
 	ccsecurity_ops.ioctl_permission = __ccs_ioctl_permission;
 	ccsecurity_ops.chmod_permission = __ccs_chmod_permission;
 	ccsecurity_ops.chown_permission = __ccs_chown_permission;

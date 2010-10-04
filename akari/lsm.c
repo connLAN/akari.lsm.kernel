@@ -620,15 +620,7 @@ static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 			  unsigned long arg)
 {
-	int rc;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	rc = ccs_fcntl_permission(file, cmd, arg);
-#else
-	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
-		rc = ccs_rewrite_permission(file);
-	else
-		rc = 0;
-#endif
+	int rc = ccs_fcntl_permission(file, cmd, arg);
 	if (rc)
 		return rc;
 	return original_security_ops.file_fcntl(file, cmd, arg);

@@ -21,11 +21,19 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/lib/akari/init_policy
+[root@akari ~]# /usr/lib/ccs/init_policy
 </td></tr>
 </table>
 
 <p>AKARI のポリシーファイルが /etc/ccs/ ディレクトリの中に作成されます。</p>
+
+<p>/etc/ccs/ccs-load-module の ccsecurity という部分を akari に書き換えてください。</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# sed -i -e 's/ccsecurity/akari/' /etc/ccs/ccs-load-module
+</td></tr>
+</table>
 
 <hr>
 
@@ -72,10 +80,6 @@
 <td>学習モードに関する設定。</td>
 </tr>
 <tr>
-<td>PREFERENCE::permissive</td>
-<td>確認モードに関する設定。</td>
-</tr>
-<tr>
 <td>PREFERENCE::enforcing</td>
 <td>強制モードに関する設定。</td>
 </tr>
@@ -86,21 +90,6 @@
 <tr>
 <td>CONFIG</td>
 <td>強制アクセス制御のモード設定。</td>
-</tr>
-</table>
-<p>PREFERENCE::learning PREFERENCE::permissive PREFERENCE::enforcing の verbose については以下の値を指定できます。</p>
-<table border="1">
-<tr>
-<td>値</td>
-<td>内容</td>
-</tr>
-<tr>
-<td>no</td>
-<td>ポリシー違反のメッセージを表示しない。</td>
-</tr>
-<tr>
-<td>yes</td>
-<td>ポリシー違反のメッセージを表示する。</td>
 </tr>
 </table>
 <p>CONFIG 行で指定されている mode については以下の値を指定できます。</p>
@@ -137,31 +126,27 @@
 
 <table border="1">
 <tr><td>
-(1) パス名のパターン
-</td><td>
-<p>file_pattern というキーワードを使用して、パス名のパターンを指定することができます。ファイルに対する操作が行われた際に、要求されたパス名が file_pattern というキーワードを使用して指定されたパス名のパターンと一致した場合、パターン化されたパス名でポリシーが生成されます。</p>
-</td></tr><tr><td>
-(2) パス名のグループ
+(1) パス名のグループ
 </td><td>
 <p>path_group というキーワードを使用して、パス名のグループを指定することができます。これは、複数のパス名を集約することでポリシーの記述量を減らすためのマクロです。</p>
 </td></tr><tr><td>
-(3) 数値のグループ
+(2) 数値のグループ
 </td><td>
 <p>number_group というキーワードを使用して、数値のグループを指定することができます。これは、複数の数値を集約することでポリシーの記述量を減らすためのマクロです。</p>
 </td></tr><tr><td>
-(4) アドレスのグループ
+(3) アドレスのグループ
 </td><td>
 <p>address_group というキーワードを使用して、 IPv4 または IPv6 アドレスのグループを指定することができます。これは、複数の IP アドレスを集約することでポリシーの記述量を減らすためのマクロです。<br>
 </td></tr><tr><td>
-(5) アクセス許可のグループ
+(4) アクセス許可のグループ
 </td><td>
 <p>acl_group というキーワードに続けてグループ番号およびそのグループに与えられるアクセス許可を指定することができます。ドメインポリシーの中から use_group というキーワードで参照されます。これは、共通して与えられるパーミッションをグループ化することでポリシーの記述量を減らすためのマクロです。</p>
 </td></tr><tr><td>
-(6) プログラム名の集約
+(5) プログラム名の集約
 </td><td>
 <p>AKARI では個々のプログラムのパス名をドメイン遷移を行う際に使用しますが、 aggregator というキーワードを使用することで必要に応じて複数のプログラムのパス名を１個のプログラムのパス名に集約して扱うことができます。</p>
 </td></tr><tr><td>
-(7) ドメイン遷移の例外
+(6) ドメイン遷移の例外
 </td><td>
 <p>AKARI では原則としてプログラムが実行されるたびにドメイン遷移が発生しますが、必要に応じてドメイン遷移を抑制したり初期化したりすることができます。</p>
 <p>initialize_domain というキーワードを使用して、ドメイン遷移履歴をリセットするプログラムを指定することができます。例えば、 initialize_domain /usr/sbin/sshd という指定が行われている場合、 /usr/sbin/sshd は &lt;kernel&gt; /usr/sbin/sshd というドメインで動作するようになります。</p>

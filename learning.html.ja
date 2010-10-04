@@ -114,11 +114,9 @@
 
 <p>q キーを押してポリシーエディタを終了してください。その後、 Apache に対して許可したい操作を再度行ってください。</p>
 
-<p>もしプロファイルで PREFERENCE::permissive={ verbose=yes } と設定されている場合（デフォルトでそうなっています）、ポリシーで許可されていない操作を行うと WARNING: というメッセージがコンソールに表示されます。</p>
+<p>ポリシーで許可されていない操作を行うと /proc/ccs/stat のカウンタが増加していきます。</p>
 
 <p><img src="operation-permissive.png" width="891" height="560"></p>
-
-<p><img src="permissive-warning.png" width="720" height="400"></p>
 
 <p>もしアクセスログの設定を<a href="initialize.html.ja#configure_audit_daemon">第２章：設定の初期化</a>で行っていた場合は、必要なアクセス許可を grep を使ってアクセスログから抽出することができます。</p>
 

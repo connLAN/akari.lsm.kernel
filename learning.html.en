@@ -114,11 +114,9 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <p>Press 'q' key to quit the policy editor. Redo whatever you want to allow Apache to do.</p>
 
-<p>If the profile is configured as "PREFERENCE::permissive={ verbose=yes }" (this is default), the "WARNING:" messages will be printed to the console when policy violation occurs.</p>
+<p>The counter in /proc/ccs/stat will incremented when policy violation occurs.</p>
 
 <p><img src="operation-permissive.png" width="891" height="560"></p>
-
-<p><img src="permissive-warning.png" width="720" height="400"></p>
 
 <p>If you have configured audit logs at <a href="initialize.html.en#configure_audit_daemon">Phase 2: Initializing configuration.</a>, you can pick up necessary permissions from audit logs using "grep" command.</p>
 

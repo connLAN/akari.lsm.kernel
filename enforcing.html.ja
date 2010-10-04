@@ -51,10 +51,6 @@
 
 <p><img src="unix-penguin-rejected.png" width="684" height="597"></p>
 
-<p>もしプロファイルで PREFERENCE::enforcing={ verbose=yes } と設定されている場合（デフォルトでそうなっています）、ポリシーで許可されていない操作を行うと ERROR: というメッセージがコンソールに表示されます。</p>
-
-<p><img src="enforcing-error.png" width="720" height="400"></p>
-
 <p>もしアクセスログの設定を<a href="initialize.html.ja#configure_audit_daemon">第２章：設定の初期化</a>で行っていた場合は、拒否されたアクセス要求を grep を使ってアクセスログから抽出することができます。</p>
 
 <table border="1">

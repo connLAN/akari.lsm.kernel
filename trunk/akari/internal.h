@@ -29,6 +29,7 @@
 #include <linux/sched.h>
 #include <linux/version.h>
 #include <linux/in6.h>
+#ifndef CONFIG_CCSECURITY
 #define CONFIG_CCSECURITY
 #define CONFIG_CCSECURITY_MAX_GRANT_LOG    1024
 #define CONFIG_CCSECURITY_MAX_REJECT_LOG   1024
@@ -36,6 +37,7 @@
 #define CONFIG_CCSECURITY_DEFAULT_LOADER "/sbin/ccs-init"
 #define CONFIG_CCSECURITY_ALTERNATIVE_TRIGGER "/sbin/ccs-start"
 #define CONFIG_CCSECURITY_BUILTIN_INITIALIZERS ""
+#endif
 #include "ccsecurity.h"
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
 #include <linux/fs.h>

@@ -235,8 +235,9 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 		rc = ccs_open_permission(bprm->file);
 #else
+		/* 01 means "read". */
 		rc = ccs_open_permission(bprm->file->f_dentry,
-					 bprm->file->f_vfsmnt, MAY_READ);
+					 bprm->file->f_vfsmnt, 01);
 #endif
 	}
 	if (rc)
@@ -325,6 +326,14 @@ static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
 	if (rc)
 		return rc;
 	return original_security_ops.path_chmod(dentry, vfsmnt, mode);
+}
+
+static int ccs_path_chroot(struct path *path)
+{
+	int rc = ccs_chroot_permission(path);
+	if (rc)
+		return rc;
+	return original_security_ops.path_chroot(path);
 }
 #endif
 
@@ -544,8 +553,7 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
-static int ccs_old_pivot_root_permission(struct nameidata *old_nd,
-					 struct nameidata *new_nd)
+static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 {
 	int rc = ccs_pivot_root_permission(old_nd, new_nd);
 	if (rc)
@@ -553,9 +561,8 @@ static int ccs_old_pivot_root_permission(struct nameidata *old_nd,
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
-static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
-				    char *type, unsigned long flags,
-				    void *data_page)
+static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
+			unsigned long flags, void *data_page)
 {
 	int rc = ccs_mount_permission(dev_name, nd, type, flags, data_page);
 	if (rc)
@@ -564,8 +571,7 @@ static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
 					      data_page);
 }
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
-static int ccs_old_pivot_root_permission(struct nameidata *old_nd,
-					 struct nameidata *new_nd)
+static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 {
 	int rc = ccs_pivot_root_permission(&old_nd->path, &new_nd->path);
 	if (rc)
@@ -573,17 +579,69 @@ static int ccs_old_pivot_root_permission(struct nameidata *old_nd,
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
-static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
-				    char *type, unsigned long flags,
-				    void *data_page)
+static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
+			unsigned long flags, void *data_page)
 {
-	int rc = ccs_mount_permission(dev_name, &nd->path, type, flags, data_page);
+	int rc = ccs_mount_permission(dev_name, &nd->path, type, flags,
+				      data_page);
 	if (rc)
 		return rc;
 	return original_security_ops.sb_mount(dev_name, nd, type, flags,
 					      data_page);
 }
+#else
+static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
+{
+	int rc = ccs_pivot_root_permission(old_path, new_path);
+	if (rc)
+		return rc;
+	return original_security_ops.sb_pivotroot(old_path, new_path);
+}
+
+static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
+			unsigned long flags, void *data_page)
+{
+	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
+	if (rc)
+		return rc;
+	return original_security_ops.sb_mount(dev_name, path, type, flags,
+					      data_page);
+}
 #endif
+
+static int ccs_sb_umount(struct vfsmount *mnt, int flags)
+{
+	int rc = ccs_umount_permission(mnt, flags);
+	if (rc)
+		return rc;
+	return original_security_ops.sb_umount(mnt, flags);
+}
+
+static int ccs_file_fcntl(struct file *file, unsigned int cmd,
+			  unsigned long arg)
+{
+	int rc;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+	rc = ccs_fcntl_permission(file, cmd, arg);
+#else
+	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
+		rc = ccs_rewrite_permission(file);
+	else
+		rc = 0;
+#endif
+	if (rc)
+		return rc;
+	return original_security_ops.file_fcntl(file, cmd, arg);
+}
+
+static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
+			  unsigned long arg)
+{
+	int rc = ccs_ioctl_permission(filp, cmd, arg);
+	if (rc)
+		return rc;
+	return original_security_ops.file_ioctl(filp, cmd, arg);
+}
 
 #include <linux/mount.h>
 #include <linux/fs_struct.h>
@@ -898,85 +956,70 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 {
 	memmove(&original_security_ops, ops, sizeof(original_security_ops));
 	smp_mb();
+	synchronize_rcu();
 	/* Security context allocator. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	ops->cred_prepare        = ccs_cred_prepare;
-	ops->cred_free           = ccs_cred_free;
+	ops->cred_prepare          = ccs_cred_prepare;
+	ops->cred_free             = ccs_cred_free;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
-	ops->cred_alloc_blank    = ccs_cred_alloc_blank;
-	ops->cred_transfer       = ccs_cred_transfer;
+	ops->cred_alloc_blank      = ccs_cred_alloc_blank;
+	ops->cred_transfer         = ccs_cred_transfer;
 #endif
 #else
-	ops->task_alloc_security = ccs_task_alloc_security;
-	ops->task_free_security  = ccs_task_free_security;
-	ops->bprm_free_security  = ccs_bprm_free_security;
+	ops->task_alloc_security   = ccs_task_alloc_security;
+	ops->task_free_security    = ccs_task_free_security;
+	ops->bprm_free_security    = ccs_bprm_free_security;
 #endif
 	/* Security context updater for successful execve(). */
-	ops->bprm_check_security = ccs_bprm_check_security;
+	ops->bprm_check_security   = ccs_bprm_check_security;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 6)
-	ops->bprm_compute_creds  = ccs_bprm_compute_creds;
+	ops->bprm_compute_creds    = ccs_bprm_compute_creds;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
-	ops->bprm_apply_creds    = ccs_bprm_apply_creds;
+	ops->bprm_apply_creds      = ccs_bprm_apply_creds;
 #else
 	ops->bprm_committing_creds = ccs_bprm_committing_creds;
 #endif
 	/* Various permission checker. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	ops->dentry_open         = ccs_dentry_open;
+	ops->dentry_open           = ccs_dentry_open;
 #else
-	ops->inode_permission    = ccs_inode_permission;
+	ops->inode_permission      = ccs_inode_permission;
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	ops->file_fcntl          = ccs_fcntl_permission;
-#else
-	//ccs_rewrite_permission
-#endif
-	ops->file_ioctl          = ccs_ioctl_permission;
+	ops->file_fcntl            = ccs_file_fcntl;
+	ops->file_ioctl            = ccs_file_ioctl;
+	ops->sb_pivotroot          = ccs_sb_pivotroot;
+	ops->sb_mount              = ccs_sb_mount;
+	ops->sb_umount             = ccs_sb_umount;
 #if defined(CONFIG_SECURITY_PATH)
+	ops->path_mknod            = ccs_path_mknod;
+	ops->path_mkdir            = ccs_path_mkdir;
+	ops->path_rmdir            = ccs_path_rmdir;
+	ops->path_unlink           = ccs_path_unlink;
+	ops->path_symlink          = ccs_path_symlink;
+	ops->path_rename           = ccs_path_rename;
+	ops->path_link             = ccs_path_link;
+	ops->path_truncate         = ccs_path_truncate;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	ops->path_chmod          = ccs_path_chmod;
-	ops->path_chown          = ccs_path_chown;
+	ops->path_chmod            = ccs_path_chmod;
+	ops->path_chown            = ccs_path_chown;
+	ops->path_chroot           = ccs_path_chroot;
 #endif
-	ops->path_truncate       = ccs_path_truncate;
-#endif
-	ops->inode_setattr       = ccs_inode_setattr;
-#if defined(CONFIG_SECURITY_PATH) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	ops->path_chroot         = ccs_chroot_permission;
-#endif
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 25)
-	ops->sb_pivotroot        = ccs_pivot_root_permission;
 #else
-	ops->sb_pivotroot        = ccs_old_pivot_root_permission;
+	ops->inode_mknod           = ccs_inode_mknod;
+	ops->inode_mkdir           = ccs_inode_mkdir;
+	ops->inode_rmdir           = ccs_inode_rmdir;
+	ops->inode_unlink          = ccs_inode_unlink;
+	ops->inode_symlink         = ccs_inode_symlink;
+	ops->inode_rename          = ccs_inode_rename;
+	ops->inode_link            = ccs_inode_link;
+	ops->inode_create          = ccs_inode_create;
 #endif
-	ops->sb_umount           = ccs_umount_permission;
-#if defined(CONFIG_SECURITY_PATH)
-	ops->path_mknod          = ccs_path_mknod;
-	ops->path_mkdir          = ccs_path_mkdir;
-	ops->path_rmdir          = ccs_path_rmdir;
-	ops->path_unlink         = ccs_path_unlink;
-	ops->path_symlink        = ccs_path_symlink;
-	ops->path_rename         = ccs_path_rename;
-	ops->path_link           = ccs_path_link;
-#else
-	ops->inode_mknod         = ccs_inode_mknod;
-	ops->inode_mkdir         = ccs_inode_mkdir;
-	ops->inode_rmdir         = ccs_inode_rmdir;
-	ops->inode_unlink        = ccs_inode_unlink;
-	ops->inode_symlink       = ccs_inode_symlink;
-	ops->inode_rename        = ccs_inode_rename;
-	ops->inode_link          = ccs_inode_link;
-	ops->inode_create        = ccs_inode_create;
-#endif
+	ops->inode_setattr         = ccs_inode_setattr;
 #ifdef CONFIG_SECURITY_NETWORK
-	ops->socket_bind         = ccs_socket_bind;
-	ops->socket_connect      = ccs_socket_connect;
-	ops->socket_listen       = ccs_socket_listen;
-	ops->socket_sendmsg      = ccs_socket_sendmsg;
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
-	ops->sb_mount            = ccs_mount_permission;
-#else
-	ops->sb_mount            = ccs_old_mount_permission;
+	ops->socket_bind           = ccs_socket_bind;
+	ops->socket_connect        = ccs_socket_connect;
+	ops->socket_listen         = ccs_socket_listen;
+	ops->socket_sendmsg        = ccs_socket_sendmsg;
 #endif
 }
 

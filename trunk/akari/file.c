@@ -962,16 +962,16 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg)
 {
 	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
-		/* 00 means "write". */
+		/* 02 means "write". */
 		return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
-					     00);
+					     02);
 	return 0;
 }
 #else
 static int __ccs_rewrite_permission(struct file *filp)
 {
-	/* 00 means "write". */
-	return __ccs_open_permission(filp->f_dentry, filp->f_vfsmnt, 00);
+	/* 02 means "write". */
+	return __ccs_open_permission(filp->f_dentry, filp->f_vfsmnt, 02);
 }
 #endif
 

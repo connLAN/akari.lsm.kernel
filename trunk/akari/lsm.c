@@ -249,18 +249,17 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 static int ccs_open(struct file *f)
 {
 	struct dentry *dentry = f->f_path.dentry;
-	//int flags = f->f_flags;
-	
 	if (!dentry->d_inode || S_ISDIR(dentry->d_inode->i_mode))
 		return 0;
-	//#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
-	//if ((flags + 1) & O_ACCMODE)
-	//flags++;
-	//#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
+	/* Don't check read permission here if called from do_execve(). */
+	if (current->in_execve)
+		return 0;
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 	return ccs_open_permission(f);
 #else
-	return ccs_open_permission(dentry, f->f_path.mnt, f->f_flags);
+	return ccs_open_permission(dentry, f->f_path.mnt, f->f_flags + 1);
 #endif
 }
 

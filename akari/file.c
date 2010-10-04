@@ -957,7 +957,17 @@ static int __ccs_chown_permission(struct dentry *dentry,
 	return error;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
+				  unsigned long arg)
+{
+	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
+		/* 01 means "write". */
+		return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
+					     01);
+	return 0;
+}
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg)
 {

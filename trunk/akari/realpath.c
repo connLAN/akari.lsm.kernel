@@ -172,20 +172,6 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 	spin_unlock(&dcache_lock);
 	if (IS_ERR(pos))
 		return pos;
-	/* Prepend device name if vfsmount is not available. */
-	if (!path->mnt) {
-		char name[64] = { };
-		int name_len;
-		const dev_t dev = sb->s_dev;
-		snprintf(name, sizeof(name) - 1, "dev(%u,%u):", MAJOR(dev),
-			 MINOR(dev));
-		name_len = strlen(name);
-		pos -= name_len;
-		if (pos < buffer)
-			goto out;
-		memmove(pos, name, name_len);
-		return pos;
-	}
 	/* Convert from $PID to self if $PID is current thread. */
 	if (sb->s_magic == PROC_SUPER_MAGIC && *pos == '/') {
 		char *ep;
@@ -207,6 +193,19 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 			memmove(pos, "/self", 5);
 		}
 #endif
+	/* Prepend device name if vfsmount is not available. */
+	} else if (!path->mnt) {
+		char name[64] = { };
+		int name_len;
+		const dev_t dev = sb->s_dev;
+		snprintf(name, sizeof(name) - 1, "dev(%u,%u):", MAJOR(dev),
+			 MINOR(dev));
+		name_len = strlen(name);
+		pos -= name_len;
+		if (pos < buffer)
+			goto out;
+		memmove(pos, name, name_len);
+		return pos;
 	}
 	/* Prepend filesystem name. */
 	{

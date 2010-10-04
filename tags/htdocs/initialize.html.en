@@ -21,11 +21,19 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/lib/akari/init_policy
+[root@akari ~]# /usr/lib/ccs/init_policy
 </td></tr>
 </table>
 
 <p>AKARI's policy files will be saved in /etc/ccs/ directory.</p>
+
+<p>Rewrite from ccsecurity in /etc/ccs/ccs-load-module to akari .</p>
+
+<table border="1">
+<tr><td>
+[root@akari ~]# sed -i -e 's/ccsecurity/akari/' /etc/ccs/ccs-load-module
+</td></tr>
+</table>
 
 <hr>
 
@@ -72,10 +80,6 @@
 <td>Configuration of learning mode.</td>
 </tr>
 <tr>
-<td>PREFERENCE::permissive</td>
-<td>Configuration of permissive mode.</td>
-</tr>
-<tr>
 <td>PREFERENCE::enforcing</td>
 <td>Configuration of enforcing mode.</td>
 </tr>
@@ -86,21 +90,6 @@
 <tr>
 <td>CONFIG</td>
 <td>Configuration of access control level.</td>
-</tr>
-</table>
-<p>You can give the following values for verbose= parameter of PREFERENCE::learning PREFERENCE::permissive PREFERENCE::enforcing .</p>
-<table border="1">
-<tr>
-<td>Value</td>
-<td>Meaning</td>
-</tr>
-<tr>
-<td>no</td>
-<td>Don't dump policy violation messages.</td>
-</tr>
-<tr>
-<td>yes</td>
-<td>Dump policy violation messages.</td>
 </tr>
 </table>
 <p>You can give the following values for mode= parameter of CONFIG line.</p>
@@ -137,31 +126,27 @@
 
 <table border="1">
 <tr><td>
-(1) Pathname pattern
-</td><td>
-<p>You can specify pathnames with patterns using "file_pattern" directive. When a file operation is performed and the requested pathname matches a patterned pathname specified using "file_pattern" directive, policy is generated using the patterned pathnames.</p>
-</td></tr><tr><td>
-(2) Pathname group
+(1) Pathname group
 </td><td>
 <p>You can specify pathname groups using "path_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple pathnames using group names.</p>
 </td></tr><tr><td>
-(3) Number group
+(2) Number group
 </td><td>
 <p>You can specify number groups using "number_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple numbers using group names.</p>
 </td></tr><tr><td>
-(4) Address group
+(3) Address group
 </td><td>
 <p>You can specify IPv4 or IPv6 address groups using "address_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple addresses using group names.<br>
 </td></tr><tr><td>
-(5) ACL group
+(4) ACL group
 </td><td>
 <p>You can specify permissions using "acl_group" directive followed by group number and permissions for that group. The ACL group is referenced by "use_group" directive in the domain policy. This is a macro to reduce the amount of domain policy by grouping commonly granted permissions.</p>
 </td></tr><tr><td>
-(6) Program aggregations
+(5) Program aggregations
 </td><td>
 <p>Basically, each program's pathname is used for domain transitions. But you can aggregate multiple program's pathnames into single program's pathname as needed using "aggregator" directive.</p>
 </td></tr><tr><td>
-(7) Domain transition exceptions
+(6) Domain transition exceptions
 </td><td>
 <p>Basically, domain transition occurs whenever a program is executed. But you can suppress or initialize domain transitions as needed.</p>
 <p>You can specify programs that initialize the domain transition history using "initialize_domain" directive. For example, if "initialize_domain /usr/sbin/sshd" is specified, /usr/sbin/sshd will run under "&lt;kernel&gt; /usr/sbin/sshd" domain.</p>

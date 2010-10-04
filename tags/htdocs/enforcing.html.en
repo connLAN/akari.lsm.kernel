@@ -51,10 +51,6 @@
 
 <p><img src="unix-penguin-rejected.png" width="684" height="597"></p>
 
-<p>If the profile is configured as "PREFERENCE::enforcing={ verbose=yes }" (this is default), the "ERROR:" messages will be printed to the console when policy violation occurs.</p>
-
-<p><img src="enforcing-error.png" width="720" height="400"></p>
-
 <p>If you have configured audit logs at <a href="initialize.html.en#configure_audit_daemon">Phase 2: Initializing configuration.</a>, you can pick up rejected requests from audit logs using "grep".</p>
 
 <table border="1">

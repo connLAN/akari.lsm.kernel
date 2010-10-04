@@ -72,6 +72,14 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	security->ee = NULL;
 	if (!ee)
 		return;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	/*
+	 * Drop refcount on "struct cred" in "struct linux_binprm" and forget
+	 * it.
+	 */
+	put_cred(security->cred);
+	security->cred = NULL;
+#endif
 	ee->reader_idx = ccs_read_lock();
 	ccs_finish_execve(ret, ee);
 }
@@ -221,16 +229,23 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 {
 	int rc;
 	struct ccs_security *security = ccs_current_security();
-	struct ccs_execve *ee;
 	if (security == &ccs_null_security)
 		return -ENOMEM;
-	ee = security->ee;
-	if (!ee) {
+	if (!security->cred) {
 		if (!ccs_policy_loaded)
 			ccs_load_policy(bprm->filename);
 		rc = ccs_start_execve(bprm, &security->ee);
-		if (security->ee)
+		if (security->ee) {
 			ccs_read_unlock(security->ee->reader_idx);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+			/*
+			 * Get refcount on "struct cred" in
+			 * "struct linux_binprm" and remember it.
+			 */
+			get_cred(bprm->cred);
+			security->cred = bprm->cred;
+#endif
+		}
 	} else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
 		rc = ccs_open_permission(bprm->file);
@@ -290,10 +305,23 @@ static int ccs_dentry_open(struct file *f)
 
 static int ccs_open(struct inode *inode, int mask, struct nameidata *nd)
 {
-	if (!inode || S_ISDIR(inode->i_mode) || !nd || !nd->dentry
-	    || !(mask & (MAY_EXEC | MAY_READ | MAY_WRITE)))
+	int flags;
+	if (!inode || S_ISDIR(inode->i_mode) || !nd || !nd->dentry)
 		return 0;
-	return ccs_open_permission(nd->dentry, nd->mnt, mask);
+	switch (mask & (MAY_READ | MAY_WRITE)) {
+	case MAY_READ:
+		flags = 01;
+		break;
+	case MAY_WRITE:
+		flags = 02;
+		break;
+	case MAY_READ | MAY_WRITE:
+		flags = 03;
+		break;
+	default:
+		return 0;
+	}
+	return ccs_open_permission(nd->dentry, nd->mnt, flags);
 }
 
 /* TODO: Use security_file_permission()? */
@@ -1050,23 +1078,42 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		if (ptr->task != task)
 			continue;
 		rcu_read_unlock();
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 		/*
-		 * Since "struct cred" in "struct linux_binprm" gets scheduled
-		 * for destruction but security_cred_free() is not called until
-		 * RCU grace period has elapsed, there is no guarantee that
-		 * a LSM hook is called before returning to userspace when
-		 * do_execve() failed. Therefore, current thread's security
-		 * information remains out of dated if do_execve() failed.
-		 * If current thread is not marked as "in execve()" but
-		 * current thread remembers "struct ccs_execve", that indicates
-		 * do_execve() has failed and security information is not yet
-		 * updated. Thus, update security information now.
+		 * Current thread needs to transit from old domain to new
+		 * domain before do_execve() succeeds in order to check
+		 * permission for interpreters and environment variables using
+		 * new domain's ACL rules. The domain transition has to be
+		 * visible from other CPU in order to allow interactive
+		 * enforcing mode. Also, the domain transition has to be
+		 * reverted if do_execve() failed. However, an LSM hook for
+		 * reverting domain transition is missing.
+		 *
+		 * When do_execve() failed, "struct cred" in
+		 * "struct linux_binprm" is scheduled for destruction.
+		 * But current thread returns to userspace without waiting for
+		 * destruction. The security_cred_free() LSM hook is called
+		 * after an RCU grace period has elapsed. Since some CPU may be
+		 * doing long long RCU read side critical section, there is
+		 * no guarantee that security_cred_free() is called before
+		 * current thread again calls do_execve().
+		 *
+		 * To be able to revert domain transition before processing
+		 * next do_execve() request, current thread gets a refcount on
+		 * "struct cred" in "struct linux_binprm" and memorizes it.
+		 * Current thread drops the refcount and forgets it when
+		 * do_execve() succeeded.
+		 *
+		 * Therefore, if current thread hasn't forgotten it and
+		 * current thread is the last one using that "struct cred",
+		 * it indicates that do_execve() has failed and reverting
+		 * domain transition is needed.
 		 */
-		if (task == current && !task->in_execve && ptr->ee) {
+		if (task == current && ptr->cred &&
+		    atomic_read(&ptr->cred->usage) == 1) {
 			printk(KERN_DEBUG
-			       "pid=%u: Rolling back to previous domain.\n",
-			       task->pid);
+			       "pid=%u: Reverting domain transition because "
+			       "do_execve() has failed.\n", task->pid);
 			ccs_clear_execve(-1, ptr);
 		}
 #endif
@@ -1089,6 +1136,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 #endif
 	get_task_struct((struct task_struct *) task);
 	ptr->task = (struct task_struct *) task;
+	ptr->cred = NULL;
 	ccs_add_security(ptr, 0);
 	return ptr;
 }
@@ -1138,7 +1186,27 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
 	struct ccs_execve *ee = ptr->ee;
 	ccs_update_security_domain(&ptr->ccs_domain_info, NULL);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	/*
+	 * If this security context was used by "struct task_struct" and
+	 * remembers "struct cred" in "struct linux_binprm", it indicates that
+	 * that "struct task_struct" exited immediately after do_execve() has
+	 * failed.
+	 */
+	if (ptr->task && ptr->cred) {
+		printk(KERN_DEBUG
+		       "Dropping refcount on \"struct cred\" in "
+		       "\"struct linux_binprm\" because some "
+		       "\"struct task_struct\" has exit()ed immediately after "
+		       "do_execve() has failed.\n");
+		put_cred(ptr->cred);
+	}
+#endif
 	if (ee) {
+		printk(KERN_DEBUG
+		       "Releasing memory in \"struct ccs_execve\" because "
+		       "some \"struct task_struct\" has exit()ed immediately "
+		       "after do_execve() has failed.\n");
 		ccs_update_security_domain(&ee->previous_domain, NULL);
 		kfree(ee->handler_path);
 		kfree(ee->tmp);

@@ -155,7 +155,7 @@ static char *ccs_print_header(struct ccs_request_info *r)
 	struct ccs_obj_info *obj = r->obj;
 	const u32 ccs_flags = ccs_current_flags();
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-	const pid_t gpid = (pid_t) ccsecurity_exports.sys_getpid();
+	const pid_t gpid = ccs_sys_getpid();
 #else
 	const pid_t gpid = task_pid_nr(current);
 #endif
@@ -171,13 +171,11 @@ static char *ccs_print_header(struct ccs_request_info *r)
 		       " task={ pid=%u ppid=%u uid=%u gid=%u euid=%u"
 		       " egid=%u suid=%u sgid=%u fsuid=%u fsgid=%u"
 		       " type%s=execute_handler }", tv.tv_sec, r->profile,
-		       ccs_mode[r->mode], gpid,
-		       (pid_t) ccsecurity_exports.sys_getpid(),
-		       (pid_t) ccsecurity_exports.sys_getppid(),
-		       current_uid(), current_gid(), current_euid(),
-		       current_egid(), current_suid(), current_sgid(),
-		       current_fsuid(), current_fsgid(), ccs_flags &
-		       CCS_TASK_IS_EXECUTE_HANDLER ? "" : "!");
+		       ccs_mode[r->mode], gpid, ccs_sys_getpid(),
+		       ccs_sys_getppid(), current_uid(), current_gid(),
+		       current_euid(), current_egid(), current_suid(),
+		       current_sgid(), current_fsuid(), current_fsgid(),
+		       ccs_flags & CCS_TASK_IS_EXECUTE_HANDLER ? "" : "!");
 	if (!obj)
 		goto no_obj_info;
 	if (!obj->validate_done) {

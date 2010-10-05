@@ -815,28 +815,6 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	return NULL;
 }
 
-static bool __init ccs_find_sys_getpid(void)
-{
-	void *ptr;
-	ptr = ccs_find_symbol(" sys_getpid\n");
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve sys_getpid().\n");
-		goto out;
-	}
-	ccsecurity_exports.sys_getpid = ptr;
-	printk(KERN_INFO "sys_getpid=%p\n", ptr);
-	ptr = ccs_find_symbol(" sys_getppid\n");
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve sys_getppid().\n");
-		goto out;
-	}
-	ccsecurity_exports.sys_getppid = ptr;
-	printk(KERN_INFO "sys_getppid=%p\n", ptr);
-	return true;
- out:
-	return false;
-}
-
 static bool __init ccs_find_find_task_by_pid(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
@@ -1046,7 +1024,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 static int __init ccs_init(void)
 {
 	struct security_operations *ops = ccs_find_security_ops();
-	if (!ops || !ccs_find_sys_getpid() || !ccs_find_find_task_by_pid() ||
+	if (!ops || !ccs_find_find_task_by_pid() ||
 	    !ccs_find_put_filesystem() || !ccs_find_vfsmount_lock() ||
 	    !ccs_find___put_task_struct())
 		return -EINVAL;

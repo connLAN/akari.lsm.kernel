@@ -119,6 +119,46 @@ static inline size_t ccs_del_manager(struct list_head *element)
 static bool ccs_used_by_task(struct ccs_domain_info *domain)
 {
 	return atomic_read(&domain->users) != 0;
+#if 0
+	bool in_use = false;
+	/*
+	 * Don't delete this domain if somebody is doing execve().
+	 *
+	 * Since ccs_finish_execve() first reverts ccs_domain_info and then
+	 * updates ccs_flags , we need smp_mb() to make sure that GC first
+	 * checks ccs_flags and then checks ccs_domain_info .
+	 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+	struct task_struct *g;
+	struct task_struct *t;
+	ccs_tasklist_lock();
+	do_each_thread(g, t) {
+		if (!(t->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
+			smp_mb(); /* Avoid out of order execution. */
+			if (t->ccs_domain_info != domain)
+				continue;
+		}
+		in_use = true;
+		goto out;
+	} while_each_thread(g, t);
+ out:
+	ccs_tasklist_unlock();
+#else
+	struct task_struct *p;
+	ccs_tasklist_lock();
+	for_each_process(p) {
+		if (!(p->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
+			smp_mb(); /* Avoid out of order execution. */
+			if (p->ccs_domain_info != domain)
+				continue;
+		}
+		in_use = true;
+		break;
+	}
+	ccs_tasklist_unlock();
+#endif
+	return in_use;
+#endif
 }
 
 /**

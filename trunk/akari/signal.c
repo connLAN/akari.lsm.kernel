@@ -73,7 +73,7 @@ static int ccs_signal_acl2(const int sig, const int pid)
 	r.param.signal.sig = sig;
 	r.param.signal.dest_pattern = domain->domainname->name;
 	r.granted = true;
-	if (ccsecurity_exports.sys_getpid() == pid) {
+	if (ccs_sys_getpid() == pid) {
 		ccs_audit_signal_log(&r);
 		return 0;                /* No check for self process. */
 	}

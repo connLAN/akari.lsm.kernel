@@ -856,8 +856,7 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	{
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1,
 			 "pid=%d uid=%d gid=%d euid=%d egid=%d suid=%d "
-			 "sgid=%d fsuid=%d fsgid=%d",
-			 (pid_t) ccsecurity_exports.sys_getpid(),
+			 "sgid=%d fsuid=%d fsgid=%d", ccs_sys_getpid(),
 			 current_uid(), current_gid(), current_euid(),
 			 current_egid(), current_suid(), current_sgid(),
 			 current_fsuid(), current_fsgid());

@@ -801,10 +801,10 @@ bool ccs_condition(struct ccs_request_info *r,
 				value = current_fsgid();
 				break;
 			case CCS_TASK_PID:
-				value = ccsecurity_exports.sys_getpid();
+				value = ccs_sys_getpid();
 				break;
 			case CCS_TASK_PPID:
-				value = ccsecurity_exports.sys_getppid();
+				value = ccs_sys_getppid();
 				break;
 			case CCS_TYPE_IS_SOCKET:
 				value = S_IFSOCK;

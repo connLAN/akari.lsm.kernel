@@ -127,15 +127,6 @@ But if you want to convert temporary files into patterns non-interactively, you 
 
 <p>We can consider that "/etc/mtab~numeric" and "/tmp/sh-thd-numeric" are temporary files, thus we make patterns for these pathnames. First, we need to consider what patterns to use. In these examples, numeric seems decimal digits. Thus, we use \$ pattern which matches one or more repetitions of decimal digits.</p>
 
-<p>Append patterns to the exception policy.</p>
-
-<table border="1">
-<tr><td>
-[root@akari ~]# echo 'file_pattern /etc/mtab~\$' | /usr/sbin/ccs-loadpolicy -e<br>
-[root@akari ~]# echo 'file_pattern /tmp/sh-thd-\$' | /usr/sbin/ccs-loadpolicy -e
-</td></tr>
-</table>
-
 <p>Replace "/etc/mtab~numeric" and "/tmp/sh-thd-numeric" in the domain policy with '/etc/mtab~\$' and '/tmp/sh-thd-\$'</p>
 
 <table border="1">

@@ -67,9 +67,7 @@
 <li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
-<li><a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a></li>
-<li><a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></li>
-<li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
+<li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
 <p>Used by /proc/ccs/exception_policy and /etc/ccs/exception_policy.conf</p>
@@ -81,7 +79,6 @@
 <li><a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></li>
 <li><a href="#exception_policy_keep_domain">keep_domain</a></li>
 <li><a href="#exception_policy_no_keep_domain">no_keep_domain</a></li>
-<li><a href="#exception_policy_file_pattern">file_pattern</a></li>
 <li><a href="#exception_policy_path_group">path_group</a></li>
 <li><a href="#exception_policy_number_group">number_group</a></li>
 <li><a href="#exception_policy_address_group">address_group</a></li>
@@ -491,9 +488,9 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 <tr><td>mode=learning</td><td>Learning mode. An access request is not rejected even if the request violates policy. Also, the permission to allow the request is automatically added to policy so that the same request no longer violates policy.</td></tr>
 <tr><td>mode=permissive</td><td>Permissive mode. An access request is not rejected even if the request violates policy. But, the permission to allow the request is not added to policy.</td></tr>
 <tr><td>mode=enforcing</td><td>Enforcing mode. An access request is rejected if the request violates policy.</td></tr>
-<tr><td>grant_log=yes</td><td>Generate grant logs. The max entries are controlled via "max_grant_log=" parameter of "<a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a>" line.</td></tr>
+<tr><td>grant_log=yes</td><td>Generate grant logs. The max entries are controlled via "max_grant_log=" parameter of "<a href="#profile_PREFERENCE">PREFERENCE</a>" line.</td></tr>
 <tr><td>grant_log=no</td><td>Don't generate grant logs.</td></tr>
-<tr><td>reject_log=yes</td><td>Generate reject logs. The max entries are controlled via "max_reject_log=" parameter of "<a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a>" line.</td></tr>
+<tr><td>reject_log=yes</td><td>Generate reject logs. The max entries are controlled via "max_reject_log=" parameter of "<a href="#profile_PREFERENCE">PREFERENCE</a>" line.</td></tr>
 <tr><td>reject_log=no</td><td>Don't generate reject logs.</td></tr>
 </table>
 
@@ -621,31 +618,17 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>Specifies access control level regarding RAW socket's remote address restriction for outgoing packets.</p>
 
-<h3><a name="profile_PREFERENCE::audit">PREFERENCE::audit</a></h3>
+<h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
-<p>Specifies preference on auditing.</p>
+<p>Specifies preference on auditing / learning / enforcing.</p>
 
 <p>"max_grant_log=" limits the max number of grant logs that the kernel can hold. </p>
 
 <p>"max_reject_log=" limits the max number of reject logs that the kernel can hold. </p>
 
-<h3><a name="profile_PREFERENCE::learning">PREFERENCE::learning</a></h3>
+<p>"max_learning_entry=" controls the max number of ACL entries that are automatically appended.</p>
 
-<p>Specifies preference on learning mode.</p>
-
-<p>"max_entry=" controls the max number of ACL entries that are automatically appended.</p>
-
-<p>"exec.realpath=" controls whether the dereferenced pathname of the requested program should be learned when adding an "file execute" entry.</p>
-
-<p>"exec.argv0=" controls whether the invocation name should be learned when adding an "file execute" entry.</p>
-
-<p>"symlink.target=" controls whether the content of the symbolic link should be learned when adding an "file symlink" entry.</p>
-
-<h3><a name="profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></h3>
-
-<p>Specifies preference on enforcing mode.</p>
-
-<p>"penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for.</p>
+<p>"enforcing_penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for.</p>
 
 <h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
@@ -844,9 +827,9 @@ Usually, you don't need this keyword.</p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
-<p>This keyword indicates that this domain has failed to append entry in learning mode since the number of entries reached to the limit specified by <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a> keyword. You need to reduce the number of entries for this domain by tuning policy.</p>
+<p>This keyword indicates that this domain has failed to append entry in learning mode since the number of entries reached to the limit specified by <a href="#profile_PREFERENCE">PREFERENCE</a> keyword. You need to reduce the number of entries for this domain by tuning policy.</p>
 
-<p>See also:  <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></p>
+<p>See also:  <a href="#profile_PREFERENCE">PREFERENCE</a></p>
 
 <h3><a name="domain_policy_transition_failed">transition_failed</a></h3>
 
@@ -862,16 +845,11 @@ Usually, you don't need this keyword.</p>
 
 <p>To read or modify current exception policy, operate like below.</p>
 <p>(Example)<br>
-echo 'file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
-echo 'delete file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+echo 'acl_group 0 file read proc:/self/stat' | ccs-loadpolicy -e<br>
+echo 'delete acl_group 0 file read proc:/self/stat' | ccs-loadpolicy -e<br>
 cat /proc/ccs/exception_policy</p>
 
 <p>See also:  <a href="#policy_file_modifiers">Policy File's Modification</a></p>
-
-<h3><a name="exception_policy_file_pattern">file_pattern</a></h3>
-
-<p>To declare pathname pattern, use file_pattern keyword followed by pathname pattern. The pathname pattern must be a canonicalized Pathname. This keyword is not applicable to neither granting execute permissions nor domain definitions.<br>
-For example, canonicalized pathname that contains a process ID (i.e. /proc/PID/ files) needs to be grouped in order to make access control work well.</p>
 
 <h3><a name="exception_policy_path_group">path_group</a></h3>
 
@@ -1038,13 +1016,13 @@ cat /proc/ccs/meminfo<br></p>
 
 <h2><a name="grant_log">/proc/ccs/grant_log</a></h2>
 
-<p>This file holds the granted log. The reader process returns immediately if no granted logs exists. To wait until a granted log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_grant_log parameter of PREFERENCE::audit, so read out timely.</p>
+<p>This file holds the granted log. The reader process returns immediately if no granted logs exists. To wait until a granted log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_grant_log parameter of PREFERENCE, so read out timely.</p>
 <p>(Example)<br>
 cat /proc/ccs/grant_log</p>
 
 <h2><a name="reject_log">/proc/ccs/reject_log</a></h2>
 
-<p>This file holds the rejected log. The reader process returns immediately if no violation logs exists. To wait until a violation log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_reject_log parameter of PREFERENCE::audit, so read out timely.</p>
+<p>This file holds the rejected log. The reader process returns immediately if no violation logs exists. To wait until a violation log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_reject_log parameter of PREFERENCE, so read out timely.</p>
 <p>(Example)<br>
 cat /proc/ccs/reject_log</p>
 
@@ -1307,8 +1285,8 @@ chown -R demo /proc/ccs/
 
 <table border="1">
 <tr><td>Example of /proc/ccs/profile</td><td>Meaning</td></tr>
-<tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 3 sleep for 0.1 second.</td></tr>
-<tr><td>4-PREFERENCE::enforcing={ penalty = 10 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 4 sleep for 1 second.</td></tr>
+<tr><td>3-PREFERENCE={ enforcing_penalty=1 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 3 sleep for 0.1 second.</td></tr>
+<tr><td>4-PREFERENCE={ enforcing_penalty = 10 }</td><td>Make the process which violated policy in enforcing mode and which belongs to a domain with profile 4 sleep for 1 second.</td></tr>
 </table>
 
 <p>This feature is a safeguard to avoid that the CPU usage remains 100% when policy violation occurs in an infinite loop. Usually, making processes sleep for 0.1 second is enough.</p>

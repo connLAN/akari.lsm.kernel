@@ -127,15 +127,6 @@ file read @WEB-CONTENTS
 
 <p>「 /etc/mtab~数値 」および「 /tmp/sh-thd-数値」がテンポラリファイルであると考えられるので、これらのパターン化を行います。まず、どのようにパターン化するかを決めます。この例では１０進数数値であると考えられることから、１桁以上の１０進数数値一致する \$ を使います。</p>
 
-<p>例外ポリシーにパターンを追加します。</p>
-
-<table border="1">
-<tr><td>
-[root@akari ~]# echo 'file_pattern /etc/mtab~\$' | /usr/sbin/ccs-loadpolicy -e<br>
-[root@akari ~]# echo 'file_pattern /tmp/sh-thd-\$' | /usr/sbin/ccs-loadpolicy -e
-</td></tr>
-</table>
-
 <p>ドメインポリシーの中の「 /etc/mtab~数値 」および「 /tmp/sh-thd-数値」を「 /etc/mtab~\$ 」および「 /tmp/sh-thd-\$ 」に置換します。</p>
 
 <table border="1">

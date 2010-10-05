@@ -185,8 +185,7 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 			memmove(pos, "/self", 5);
 		}
 #else
-		if (*ep == '/' &&
-		    pid == ccsecurity_exports.sys_getpid()) {
+		if (*ep == '/' && pid == ccs_sys_getpid()) {
 			pos = ep - 5;
 			if (pos < buffer)
 				goto out;

@@ -1272,6 +1272,82 @@ static inline void ccs_tasklist_unlock(void)
 
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+static inline pid_t ccs_sys_getppid(void)
+{
+	pid_t pid;
+	rcu_read_lock();
+	pid = task_tgid_vnr(current->real_parent);
+	rcu_read_unlock();
+	return pid;
+}
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+static inline pid_t ccs_sys_getppid(void)
+{
+	pid_t pid;
+	rcu_read_lock();
+	pid = rcu_dereference(current->real_parent)->tgid;
+	rcu_read_unlock();
+	return pid;
+}
+#elif defined(TASK_DEAD)
+static inline pid_t ccs_sys_getppid(void)
+{
+	pid_t pid;
+	struct task_struct *me = current;
+	struct task_struct *parent;
+	parent = me->group_leader->real_parent;
+	for (;;) {
+		pid = parent->tgid;
+#ifdef CONFIG_SMP
+		{
+			struct task_struct *old = parent;
+			smp_rmb();
+			parent = me->group_leader->real_parent;
+			if (old != parent)
+				continue;
+		}
+#endif
+		break;
+	}
+	return pid;
+}
+#else
+static inline pid_t ccs_sys_getppid(void)
+{
+	pid_t pid;
+	struct task_struct *me = current;
+	struct task_struct *parent;
+	parent = me->p_opptr;
+	for (;;) {
+		pid = parent->pid;
+#ifdef CONFIG_SMP
+		{
+			struct task_struct *old = parent;
+			mb();
+			parent = me->p_opptr;
+			if (old != parent)
+				continue;
+		}
+#endif
+		break;
+	}
+	return pid;
+}
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+static inline pid_t ccs_sys_getpid(void)
+{
+	return task_tgid_vnr(current);
+}
+#else
+static inline pid_t ccs_sys_getpid(void)
+{
+	return current->tgid;
+}
+#endif
+
 static inline u8 ccs_get_mode(const u8 profile, const u8 index)
 {
 	return ccs_get_config(profile, index) & (CCS_CONFIG_MAX_MODE - 1);

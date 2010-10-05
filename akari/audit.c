@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/09/01
+ * Version: 1.8.0-pre   2010/10/05
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -364,18 +364,27 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
 			  const struct ccs_acl_info *matched_acl,
 			  const bool is_granted)
 {
+	unsigned int len;
 	u8 mode;
 	const u8 category = ccs_index2category[index] + CCS_MAX_MAC_INDEX;
+	struct ccs_profile *p;
 	if (!ccs_policy_loaded)
+		return false;
+	p = ccs_profile(profile);
+	if (is_granted)
+		len = p->pref[CCS_PREF_MAX_GRANT_LOG];
+	else
+		len = p->pref[CCS_PREF_MAX_REJECT_LOG];
+	if (ccs_log_count[is_granted] >= len)
 		return false;
 	if (is_granted && matched_acl && matched_acl->cond &&
 	    matched_acl->cond->grant_log)
 		return matched_acl->cond->grant_log == 2;
-	mode = ccs_profile(profile)->config[index];
+	mode = p->config[index];
 	if (mode == CCS_CONFIG_USE_DEFAULT)
-		mode = ccs_profile(profile)->config[category];
+		mode = p->config[category];
 	if (mode == CCS_CONFIG_USE_DEFAULT)
-		mode = ccs_profile(profile)->default_config;
+		mode = p->default_config;
 	if (is_granted)
 		return mode & CCS_CONFIG_WANT_GRANT_LOG;
 	return mode & CCS_CONFIG_WANT_REJECT_LOG;
@@ -394,12 +403,7 @@ void ccs_write_log2(struct ccs_request_info *r, const char *fmt, va_list args)
 	struct ccs_log *entry;
 	bool quota_exceeded = false;
 	const bool is_granted = r->granted;
-	if (is_granted)
-		len = ccs_preference.audit_max_grant_log;
-	else
-		len = ccs_preference.audit_max_reject_log;
-	if (ccs_log_count[is_granted] >= len ||
-	    !ccs_get_audit(r->profile, r->type, r->matched_acl, is_granted))
+	if (!ccs_get_audit(r->profile, r->type, r->matched_acl, is_granted))
 		goto out;
 	buf = ccs_init_log(&len, r, fmt, args);
 	if (!buf)

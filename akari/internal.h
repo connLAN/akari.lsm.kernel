@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/09/01
+ * Version: 1.8.0-pre   2010/10/05
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -89,6 +89,14 @@ enum ccs_policy_stat_type {
 	CCS_STAT_POLICY_PERMISSIVE, /* == CCS_CONFIG_PERMISSIVE */
 	CCS_STAT_POLICY_ENFORCING,  /* == CCS_CONFIG_ENFORCING */
 	CCS_MAX_POLICY_STAT
+};
+
+enum ccs_pref_index {
+	CCS_PREF_MAX_GRANT_LOG,
+	CCS_PREF_MAX_REJECT_LOG,
+	CCS_PREF_MAX_LEARNING_ENTRY,
+	CCS_PREF_ENFORCING_PENALTY,
+	CCS_MAX_PREF,
 };
 
 enum ccs_memory_stat_type {
@@ -974,17 +982,11 @@ struct ccs_io_buffer {
 	u8 type;
 };
 
-struct ccs_preference {
-	unsigned int audit_max_grant_log;
-	unsigned int audit_max_reject_log;
-	unsigned int learning_max_entry;
-	unsigned int enforcing_penalty;
-};
-
 struct ccs_profile {
 	const struct ccs_path_info *comment;
 	u8 default_config;
 	u8 config[CCS_MAX_MAC_INDEX + CCS_MAX_MAC_CATEGORY_INDEX];
+	unsigned int pref[CCS_MAX_PREF];
 };
 
 /* Prototype definition for "struct ccsecurity_operations". */
@@ -1167,7 +1169,6 @@ extern const u8 ccs_c2mac[CCS_MAX_CAPABILITY_INDEX];
 extern const u8 ccs_pn2mac[CCS_MAX_PATH_NUMBER_OPERATION];
 extern const u8 ccs_pnnn2mac[CCS_MAX_MKDEV_OPERATION];
 extern const u8 ccs_pp2mac[CCS_MAX_PATH2_OPERATION];
-extern struct ccs_preference ccs_preference;
 extern unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
 extern unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)

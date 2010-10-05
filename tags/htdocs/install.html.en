@@ -23,7 +23,7 @@
 <tr><td>RedHat distributions</td><td>
 # VERSION=`uname -r`<br>
 # yum -y install kernel-devel-${VERSION}<br>
-# cd /usr/src/kernels/linux-headers-${VERSION}*/
+# cd /usr/src/kernels/${VERSION}*/
 </td></tr>
 <tr><td>Debian distributions</td><td>
 # VERSION=`uname -r`<br>

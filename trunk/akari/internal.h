@@ -1295,44 +1295,18 @@ static inline pid_t ccs_sys_getppid(void)
 static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
-	struct task_struct *me = current;
-	struct task_struct *parent;
-	parent = me->group_leader->real_parent;
-	for (;;) {
-		pid = parent->tgid;
-#ifdef CONFIG_SMP
-		{
-			struct task_struct *old = parent;
-			smp_rmb();
-			parent = me->group_leader->real_parent;
-			if (old != parent)
-				continue;
-		}
-#endif
-		break;
-	}
+	read_lock(&tasklist_lock);
+	pid = current->group_leader->real_parent->tgid;
+	read_unlock(&tasklist_lock);
 	return pid;
 }
 #else
 static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
-	struct task_struct *me = current;
-	struct task_struct *parent;
-	parent = me->p_opptr;
-	for (;;) {
-		pid = parent->pid;
-#ifdef CONFIG_SMP
-		{
-			struct task_struct *old = parent;
-			mb();
-			parent = me->p_opptr;
-			if (old != parent)
-				continue;
-		}
-#endif
-		break;
-	}
+	read_lock(&tasklist_lock);
+	pid = current = me->p_opptr->pid;
+	read_unlock(&tasklist_lock);
 	return pid;
 }
 #endif

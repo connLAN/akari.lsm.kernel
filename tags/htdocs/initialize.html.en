@@ -72,24 +72,16 @@
 <table border="1">
 <tr><td>Name</td><td>Control</td></tr>
 <tr>
-<td>PREFERENCE::audit</td>
-<td>Configuration of auditing preference.</td>
-</tr>
-<tr>
-<td>PREFERENCE::learning</td>
-<td>Configuration of learning mode.</td>
-</tr>
-<tr>
-<td>PREFERENCE::enforcing</td>
-<td>Configuration of enforcing mode.</td>
-</tr>
-<tr>
 <td>COMMENT</td>
 <td>A line of text that describes the content of the profile.</td>
 </tr>
 <tr>
 <td>CONFIG</td>
-<td>Configuration of access control level.</td>
+<td>Configuration of operation mode.</td>
+</tr>
+<tr>
+<td>PREFERENCE</td>
+<td>Configuration of auditing / learning / enforcing.</td>
 </tr>
 </table>
 <p>You can give the following values for mode= parameter of CONFIG line.</p>
@@ -206,9 +198,9 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </td></tr>
 </table>
 
-<p>You may give PREFERENCE::audit={ max_grant_log=0 } for profiles and give /dev/null for $location_to_store_access_granted_logs if you don't want "access granted logs". Since "ccs-auditd" doesn't have filtering functions, be careful with the disk's free space if you want to save "access granted logs".</p>
+<p>You may give PREFERENCE={ max_grant_log=0 } for profiles and give /dev/null for $location_to_store_access_granted_logs if you don't want "access granted logs". Since "ccs-auditd" doesn't have filtering functions, be careful with the disk's free space if you want to save "access granted logs".</p>
 
-<p>You may give PREFERENCE::audit={ max_reject_log=0 } for profiles and give /dev/null for $location_to_store_access_rejected_logs if you don't want "access rejected logs". But I recommend you to save "access rejected logs". This manual assumes that "access rejected logs" is saved in /var/log/ccs/reject_log.conf .</p>
+<p>You may give PREFERENCE={ max_reject_log=0 } for profiles and give /dev/null for $location_to_store_access_rejected_logs if you don't want "access rejected logs". But I recommend you to save "access rejected logs". This manual assumes that "access rejected logs" is saved in /var/log/ccs/reject_log.conf .</p>
 
 <table border="1">
 <tr><td>
@@ -238,7 +230,7 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </td></tr>
 </table>
 
-<p>If you don't want neither "access granted logs" nor "access rejected logs", you needn't to run "ccs-auditd" and you can give PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } for profiles to save memory and improve performance.</p>
+<p>If you don't want neither "access granted logs" nor "access rejected logs", you needn't to run "ccs-auditd" and you can give PREFERENCE={ max_grant_log=0 max_reject_log=0 } for profiles to save memory and improve performance.</p>
 
 <hr>
 

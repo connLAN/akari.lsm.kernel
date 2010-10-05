@@ -67,9 +67,7 @@
 <li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
-<li><a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a></li>
-<li><a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></li>
-<li><a href="#profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></li>
+<li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
 <p>/proc/ccs/exception_policy および /etc/ccs/exception_policy.conf で使われるもの</p>
@@ -81,7 +79,6 @@
 <li><a href="#exception_policy_no_initialize_domain">no_initialize_domain</a></li>
 <li><a href="#exception_policy_keep_domain">keep_domain</a></li>
 <li><a href="#exception_policy_no_keep_domain">no_keep_domain</a></li>
-<li><a href="#exception_policy_file_pattern">file_pattern</a></li>
 <li><a href="#exception_policy_path_group">path_group</a></li>
 <li><a href="#exception_policy_number_group">number_group</a></li>
 <li><a href="#exception_policy_address_group">address_group</a></li>
@@ -491,9 +488,9 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 <tr><td>mode=learning</td><td>学習モード。ポリシーに違反してもアクセス要求を拒否することはせず、再度同じアクセス要求が発生した場合にポリシー違反とならないようにするために、ポリシーへの自動追加を行います。</td></tr>
 <tr><td>mode=permissive</td><td>確認モード。ポリシーに違反してもアクセス要求を拒否することはしませんが、ポリシーへの自動追加も行いません。</td></tr>
 <tr><td>mode=enforcing</td><td>強制モード。ポリシーに違反するアクセス要求を拒否します。</td></tr>
-<tr><td>grant_log=yes</td><td>アクセス許可ログを取得する。上限は <a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a> の max_grant_log= で指定する。</td></tr>
+<tr><td>grant_log=yes</td><td>アクセス許可ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_grant_log= で指定する。</td></tr>
 <tr><td>grant_log=no</td><td>アクセス許可ログを取得しない。</td></tr>
-<tr><td>reject_log=yes</td><td>アクセス拒否ログを取得する。上限は <a href="#profile_PREFERENCE::audit">PREFERENCE::audit</a> の max_reject_log= で指定する。</td></tr>
+<tr><td>reject_log=yes</td><td>アクセス拒否ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_reject_log= で指定する。</td></tr>
 <tr><td>reject_log=no</td><td>アクセス拒否ログを取得しない。</td></tr>
 </table>
 
@@ -621,31 +618,17 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>RAW ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
 
-<h3><a name="profile_PREFERENCE::audit">PREFERENCE::audit</a></h3>
+<h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
-<p>アクセスログの取得方法に関する設定を指定します。</p>
+<p>アクセスログ／学習モード／強制モードに関する設定を指定します。</p>
 
 <p>max_grant_log= にはカーネル内に保持する、ポリシーによって許可されたアクセス要求のログの件数を指定します。</p>
 
 <p>max_reject_log= にはカーネル内に保持する、ポリシーによって許可されなかったアクセス要求のログの件数を指定します。</p>
 
-<h3><a name="profile_PREFERENCE::learning">PREFERENCE::learning</a></h3>
+<p>max_learning_entry= には自動的に追加されるアクセス許可の上限を指定します。</p>
 
-<p>学習モードに関する設定を指定します。</p>
-
-<p>max_entry= には自動的に追加されるアクセス許可の上限を指定します。</p>
-
-<p>exec.realpath= にはプログラムの実行許可を追加するときに、プログラムの実体のパス名も学習するかどうかを指定します。</p>
-
-<p>exec.argv0= にはプログラムの実行許可を追加するときに、最初の引数も学習するかどうかを指定します。</p>
-
-<p>symlink.target= にはシンボリックリンクの作成許可を追加するときに、シンボリックリンクの内容も学習するかどうかを指定します。</p>
-
-<h3><a name="profile_PREFERENCE::enforcing">PREFERENCE::enforcing</a></h3>
-
-<p>強制モードに関する設定を指定します。</p>
-
-<p>penalty= にはポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
+<p>enforcing_penalty= にはポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
 
 <h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
@@ -844,9 +827,9 @@ file chroot /</p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
-<p>これは、学習モードで動作中にアクセス許可の数が <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a> で指定された値に到達したため、このドメインに対してはアクセス許可を学習しきれなかったことを示しています。チューニングを行うなどしてアクセス許可の数を減らすようにしてください。</p>
+<p>これは、学習モードで動作中にアクセス許可の数が <a href="#profile_PREFERENCE">PREFERENCE</a> で指定された値に到達したため、このドメインに対してはアクセス許可を学習しきれなかったことを示しています。チューニングを行うなどしてアクセス許可の数を減らすようにしてください。</p>
 
-<p>関連項目： <a href="#profile_PREFERENCE::learning">PREFERENCE::learning</a></p>
+<p>関連項目： <a href="#profile_PREFERENCE">PREFERENCE</a></p>
 
 <h3><a name="domain_policy_transition_failed">transition_failed</a></h3>
 
@@ -862,16 +845,11 @@ file chroot /</p>
 
 <p>現在の例外ポリシーを読み出しまたは追加または削除するには以下のように操作します。</p>
 <p>（例）<br>
-echo 'file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
-echo 'delete file_pattern /proc/\$/status' | ccs-loadpolicy -e<br>
+echo 'acl_group 0 file read proc:/self/stat' | ccs-loadpolicy -e<br>
+echo 'delete acl_group 0 file read proc:/self/stat' | ccs-loadpolicy -e<br>
 cat /proc/ccs/exception_policy</p>
 
 <p>関連項目： <a href="#policy_file_modifiers">変更について</a></p>
-
-<h3><a name="exception_policy_file_pattern">file_pattern</a></h3>
-
-<p>パス名のパターン化を指示するには、 file_pattern というキーワードに続けて、パス名のパターンを指定します。パス名は正規化されたパス名でなければなりません。このキーワードは実行許可を与える場合とドメイン定義には適用されません。<br>
-例えば、プロセスＩＤを含む正規化されたパス名（ /proc/PID/ ）は、アクセス制御が正しく行われるようにグループ化されなければなりません。</p>
 
 <h3><a name="exception_policy_path_group">path_group</a></h3>
 
@@ -1038,13 +1016,13 @@ cat /proc/ccs/meminfo<br></p>
 
 <h2><a name="grant_log">/proc/ccs/grant_log</a></h2>
 
-<p>ドメインポリシーに対するアクセス許可ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_grant_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
+<p>ドメインポリシーに対するアクセス許可ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE の max_grant_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
 <p>（例）<br>
 cat /proc/ccs/grant_log</p>
 
 <h2><a name="reject_log">/proc/ccs/reject_log</a></h2>
 
-<p>ドメインポリシーに対するアクセス拒否ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE::audit の max_reject_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
+<p>ドメインポリシーに対するアクセス拒否ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE の max_reject_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
 <p>（例）<br>
 cat /proc/ccs/reject_log</p>
 
@@ -1307,8 +1285,8 @@ chown -R demo /proc/ccs/
 
 <table border="1">
 <tr><td>/proc/ccs/profile での指定例</td><td>意味</td></tr>
-<tr><td>3-PREFERENCE::enforcing={ penalty=1 }</td><td>プロファイル 3 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 0.1 秒間スリープさせます。</td></tr>
-<tr><td>4-PREFERENCE::enforcing={ penalty=10 }</td><td>プロファイル 4 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 1 秒間スリープさせます。</td></tr>
+<tr><td>3-PREFERENCE={ enforcing_penalty=1 }</td><td>プロファイル 3 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 0.1 秒間スリープさせます。</td></tr>
+<tr><td>4-PREFERENCE={ enforcing_penalty=10 }</td><td>プロファイル 4 が割り当てられているプロセスが強制モードに於いてポリシー違反を発生させた場合、 1 秒間スリープさせます。</td></tr>
 </table>
 
 <p>この機能は、無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するための安全装置です。通常は 0.1 秒間スリープさせるだけで充分です。</p>

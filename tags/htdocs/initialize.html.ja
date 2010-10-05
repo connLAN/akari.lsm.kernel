@@ -72,24 +72,16 @@
 <table border="1">
 <tr><td>項目</td><td>内容</td></tr>
 <tr>
-<td>PREFERENCE::audit</td>
-<td>アクセスログの取得方法に関する設定。</td>
-</tr>
-<tr>
-<td>PREFERENCE::learning</td>
-<td>学習モードに関する設定。</td>
-</tr>
-<tr>
-<td>PREFERENCE::enforcing</td>
-<td>強制モードに関する設定。</td>
-</tr>
-<tr>
 <td>COMMENT</td>
 <td>プロファイルの内容を説明するための１行コメント。</td>
 </tr>
 <tr>
 <td>CONFIG</td>
-<td>強制アクセス制御のモード設定。</td>
+<td>動作モードの設定。</td>
+</tr>
+<tr>
+<td>PREFERENCE</td>
+<td>アクセスログ／学習モード／強制モードに関する設定。</td>
 </tr>
 </table>
 <p>CONFIG 行で指定されている mode については以下の値を指定できます。</p>
@@ -206,9 +198,9 @@
 </td></tr>
 </table>
 
-<p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 ccs-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
+<p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 ccs-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
 
-<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE::audit={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/ccs/reject_log.conf に保存するものとします。</p>
+<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/ccs/reject_log.conf に保存するものとします。</p>
 
 <table border="1">
 <tr><td>
@@ -238,7 +230,7 @@
 </td></tr>
 </table>
 
-<p>アクセス許可ログ・アクセス拒否ログのどちらも保存しない場合には ccs-auditd を実行する必要はありません。また、プロファイルで PREFERENCE::audit={ max_grant_log=0 max_reject_log=0 } を指定しておくことで、消費メモリの節約と応答速度の向上が期待できます。</p>
+<p>アクセス許可ログ・アクセス拒否ログのどちらも保存しない場合には ccs-auditd を実行する必要はありません。また、プロファイルで PREFERENCE={ max_grant_log=0 max_reject_log=0 } を指定しておくことで、消費メモリの節約と応答速度の向上が期待できます。</p>
 
 <hr>
 

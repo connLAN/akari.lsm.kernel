@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/09/01
+ * Version: 1.8.0-pre   2010/10/05
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -11,13 +11,6 @@
  */
 
 #include "internal.h"
-
-struct ccs_preference ccs_preference = {
-	.audit_max_grant_log = CONFIG_CCSECURITY_MAX_GRANT_LOG,
-	.audit_max_reject_log = CONFIG_CCSECURITY_MAX_REJECT_LOG,
-	.learning_max_entry = CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY,
-	.enforcing_penalty = 0,
-};
 
 /* Profile version. Currently only 20100903 is defined. */
 static unsigned int ccs_profile_version;
@@ -183,6 +176,13 @@ const char * const ccs_condition_keyword[CCS_MAX_CONDITION_KEYWORD] = {
 	[CCS_PATH2_PARENT_PERM]    = "path2.parent.perm",
 };
 
+static const char * const ccs_pref_keywords[CCS_MAX_PREF] = {
+	[CCS_PREF_MAX_GRANT_LOG]      = "max_grant_log",
+	[CCS_PREF_MAX_REJECT_LOG]     = "max_reject_log",
+	[CCS_PREF_MAX_LEARNING_ENTRY] = "max_learning_entry",
+	[CCS_PREF_ENFORCING_PENALTY]  = "enforcing_penalty",
+};
+
 /* Permit policy management by non-root user? */
 static bool ccs_manage_by_non_root;
 
@@ -332,6 +332,12 @@ static struct ccs_profile *ccs_assign_profile(const unsigned int profile)
 			CCS_CONFIG_WANT_GRANT_LOG | CCS_CONFIG_WANT_REJECT_LOG;
 		memset(ptr->config, CCS_CONFIG_USE_DEFAULT,
 		       sizeof(ptr->config));
+		ptr->pref[CCS_PREF_MAX_GRANT_LOG] =
+			CONFIG_CCSECURITY_MAX_GRANT_LOG;
+		ptr->pref[CCS_PREF_MAX_REJECT_LOG] =
+			CONFIG_CCSECURITY_MAX_REJECT_LOG;
+		ptr->pref[CCS_PREF_MAX_LEARNING_ENTRY] =
+			CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY;
 		mb(); /* Avoid out-of-order execution. */
 		ccs_profile_ptr[profile] = ptr;
 		entry = NULL;
@@ -361,7 +367,7 @@ static void ccs_check_profile(void)
 	if (ccs_profile_version != 20100903)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
-	printk(KERN_INFO "CCSecurity: 1.8.0-pre   2010/09/01\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0-pre   2010/10/05\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -399,24 +405,6 @@ static void ccs_set_uint(unsigned int *i, const char *string, const char *find)
 	const char *cp = strstr(string, find);
 	if (cp)
 		sscanf(cp + strlen(find), "=%u", i);
-}
-
-static int ccs_set_pref(char *data)
-{
-	if (ccs_str_starts(&data, "audit")) {
-		ccs_set_uint(&ccs_preference.audit_max_grant_log, data,
-			     "max_grant_log");
-		ccs_set_uint(&ccs_preference.audit_max_reject_log, data,
-			     "max_reject_log");
-	} else if (ccs_str_starts(&data, "enforcing")) {
-		ccs_set_uint(&ccs_preference.enforcing_penalty, data,
-			     "penalty");
-	} else if (ccs_str_starts(&data, "learning")) {
-		ccs_set_uint(&ccs_preference.learning_max_entry, data,
-			     "max_entry");
-	} else
-		return -EINVAL;
-	return 0;
 }
 
 static int ccs_set_mode(char *name, const char *value,
@@ -502,8 +490,6 @@ static int ccs_write_profile(struct ccs_io_buffer *head)
 	struct ccs_profile *profile;
 	if (sscanf(data, "PROFILE_VERSION=%u", &ccs_profile_version) == 1)
 		return 0;
-	if (ccs_str_starts(&data, "PREFERENCE::"))
-		return ccs_set_pref(data);
 	i = simple_strtoul(data, &cp, 10);
 	if (*cp != '-')
 		return -EINVAL;
@@ -521,19 +507,13 @@ static int ccs_write_profile(struct ccs_io_buffer *head)
 		ccs_put_name(old_comment);
 		return 0;
 	}
+	if (!strcmp(data, "PREFERENCE")) {
+		for (i = 0; i < CCS_MAX_PREF; i++)
+			ccs_set_uint(&profile->pref[i], cp,
+				     ccs_pref_keywords[i]);
+		return 0;
+	}
 	return ccs_set_mode(data, cp, profile);
-}
-
-static void ccs_print_preference(struct ccs_io_buffer *head)
-{
-	ccs_io_printf(head, "PREFERENCE::%s={ "
-		      "max_grant_log=%u max_reject_log=%u }\n", "audit",
-		      ccs_preference.audit_max_grant_log,
-		      ccs_preference.audit_max_reject_log);
-	ccs_io_printf(head, "PREFERENCE::%s={ max_entry=%u }\n",
-		      "learning", ccs_preference.learning_max_entry);
-	ccs_io_printf(head, "PREFERENCE::%s={ penalty=%u }\n",
-		      "enforcing", ccs_preference.enforcing_penalty);
 }
 
 static void ccs_print_config(struct ccs_io_buffer *head, const u8 config)
@@ -559,7 +539,6 @@ static void ccs_read_profile(struct ccs_io_buffer *head)
 	switch (head->r.step) {
 	case 0:
 		ccs_io_printf(head, "PROFILE_VERSION=%s\n", "20100903");
-		ccs_print_preference(head);
 		head->r.step++;
 		break;
 	case 1:
@@ -573,10 +552,17 @@ static void ccs_read_profile(struct ccs_io_buffer *head)
 		break;
 	case 2:
 		{
+			u8 i;
 			const struct ccs_path_info *comment = profile->comment;
 			ccs_io_printf(head, "%u-COMMENT=", index);
 			ccs_set_string(head, comment ? comment->name : "");
 			ccs_set_lf(head);
+			ccs_io_printf(head, "%u-PREFERENCE={ ", index);
+			for (i = 0; i < CCS_MAX_PREF; i++)
+				ccs_io_printf(head, "%s=%u ",
+					      ccs_pref_keywords[i],
+					      profile->pref[i]);
+			ccs_set_string(head, " }\n");
 			head->r.step++;
 		}
 		break;
@@ -1936,21 +1922,23 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 		ccs_update_stat(r->mode);
 	switch (r->mode) {
 		int i;
+		struct ccs_profile *p;
 	case CCS_CONFIG_ENFORCING:
 		error = -EPERM;
 		if (atomic_read(&ccs_query_observers))
 			break;
 		if (ccs_current_flags() & CCS_DONT_SLEEP_ON_ENFORCE_ERROR)
 			goto out;
-		/* Check PREFERENCE::enforcing sleep parameter. */
-		for (i = 0; i < ccs_preference.enforcing_penalty; i++) {
+		p = ccs_profile(r->profile);
+		/* Check enforcing_penalty parameter. */
+		for (i = 0; i < p->pref[CCS_PREF_ENFORCING_PENALTY]; i++) {
 			set_current_state(TASK_INTERRUPTIBLE);
 			schedule_timeout(HZ / 10);
 		}
 		goto out;
 	case CCS_CONFIG_LEARNING:
 		error = 0;
-		/* Check PREFERENCE::learning max_entry parameter. */
+		/* Check mac_learning_entry parameter. */
 		if (ccs_domain_quota_ok(r))
 			break;
 		/* fall through */

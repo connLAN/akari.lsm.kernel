@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/09/01
+ * Version: 1.8.0-pre   2010/10/05
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -1025,7 +1025,7 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 			if (perm & (1 << i))
 				count++;
 	}
-	if (count < ccs_preference.learning_max_entry)
+	if (count < ccs_profile(r->profile)->pref[CCS_PREF_MAX_LEARNING_ENTRY])
 		return true;
 	if (!domain->flags[CCS_DIF_QUOTA_WARNED]) {
 		domain->flags[CCS_DIF_QUOTA_WARNED] = true;

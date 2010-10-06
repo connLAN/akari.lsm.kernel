@@ -1287,7 +1287,11 @@ static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
 	rcu_read_lock();
+#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 5) || (defined(AX_MAJOR) && AX_MAJOR == 3)
+	pid = rcu_dereference(current->parent)->tgid;
+#else
 	pid = rcu_dereference(current->real_parent)->tgid;
+#endif
 	rcu_read_unlock();
 	return pid;
 }

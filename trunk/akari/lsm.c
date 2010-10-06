@@ -16,6 +16,12 @@ struct ccsecurity_exports ccsecurity_exports;
 struct ccsecurity_operations ccsecurity_ops;
 static struct security_operations original_security_ops;
 
+#if defined(D_PATH_DISCONNECT)
+#define CCS_INODE_HOOK_HAS_MNT
+#elif defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 25)
+#define CCS_INODE_HOOK_HAS_MNT
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 static void ccs_task_security_gc(void);
 static int ccs_copy_cred_security(const struct cred *new,
@@ -386,6 +392,28 @@ static int ccs_path_truncate(struct path *path, loff_t length,
 
 #endif
 
+#ifdef CCS_INODE_HOOK_HAS_MNT
+static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
+			     struct iattr *attr)
+{
+	int rc = 0;
+#if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+        if (attr->ia_valid & ATTR_UID)
+		rc = ccs_chown_permission(dentry, mnt, attr->ia_uid, -1);
+	if (!rc && (attr->ia_valid & ATTR_GID))
+		rc = ccs_chown_permission(dentry, mnt, -1, attr->ia_gid);
+	if (!rc && (attr->ia_valid & ATTR_MODE))
+		rc = ccs_chmod_permission(dentry, mnt, attr->ia_mode);
+#endif
+#if !defined(CONFIG_SECURITY_PATH)
+	if (!rc && (attr->ia_valid & ATTR_SIZE))
+		rc = ccs_truncate_permission(dentry, mnt);
+#endif
+	if (rc)
+		return rc;
+	return original_security_ops.inode_setattr(dentry, mnt, attr);
+}
+#else
 static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	int rc = 0;
@@ -405,13 +433,14 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 		return rc;
 	return original_security_ops.inode_setattr(dentry, attr);
 }
+#endif
 
 #if defined(CONFIG_SECURITY_PATH)
 static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 			  unsigned int dev)
 {
-	int rc = ccs_mknod_permission(dir->dentry->d_inode, dentry, dir->mnt, mode,
-				      dev);
+	int rc = ccs_mknod_permission(dir->dentry->d_inode, dentry, dir->mnt,
+				      mode, dev);
 	if (rc)
 		return rc;
 	return original_security_ops.path_mknod(dir, dentry, mode, dev);
@@ -419,7 +448,8 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 
 static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 {
-	int rc = ccs_mkdir_permission(dir->dentry->d_inode, dentry, dir->mnt, mode);
+	int rc = ccs_mkdir_permission(dir->dentry->d_inode, dentry, dir->mnt,
+				      mode);
 	if (rc)
 		return rc;
 	return original_security_ops.path_mkdir(dir, dentry, mode);
@@ -466,12 +496,88 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 			 struct dentry *new_dentry)
 {
-	int rc = ccs_link_permission(old_dentry, new_dir->dentry->d_inode, new_dentry,
-				     new_dir->mnt);
+	int rc = ccs_link_permission(old_dentry, new_dir->dentry->d_inode,
+				     new_dentry, new_dir->mnt);
 	if (rc)
 		return rc;
 	return original_security_ops.path_link(old_dentry, new_dir,
 					       new_dentry);
+}
+#elif defined(CCS_INODE_HOOK_HAS_MNT)
+static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
+			   struct vfsmount *mnt, int mode, dev_t dev)
+{
+	int rc = ccs_mknod_permission(dir, dentry, mnt, mode, dev);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_mknod(dir, dentry, mnt, mode, dev);
+}
+static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
+			   struct vfsmount *mnt, int mode)
+{
+	int rc = ccs_mkdir_permission(dir, dentry, mnt, mode);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_mkdir(dir, dentry, mnt, mode);
+}
+static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
+			   struct vfsmount *mnt)
+{
+	int rc = ccs_rmdir_permission(dir, dentry, mnt);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_rmdir(dir, dentry, mnt);
+}
+static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
+			    struct vfsmount *mnt)
+{
+	int rc = ccs_unlink_permission(dir, dentry, mnt);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_unlink(dir, dentry, mnt);
+}
+
+static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
+			     struct vfsmount *mnt, const char *old_name)
+{
+	int rc = ccs_symlink_permission(dir, dentry, mnt, old_name);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_symlink(dir, dentry, mnt, old_name);
+}
+
+static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
+			    struct vfsmount *old_mnt, struct inode *new_dir,
+			    struct dentry *new_dentry,
+			    struct vfsmount *new_mnt)
+{
+	int rc = ccs_rename_permission(old_dir, old_dentry, new_dir,
+				       new_dentry, new_mnt);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_rename(old_dir, old_dentry, old_mnt,
+						  new_dir, new_dentry,
+						  new_mnt);
+}
+
+static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
+			  struct inode *dir, struct dentry *new_dentry,
+			  struct vfsmount *new_mnt)
+{
+	int rc = ccs_link_permission(old_dentry, dir, new_dentry, new_mnt);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_link(old_dentry, old_mnt, dir,
+						new_dentry, new_mnt);
+}
+
+static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
+			    struct vfsmount *mnt, int mode)
+{
+	int rc = ccs_mknod_permission(dir, dentry, mnt, mode, 0);
+	if (rc)
+		return rc;
+	return original_security_ops.inode_create(dir, dentry, mnt, mode);
 }
 #else
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
@@ -516,7 +622,8 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct inode *new_dir, struct dentry *new_dentry)
 {
-	int rc = ccs_rename_permission(old_dir, old_dentry, new_dir, new_dentry, NULL);
+	int rc = ccs_rename_permission(old_dir, old_dentry, new_dir,
+				       new_dentry, NULL);
 	if (rc)
 		return rc;
 	return original_security_ops.inode_rename(old_dir, old_dentry, new_dir,
@@ -540,7 +647,6 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_create(dir, dentry, mode);
 }
-
 #endif
 
 #ifdef CONFIG_SECURITY_NETWORK

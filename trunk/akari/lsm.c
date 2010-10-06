@@ -666,6 +666,29 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 #include <linux/mount.h>
 #include <linux/fs_struct.h>
 
+static int __init ccs_kernel_read(struct file *file, unsigned long offset,
+				  char *addr, unsigned long count)
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 8)
+	/*
+	 * I can't use kernel_read() because seq_read() returns -EPIPE
+	 * if &pos != &file->f_pos .
+	 */
+	mm_segment_t old_fs;
+	unsigned long pos = file->f_pos;
+	int result;
+	file->f_pos = offset;
+	old_fs = get_fs();
+	set_fs(get_ds());
+	result = vfs_read(file, (void __user *)addr, count, &file->f_pos);
+	set_fs(old_fs);
+	file->f_pos = pos;
+	return result;
+#else
+	return kernel_read(file, offset, addr, count);
+#endif
+}
+
 static void *__init ccs_find_symbol(const char *keyline)
 {
 	struct file *file = NULL;
@@ -675,12 +698,12 @@ static void *__init ccs_find_symbol(const char *keyline)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
 		struct file_system_type *fstype = get_fs_type("proc");
 		struct vfsmount *mnt = vfs_kern_mount(fstype, 0, "proc", NULL);
-#elif LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 6) || LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 7)
-		struct file_system_type *fstype = get_fs_type("proc");
-		struct vfsmount *mnt = kern_mount(fstype);
-#else
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
 		struct file_system_type *fstype = NULL;
 		struct vfsmount *mnt = do_kern_mount("proc", 0, "proc", NULL);
+#else
+		struct file_system_type *fstype = get_fs_type("proc");
+		struct vfsmount *mnt = kern_mount(fstype);
 #endif
 		struct dentry *root;
 		struct dentry *dentry;
@@ -720,8 +743,8 @@ static void *__init ccs_find_symbol(const char *keyline)
 	if (buf) {
 		int len;
 		int offset = 0;
-		while ((len = kernel_read(file, offset, buf,
-					  PAGE_SIZE - 1)) > 0) {
+		while ((len = ccs_kernel_read(file, offset, buf,
+					      PAGE_SIZE - 1)) > 0) {
 			char *cp;
 			buf[len] = '\0';
 			cp = strrchr(buf, '\n');

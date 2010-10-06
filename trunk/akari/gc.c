@@ -12,7 +12,7 @@
 
 #include <linux/version.h>
 #include "internal.h"
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
 #include <linux/kthread.h>
 #endif
 
@@ -783,7 +783,7 @@ static int ccs_gc_thread(void *unused)
  */
 void ccs_run_gc(void)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
 	struct task_struct *task = kthread_create(ccs_gc_thread, NULL,
 						  "GC for CCS");
 	if (!IS_ERR(task))

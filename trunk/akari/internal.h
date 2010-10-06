@@ -57,8 +57,8 @@
 #ifndef CONFIG_MODULES
 #error You must choose CONFIG_MODULES=y for building this module.
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-#error Currently unsupported because I cannot resolve vfsmount_lock .
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+#error This version is not supported because I cannot resolve vfsmount_lock .
 #endif
 
 struct dentry;
@@ -1305,7 +1305,7 @@ static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
 	read_lock(&tasklist_lock);
-	pid = current = me->p_opptr->pid;
+	pid = current->p_opptr->pid;
 	read_unlock(&tasklist_lock);
 	return pid;
 }

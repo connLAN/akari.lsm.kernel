@@ -28,7 +28,7 @@ static const int ccs_lookup_flags = LOOKUP_FOLLOW;
 static const int ccs_lookup_flags = LOOKUP_FOLLOW | LOOKUP_POSITIVE;
 #endif
 #include <net/sock.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
 #include <linux/kthread.h>
 #endif
 #include <linux/proc_fs.h>

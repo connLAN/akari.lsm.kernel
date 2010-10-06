@@ -675,12 +675,24 @@ static void *__init ccs_find_symbol(const char *keyline)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
 		struct file_system_type *fstype = get_fs_type("proc");
 		struct vfsmount *mnt = vfs_kern_mount(fstype, 0, "proc", NULL);
+#elif LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 6) || LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 7)
+		struct file_system_type *fstype = get_fs_type("proc");
+		struct vfsmount *mnt = kern_mount(fstype);
 #else
+		struct file_system_type *fstype = NULL;
 		struct vfsmount *mnt = do_kern_mount("proc", 0, "proc", NULL);
 #endif
 		struct dentry *root;
 		struct dentry *dentry;
-		if (!mnt)
+		/*
+		 * We want to call put_filesystem(fstype). However, it is
+		 * impossible to call put_filesystem() from ccs_find_symbol()
+		 * because ccs_find_symbol() is called for finding address of
+		 * put_filesystem(). Therefore, we embed put_filesystem() here.
+		 */
+		if (fstype)
+			module_put(fstype->owner);
+		if (IS_ERR(mnt))
 			goto out;
 		root = dget(mnt->mnt_root);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
@@ -692,6 +704,7 @@ static void *__init ccs_find_symbol(const char *keyline)
 		dentry = lookup_one_len("kallsyms", root, 8);
 		up(&root->d_inode->i_sem);
 #endif
+		dput(root);
 		if (IS_ERR(dentry))
 			mntput(mnt);
 		else
@@ -700,16 +713,6 @@ static void *__init ccs_find_symbol(const char *keyline)
 					   , current_cred()
 #endif
 					   );
-		dput(root);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
-		/*
-		 * We need to call put_filesystem(fstype); here. However, it is
-		 * impossible because this function is used for finding address
-		 * of put_filesystem(). Therefore, we embed put_filesystem()
-		 * into here.
-		 */
-		module_put(fstype->owner);
-#endif
 	}
 	if (IS_ERR(file) || !file)
 		goto out;
@@ -883,7 +886,33 @@ static bool __init ccs_find___put_task_struct(void)
 #endif
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+
+/* Never mark this variable as __initdata . */
+static spinlock_t ccs_vfsmount_lock;
+
+/* Never mark this function as __init . */
+static int lsm_flwup(struct vfsmount **mnt, struct dentry **dentry)
+{
+	struct vfsmount *parent;
+	struct dentry *mountpoint;
+	spin_lock(&ccs_vfsmount_lock);
+	parent=(*mnt)->mnt_parent;
+	if (parent == *mnt) {
+		spin_unlock(&ccs_vfsmount_lock);
+		return 0;
+	}
+	mntget(parent);
+	mountpoint=dget((*mnt)->mnt_mountpoint);
+	spin_unlock(&ccs_vfsmount_lock);
+	dput(*dentry);
+	*dentry = mountpoint;
+	mntput(*mnt);
+	*mnt = parent;
+	return 1;
+}
+
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 
 /* Never mark this variable as __initdata . */
 static spinlock_t ccs_vfsmount_lock;
@@ -900,7 +929,52 @@ static void lsm_pin(struct vfsmount *mnt)
 
 static bool __init ccs_find_vfsmount_lock(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+	int i;
+	const u8 *cp;
+	spinlock_t *ptr;
+	/*
+	 * Guess "spinlock_t vfsmount_lock;".
+	 * This trick depends on below assumptions.
+	 *
+	 * (1) Compiler generates identical code for follow_up() and lsm_flwup().
+	 * (2) ccs_vfsmount_lock is found within 128 bytes from lsm_flwup,
+	 *     even if additional code (e.g. debug symbols) is added.
+	 * (3) It is safe to read 128 bytes from lsm_flwup.
+	 * (4) ccs_vfsmount_lock != Byte code except ccs_vfsmount_lock.
+	 */
+	cp = (const u8 *) lsm_flwup;
+	for (i = 0; i < 128; i++) {
+		if (sizeof(void *) == sizeof(u32)) {
+			if (* (u32 *) cp == (u32) &ccs_vfsmount_lock)
+				break;
+		} else if (sizeof(void *) == sizeof(u64)) {
+			if (* (u64 *) cp == (u64) &ccs_vfsmount_lock)
+				break;
+		}
+		cp++;
+	}
+	if (i == 128) {
+		printk(KERN_ERR "Can't resolve ccs_vfsmount_lock .\n");
+		goto out;
+	}
+	cp = (const u8 *) __symbol_get("follow_up");
+	if (!cp) {
+		printk(KERN_ERR "Can't resolve follow_up().\n");
+		goto out;
+	}
+	/* This should be "spinlock_t *vfsmount_lock;". */
+	ptr = * (spinlock_t **) (cp + i);
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
+		goto out;
+	}
+	ccsecurity_exports.vfsmount_lock = ptr;
+	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
+	return true;
+ out:
+	return false;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 	int i;
 	const u8 *cp;
 	spinlock_t *ptr;
@@ -941,7 +1015,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 		goto out;
 	}
 	ccsecurity_exports.vfsmount_lock = ptr;
-	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);	
+	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
 	return true;
  out:
 	return false;
@@ -954,7 +1028,11 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 {
 	memmove(&original_security_ops, ops, sizeof(original_security_ops));
 	smp_mb();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 12)
 	synchronize_rcu();
+#else
+	synchronize_kernel();
+#endif
 	/* Security context allocator. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	ops->cred_prepare          = ccs_cred_prepare;

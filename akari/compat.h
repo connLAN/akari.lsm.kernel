@@ -200,6 +200,12 @@ do {									\
 		set_current_state(TASK_UNINTERRUPTIBLE);	\
 		schedule_timeout((HZ * secs) + 1);		\
 	}
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 9)
+#undef ssleep
+#define ssleep(secs) {						\
+		set_current_state(TASK_UNINTERRUPTIBLE);	\
+		schedule_timeout((HZ * secs) + 1);		\
+	}
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)

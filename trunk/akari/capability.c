@@ -45,7 +45,7 @@ static bool ccs_check_capability_acl(struct ccs_request_info *r,
 		container_of(ptr, typeof(*acl), head);
 	return acl->operation == r->param.capability.operation;
 }
-			
+
 /**
  * ccs_capable - Check permission for capability.
  *

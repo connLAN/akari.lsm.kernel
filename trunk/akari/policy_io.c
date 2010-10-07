@@ -44,7 +44,7 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_FILE_LINK]       = "link",
 	[CCS_MAC_FILE_RENAME]     = "rename",
 	[CCS_MAC_FILE_CHMOD]      = "chmod",
-	[CCS_MAC_FILE_CHOWN]      = "chown", 
+	[CCS_MAC_FILE_CHOWN]      = "chown",
 	[CCS_MAC_FILE_CHGRP]      = "chgrp",
 	[CCS_MAC_FILE_IOCTL]      = "ioctl",
 	[CCS_MAC_FILE_CHROOT]     = "chroot",
@@ -343,7 +343,7 @@ static struct ccs_profile *ccs_assign_profile(const unsigned int profile)
 		entry = NULL;
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	kfree(entry);
 	return ptr;
 }
@@ -422,7 +422,8 @@ static int ccs_set_mode(char *name, const char *value,
 			int len = 0;
 			if (i < CCS_MAX_MAC_INDEX) {
 				const u8 c = ccs_index2category[i];
-				const char *category = ccs_category_keywords[c]; 
+				const char *category =
+					ccs_category_keywords[c];
 				len = strlen(category);
 				if (strncmp(name, category, len) ||
 				    name[len++] != ':' || name[len++] != ':')
@@ -533,7 +534,7 @@ static void ccs_read_profile(struct ccs_io_buffer *head)
 {
 	u8 index;
 	const struct ccs_profile *profile;
- next:
+next:
 	index = head->r.index;
 	profile = ccs_profile_ptr[index];
 	switch (head->r.step) {
@@ -1197,7 +1198,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 		goto print_cond_part;
 	if (acl->is_deleted)
 		return true;
- next:
+next:
 	bit = head->r.bit;
 	if (!ccs_flush(head))
 		return false;
@@ -1356,7 +1357,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 		head->r.cond_step = 0;
 		if (!ccs_flush(head))
 			return false;
- print_cond_part:
+print_cond_part:
 		if (!ccs_print_condition(head, acl->cond))
 			return false;
 		head->r.print_cond_part = false;
@@ -1372,7 +1373,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 	case CCS_TYPE_UNIX_ACL:
 		goto next;
 	}
- done:
+done:
 	head->r.bit = 0;
 	return true;
 }
@@ -1452,7 +1453,7 @@ static void ccs_read_domain(struct ccs_io_buffer *head)
 				goto done;
 		}
 	}
- done:
+done:
 	head->r.eof = true;
 }
 
@@ -1681,8 +1682,8 @@ static bool ccs_read_group(struct ccs_io_buffer *head, const int idx)
 						head)->member_name->name);
 			} else if (idx == CCS_NUMBER_GROUP) {
 				ccs_print_number_union(head, &container_of
-						       (ptr, struct ccs_number_group,
-							head)->number);
+					       (ptr, struct ccs_number_group,
+						head)->number);
 			} else if (idx == CCS_ADDRESS_GROUP) {
 				char buffer[128];
 				struct ccs_address_group *member =
@@ -1832,7 +1833,7 @@ static atomic_t ccs_query_observers = ATOMIC_INIT(0);
 static int ccs_truncate(char *str)
 {
 	char *start = str;
-	while (* (unsigned char *) str > (unsigned char) ' ')
+	while (*(unsigned char *) str > (unsigned char) ' ')
 		str++;
 	*str = '\0';
 	return strlen(start) + 1;
@@ -1885,7 +1886,6 @@ static void ccs_add_entry(char *header)
 		ccs_addprintf(buffer, len, " exec.argv[0]=%s", argv0);
 	if (symlink)
 		ccs_addprintf(buffer, len, "%s", symlink);
-	//printk(KERN_DEBUG "'%s'\n", buffer);
 	ccs_normalize_line(buffer);
 	if (!ccs_write_domain2(buffer, ccs_current_domain(), false))
 		ccs_update_stat(CCS_STAT_POLICY_UPDATES);
@@ -1997,7 +1997,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 		/* Timed out or rejected by administrator. */
 		break;
 	}
- out:
+out:
 	kfree(entry.query);
 	return error;
 }

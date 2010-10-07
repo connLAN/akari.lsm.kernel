@@ -182,7 +182,7 @@ static bool ccs_scan_bprm(struct ccs_execve *ee,
 		if (!result)
 			break;
 	}
- out:
+out:
 	if (result) {
 		int i;
 		/* Check not-yet-checked entries. */
@@ -320,7 +320,7 @@ static bool ccs_parse_argv(char *start, struct ccs_argv *argv)
 	argv->is_not = is_not;
 	argv->value = value;
 	return true;
- out:
+out:
 	return false;
 }
 
@@ -376,7 +376,7 @@ static bool ccs_parse_envp(char *start, struct ccs_envp *envp)
 	envp->is_not = is_not;
 	envp->value = value;
 	return true;
- out:
+out:
 	return false;
 }
 
@@ -439,7 +439,7 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 		}
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	if (found) {
 		ccs_del_condition(&entry->head.list);
 		kfree(entry);
@@ -467,7 +467,7 @@ struct ccs_condition *ccs_get_condition(char *condition)
 	struct ccs_condition e = { };
 	bool dry_run = true;
 	char *end_of_string = condition + strlen(condition);
- rerun:
+rerun:
 	start = condition;
 	while (1) {
 		u8 left = -1;
@@ -590,7 +590,7 @@ struct ccs_condition *ccs_get_condition(char *condition)
 					goto out;
 			}
 		}
- store_value:
+store_value:
 		if (dry_run)
 			continue;
 		condp->left = left;
@@ -629,7 +629,7 @@ struct ccs_condition *ccs_get_condition(char *condition)
 			*start = ' ';
 	dry_run = false;
 	goto rerun;
- out:
+out:
 	dprintk(KERN_WARNING "%u: %s failed\n", __LINE__, __func__);
 	if (entry) {
 		ccs_del_condition(&entry->head.list);

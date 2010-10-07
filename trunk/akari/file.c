@@ -510,7 +510,8 @@ static void __ccs_save_open_mode(int mode)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 14)
 	/* O_TRUNC passes MAY_WRITE to ccs_open_permission(). */
 	else if (!(mode & 3) && (mode & O_TRUNC))
-		ccs_current_security()->ccs_flags |= CCS_OPEN_FOR_READ_TRUNCATE;
+		ccs_current_security()->ccs_flags |=
+			CCS_OPEN_FOR_READ_TRUNCATE;
 #endif
 }
 
@@ -586,7 +587,7 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 		error = ccs_path_permission(&r, CCS_TYPE_TRUNCATE, &buf);
 	}
 #endif
- out:
+out:
 	kfree(buf.name);
 	ccs_read_unlock(idx);
 	if (r.mode != CCS_CONFIG_ENFORCING)
@@ -655,7 +656,7 @@ static int ccs_path_perm(const u8 operation, struct inode *dir,
 	error = ccs_path_permission(&r, operation, &buf);
 	if (operation == CCS_TYPE_SYMLINK)
 		kfree(symlink_target.name);
- out:
+out:
 	kfree(buf.name);
 	ccs_read_unlock(idx);
 	if (!is_enforce)
@@ -714,7 +715,7 @@ static int ccs_mkdev_perm(const u8 operation, struct inode *dir,
 		error = ccs_audit_mkdev_log(&r);
 	} while (error == CCS_RETRY_REQUEST);
 	kfree(buf.name);
- out:
+out:
 	ccs_read_unlock(idx);
 	if (!is_enforce)
 		error = 0;
@@ -782,7 +783,7 @@ static int ccs_path2_perm(const u8 operation, struct inode *dir1,
 		ccs_check_acl(&r, ccs_check_path2_acl);
 		error = ccs_audit_path2_log(&r);
 	} while (error == CCS_RETRY_REQUEST);
- out:
+out:
 	kfree(buf1.name);
 	kfree(buf2.name);
 	ccs_read_unlock(idx);
@@ -890,7 +891,7 @@ static int ccs_path_number_perm(const u8 type, struct inode *dir,
 		error = ccs_audit_path_number_log(&r);
 	} while (error == CCS_RETRY_REQUEST);
 	kfree(buf.name);
- out:
+out:
 	ccs_read_unlock(idx);
 	if (r.mode != CCS_CONFIG_ENFORCING)
 		error = 0;
@@ -1203,7 +1204,7 @@ static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 	if (!buffer)
 		goto out;
 	snprintf(buffer, PAGE_SIZE - 1, "proc:/sys");
- repeat:
+repeat:
 	if (!nlen) {
 		error = -ENOTDIR;
 		goto out;
@@ -1283,7 +1284,7 @@ no_child:
 		goto out;
 	}
 	error = -ENOTDIR;
- out:
+out:
 	ccs_read_unlock(idx);
 	kfree(buffer);
 	return error;

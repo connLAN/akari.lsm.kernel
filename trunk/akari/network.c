@@ -87,7 +87,7 @@ static int ccs_audit_inet_log(struct ccs_request_info *r)
 			       r->param.inet_network.ip);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, " %u",
-		 r->param.inet_network.port); 
+		 r->param.inet_network.port);
 	return ccs_audit_net_log(r, "inet", r->param.inet_network.protocol,
 				 r->param.inet_network.operation, buf);
 }
@@ -387,7 +387,7 @@ int ccs_write_inet_network(struct ccs_acl_param *param)
 		goto out;
 	error = ccs_update_domain(&e.head, sizeof(e), param, ccs_same_inet_acl,
 				  ccs_merge_inet_acl);
- out:
+out:
 	if (e.address_type == CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP)
 		ccs_put_group(e.address.group);
 	else if (e.address_type == CCS_IP_ADDRESS_TYPE_IPv6) {
@@ -421,7 +421,7 @@ int ccs_write_unix_network(struct ccs_acl_param *param)
 	if (e.protocol == CCS_SOCK_MAX || !e.perm)
 		return -EINVAL;
 	if (!ccs_parse_name_union(ccs_read_token(param), &e.name))
-                return -EINVAL;
+		return -EINVAL;
 	error = ccs_update_domain(&e.head, sizeof(e), param, ccs_same_unix_acl,
 				  ccs_merge_unix_acl);
 	ccs_put_name_union(&e.name);
@@ -459,7 +459,9 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
 		r.param.inet_network.is_ipv6 = address->inet.is_ipv6;
 		r.param.inet_network.address = address->inet.address;
 		r.param.inet_network.port = ntohs(address->inet.port);
-		/* use host byte order to allow u32 comparison than memcmp().*/
+		/*
+		 * Use host byte order to allow u32 comparison than memcmp().
+		 */
 		r.param.inet_network.ip = ntohl(*address->inet.address);
 		if (no_sleep)
 			task->ccs_flags |= CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
@@ -501,7 +503,7 @@ static int ccs_check_inet_address(const struct sockaddr *addr,
 	if (address->protocol == SOCK_RAW)
 		i->port = htons(port);
 	return ccs_inet_entry(address);
- skip:
+skip:
 	return 0;
 }
 
@@ -529,7 +531,8 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
 					  address->unix0.addr_len
 					  - sizeof(sa_family_t));
 		if (buf) {
-			struct ccs_security * const task = ccs_current_security();
+			struct ccs_security * const task =
+				ccs_current_security();
 			const bool no_sleep =
 				address->operation == CCS_NETWORK_ACCEPT ||
 				address->operation == CCS_NETWORK_RECV;
@@ -574,7 +577,7 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 	 */
 	if (u->addr[0] && addr_len > sizeof(short) &&
 	    addr_len <= sizeof(struct sockaddr_un))
-                ((char *) u->addr)[addr_len] = '\0';
+		((char *) u->addr)[addr_len] = '\0';
 	return ccs_unix_entry(address);
 }
 
@@ -797,7 +800,7 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 	case PF_INET:
 		{
 			struct in_addr *sin4 = (struct in_addr *) &addr;
-			address.inet.is_ipv6 = false; 
+			address.inet.is_ipv6 = false;
 			sin4->s_addr = ip_hdr(skb)->saddr;
 			break;
 		}
@@ -806,7 +809,8 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 			struct unix_address *u = unix_sk(skb->sk)->addr;
 #else
-			struct unix_address *u = skb->sk->protinfo.af_unix.addr;
+			struct unix_address *u =
+				skb->sk->protinfo.af_unix.addr;
 #endif
 			unsigned int addr_len;
 			if (!u)
@@ -815,8 +819,9 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 			if (addr_len >= sizeof(addr))
 				return 0;
 			memcpy(&addr, u->name, addr_len);
-			return ccs_check_unix_address((struct sockaddr *) &addr,
-						      addr_len, &address);
+			return ccs_check_unix_address((struct sockaddr *)
+						      &addr, addr_len,
+						      &address);
 		}
 	}
 	address.inet.address = (u32 *) &addr;

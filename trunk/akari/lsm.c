@@ -36,7 +36,7 @@ static struct list_head ccs_security_list[2] = {
 	LIST_HEAD_INIT(ccs_security_list[1]),
 };
 static DEFINE_SPINLOCK(ccs_security_list_lock);
-//#define DEBUG_COUNTER
+/* #define DEBUG_COUNTER */
 #ifdef DEBUG_COUNTER
 static atomic_t ccs_security_counter[2];
 #endif
@@ -381,7 +381,7 @@ static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
 {
 	int rc = 0;
 #if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-        if (attr->ia_valid & ATTR_UID)
+	if (attr->ia_valid & ATTR_UID)
 		rc = ccs_chown_permission(dentry, mnt, attr->ia_uid, -1);
 	if (!rc && (attr->ia_valid & ATTR_GID))
 		rc = ccs_chown_permission(dentry, mnt, -1, attr->ia_gid);
@@ -401,7 +401,7 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	int rc = 0;
 #if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-        if (attr->ia_valid & ATTR_UID)
+	if (attr->ia_valid & ATTR_UID)
 		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, -1);
 	if (!rc && (attr->ia_valid & ATTR_GID))
 		rc = ccs_chown_permission(dentry, NULL, -1, attr->ia_gid);
@@ -669,13 +669,11 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 }
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
-#include <linux/net.h>
-#include <net/sock.h>
 static void ccs_socket_post_accept(struct socket *sock, struct socket *newsock)
 {
 	original_security_ops.socket_post_accept(sock, newsock);
 	/*
-	 * This hook is called after the accept()ed socket's became visible to
+	 * This hook is called after the accept()ed socket became visible to
 	 * userspace. Therefore, this hook is useless for security purpose.
 	 * But for analyzing purpose, it would be fine.
 	 */
@@ -773,6 +771,8 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 	return original_security_ops.file_ioctl(filp, cmd, arg);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+
 #include <linux/mount.h>
 #include <linux/fs_struct.h>
 
@@ -818,10 +818,7 @@ static void *__init ccs_find_symbol(const char *keyline)
 		struct dentry *root;
 		struct dentry *dentry;
 		/*
-		 * We want to call put_filesystem(fstype). However, it is
-		 * impossible to call put_filesystem() from ccs_find_symbol()
-		 * because ccs_find_symbol() is called for finding address of
-		 * put_filesystem(). Therefore, we embed put_filesystem() here.
+		 * We embed put_filesystem() here because it is not exported.
 		 */
 		if (fstype)
 			module_put(fstype->owner);
@@ -874,9 +871,11 @@ static void *__init ccs_find_symbol(const char *keyline)
 		kfree(buf);
 	}
 	filp_close(file, NULL);
- out:
+out:
 	return (void *) entry;
 }
+
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
@@ -913,10 +912,10 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	cp = (const u8 *) lsm_addr_calculator;
 	for (i = 0; i < 128; i++) {
 		if (sizeof(ccs_security_ops) == sizeof(u32)) {
-			if (* (u32 *) cp == (u32) &ccs_security_ops)
+			if (*(u32 *) cp == (u32) &ccs_security_ops)
 				break;
 		} else if (sizeof(ccs_security_ops) == sizeof(u64)) {
-			if (* (u64 *) cp == (u64) &ccs_security_ops)
+			if (*(u64 *) cp == (u64) &ccs_security_ops)
 				break;
 		}
 		cp++;
@@ -931,7 +930,7 @@ static struct security_operations * __init ccs_find_security_ops(void)
 		goto out;
 	}
 	/* This should be "struct security_operations *security_ops;". */
-	ptr = * (struct security_operations ***) (cp + i);
+	ptr = *(struct security_operations ***) (cp + i);
 #else
 	/* This is "struct security_operations *security_ops;". */
 	ptr = (struct security_operations **) __symbol_get("security_ops");
@@ -947,7 +946,7 @@ static struct security_operations * __init ccs_find_security_ops(void)
 		goto out;
 	}
 	return ops;
- out:
+out:
 	return NULL;
 }
 
@@ -978,26 +977,11 @@ static bool __init ccs_find_find_task_by_pid(void)
 	ccsecurity_exports.find_task_by_pid_ns = ptr;
 	printk(KERN_INFO "find_task_by_pid_ns=%p\n", ptr);
 	return true;
- out:
+out:
 	return false;
 #else
 	return true;
 #endif
-}
-
-static bool __init ccs_find_put_filesystem(void)
-{
-	void *ptr;
-	ptr = ccs_find_symbol(" put_filesystem\n");
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve put_filesystem().\n");
-		goto out;
-	}
-	ccsecurity_exports.put_filesystem = ptr;
-	printk(KERN_INFO "put_filesystem=%p\n", ptr);
-	return true;
- out:
-	return false;
 }
 
 static bool __init ccs_find___put_task_struct(void)
@@ -1012,7 +996,7 @@ static bool __init ccs_find___put_task_struct(void)
 	ccs___put_task_struct = ptr;
 	printk(KERN_INFO "__put_task_struct=%p\n", ptr);
 	return true;
- out:
+out:
 	return false;
 #else
 	return true;
@@ -1030,13 +1014,13 @@ static int lsm_flwup(struct vfsmount **mnt, struct dentry **dentry)
 	struct vfsmount *parent;
 	struct dentry *mountpoint;
 	spin_lock(&ccs_vfsmount_lock);
-	parent=(*mnt)->mnt_parent;
+	parent = (*mnt)->mnt_parent;
 	if (parent == *mnt) {
 		spin_unlock(&ccs_vfsmount_lock);
 		return 0;
 	}
 	mntget(parent);
-	mountpoint=dget((*mnt)->mnt_mountpoint);
+	mountpoint = dget((*mnt)->mnt_mountpoint);
 	spin_unlock(&ccs_vfsmount_lock);
 	dput(*dentry);
 	*dentry = mountpoint;
@@ -1070,7 +1054,8 @@ static bool __init ccs_find_vfsmount_lock(void)
 	 * Guess "spinlock_t vfsmount_lock;".
 	 * This trick depends on below assumptions.
 	 *
-	 * (1) Compiler generates identical code for follow_up() and lsm_flwup().
+	 * (1) Compiler generates identical code for follow_up() and
+	 *     lsm_flwup().
 	 * (2) ccs_vfsmount_lock is found within 128 bytes from lsm_flwup,
 	 *     even if additional code (e.g. debug symbols) is added.
 	 * (3) It is safe to read 128 bytes from lsm_flwup.
@@ -1079,10 +1064,10 @@ static bool __init ccs_find_vfsmount_lock(void)
 	cp = (const u8 *) lsm_flwup;
 	for (i = 0; i < 128; i++) {
 		if (sizeof(void *) == sizeof(u32)) {
-			if (* (u32 *) cp == (u32) &ccs_vfsmount_lock)
+			if (*(u32 *) cp == (u32) &ccs_vfsmount_lock)
 				break;
 		} else if (sizeof(void *) == sizeof(u64)) {
-			if (* (u64 *) cp == (u64) &ccs_vfsmount_lock)
+			if (*(u64 *) cp == (u64) &ccs_vfsmount_lock)
 				break;
 		}
 		cp++;
@@ -1097,7 +1082,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 		goto out;
 	}
 	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = * (spinlock_t **) (cp + i);
+	ptr = *(spinlock_t **) (cp + i);
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
 		goto out;
@@ -1105,7 +1090,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 	ccsecurity_exports.vfsmount_lock = ptr;
 	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
 	return true;
- out:
+out:
 	return false;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 	int i;
@@ -1124,10 +1109,10 @@ static bool __init ccs_find_vfsmount_lock(void)
 	cp = (const u8 *) lsm_pin;
 	for (i = 0; i < 128; i++) {
 		if (sizeof(void *) == sizeof(u32)) {
-			if (* (u32 *) cp == (u32) &ccs_vfsmount_lock)
+			if (*(u32 *) cp == (u32) &ccs_vfsmount_lock)
 				break;
 		} else if (sizeof(void *) == sizeof(u64)) {
-			if (* (u64 *) cp == (u64) &ccs_vfsmount_lock)
+			if (*(u64 *) cp == (u64) &ccs_vfsmount_lock)
 				break;
 		}
 		cp++;
@@ -1142,7 +1127,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 		goto out;
 	}
 	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = * (spinlock_t **) (cp + i);
+	ptr = *(spinlock_t **) (cp + i);
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
 		goto out;
@@ -1150,7 +1135,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 	ccsecurity_exports.vfsmount_lock = ptr;
 	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
 	return true;
- out:
+out:
 	return false;
 #else
 	return true;
@@ -1239,8 +1224,7 @@ static int __init ccs_init(void)
 {
 	struct security_operations *ops = ccs_find_security_ops();
 	if (!ops || !ccs_find_find_task_by_pid() ||
-	    !ccs_find_put_filesystem() || !ccs_find_vfsmount_lock() ||
-	    !ccs_find___put_task_struct())
+	    !ccs_find_vfsmount_lock() || !ccs_find___put_task_struct())
 		return -EINVAL;
 	ccs_main_init();
 	ccs_update_security_ops(ops);
@@ -1262,11 +1246,11 @@ bool ccs_domain_in_use(const struct ccs_domain_info *domain)
 		list_for_each_entry_rcu(ptr, list, list) {
 			struct ccs_execve *ee = ptr->ee;
 			if (ptr->ccs_domain_info == domain ||
-			    (ee && ee->previous_domain == domain)) 
+			    (ee && ee->previous_domain == domain))
 				goto found;
 		}
 	}
- found:
+found:
 	rcu_read_unlock();
 	return i < 2;
 }
@@ -1352,10 +1336,12 @@ struct ccs_domain_info *ccs_read_task_security(const struct task_struct *task)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
-static int ccs_copy_cred_security(const struct cred *new, const struct cred *old, gfp_t gfp)
+static int ccs_copy_cred_security(const struct cred *new,
+				  const struct cred *old, gfp_t gfp)
 {
 	struct ccs_security *old_security = ccs_find_cred_security(old);
-	struct ccs_security *new_security = kzalloc(sizeof(*new_security), gfp);
+	struct ccs_security *new_security =
+		kzalloc(sizeof(*new_security), gfp);
 	if (!new_security)
 		return -ENOMEM;
 	*new_security = *old_security;

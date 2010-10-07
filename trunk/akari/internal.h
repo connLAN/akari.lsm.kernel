@@ -70,17 +70,9 @@ struct in6_addr;
  * @pos:        the &struct list_head to use as a loop cursor.
  * @head:       the head for your list.
  */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
-#define list_for_each_cookie(pos, head)			\
-	if (!pos)					\
-		pos = rcu_dereference((head)->next);	\
-	for ( ; pos != (head); pos = rcu_dereference(pos->next))
-#else
-#define list_for_each_cookie(pos, head)				\
-	if (!pos)						\
-		pos = srcu_dereference((head)->next, &ccs_ss);	\
-	for ( ; pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
-#endif
+#define list_for_each_cookie(pos, head)				     \
+	for (pos || (pos = srcu_dereference((head)->next, &ccs_ss)); \
+	pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
 
 enum ccs_policy_stat_type {
 	/* Do not change this order. */
@@ -144,7 +136,6 @@ enum ccs_path_acl_index {
 	CCS_TYPE_SYMLINK,
 	CCS_TYPE_CHROOT,
 	CCS_TYPE_UMOUNT,
-	//CCS_TYPE_TRANSIT,
 	CCS_MAX_PATH_OPERATION
 };
 
@@ -228,7 +219,6 @@ enum ccs_mac_index {
 	CCS_MAC_FILE_MOUNT,
 	CCS_MAC_FILE_UMOUNT,
 	CCS_MAC_FILE_PIVOT_ROOT,
-	//CCS_MAC_FILE_TRANSIT,
 	CCS_MAC_NETWORK_INET_STREAM_BIND,
 	CCS_MAC_NETWORK_INET_STREAM_LISTEN,
 	CCS_MAC_NETWORK_INET_STREAM_CONNECT,
@@ -678,7 +668,7 @@ struct ccs_request_info {
 	u8 mode;
 	/*
 	 * For holding operation index used for this request.
-	 * Used by ccs_init_request_info() / ccs_get_mode() / 
+	 * Used by ccs_init_request_info() / ccs_get_mode() /
 	 * ccs_write_log(). One of values in "enum ccs_mac_index".
 	 */
 	u8 type;

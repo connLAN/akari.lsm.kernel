@@ -141,7 +141,7 @@ static bool ccs_used_by_task(struct ccs_domain_info *domain)
 		in_use = true;
 		goto out;
 	} while_each_thread(g, t);
- out:
+out:
 	ccs_tasklist_unlock();
 #else
 	struct task_struct *p;
@@ -658,7 +658,7 @@ static void ccs_collect_entry(void)
 				goto unlock;
 		}
 	}
- unlock:
+unlock:
 	ccs_read_unlock(idx);
 	mutex_unlock(&ccs_policy_lock);
 }

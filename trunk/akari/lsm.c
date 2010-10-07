@@ -44,9 +44,6 @@ static atomic_t ccs_security_counter[2];
 static void ccs_add_security(struct ccs_security *ptr, const bool is_cred)
 {
 	unsigned long flags;
-	struct ccs_domain_info *domain = ptr->ccs_domain_info;
-	if (domain)
-		atomic_inc(&domain->users);
 #ifdef DEBUG_COUNTER
 	atomic_inc(&ccs_security_counter[is_cred]);
 	printk(KERN_DEBUG "Add %p (%s=%u)\n", ptr, is_cred ? "cred" : "task",
@@ -55,18 +52,6 @@ static void ccs_add_security(struct ccs_security *ptr, const bool is_cred)
 	spin_lock_irqsave(&ccs_security_list_lock, flags);
 	list_add_rcu(&ptr->list, &ccs_security_list[is_cred]);
 	spin_unlock_irqrestore(&ccs_security_list_lock, flags);
-}
-
-void ccs_update_security_domain(struct ccs_domain_info **pdomain,
-				struct ccs_domain_info *domain)
-{
-	if (!pdomain || *pdomain == domain)
-		return;
-	if (domain)
-		atomic_inc(&domain->users);
-	if (*pdomain)
-		atomic_dec(&(*pdomain)->users);
-	*pdomain = domain;
 }
 
 static void ccs_clear_execve(int ret, struct ccs_security *security)
@@ -147,8 +132,7 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 	    old_security == &ccs_null_security)
 		return;
 	new_security->ccs_flags = old_security->ccs_flags;
-	ccs_update_security_domain(&new_security->ccs_domain_info,
-				   old_security->ccs_domain_info);
+	new_security->ccs_domain_info = old_security->ccs_domain_info;
 }
 
 #endif
@@ -225,8 +209,7 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 	/* Update current task's cred's domain for future fork(). */
 	new_security = ccs_find_cred_security(bprm->cred);
 	new_security->ccs_flags = old_security->ccs_flags;
-	ccs_update_security_domain(&new_security->ccs_domain_info,
-				   old_security->ccs_domain_info);
+	new_security->ccs_domain_info = old_security->ccs_domain_info;
 }
 
 #endif
@@ -684,6 +667,27 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 		return rc;
 	return original_security_ops.socket_sendmsg(sock, msg, size);
 }
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
+#include <linux/net.h>
+#include <net/sock.h>
+static void ccs_socket_post_accept(struct socket *sock, struct socket *newsock)
+{
+	original_security_ops.socket_post_accept(sock, newsock);
+	/*
+	 * This hook is called after the accept()ed socket's became visible to
+	 * userspace. Therefore, this hook is useless for security purpose.
+	 * But for analyzing purpose, it would be fine.
+	 */
+	if (ccs_socket_post_accept_permission(sock, newsock)) {
+		static u8 counter = 20;
+		if (counter) {
+			counter--;
+			printk(KERN_INFO "I can't drop accept()ed socket.\n");
+		}
+	}
+}
+#endif
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
@@ -1225,6 +1229,9 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	ops->socket_connect        = ccs_socket_connect;
 	ops->socket_listen         = ccs_socket_listen;
 	ops->socket_sendmsg        = ccs_socket_sendmsg;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
+	ops->socket_post_accept    = ccs_socket_post_accept;
+#endif
 #endif
 }
 
@@ -1245,15 +1252,24 @@ static int __init ccs_init(void)
 module_init(ccs_init);
 MODULE_LICENSE("GPL");
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
-#undef list_for_each_entry_rcu
-#define list_for_each_entry_rcu(pos, head, member)			\
-	for (pos = list_entry(rcu_dereference((head)->next),		\
-			      typeof(*pos), member);			\
-	     prefetch(pos->member.next), &pos->member != (head);	\
-	     pos = list_entry(rcu_dereference(pos->member.next),	\
-			      typeof(*pos), member))
-#endif
+bool ccs_domain_in_use(const struct ccs_domain_info *domain)
+{
+	u8 i;
+	struct ccs_security *ptr;
+	rcu_read_lock();
+	for (i = 0; i < 2; i++) {
+		struct list_head *list = &ccs_security_list[i];
+		list_for_each_entry_rcu(ptr, list, list) {
+			struct ccs_execve *ee = ptr->ee;
+			if (ptr->ccs_domain_info == domain ||
+			    (ee && ee->previous_domain == domain)) 
+				goto found;
+		}
+	}
+ found:
+	rcu_read_unlock();
+	return i < 2;
+}
 
 struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 {
@@ -1370,7 +1386,6 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
 	struct ccs_execve *ee = ptr->ee;
-	ccs_update_security_domain(&ptr->ccs_domain_info, NULL);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	/*
 	 * If this security context was used by "struct task_struct" and
@@ -1392,7 +1407,6 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 		       "Releasing memory in \"struct ccs_execve\" because "
 		       "some \"struct task_struct\" has exit()ed immediately "
 		       "after do_execve() has failed.\n");
-		ccs_update_security_domain(&ee->previous_domain, NULL);
 		kfree(ee->handler_path);
 		kfree(ee->tmp);
 		kfree(ee->dump.data);
@@ -1407,9 +1421,7 @@ static void ccs_rcu_free(void *arg)
 {
 	struct ccs_security *ptr = arg;
 	struct ccs_execve *ee = ptr->ee;
-	ccs_update_security_domain(&ptr->ccs_domain_info, NULL);
 	if (ee) {
-		ccs_update_security_domain(&ee->previous_domain, NULL);
 		kfree(ee->handler_path);
 		kfree(ee->tmp);
 		kfree(ee->dump.data);

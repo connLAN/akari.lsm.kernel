@@ -131,7 +131,8 @@ ccs_path_matches_group(const struct ccs_path_info *pathname,
 		       const struct ccs_group *group)
 {
 	struct ccs_path_group *member;
-	list_for_each_entry_rcu(member, &group->member_list, head.list) {
+	list_for_each_entry_srcu(member, &group->member_list, head.list,
+				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
 		if (!ccs_path_matches_pattern(pathname, member->member_name))
@@ -157,7 +158,8 @@ bool ccs_number_matches_group(const unsigned long min, const unsigned long max,
 {
 	struct ccs_number_group *member;
 	bool matched = false;
-	list_for_each_entry_rcu(member, &group->member_list, head.list) {
+	list_for_each_entry_srcu(member, &group->member_list, head.list,
+				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
 		if (min > member->number.values[1] ||
@@ -186,7 +188,8 @@ bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
 	struct ccs_address_group *member;
 	const u32 ip = ntohl(*address);
 	bool matched = false;
-	list_for_each_entry_rcu(member, &group->member_list, head.list) {
+	list_for_each_entry_srcu(member, &group->member_list, head.list,
+				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
 		if (member->is_ipv6) {

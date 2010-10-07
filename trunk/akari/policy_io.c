@@ -356,7 +356,7 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	list_for_each_entry_rcu(domain, &ccs_domain_list, list) {
+	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
 		if (ccs_profile_ptr[profile])
 			continue;
@@ -706,8 +706,8 @@ static bool ccs_manager(void)
 	if (!ccs_manage_by_non_root && (current_uid() || current_euid()))
 		return false;
 	exe = ccs_get_exe();
-	list_for_each_entry_rcu(ptr, &ccs_policy_list[CCS_ID_MANAGER],
-				head.list) {
+	list_for_each_entry_srcu(ptr, &ccs_policy_list[CCS_ID_MANAGER],
+				 head.list, &ccs_ss) {
 		if (ptr->head.is_deleted)
 			continue;
 		if (ptr->is_domain) {

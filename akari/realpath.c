@@ -109,7 +109,7 @@ static char *ccs_get_absolute_path(struct path *path, char * const buffer,
 		goto out;
 	memmove(pos, dentry->d_name.name, len);
 	return pos;
- out:
+out:
 	return ERR_PTR(-ENOMEM);
 }
 
@@ -148,7 +148,7 @@ static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 		dentry = parent;
 	}
 	return pos;
- out:
+out:
 	return ERR_PTR(-ENOMEM);
 }
 
@@ -217,7 +217,7 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 		pos[name_len] = ':';
 	}
 	return pos;
- out:
+out:
 	return ERR_PTR(-ENOMEM);
 }
 
@@ -303,7 +303,7 @@ char *ccs_realpath_from_path(struct path *path)
 		ccs_realpath_lock();
 		pos = ccs_get_absolute_path(path, buf, buf_len - 1);
 		ccs_realpath_unlock();
- encode:
+encode:
 		if (IS_ERR(pos))
 			continue;
 		name = ccs_encode(pos);

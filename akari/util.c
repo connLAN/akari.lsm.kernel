@@ -459,7 +459,7 @@ static bool ccs_correct_word2(const char *string, size_t len)
 	if (in_repetition)
 		goto out;
 	return true;
- out:
+out:
 	return false;
 }
 
@@ -516,7 +516,7 @@ bool ccs_correct_domain(const unsigned char *domainname)
 		domainname = cp + 1;
 	}
 	return ccs_correct_path(domainname);
- out:
+out:
 	return false;
 }
 
@@ -808,7 +808,7 @@ static bool ccs_path_matches_pattern2(const char *f, const char *p)
 	       (*(p + 1) == '*' || *(p + 1) == '@'))
 		p += 2;
 	return !*f && !*p;
- recursive:
+recursive:
 	/*
 	 * The "\{" pattern is permitted only after '/' character.
 	 * This guarantees that below "*(p - 1)" is safe.
@@ -925,7 +925,7 @@ const char *ccs_get_exe(void)
 u8 ccs_get_config(const u8 profile, const u8 index)
 {
 	u8 config;
-	const struct ccs_profile *p; 
+	const struct ccs_profile *p;
 	if (!ccs_policy_loaded)
 		return CCS_CONFIG_DISABLED;
 	p = ccs_profile(profile);

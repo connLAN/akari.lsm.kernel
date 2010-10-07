@@ -105,7 +105,7 @@ static char *ccs_print_bprm(struct linux_binprm *bprm,
 	*cp++ = '}';
 	*cp = '\0';
 	return buffer;
- out:
+out:
 	snprintf(buffer, ccs_buffer_len - 1, "argv[]={ ... } envp[]= { ... }");
 	return buffer;
 }
@@ -213,7 +213,7 @@ static char *ccs_print_header(struct ccs_request_info *r)
 		}
 		pos += snprintf(buffer + pos, ccs_buffer_len - 1 - pos, " }");
 	}
- no_obj_info:
+no_obj_info:
 	if (pos < ccs_buffer_len - 1)
 		return buffer;
 	kfree(buffer);
@@ -286,7 +286,7 @@ char *ccs_init_log(int *len, struct ccs_request_info *r, const char *fmt,
 				" symlink.target=\"%s\"", symlink);
 	pos += snprintf(buf + pos, (*len) - 1 - pos, "\n%s\n", domainname);
 	vsnprintf(buf + pos, (*len) - 1 - pos, fmt, args);
- out:
+out:
 	kfree(realpath);
 	kfree(bprm_info);
 	kfree(header);
@@ -436,7 +436,7 @@ void ccs_write_log2(struct ccs_request_info *r, const char *fmt, va_list args)
 		goto out;
 	}
 	wake_up(&ccs_log_wait[is_granted]);
- out:
+out:
 	ccs_update_task_domain(r);
 }
 

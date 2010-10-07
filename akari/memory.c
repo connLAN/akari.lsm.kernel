@@ -139,7 +139,7 @@ struct ccs_group *ccs_get_group(const char *group_name, const u8 idx)
 		}
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	ccs_put_name(e.group_name);
 	return found ? group : NULL;
 }
@@ -181,7 +181,7 @@ const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr)
 		error = 0;
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	kfree(entry);
 	return !error ? &ptr->addr : NULL;
 }
@@ -234,7 +234,7 @@ const struct ccs_path_info *ccs_get_name(const char *name)
 		kfree(ptr);
 		ptr = NULL;
 	}
- out:
+out:
 	mutex_unlock(&ccs_policy_lock);
 	return ptr ? &ptr->entry : NULL;
 }
@@ -281,7 +281,7 @@ static const char * const ccs_memory_header[CCS_MAX_MEMORY_STAT] = {
 	[CCS_MEMORY_AUDIT]  = "Audit logs:",
 	[CCS_MEMORY_QUERY]  = "Query lists:",
 };
-	
+
 /**
  * ccs_read_memory_counter - Check for memory usage.
  *

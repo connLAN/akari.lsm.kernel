@@ -105,6 +105,6 @@ int ccs_write_reserved_port(char *data, const bool is_delete)
 							 is_delete);
 		break;
 	}
- out:
+out:
 	return -EINVAL;
 }

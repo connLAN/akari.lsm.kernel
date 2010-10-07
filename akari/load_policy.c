@@ -246,25 +246,9 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 extern spinlock_t vfsmount_lock;
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
-static inline void module_put(struct module *module)
-{
-	if (module)
-		__MOD_DEC_USE_COUNT(module);
-}
-#endif
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-static void put_filesystem(struct file_system_type *fs)
-{
-	module_put(fs->owner);
-}
-#endif
-
 /* Jump table for loadable kernel module. */
 const struct ccsecurity_exports ccsecurity_exports = {
 	.load_policy = ccs_load_policy,
-	.put_filesystem = put_filesystem,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)
 	.vfsmount_lock = &vfsmount_lock,
 #endif

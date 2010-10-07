@@ -104,13 +104,13 @@ int ccs_write_group(char *data, const bool is_delete, const u8 type)
 		}
 		error = ccs_update_policy(&e.head, sizeof(e), is_delete,
 					  member, ccs_same_address_group);
- out_address:
+out_address:
 		if (e.is_ipv6) {
 			ccs_put_ipv6_address(e.min.ipv6);
 			ccs_put_ipv6_address(e.max.ipv6);
 		}
 	}
- out:
+out:
 	ccs_put_group(group);
 	return error;
 }

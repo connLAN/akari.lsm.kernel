@@ -141,7 +141,7 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 		}
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	ccs_put_condition(new_entry->cond);
 	return error;
 }
@@ -154,7 +154,7 @@ void ccs_check_acl(struct ccs_request_info *r,
 	struct ccs_acl_info *ptr;
 	bool retried = false;
 	const u8 i = !check_entry;
- retry:
+retry:
 	list_for_each_entry_srcu(ptr, &domain->acl_info_list[i], list,
 				 &ccs_ss) {
 		if (ptr->is_deleted)
@@ -226,7 +226,7 @@ static int ccs_update_transition_control_entry(const char *domainname,
 	error = ccs_update_policy(&e.head, sizeof(e), is_delete,
 				  &ccs_policy_list[CCS_ID_TRANSITION_CONTROL],
 				  ccs_same_transition_control);
- out:
+out:
 	ccs_put_name(e.domainname);
 	ccs_put_name(e.program);
 	return error;
@@ -291,7 +291,7 @@ static u8 ccs_transition_type(const struct ccs_path_info *domainname,
 	const char *last_name = ccs_last_word(domainname->name);
 	u8 type;
 	for (type = 0; type < CCS_MAX_TRANSITION_TYPE; type++) {
- next:
+next:
 		list_for_each_entry_srcu(ptr, &ccs_policy_list
 					 [CCS_ID_TRANSITION_CONTROL],
 					 head.list, &ccs_ss) {
@@ -324,7 +324,7 @@ static u8 ccs_transition_type(const struct ccs_path_info *domainname,
 			goto done;
 		}
 	}
- done:
+done:
 	return type;
 }
 
@@ -363,7 +363,7 @@ static int ccs_update_aggregator_entry(const char *original_name,
 	error = ccs_update_policy(&e.head, sizeof(e), is_delete,
 				  &ccs_policy_list[CCS_ID_AGGREGATOR],
 				  ccs_same_aggregator);
- out:
+out:
 	ccs_put_name(e.original_name);
 	ccs_put_name(e.aggregated_name);
 	return error;
@@ -459,7 +459,7 @@ struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 		}
 	}
 	mutex_unlock(&ccs_policy_lock);
- out:
+out:
 	ccs_put_name(e.domainname);
 	if (entry && transit) {
 		ccs_current_security()->ccs_domain_info = entry;
@@ -495,7 +495,7 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 	struct ccs_path_info rn = { }; /* real name */
 	int retval;
 	bool need_kfree = false;
- retry:
+retry:
 	r->matched_acl = NULL;
 	if (need_kfree) {
 		kfree(rn.name);
@@ -617,7 +617,7 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 			       "ERROR: Domain '%s' not defined.\n", ee->tmp);
 		}
 	}
- out:
+out:
 	if (need_kfree)
 		kfree(rn.name);
 	return retval;
@@ -699,7 +699,7 @@ static int ccs_environ(struct ccs_execve *ee)
 		}
 		offset = 0;
 	}
- out:
+out:
 	if (r->mode != 3)
 		error = 0;
 	kfree(env_page.data);
@@ -966,7 +966,7 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	task->ccs_flags |= CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
 	retval = ccs_find_next_domain(ee);
 	task->ccs_flags &= ~CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
- out:
+out:
 	return retval;
 }
 
@@ -1100,7 +1100,7 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 					     CCS_TYPE_DENIED_EXECUTE_HANDLER))
 			return ccs_try_alt_exec(ee);
 	}
- 	if (!retval)
+	if (!retval)
 		retval = ccs_environ(ee);
 	return retval;
 }

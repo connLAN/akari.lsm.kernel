@@ -38,7 +38,7 @@ static bool ccs_check_task_acl(struct ccs_request_info *r,
 static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 			      size_t count, loff_t *ppos)
 {
-	char *data;		
+	char *data;
 	int error;
 	if (!count || count >= CCS_EXEC_TMPSIZE - 10)
 		return -ENOMEM;
@@ -70,7 +70,7 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 		ccs_read_unlock(idx);
 	} else
 		error = -EINVAL;
- out:
+out:
 	kfree(data);
 	return error ? error : count;
 }
@@ -125,7 +125,7 @@ void ccs_update_stat(const u8 index)
 	ccs_stat_updated[index]++;
 	ccs_stat_modified[index] = tv.tv_sec;
 }
-	
+
 /**
  * ccs_read_stat - read() for /proc/ccs/stat interface.
  *
@@ -332,7 +332,7 @@ static int proc_notify_change(struct dentry *dentry, struct iattr *iattr)
 	de->uid = inode->i_uid;
 	de->gid = inode->i_gid;
 	de->mode = inode->i_mode;
- out:
+out:
 	return error;
 }
 

@@ -85,6 +85,19 @@ static bool ccs_check_mount_acl(struct ccs_request_info *r,
 		 ccs_compare_name_union(r->param.mount.dev, &acl->dev_name));
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+static inline void module_put(struct module *module)
+{
+	if (module)
+		__MOD_DEC_USE_COUNT(module);
+}
+#endif
+
+static inline void ccs_put_filesystem(struct file_system_type *fstype)
+{
+	module_put(fstype->owner);
+}
+
 /**
  * ccs_mount_acl - Check permission for mount() operation.
  *
@@ -187,11 +200,11 @@ static int ccs_mount_acl(struct ccs_request_info *r, char *dev_name,
 		ccs_check_acl(r, ccs_check_mount_acl);
 		error = ccs_audit_mount_log(r);
 	} while (error == CCS_RETRY_REQUEST);
- out:
+out:
 	kfree(requested_dev_name);
 	kfree(requested_dir_name);
 	if (fstype)
-		ccsecurity_exports.put_filesystem(fstype);
+		ccs_put_filesystem(fstype);
 	kfree(requested_type);
 	/* Drop refcount obtained by ccs_get_path(). */
 	if (obj.path1.dentry)

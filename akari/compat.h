@@ -109,22 +109,16 @@
 	})
 #endif
 
-#ifndef list_for_each_entry_rcu
-#define list_for_each_entry_rcu(pos, head, member)		 \
-	for (pos = list_entry(rcu_dereference((head)->next),	 \
-			      typeof(*pos), member);		 \
-	     prefetch(pos->member.next), &pos->member != (head); \
-	     pos = list_entry(rcu_dereference(pos->member.next), \
-			      typeof(*pos), member))
+#ifndef srcu_dereference
+#define srcu_dereference(p, ss) rcu_dereference(p)
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
-#undef list_for_each_entry_rcu
-#define list_for_each_entry_rcu(pos, head, member)			   \
-	for (pos = list_entry(srcu_dereference((head)->next, &ccs_ss),	   \
-			      typeof(*pos), member);			   \
-	     prefetch(pos->member.next), &pos->member != (head);	   \
-	     pos = list_entry(srcu_dereference(pos->member.next, &ccs_ss), \
+#ifndef list_for_each_entry_srcu
+#define list_for_each_entry_srcu(pos, head, member, ss)		      \
+	for (pos = list_entry(srcu_dereference((head)->next, ss),     \
+			      typeof(*pos), member);		      \
+	     prefetch(pos->member.next), &pos->member != (head);      \
+	     pos = list_entry(srcu_dereference(pos->member.next, ss), \
 			      typeof(*pos), member))
 #endif
 

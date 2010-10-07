@@ -118,7 +118,7 @@ static inline size_t ccs_del_manager(struct list_head *element)
  */
 static bool ccs_used_by_task(struct ccs_domain_info *domain)
 {
-	return atomic_read(&domain->users) != 0;
+	return ccs_domain_in_use(domain);
 #if 0
 	bool in_use = false;
 	/*

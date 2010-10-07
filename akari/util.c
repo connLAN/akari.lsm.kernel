@@ -547,7 +547,7 @@ struct ccs_domain_info *ccs_find_domain(const char *domainname)
 	struct ccs_path_info name;
 	name.name = domainname;
 	ccs_fill_path_info(&name);
-	list_for_each_entry_rcu(domain, &ccs_domain_list, list) {
+	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		if (!domain->is_deleted &&
 		    !ccs_pathcmp(&name, domain->domainname))
 			return domain;
@@ -988,7 +988,8 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 		return false;
 	if (!domain)
 		return true;
-	list_for_each_entry_rcu(ptr, &domain->acl_info_list[0], list) {
+	list_for_each_entry_srcu(ptr, &domain->acl_info_list[0], list,
+				 &ccs_ss) {
 		u16 perm;
 		u8 i;
 		if (ptr->is_deleted)

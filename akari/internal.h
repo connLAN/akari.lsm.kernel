@@ -720,7 +720,6 @@ struct ccs_domain_info {
 	u8 group;
 	bool is_deleted;   /* Delete flag.           */
 	bool flags[CCS_MAX_DOMAIN_INFO_FLAGS];
-	atomic_t users;
 };
 
 /*
@@ -1390,10 +1389,9 @@ struct ccs_security {
 };
 
 extern void __init ccs_main_init(void);
+extern bool ccs_domain_in_use(const struct ccs_domain_info *domain);
 extern struct ccs_security *ccs_find_task_security(const struct task_struct *
 						   task);
-extern void ccs_update_security_domain(struct ccs_domain_info **pdomain,
-				       struct ccs_domain_info *domain);
 
 static inline struct ccs_security *ccs_current_security(void)
 {
@@ -1402,22 +1400,30 @@ static inline struct ccs_security *ccs_current_security(void)
 
 static inline struct ccs_domain_info *ccs_task_domain(struct task_struct *task)
 {
-	return ccs_find_task_security(task)->ccs_domain_info;
+	struct ccs_domain_info *domain;
+	rcu_read_lock();
+	domain = ccs_find_task_security(task)->ccs_domain_info;
+	rcu_read_unlock();
+	return domain;
 }
 
 static inline struct ccs_domain_info *ccs_current_domain(void)
 {
-	return ccs_task_domain(current);
+	return ccs_find_task_security(current)->ccs_domain_info;
 }
 
 static inline u32 ccs_task_flags(struct task_struct *task)
 {
-	return ccs_find_task_security(task)->ccs_flags;
+	u32 ccs_flags;
+	rcu_read_lock();
+	ccs_flags = ccs_find_task_security(task)->ccs_flags;
+	rcu_read_unlock();
+	return ccs_flags;
 }
 
 static inline u32 ccs_current_flags(void)
 {
-	return ccs_task_flags(current);
+	return ccs_find_task_security(current)->ccs_flags;
 }
 
 #endif

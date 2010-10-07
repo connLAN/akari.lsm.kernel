@@ -62,8 +62,8 @@ static int ccs_update_reserved_entry(const u16 min_port, const u16 max_port,
 	ccs_tmp_map = kzalloc(8192, CCS_GFP_FLAGS);
 	if (!ccs_tmp_map)
 		return -ENOMEM;
-	list_for_each_entry_rcu(ptr, &ccs_policy_list[CCS_ID_RESERVEDPORT],
-				head.list) {
+	list_for_each_entry_srcu(ptr, &ccs_policy_list[CCS_ID_RESERVEDPORT],
+				 head.list, &ccs_ss) {
 		unsigned int port;
 		if (ptr->head.is_deleted)
 			continue;

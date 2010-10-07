@@ -200,11 +200,11 @@
 
 <p>アクセス許可ログを保存する必要が無い場合は、プロファイルで PREFERENCE={ max_grant_log=0 } という指定をして、アクセス許可ログの保存場所として /dev/null を指定することができます。 ccs-auditd にはフィルタリング機能がありませんので、アクセス許可ログを保存する場合はディスク容量に注意してください。</p>
 
-<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/ccs/reject_log.conf に保存するものとします。</p>
+<p>アクセス拒否ログを保存する必要が無い場合は、プロファイルで PREFERENCE={ max_reject_log=0 } という指定をして、アクセス拒否ログの保存場所として /dev/null を指定することができます。アクセス拒否ログは保存しておくことを推奨します。この手順書では、アクセス拒否ログを /var/log/akari/reject_log.conf に保存するものとします。</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/ccs-auditd /dev/null /var/log/ccs/reject_log.conf
+/usr/sbin/ccs-auditd /dev/null /var/log/akari/reject_log.conf
 </td></tr>
 </table>
 
@@ -212,7 +212,7 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# mkdir -p /var/log/ccs
+[root@akari ~]# mkdir -p /var/log/akari
 </td></tr>
 </table>
 
@@ -220,7 +220,7 @@
 
 <table border="1">
 <tr><td>
-/var/log/ccs/reject_log.conf {<br>
+/var/log/akari/reject_log.conf {<br>
 &nbsp;&nbsp;weekly<br>
 &nbsp;&nbsp;rotate 9<br>
 &nbsp;&nbsp;missingok<br>

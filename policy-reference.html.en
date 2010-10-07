@@ -29,6 +29,8 @@
 <p>6.2 <a href="#conditional_acl">Using conditional ACL.</a></p>
 <p>6.3 <a href="#transit_on_match">Domain transition upon ACL match.</a></p>
 <p>6.4 <a href="#sleep_penalty">Sleep penalty for policy violation.</a></p>
+<p>6.5 <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
+<p>6.6 <a href="#denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">Keywords Index</a></h1>
@@ -67,6 +69,14 @@
 <li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
+<li><a href="#profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></li>
 <li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
@@ -112,6 +122,8 @@
 <li><a href="#domain_policy_network">network</a></li>
 <li><a href="#domain_policy_use_profile">use_profile</a></li>
 <li><a href="#domain_policy_use_group">use_group</a></li>
+<li><a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a></li>
+<li><a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a></li>
 <li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
@@ -390,6 +402,90 @@ Query lists: 1048576
 </td></tr>
 </table>
 
+<p>There is an exception. If either</p>
+
+<ul>
+<li>The execute request was denied at "<a href="#exec_stage_check_execute">Checking permission</a>" or "<a href="#exec_stage_check_destination">Deciding destination domain</a>" but the domain the process that issued execute request belongs to has <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> keyword.</li>
+<li>The domain the process that issued execute request belongs to has <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword.</li>
+</ul>
+
+<p>and</p>
+
+<ul>
+<li>The process that issued execute request is not a process executed by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> or <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> keyword.</li>
+</ul>
+
+<p>the steps shown below are performed instead for the steps shown above. The usage of this exception is explained in "<a href="#auto_execute_handler">Judging execute request outside the kernel.</a>" and "<a href="#denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a>"</p>
+
+<table border="1">
+<tr><td>Step</td><td>Procedure</td></tr>
+<tr><td>Getting program's name</td><td>
+<p>Keep the pathname of the program specified by <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> or <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> and keep it as "Candidate".</p>
+</td></tr>
+<tr><td>Appending information</td><td>
+<p>Append all environment variables to the tail of arguments, and delete all environment variables.</p>
+<p>Insert "Candidate" "the domainname the process that issued execute request belongs to" "the pathname of the process that issued execute request" "state of the process that issued execute request" "the pathname of the requested program" "number of arguments" "number of environment variables" to the top of arguments.</p>
+</td></tr>
+<tr><td>Deciding destination domain</td><td>
+
+<p>(1) Search exception policy for</p>
+
+<ul>
+<li>no_initialize_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>no_initialize_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>no_initialize_domain "Candidate" from any
+<li>no_initialize_domain any from any
+</ul>
+
+<p>and if found one, jump to (3).</p>
+
+<p>(2) Search exception policy for</p>
+
+<ul>
+<li>initialize_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>initialize_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>initialize_domain "Candidate" from any
+<li>initialize_domain any from any
+</ul>
+
+<p>and if found one, concatenate "the name of the domain that the kernel belongs to (i.e. &lt;kernel&gt;)" and "Candidate" and keep the result as destination domain, then jump to (6).</p>
+
+<p>(3) Search exception policy for</p>
+
+<ul>
+<li>no_keep_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>no_keep_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>no_keep_domain any from "the name of the domain the current process belongs to"
+<li>no_keep_domain any from "the last part of the name of the domain the current process belongs to"
+<li>no_keep_domain any from any
+</ul>
+
+<p>and if found one, jump to (5).</p>
+
+<p>(4) Search exception policy for</p>
+
+<ul>
+<li>keep_domain "Candidate" from "the name of the domain the current process belongs to"
+<li>keep_domain "Candidate" from "the last part of the name of the domain the current process belongs to"
+<li>keep_domain any from "the name of the domain the current process belongs to"
+<li>keep_domain any from "the last part of the name of the domain the current process belongs to"
+<li>keep_domain any from any
+</ul>
+
+<p>and if found one, set "the name of the domain the current process belongs to" as destination domain, then jump to (6).</p>
+
+<p>(5) Concatenate "the name of the domain the current process belongs to" and "Candidate" and keep the result as destination domain.</p>
+
+<p>(6) Check whether the destination domain is defined, and deny the execute request if not.</p>
+
+</td></tr>
+<tr><td>Execute program</td><td>
+
+<p>Perform regular steps for executing program. If successfully completed, the process transits to destination domain.</p>
+
+</td></tr>
+</table>
+
 <h2>4.3 <a name="access_logs">Access Logs</a></h2>
 
 <p>AKARI generates two types of access logs. One contains access requests that didn't violate domain policy. The other contains access requests that violated domain policy. The former is called grant log and is readable via /proc/ccs/grant_log . The latter is called reject log and is readable via /proc/ccs/reject_log . A utility program /usr/sbin/ccs-auditd is included for reading these logs and saving the logs as files.</p>
@@ -398,19 +494,19 @@ Query lists: 1048576
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
 file execute /bin/cat
 </td></tr>
 </table>
 
-<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain attempted to execute /bin/cat , and the arguments were "cat" and "/etc/fstab", environment variables were "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". Also, process information such as PID, UID are shown.</p>
+<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain attempted to execute /bin/cat , and the arguments were "cat" and "/etc/fstab", environment variables were "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". Also, process information such as PID, UID are shown.</p>
 
 <p>The next log is generated by opening a file for reading.</p>
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat<br>
 file read /etc/fstab
 </td></tr>
@@ -422,19 +518,30 @@ file read /etc/fstab
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat<br>
 use_profile 1
 </td></tr>
 </table>
 
-<p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. AKARI automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
+<p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. TOMOYO Linux automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
 
-<p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/ccs-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/ccs/diff.txt) and you can add to domain policy by doing</p>
+<p>The next log is generated when a program that is different from the program being requested was executed because of <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
+<table border="1">
+<tr><td>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash<br>
+task auto_execute_handler /bin/audit-exec-param
+</td></tr>
+</table>
+
+<p>This log shows that a process that belongs to a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash" attempted to execute a program, but since the task auto_execute_handler keyword is specified to the domain, /bin/audit-exec-param was executed, and arguments passed to /bin/audit-exec-param were "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". To avoid /bin/audit-exec-param affected by environment variables such as LD_PRELOAD, environment variables are moved to arguments.</p>
+
+<p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/ccs-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/akari/diff.txt) and you can add to domain policy by doing</p>
 
 <table border="1">
 <tr><td>
-# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/ccs/diff.txt
+# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/akari/diff.txt
 </td></tr>
 </table>
 
@@ -618,6 +725,38 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>Specifies access control level regarding RAW socket's remote address restriction for outgoing packets.</p>
 
+<h3><a name="profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's datagram socket's local address restriction.</p>
+
+<h3><a name="profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's datagram socket's remote address restriction for outgoing packets.</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's stream socket's bind() operation.</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's stream socket's listen() operation.</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's stream socket's connect() operation.</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's seqpacket socket's bind() operation.</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's seqpacket socket's listen() operation.</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></h3>
+
+<p>Specifies access control level regarding UNIX domain's seqpacket socket's connect() operation.</p>
+
 <h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
 <p>Specifies preference on auditing / learning / enforcing.</p>
@@ -626,9 +765,9 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>"max_reject_log=" limits the max number of reject logs that the kernel can hold. </p>
 
-<p>"max_learning_entry=" controls the max number of ACL entries that are automatically appended.</p>
+<p>"max_learning_entry=" controls the max number of ACL entries that are automatically appended in learning mode.</p>
 
-<p>"enforcing_penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for.</p>
+<p>"enforcing_penalty=" controls how long (in units of 0.1 second) should the process that violated policy sleep for in enforcing mode.</p>
 
 <h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
@@ -824,6 +963,20 @@ Usually, you don't need this keyword.</p>
 <h3><a name="domain_policy_use_group">use_group</a></h3>
 
 <p>This keyword indicates the group number currently assigned to this domain. The group number is an integer between 0 and 255.</p>
+
+<h3><a name="domain_policy_task_auto_execute_handler">task auto_execute_handler</a></h3>
+
+<p>This domain executes only one program specified by this keyword. You can use this keyword for domains you want to validate parameters before executing the requested program.</p>
+
+<p>If this keyword is specified, only one program specified by this keyword regardless of the mode specified by <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>. Thus, if the pathname specified by this program cannot be executed, no programs can be executed from this domain.</p>
+
+<p>See also:  <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
+
+<h3><a name="domain_policy_task_denied_execute_handler">task denied_execute_handler</a></h3>
+
+<p>This domain executes this program only when execute request was rejected and the mode of <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> is enforcing. If this keyword is not specified and the mode of <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> is enforcing, execute request is rejected.</p>
+
+<p>Exception is, if the <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword is specified, task denied_execute_handler keyword is ignored.</p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
@@ -1156,6 +1309,14 @@ chown -R demo /proc/ccs/
 
 <h3>The following conditions are also available.</h3>
 
+<h4>Type of process</h4>
+
+<table border="1">
+<tr><td>Condition</td><td>Meaning</td></tr>
+<tr><td>task.type=execute_handler</td><td>Current process is a program specified by execute_handler keyword.</td></tr>
+<tr><td>task.type!=execute_handler</td><td>Current process is not a program specified by execute_handler keyword.</td></tr>
+</table>
+
 <h4>Type of file.</h4>
 
 <table border="1">
@@ -1290,6 +1451,101 @@ chown -R demo /proc/ccs/
 </table>
 
 <p>This feature is a safeguard to avoid that the CPU usage remains 100% when policy violation occurs in an infinite loop. Usually, making processes sleep for 0.1 second is enough.</p>
+
+<h2>6.5 <a name="auto_execute_handler">Judging execute request outside the kernel.</a></h2>
+
+<p>Basically, TOMOYO Linux controls whether to execute a program or not according to the domain policy. You can check parameters using exec.argv and exec.envp described in <a href="#conditional_acl">Using conditional ACL.</a> But this approach support only simple pattern matching and you need to specify what programs are permitted to be executed beforehand.</p>
+
+<p>Therefore, TOMOYO Linux supports a mechanism named <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>. If this mechanism is used, the kernel no longer controls whether to execute a requested program or not, and the kernel merely executes the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> determines whether to execute the requested program or not, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> executes the requested program only if the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> considers it is appropriate.</p>
+
+<p>In Linux, the behavior "execute a program" means "overwrite the process which requested to execute a program with the requested program's image" and "the process which requested to execute a program cannot regain control if the execute request was succeeded". Therefore, the process which requested to execute a program can receive a notification only when the execute request was failed.<br>
+For example, let's consider a situation where a process running as program-A attempts to execute program-B.<br>
+When the process running as program-A requests the execution of program-B, the kernel checks the domain policy for "whether it is appropriate to execute program-B from a process running as program-A or not" and the kernel overwrites the process running as program-A with program-B if the kernel considers it is appropriate, and the kernel doesn't overwrite the process running as program-A with program-B and notifies the process running as program-A that execution of program-B is not permitted if the kernel considers it is not appropriate.</p>
+
+<p>When <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> is specified, a different program program-C specified as task auto_execute_handler mediates this behavior.<br>
+When the process running as program-A requests the execution of program-B, the kernel overwrites the process running as program-A with program-C to let the program-C judge whether it is appropriate to execute program-B from a process running as program-A or not.
+The process now running as program-C determines whether it is appropriate to execute program-B from a process running as program-A or not, and the process now running as program-C requests the execution of program-B (and the kernel will overwrite the process now running as program-C with program-B) if the process now running as program-C considers it is appropriate, and the process now running as program-C terminates without executing program-B if the process now running as program-C considers it is not appropriate.</p>
+
+<p>As stated above, this mechanism has a side effect that it becomes impossible to notify the process running as program-A that the requested program (i.e. program-B) was not executed since program-C abandons a mean to notify the process running as program-A that the execute request of program-B was not accepted.<br>
+But, even if <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> is not specified, there are various factors that cause "the execute request was accepted but the program terminated before starting the expected behavior" such as "the process was unable to read shared libraries", "the process received KILL signal", "the system became out of memory and the process was killed by OOM killer". In other words, there are uncertainties between "the execute request did not fail" and "the executed program starts the expected behavior".<br>
+Viewing in this light, there is no guarantee that "the program starts expected behavior unless the process receives a notification that the execution of the program failed" from the beginning. And, it is possible to say that it is an acceptable result that the program-C specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> failed to notify the process previously running as program-A that the execution of program-B failed.</p>
+
+<p>TOMOYO Linux's assumes that the administrator knows what programs needs to be executed from what programs beforehand and permits execution of minimal programs. Thus, assuming that unexpected execute request which are not permitted by policy won't occur as long as the system is running properly, it is OK to accept all execute requests. If an execute request that should not be accepted occurs, you can take different actions such as terminating the process instead of rejecting the request by using <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> mechanism. So, you don't have to let the kernel judge whether to execute the program or not alone.</p>
+
+<p>Thus, you can let external userland program judge whether to execute the requested program or not occurred from a domain by specifying <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword to the domain.</p>
+<p>If you try to judge inside the kernel, there are few library functions available and it is more likely to fail when allocating contiguous memory area. But if you try to judge outside the kernel, there are many library functions available and it is less likely to fail when allocating contiguous memory area, and you can do more detailed checking. So, you can let external userland program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword examine parameters and let the program execute the requested program only if parameters are appropriate.</p>
+
+<p>The side effect of this approach is that there is no mean to notify the process that the execute request was not accepted when it is not appropriate to execute the requested program. But since you can freely customize the program for <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword, you can even  judge using ssh to ask remotely.</p>
+
+<p>To use this feature, specify like below.</p>
+
+<table border="1">
+<tr><td>Example of /proc/ccs/domain_policy</td><td>Meaning</td></tr>
+<tr><td>task auto_execute_handler /usr/sbin/check-and-exec</td><td>Whenever a process which belongs to this domain requests execution of a program, execute /usr/sbin/check-and-exec instead for the requested program. /usr/sbin/check-and-exec checks parameters and executes the requested program if /usr/sbin/check-and-exec considers it is appropriate to execute.</td></tr>
+</table>
+
+<p>The program specified by task auto_execute_handler keyword receives the following parameters. Compare with file execute log described in <a href="#access_logs">Access Logs</a>.</p>
+
+<ul>
+<li>argv[0] contains the pathname of the program specified by task auto_execute_handler keyword.</li>
+<li>argv[1] contains the name of the domain which the process which issued an execute request belongs to.</li>
+<li>argv[2] contains the name of the program which the process which issued an execute request.</li>
+<li>argv[3] contains information of the process which the process which issued an execute request.</li>
+<li>argv[4] contains the name of the program which was requested by the process.</li>
+<li>argv[5] contains the number of arguments.</li>
+<li>argv[6] contains the number of environment variables.</li>
+<li>From argv[7] to argv[6 + argc] contains the arguments.</li>
+<li>From argv[7 + argc] to argv [6 + argc + envc] contains the environment variables.</li>
+<li>All environment variables are cleared for safety.</li>
+<li>Other resources such as standard input/output are inherited.</li>
+</ul>
+
+<p>Be careful with the following notes when you use this feature.</p>
+
+<ul>
+<li>You need not to and should not give execute permission (<a href="#domain_policy_file_execute">file execute</a> keyword) to the program specified by task auto_execute_handler keyword.</li>
+<li>This mechanism can't work if a process cannot access the program specified by task auto_execute_handler keyword because the process is running inside a chroot environment. Since it is dangerous to allow execution of programs outside the chroot environment, the program specified by task auto_execute_handler keyword is searched from the current process's / directory rather than the current process's namespace's / directory.</li>
+<li>This mechanism can't work if the domain for the program specified for task auto_execute_handler keyword doesn't exist. So, you need to prepare domains by (for example) creating a domain for the program specified by task auto_execute_handler keyword just under the &lt;kernel&gt; and mark the program specified by task auto_execute_handler keyword using <a href="#exception_policy_initialize_domain">initialize_domain</a> keyword.</li>
+<li>The program specified by task auto_execute_handler keyword is invoked with all environment variables cleared so that the program won't be affected by some dangerous environment variables (e.g. LD_PRELOAD). This means that even environment variable PATH is not set, so please be careful when executing external programs. Also, I recommend you to assign profile for enforcing mode against the domain for the program specified by task auto_execute_handler keyword.</li>
+</ul>
+
+<p>A source code named audit-exec-param.c is included as a sample program of how to use this mechanism in the ccs-tools source package. You can customize freely.</p>
+<p>This mechanism is just providing a hook. How to utilize this hook is up to you.</p>
+
+<h2>6.6 <a name="denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></h2>
+
+<p>TOMOYO Linux's approach is "know what programs needs to be executed from what programs beforehand and create policy that permits execution of minimal programs". Thus, you can not only reject unnecessary execution requests but also do different behavior.</p>
+
+<p>By default, if an execute request of a program which is not permitted by file execute keyword occurs in enforcing mode, the kernel rejects the execute request. But assuming that you know what programs needs to be executed from what programs beforehand, an execute request of a program which is not permitted by file execute keyword will not occur as long as the process is keeping control, and you can regard that the process is not keeping control (in other words, the process already lost control) if such request occurs.</p>
+
+<p>Attackers steal control of a process by attacking security holes such as buffer overflow and attempt to execute commands such as shells. If the process does not need to execute the shell (in other words, you needn't to give permission like "file execute /bin/bash"), it is considered that the process has already lost control at the moment of the execution request of shells.</p>
+
+<p>Normally, when execution of a program which is not permitted by the policy is requested, the kernel merely reject the request. But it is unlikely that the process gets back control (in other words, the process resumes proper operations) by just rejecting the request if the request is issued by the process that has lost control.<br>
+In Linux, "execute a program" means that the current process is overwritten by the requested program and transfer control to the requested program. This means that a process gets back control by overwriting the process with different program even if the process has lost control because of buffer overflow.</p>
+
+<p>The control of a process which has once lost control by the attacker and is overwritten by a program requested by the attacker depends on the program used for overwriting. If a program like shells is executed, the control remains on the attacker's side (in other words, the owner of the process) because shells accept whatever the user requested. But if a program which terminates silently (e.g. /bin/true) is executed, the control will not remains on the attacker's side because the process owned by the attacker will terminate immediately.</p>
+
+<p>As described above, an event that "an execute request of an unnecessary program is issued by an attacker" depending on how you look at it. You can consider that "the attacker is giving the system a chance to get back control on the system's side".<br>
+Thus, TOMOYO Linux provides a mechanism that executes different program instead of merely rejecting the request when an execute request of a program which is not permitted by policy occurs. How to utilize this mechanism is up to you.</p>
+
+<p>For example, you can replace the execute request of a program which is not permitted by the policy with /bin/true so that the process which requested the execution of a program which is not permitted by the policy will terminate immediately.</p>
+
+<p>For example, you can replace the execute request of shells with a honey pot client's program and observe what requests the attacker issues.</p>
+
+<p>For example, you can forcibly terminate the login session.</p>
+
+<p>For example, you can show warning message like "You are not permitted to execute this program." which is similar to Ubuntu's command-not-found package (which tells the user in what package the requested command is included).</p>
+
+<p>For example, you can change a firewall's configuration if you succeeded to derive the IP address of the attacker.</p>
+
+<p>To use this feature, specify like below.</p>
+
+<table border="1">
+<tr><td>Example of /proc/ccs/profile</td><td>Example of /proc/ccs/domain_policy</td><td>Meaning</td></tr>
+<tr><td>3-CONFIG::file::execute=enforcing</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>If a process which belongs to a domain with profile 3 requested execution of a program which is not permitted by the domain policy, execute /bin/true instead of rejecting the execute request.</td></tr>
+</table>
+
+<p>Notes on this feature is the same as <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
 
 <hr>
 

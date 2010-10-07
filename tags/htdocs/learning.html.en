@@ -122,100 +122,100 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3057) task={ pid=3057 ppid=3049 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3057) task={ pid=3057 ppid=3049 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
 file execute /usr/bin/id<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 use_profile 2<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env TERM<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env PATH<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env PWD<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env LANG<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env SHLVL<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env LANGUAGE<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 misc env _<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=902139 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=902121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=902139 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=902121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /etc/selinux/config<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=469 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=469 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read selinuxfs:/mls<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/setrans/.setrans-unix<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read proc:/filesystems<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1626176 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1625571 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1626176 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1625571 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /usr/lib/locale/locale-archive<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/setrans/.setrans-unix<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/nscd/socket<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/nscd/socket<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=902027 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=902027 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /etc/nsswitch.conf<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=905247 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=905247 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /etc/passwd<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/nscd/socket<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 network unix stream connect /var/run/nscd/socket<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /etc/group<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 file read /etc/group
 </td></tr>
@@ -225,29 +225,29 @@ file read /etc/group
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878<br>
 <br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
 file execute /usr/bin/id<br>
 <br>
 &lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
 use_profile 2<br>
 <br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=469 perm=0755 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1626176 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1625571 perm=0755 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=902027 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=902139 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=902121 perm=0755 }<br>
-#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 } path1={ uid=0 gid=0 ino=905247 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=469 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1626176 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1625571 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1676438 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1676072 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=linux" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=901236 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=902027 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=902139 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=902121 perm=0755 }<br>
+#2010-09-09 14:27:28# profile=2 mode=permissive (global-pid=3392) task={ pid=3392 ppid=3388 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=905247 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 file read /etc/group<br>
 file read /etc/nsswitch.conf<br>
 file read /etc/passwd<br>
@@ -271,7 +271,7 @@ network unix stream connect /var/run/setrans/.setrans-unix
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/lib/akari/convert-audit-log | /usr/sbin/ccs-sortpolicy<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/lib/ccs/convert-audit-log | /usr/sbin/ccs-sortpolicy<br>
 &lt;kernel&gt; /usr/sbin/httpd<br>
 <br>
 network inet stream accept 0:0:0:0:0:ffff:c0a8:103 3878 task.pid=3057 task.ppid=3049 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48<br>
@@ -305,7 +305,7 @@ network unix stream connect /var/run/setrans/.setrans-unix task.pid=3392 task.pp
 
 <table border="1">
 <tr><td>
-[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/ccs/reject_log.conf | /usr/sbin/ccs-sortpolicy &gt; ~/rejected.log<br>
+[root@akari ~]# grep -A 3 -F 'profile=2 mode=permissive' /var/log/akari/reject_log.conf | /usr/sbin/ccs-sortpolicy &gt; ~/rejected.log<br>
 [root@akari ~]# emacs ~/rejected.log<br>
 [root@akari ~]# /usr/sbin/ccs-loadpolicy -d &lt; ~/rejected.log
 </td></tr>

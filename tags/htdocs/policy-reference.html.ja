@@ -29,6 +29,8 @@
 <p>6.2 <a href="#conditional_acl">条件付きアクセス許可の指定</a></p>
 <p>6.3 <a href="#transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a></p>
 <p>6.4 <a href="#sleep_penalty">ポリシー違反時のペナルティ指定</a></p>
+<p>6.5 <a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></p>
+<p>6.6 <a href="#denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">キーワード一覧</a></h1>
@@ -67,6 +69,14 @@
 <li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
 <li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
+<li><a href="#profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></li>
+<li><a href="#profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></li>
+<li><a href="#profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></li>
 <li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
@@ -112,6 +122,8 @@
 <li><a href="#domain_policy_network">network</a></li>
 <li><a href="#domain_policy_use_profile">use_profile</a></li>
 <li><a href="#domain_policy_use_group">use_group</a></li>
+<li><a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a></li>
+<li><a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a></li>
 <li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
@@ -390,6 +402,90 @@ Query lists: 1048576
 </td></tr>
 </table>
 
+<p>ただし、例外として</p>
+
+<ul>
+<li>上記手順の「<a href="#exec_stage_check_execute">権限のチェック</a>」「<a href="#exec_stage_check_destination">遷移先の決定</a>」のどちらかに於いて拒否されたが、プログラムの実行を要求したプロセスの属しているドメインに <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> キーワードが指定されている</li>
+<li>プログラムの実行を要求したプロセスの属しているドメインに <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードが指定されている</li>
+</ul>
+
+<p>のどちらかに該当し、かつ、</p>
+
+<ul>
+<li>プログラムの実行を要求したプロセスが <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードまたは <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> キーワードにより起動されたプロセスではない</li>
+</ul>
+
+<p>場合には、以下の手順を実行します。この例外の使い方については「<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>」と「<a href="#denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a>」で説明します。</p>
+
+<table border="1">
+<tr><td>Step</td><td>内容</td></tr>
+<tr><td>プログラム名の取得</td><td>
+<p><a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> または <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> で指定されているプログラムのパス名を取得し、「パス名候補」とします。</p>
+</td></tr>
+<tr><td>情報の追加</td><td>
+<p>全ての環境変数を引数の末尾に追加し、全ての環境変数を削除します。</p>
+<p>「パス名候補」「プログラムの実行を要求したプロセスの属しているドメインのドメイン名」「プログラムの実行を要求したプロセスのパス名」「プログラムの実行を要求したプロセスの状態」「実行が要求されたプログラムのパス名」「引数の数」「環境変数の数」を引数の先頭に挿入します。</p>
+</td></tr>
+<tr><td>遷移先の決定</td><td>
+
+<p>(1) 例外ポリシーから</p>
+
+<ul>
+<li>no_initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_initialize_domain 「パス名候補」 from any
+<li>no_initialize_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は (3) へ進みます。</p>
+
+<p>(2) 例外ポリシーから</p>
+
+<ul>
+<li>initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>initialize_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>initialize_domain 「パス名候補」 from any
+<li>initialize_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は「カーネルが属しているドメインのドメイン名（ &lt;kernel&gt; ）」と「パス名候補」とを連結して「遷移先ドメイン」として (6) へ進みます。</p>
+
+<p>(3) 例外ポリシーから</p>
+
+<ul>
+<li>no_keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」
+<li>no_keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>no_keep_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は (5) へ進みます。</p>
+
+<p>(4) 例外ポリシーから</p>
+
+<ul>
+<li>keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」
+<li>keep_domain 「パス名候補」 from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」
+<li>keep_domain any from 「現在のプロセスが属しているドメインのドメイン名」の最後の要素
+<li>keep_domain any from any
+</ul>
+
+<p>というエントリを探します。見つかった場合は「現在のプロセスが属しているドメインのドメイン名」を「遷移先ドメイン」とし、 (6) へ進みます。</p>
+
+<p>(5) 「現在のプロセスが属しているドメインのドメイン名」と「パス名候補」とを連結して「遷移先ドメイン」とし、 (6) へ進みます。</p>
+
+<p>(6) ドメインポリシーから「遷移先ドメイン」を探します。見つからなければプログラムの実行要求は拒否されます。</p>
+
+</td></tr>
+<tr><td>プログラムの実行</td><td>
+
+<p>通常のプログラム実行処理を行い、正常に終了した場合は「遷移先ドメイン」に遷移します。</p>
+
+</td></tr>
+</table>
+
 <h2>4.3 <a name="access_logs">アクセスログについて</a></h2>
 
 <p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、 /proc/ccs/grant_log から取得することができます。後者は拒否ログと呼ばれ、 /proc/ccs/reject_log から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/ccs-auditd というプログラムが付属しています。</p>
@@ -398,19 +494,19 @@ Query lists: 1048576
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
 file execute /bin/cat
 </td></tr>
 </table>
 
-<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash というドメインに属しているプロセスが /bin/cat というプログラムを実行しようとし、そのときの引数の内容は "cat" "/etc/fstab" 、環境変数の内容は "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。また、プロセスＩＤやユーザＩＤなど、プロセスに関する情報も一緒に出力されます。</p>
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash というドメインに属しているプロセスが /bin/cat というプログラムを実行しようとし、そのときの引数の内容は "cat" "/etc/fstab" 、環境変数の内容は "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。また、プロセスＩＤやユーザＩＤなど、プロセスに関する情報も一緒に出力されます。</p>
 
 <p>次の例は、ファイルを読み込みモードでオープンしようとしたときのログです。</p>
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat<br>
 file read /etc/fstab
 </td></tr>
@@ -422,19 +518,30 @@ file read /etc/fstab
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat<br>
 use_profile 1
 </td></tr>
 </table>
 
-<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 AKARI では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 TOMOYO Linux では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
 
-<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/ccs/diff.txt という名前で保存した後、</p>
+<p>次の例は、<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>するために要求されたのとは異なるプログラムが実行されたときのログです。</p>
+<table border="1">
+<tr><td>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash<br>
+task auto_execute_handler /bin/audit-exec-param
+</td></tr>
+</table>
+
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash というドメインに属しているプロセスがプログラムを実行しようとしたが、 task auto_execute_handler が指定されていたので代わりに /bin/audit-exec-param というプログラムが実行されたこと、 /bin/audit-exec-param に渡された引数の内容は "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。 LD_PRELOAD などの環境変数によって  /bin/audit-exec-param の動作が左右されるのを防ぐため、環境変数を引数に移動しています。</p>
+
+<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/akari/diff.txt という名前で保存した後、</p>
 
 <table border="1">
 <tr><td>
-# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/ccs/diff.txt
+# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/akari/diff.txt
 </td></tr>
 </table>
 
@@ -618,6 +725,38 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>RAW ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
 
+<h3><a name="profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></h3>
+
+<p>同一ホスト内でのデータグラムソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></h3>
+
+<p>同一ホスト内でのデータグラムソケットが受信してよいリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></h3>
+
+<p>同一ホスト内でのストリームソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></h3>
+
+<p>同一ホスト内でのストリームソケットが待ち受けするローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></h3>
+
+<p>同一ホスト内でのストリームソケットが接続するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></h3>
+
+<p>同一ホスト内での SEQPACKET ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></h3>
+
+<p>同一ホスト内での SEQPACKET ソケットが待ち受けするローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
+<h3><a name="profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></h3>
+
+<p>同一ホスト内での SEQPACKET ソケットが接続するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+
 <h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
 <p>アクセスログ／学習モード／強制モードに関する設定を指定します。</p>
@@ -626,9 +765,9 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>max_reject_log= にはカーネル内に保持する、ポリシーによって許可されなかったアクセス要求のログの件数を指定します。</p>
 
-<p>max_learning_entry= には自動的に追加されるアクセス許可の上限を指定します。</p>
+<p>max_learning_entry= には学習モードで自動的に追加されるアクセス許可の上限を指定します。</p>
 
-<p>enforcing_penalty= にはポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
+<p>enforcing_penalty= には強制モードでポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。</p>
 
 <h2><a name="domain_policy">/proc/ccs/domain_policy</a></h2>
 
@@ -824,6 +963,20 @@ file chroot /</p>
 <h3><a name="domain_policy_use_group">use_group</a></h3>
 
 <p>これは、このドメインに対して割り当てられているグループ番号を示しています。グループ番号は 0 ～ 255 の値をとります。</p>
+
+<h3><a name="domain_policy_task_auto_execute_handler">task auto_execute_handler</a></h3>
+
+<p>これは、このドメインに対しては常にこのキーワードで指定されたプログラムだけを実行することを示しています。特定のドメインで実行されるプログラムの実行要求を全て特定のプログラムを経由して起動させたい場合に使います。</p>
+
+<p>このキーワードが指定されている場合、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> の値に関わらず常にこのキーワードで指定されたプログラムが実行されます。そのため、このキーワードに適切なプログラムへのパス名が指定されていなかった場合、このキーワードが指定されているドメインからは一切のプログラムを実行できなくなります。</p>
+
+<p>関連項目： <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
+
+<h3><a name="domain_policy_task_denied_execute_handler">task denied_execute_handler</a></h3>
+
+<p>これは、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合には、常にこのキーワードで指定されたプログラムを実行することを示しています。このキーワードが指定されていない場合、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合にはプログラムの実行を拒否します。</p>
+
+<p>ただし、ドメインに対して <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードが指定されている場合、このキーワードは無視されます。</p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
@@ -1156,6 +1309,14 @@ chown -R demo /proc/ccs/
 <tr><td>exec.envp["name"]=NULL</td><td>環境変数 name が定義されていない</td></tr>
 </table>
 
+<h4>プロセス種別の指定</h4>
+
+<table border="1">
+<tr><td>条件</td><td>意味</td></tr>
+<tr><td>task.type=execute_handler</td><td>プロセスは execute_handler として動作している</td></tr>
+<tr><td>task.type!=execute_handler</td><td>プロセスは普通のプロセスとして動作している</td></tr>
+</table>
+
 <h4>ファイル種別の指定</h4>
 
 <table border="1">
@@ -1290,6 +1451,101 @@ chown -R demo /proc/ccs/
 </table>
 
 <p>この機能は、無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するための安全装置です。通常は 0.1 秒間スリープさせるだけで充分です。</p>
+
+<h2>6.5 <a name="auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></h2>
+
+<p>TOMOYO Linux では、原則としてポリシーに従ってプログラムの実行可否を制御します。プログラム実行時のパラメータをチェックしたい場合には、<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明したように exec.argv や exec.envp を使ってチェックを行うことができます。しかし、<a href="#conditional_acl">条件付きアクセス許可の指定</a>では、単純なパターンマッチしかサポートされておらず、また、どのようなプログラムの実行を許可するかを予め指定しておく必要があります。</p>
+
+<p>そこで、 TOMOYO Linux では <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> という仕組みがサポートされています。この仕組みは、プログラムの実行可否をカーネルが判断するのではなく、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> により指定されたプログラムが判断し、プログラムの実行を許可すべきと判断した場合には実際にプログラムを実行するという動作をします。</p>
+
+<p>Linux に於いては、プログラムを実行するという動作は、プログラムの実行を要求したプロセスを上書きするという動作であり、プログラムの実行に成功した場合にはプログラムの実行を要求したプロセスに制御が戻ることはありません。つまり、要求されたプログラムの実行に失敗した場合にしか、プログラムの実行を要求したプロセスに対して、要求されたプログラムが実行されなかったことが通知されません。<br>
+例えば、プログラムＡとして動作しているプロセスがプログラムＢの実行を要求する場合を考えてみます。<br>
+プログラムＡとして動作しているプロセスがプログラムＢの実行を要求すると、カーネルが「プログラムＡとして動作しているプロセスからプログラムＢを実行することは適切であるかどうか」をポリシーを照合することで判断し、適切であると判断された場合には「プログラムＡとして動作しているプロセスをプログラムＢで上書き」し、適切では無いと判断された場合には「プログラムＡとして動作しているプロセスにプログラムＢの実行が認められていないことを通知」します。</p>
+
+<p><a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> を指定した場合、 task auto_execute_handler として指定されたプログラムＣがこの動作に介在します。<br>
+プログラムＡとして動作しているプロセスがプログラムＢの実行を要求すると、プログラムＣに「プログラムＡとして動作しているプロセスからプログラムＢを実行することは適切であるかどうか」を判断してもらうために「プログラムＡとして動作しているプロセスをプログラムＣで上書き」します。プログラムＣとして動作するようになったプロセスが「プログラムＡとして動作していたプロセスからプログラムＢを実行することは適切であるかどうか」を判断し、適切であると判断した場合には「プログラムＣとして動作しているプロセスをプログラムＢで上書き」し、適切では無いと判断された場合には「プログラムＣとして動作しているプロセスをプログラムＢで上書きせずに終了」します。</p>
+
+<p>このように、プログラムＢの実行を要求したプログラムＡとして動作していたプロセスがに対して、プログラムＢの実行に失敗したことを通知する手段を放棄することになるため、プログラムＢの実行を要求したプログラムＡとして動作していたプロセスが、プログラムＢが実行されなかったという通知を受けることができなくなるという副作用が発生します。<br>
+しかし、たとえ <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> を指定していない場合であっても、「共有ライブラリの読み込みができなかった」「 KILL シグナルを受信した」「メモリ不足になり OOM killer によって強制終了させられた」など、様々な要因によって「実行には成功したが期待された動作を始める前に終了してしまった」という状況が起こりえます。つまり、「プログラムの実行が失敗しなかった」ということと「要求されたプログラムが期待した動作を始めた」ということの間には、不確定要素が存在します。<br>
+そう考えると、「プログラムの実行に失敗したという通知が無い限りプログラムは期待された動作を始める」という保証は最初から存在しないわけなので、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> により指定されたプログラムＣが、プログラムＢの実行に失敗したことをプログラムＢの実行を要求したプログラムＡとして動作していたプロセスに通知できなかったという結果になったとしても、容認できる範囲であると言えると思います。</p>
+
+<p>TOMOYO Linux は、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、正常な動作をしている限り、ポリシーで許可されていないプログラムの実行要求は起こらないはずだと仮定すると、全てのプログラムの実行要求をとりあえず受理して構わないと考えることができます。もしも受理すべきではないプログラムの実行要求が発生した場合、 <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> の機能を使うことで要求を拒否する代わりにそのプロセスを強制終了させるなどの行動を起こすことができます。つまり、カーネルの内部でプログラムの実行可否の判断を行わなくても構わないということです。</p>
+
+<p>そこで、ドメインに対して <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードを指定しておくことで、そのドメインから発生する全てのプログラムの実行可否の判断をカーネル外部のプログラムに委ねることができるようになります。</p>
+<p>カーネルの内部では利用可能なライブラリが少ない上に連続したメモリ領域の割り当てが失敗する可能性が高くなりますが、
+カーネルの外部であれば豊富なライブラリを使ってメモリ割り当ての限界を心配せずに詳細なチェックが可能になります。そこで、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> で指定したプログラムにプログラム実行時のパラメータをチェックしてもらい、適切であればプログラムを実行してもらうようにすることができます。</p>
+
+<p>この方式の副作用は、プログラムの実行を拒否すべきと判断した場合に、プログラムの実行を要求したプロセスに通知する方法が無い点です。しかし、自由にカスタマイズできるので、 ssh 等を用いて遠隔地のマシンに問い合わせをしながらしながら判断することも可能です。</p>
+
+<p>この機能を使うには、以下のように指定します。</p>
+
+<table border="1">
+<tr><td>/proc/ccs/domain_policy の例</td><td>意味</td></tr>
+<tr><td>task auto_execute_handler /usr/sbin/check-and-exec</td><td>このドメインに属しているプロセスがプログラムの実行を要求した場合、要求されたプログラムを実行する代わりに /usr/sbin/check-and-exec を実行します。 /usr/sbin/check-and-exec はパラメータをチェックし、妥当と判断した場合には要求されたプログラムを実行します。</td></tr>
+</table>
+
+<p>task auto_execute_handler で指定されたプログラムは、以下のパラメータを受け取ります。<a href="#access_logs">アクセスログについて</a>で説明した、 file execute のログと比較してみてください。</p>
+
+<ul>
+<li>argv[0] には、 task auto_execute_handler で指定されたプログラムのパス名が入っています。</li>
+<li>argv[1] には、プログラムの実行を要求したプロセスのドメイン名が入っています。</li>
+<li>argv[2] には、プログラムの実行を要求したプロセスのパス名が入っています。</li>
+<li>argv[3] には、プログラムの実行を要求したプロセスの情報が入っています。</li>
+<li>argv[4] には、実行が要求されたプログラムのパス名が入っています。</li>
+<li>argv[5] には、プログラム実行要求時の引数の数が入っています。</li>
+<li>argv[6] には、プログラム実行要求時の環境変数の数が入っています。</li>
+<li>argv[7] から argv[6 + argc] には、呼び出し元プロセスが渡した argv[] の内容が入っています。</li>
+<li>argv[7 + argc] から argv [6 + argc + envc] には、呼び出し元プロセスが渡した envp[] の内容が入っています。</li>
+<li>環境変数 envp[] は全てクリアされます。</li>
+<li>標準入出力などは呼び出し元プロセスのものを引き継ぎます。</li>
+</ul>
+
+<p>この機能を使用する際には、以下の点に注意してください。</p>
+
+<ul>
+<li>task auto_execute_handler で指定されたプログラムに対して実行許可（ <a href="#domain_policy_file_execute">file execute</a> ）を与える必要はありませんし、与えるべきではありません。</li>
+<li>プロセスが chroot 内部の環境で動作している場合、 task auto_execute_handler で指定されたプログラムが見つからないために実行されない場合があります。これは、プロセスが chroot 内部の環境で動作している場合に、 chroot 外部の環境にあるプログラムを実行できてしまうと危険なので、 task auto_execute_handler で指定されたプログラムは、プロセスの名前空間のルートディレクトリではなく、プロセスのルートディレクトリから検索するようになっているためです。</li>
+<li>task auto_execute_handler で指定されたプログラムが動作するためのドメインが存在しない場合、実行されません。そのため、例えば &lt;kernel&gt; 直下に task auto_execute_handler で指定されたプログラム用のドメインを作成して、そのプログラムを <a href="#exception_policy_initialize_domain">initialize_domain</a> キーワードで指定するなどの準備をしてください。</li>
+<li>task auto_execute_handler で指定されたプログラムは環境変数の影響を受けるのを避けるため、全ての環境変数の内容をクリアした状態で起動されます。そのため、環境変数 PATH 等が設定されていないので、外部コマンドを呼び出す場合には注意してください。また、 task auto_execute_handler で指定されたプログラムが動作するドメインにも強制モード用のプロファイルを割り当てておくことを推奨します。</li>
+</ul>
+
+<p>ccs-tools のソースパッケージには、 audit-exec-param.c というサンプルプログラムが入っています。ご自由に改造してお使いください。</p>
+<p>この機能は、機構を提供しているだけです。この機構を活用できるかどうかはあなた次第です。</p>
+
+<h2>6.6 <a name="denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></h2>
+
+<p>TOMOYO Linux では、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、不要なプログラムの実行を拒否するという振る舞いだけでなく、それ以外の振る舞いを行うこともできます。</p>
+
+<p>強制モードに於いて file execute 構文により許可されていないプログラムの実行が要求された場合、デフォルトではプログラムの実行を拒否します。しかし、あるプログラムからどのプログラムの実行を許可する必要があるかを把握済みであるという前提があれば、プロセスが正常な動作をしている限りに於いて許可されていないプログラムの実行が要求されることは無いので、許可されていないプログラムの実行が要求されたということはプロセスが正常な動作をしていない（つまり、プロセスにとっては制御を失った状態である）とみなすことができます。</p>
+
+<p>攻撃者はバッファオーバーフローなどのセキュリティホールを攻撃することでプロセスの制御を奪い、シェルなどのコマンドの実行を要求してきます。もし、そのプロセスからシェルの実行を許可する必要が無い（すなわち file execute /bin/bash のようなアクセス許可を与える必要が無い）のであれば、シェルの実行が要求された時点で既にプロセスにとっては制御を失っていると考えることができます。</p>
+
+<p>通常、許可されていないプログラムの実行が要求された場合は、その要求を拒否するだけです。しかし、制御を失っているプロセスから要求されたプログラムの実行要求を拒否したところで、そのプロセスの制御が取り戻される（つまり、正常な動作をするようになる）とは考えられません。<br>
+しかし、プログラムを実行するということは、現在動作中のプロセスを新しいプログラムに置き換えることで、制御を新しいプログラムに譲渡することを意味します。つまり、あるプロセスがバッファオーバーフローなどにより制御を失っていたとしても、プログラムを実行することにより、そのプロセスの制御が取り戻されるわけです。</p>
+
+<p>攻撃者の手によって制御を失ったプロセスからプログラムが実行された後の制御は、どのプログラムが実行されたかによって決まります。シェルが実行された場合には、シェルはユーザが要求したとおりに処理を実行してしまうため、プログラムの実行を要求したプロセスの所有者である攻撃者の手に委ねられてしまうわけです。しかし、何もせずに終了するようなプログラム（例えば /bin/true ）が実行された場合には、プロセスの制御が攻撃者の手に委ねられてしまうことはありません。</p>
+
+<p>このように、攻撃者の手によって本来許可する必要の無いプログラムの実行が要求されるという出来事は、見方を変えると、攻撃者自身が制御を取り戻すためのチャンスを与えてくれていると考えることができます。<br>
+そこで、 TOMOYO Linux では、許可されていないプログラムの実行が要求された場合、その要求を拒否する代わりに他のプログラムを実行するための機構を提供しています。この機構を用いて何をするかはシステム管理者の自由です。</p>
+
+<p>例えば、シェルの実行要求を /bin/true の実行要求に差し替えてしまうことで、そのプロセスを直ちに強制終了させることができます。</p>
+
+<p>例えば、シェルの実行要求をハニーポットクライアントプログラムの実行要求に差し替えてしまうことで、攻撃者がどのようなリクエストを行うかを観察することができます。</p>
+
+<p>例えば、そのログインセッションを強制終了させることができます。</p>
+
+<p>例えば、要求されたコマンドがどのパッケージに含まれているかを教えてくれる Ubuntu の command-not-found パッケージのように、「 You are not permitted to execute this program. 」のような警告を表示することができます。</p>
+
+<p>例えば、攻撃者の接続元ＩＰアドレスを割り出して、ファイアウォールの設定を変更することができます。</p>
+
+<p>この機能を使うには、以下のように指定します。</p>
+
+<table border="1">
+<tr><td>/proc/ccs/profile の例</td><td>/proc/ccs/domain_policy の例</td><td>意味</td></tr>
+<tr><td>3-CONFIG::file::execute=enforcing</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>プロファイル 3 が割り当てられているドメインに属しているプロセスが、許可されていないプログラムの実行を要求した場合、代わりに /bin/true を実行します。</td></tr>
+</table>
+
+<p>この機能を使用する際の注意事項は<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>と同じです。</p>
 
 <hr>
 

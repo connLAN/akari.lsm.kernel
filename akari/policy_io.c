@@ -360,13 +360,22 @@ static void ccs_check_profile(void)
 		const u8 profile = domain->profile;
 		if (ccs_profile_ptr[profile])
 			continue;
+		printk(KERN_ERR "You need to define profile %u before using it.\n",
+		       profile);
+		printk(KERN_ERR "Please see http://tomoyo.sourceforge.jp/1.8/ "
+		       "for more information.\n");
 		panic("Profile %u (used by '%s') not defined.\n",
 		      profile, domain->domainname->name);
 	}
 	ccs_read_unlock(idx);
-	if (ccs_profile_version != 20100903)
+	if (ccs_profile_version != 20100903) {
+		printk(KERN_ERR "You need to install userland programs for "
+		       "TOMOYO 1.8 and initialize policy configuration.\n");
+		printk(KERN_ERR "Please see http://tomoyo.sourceforge.jp/1.8/ "
+		       "for more information.\n");
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
+	}
 	printk(KERN_INFO "CCSecurity: 1.8.0-pre   2010/10/05\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }

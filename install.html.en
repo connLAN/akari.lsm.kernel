@@ -15,7 +15,35 @@
 
 <hr>
 
-<h2>Step 1: Installing kernel module</h2>
+<h2>Step 1: Installing tools</h2>
+
+<p>Install packages needed for compiling kernel modules and tools.</p>
+
+<table border="1">
+<tr><td>RedHat distributions</td><td>
+# yum -y install gcc ncurses-devel readline-devel help2man
+</td></tr>
+<tr><td>Debian distributions</td><td>
+# apt-get -y install gcc libncurses-dev libreadline-dev help2man
+</td></tr>
+</table>
+
+<p>Next, run the following commands in order to install AKARI's tools.</p>
+
+<table border="1">
+<tr><td>
+# cd /tmp/<br>
+# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
+# tar -zxf ccs-tools.tar.gz<br>
+# cd ccstools/<br>
+# make -s<br>
+# make -s install
+</td></tr>
+</table>
+
+<hr>
+
+<h2>Step 2: Installing kernel module</h2>
 
 <p>Install a kernel development package which was configured with LSM (Linux Security Modules) support enabled (i.e. CONFIG_SECURITY=y ), and goto the extracted directory.</p>
 
@@ -41,22 +69,6 @@
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
-</td></tr>
-</table>
-
-<hr>
-
-<h2>Step 2: Installing tools</h2>
-
-<p>Run the following commands in order to install tools.</p>
-
-<table border="1">
-<tr><td>
-# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
-# tar -zxf ccs-tools.tar.gz<br>
-# cd ccstools/<br>
-# make -s<br>
-# make -s install
 </td></tr>
 </table>
 

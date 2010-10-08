@@ -1,0 +1,10 @@
+Notes for AKARI project
+
+This is a handy Mandatory Access Control module for Linux 2.6 kernels.
+This patch is released under the GPLv2.
+
+Project URL: http://akari.sourceforge.jp/
+
+ChangeLog:
+
+Version 1.0   2010/10/10   First release.

@@ -70,8 +70,8 @@ struct in6_addr;
  * @pos:        the &struct list_head to use as a loop cursor.
  * @head:       the head for your list.
  */
-#define list_for_each_cookie(pos, head)				     \
-	for (pos || (pos = srcu_dereference((head)->next, &ccs_ss)); \
+#define list_for_each_cookie(pos, head)					 \
+	for (pos = pos ? pos : srcu_dereference((head)->next, &ccs_ss)); \
 	pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
 
 enum ccs_policy_stat_type {

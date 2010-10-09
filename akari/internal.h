@@ -1025,7 +1025,7 @@ bool ccs_str_starts(char **src, const char *find);
 bool ccs_tokenize(char *buffer, char *w[], size_t size);
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
-char *ccs_init_log(int *len, struct ccs_request_info *r, const char *fmt,
+char *ccs_init_log(struct ccs_request_info *r, int len, const char *fmt,
 		   va_list args);
 char *ccs_realpath_from_path(struct path *path);
 const char *ccs_get_exe(void);
@@ -1110,7 +1110,8 @@ void ccs_update_stat(const u8 index);
 void ccs_warn_oom(const char *function);
 void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
-void ccs_write_log2(struct ccs_request_info *r, const char *fmt, va_list args);
+void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
+		    va_list args);
 
 /* strcmp() for "struct ccs_path_info" structure. */
 static inline bool ccs_pathcmp(const struct ccs_path_info *a,

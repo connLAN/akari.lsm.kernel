@@ -1920,9 +1920,12 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 	static unsigned int ccs_serial;
 	struct ccs_query entry = { };
 	bool quota_exceeded = false;
+	va_start(args, fmt);
+	len = vsnprintf((char *) &len, 1, fmt, args) + 1;
+	va_end(args);
 	/* Write /proc/ccs/grant_log or /proc/ccs/reject_log . */
 	va_start(args, fmt);
-	ccs_write_log2(r, fmt, args);
+	ccs_write_log2(r, len, fmt, args);
 	va_end(args);
 	/* Nothing more to do if granted. */
 	if (r->granted)
@@ -1956,7 +1959,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 	}
 	/* Get message. */
 	va_start(args, fmt);
-	entry.query = ccs_init_log(&len, r, fmt, args);
+	entry.query = ccs_init_log(r, len, fmt, args);
 	va_end(args);
 	if (!entry.query)
 		goto out;
@@ -1965,6 +1968,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 		ccs_add_entry(entry.query);
 		goto out;
 	}
+	len = ccs_round2(entry.query_len);
 	spin_lock(&ccs_query_list_lock);
 	if (ccs_memory_quota[CCS_MEMORY_QUERY] &&
 	    ccs_memory_used[CCS_MEMORY_QUERY] + len

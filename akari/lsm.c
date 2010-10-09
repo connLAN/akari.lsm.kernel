@@ -898,12 +898,12 @@ out:
  * (2) It is safe to read 128 bytes from @function.
  * (3) @variable != Byte code except @variable.
  */
-static const u8 * __init ccs_find_variable(void *function, u64 variable,
-					   const char *symbol)
+static void * __init ccs_find_variable(void *function, u64 variable,
+				       const char *symbol)
 {
 	int i;
-	const u8 *base;
-	const u8 *cp = (const u8 *) function;
+	u8 *base;
+	u8 *cp = function;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	if (*symbol == ' ')
 		base = ccs_find_symbol(symbol);
@@ -923,9 +923,21 @@ static const u8 * __init ccs_find_variable(void *function, u64 variable,
 		}
 		cp++;
 	}
+	/* Next, assume absolute 32bit addressing mode is used. */
+	if (sizeof(void *) == sizeof(u64)) {
+		cp = function;
+		for (i = 0; i < 128; i++) {
+			if (*(u32 *) cp == (u32) variable) {
+				static void *cp4ret;
+				cp4ret = *(int *) (base + i);
+				return &cp4ret;
+			}
+			cp++;
+		}
+	}
 	/* Next, assume PC-relative mode is used. (x86_64) */
 	if (sizeof(void *) == sizeof(u64)) {
-		cp = (const u8 *) function;
+		cp = function;
 		for (i = 0; i < 128; i++) {
 			if ((u64) (cp + sizeof(int) + *(int *)(cp)) ==
 			    variable) {
@@ -959,7 +971,7 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	struct security_operations **ptr;
 	struct security_operations *ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	const u8 *cp;
+	void *cp;
 	/*
 	 * Guess "struct security_operations *security_ops;".
 	 * This trick assumes that compiler generates identical code for
@@ -981,7 +993,7 @@ static struct security_operations * __init ccs_find_security_ops(void)
 		printk(KERN_ERR "Can't resolve security_ops structure.\n");
 		goto out;
 	}
-	printk(KERN_INFO "security_ops=%p\n", ptr);
+	printk(KERN_INFO "&security_ops=%p\n", ptr);
 	ops = *ptr;
 	if (!ops) {
 		printk(KERN_ERR "No security_operations registered.\n");
@@ -1089,14 +1101,15 @@ static void lsm_pin(struct vfsmount *mnt)
 static bool __init ccs_find_vfsmount_lock(void)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-	const u8 *cp;
+	void *cp;
 	spinlock_t *ptr;
 	/*
 	 * Guess "spinlock_t vfsmount_lock;".
 	 * This trick assumes that compiler generates identical code for
 	 * follow_up() and lsm_flwup().
 	 */
-	cp = ccs_find_variable(lsm_flwup, &ccs_vfsmount_lock, "follow_up");
+	cp = ccs_find_variable(lsm_flwup, (u64) &ccs_vfsmount_lock,
+			       "follow_up");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve follow_up().\n");
 		goto out;
@@ -1113,14 +1126,14 @@ static bool __init ccs_find_vfsmount_lock(void)
 out:
 	return false;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	const u8 *cp;
+	void *cp;
 	spinlock_t *ptr;
 	/*
 	 * Guess "spinlock_t vfsmount_lock;".
 	 * This trick assumes that compiler generates identical code for
 	 * mnt_pin() and lsm_pin().
 	 */
-	cp = ccs_find_variable(lsm_pin, &ccs_vfsmount_lock, "mnt_pin");
+	cp = ccs_find_variable(lsm_pin, (u64) &ccs_vfsmount_lock, "mnt_pin");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve mnt_pin().\n");
 		goto out;

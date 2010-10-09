@@ -916,30 +916,26 @@ static const u8 * __init ccs_find_variable(void *function, u64 variable,
 	for (i = 0; i < 128; i++) {
 		if (sizeof(void *) == sizeof(u32)) {
 			if (*(u32 *) cp == (u32) variable)
-				break;
+				return base + i;
 		} else if (sizeof(void *) == sizeof(u64)) {
 			if (*(u64 *) cp == variable)
-				break;
+				return base + i;
 		}
 		cp++;
-	}
-	if (i < 128) {
-		cp = (const u8 *) base;
-		return base + i;
 	}
 	/* Next, assume PC-relative mode is used. (x86_64) */
 	if (sizeof(void *) == sizeof(u64)) {
 		cp = (const u8 *) function;
 		for (i = 0; i < 128; i++) {
 			if ((u64) (cp + sizeof(int) + *(int *)(cp)) ==
-			    variable)
-				break;
+			    variable) {
+				static const u8 *cp4ret;
+				cp = base + i;
+				cp += sizeof(int) + *(int *)(cp);
+				cp4ret = cp;
+				return &cp4ret;
+			}
 			cp++;
-		}
-		if (i < 128) {
-			cp = (const u8 *) base;
-			cp += i;
-			return cp + sizeof(int) + *(int *)(cp);
 		}
 	}
 	return NULL;
@@ -977,7 +973,6 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	}
 	/* This should be "struct security_operations *security_ops;". */
 	ptr = *(struct security_operations ***) cp;
-	//ptr = (struct security_operations **) cp;
 #else
 	/* This is "struct security_operations *security_ops;". */
 	ptr = (struct security_operations **) __symbol_get("security_ops");

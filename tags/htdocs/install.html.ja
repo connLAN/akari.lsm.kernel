@@ -15,37 +15,20 @@
 
 <hr>
 
-<h2>ステップ１：ツールのインストール</h2>
+<h2>ステップ１：カーネルモジュールのインストール</h2>
 
 <p>カーネルモジュールとツールのコンパイルに必要なパッケージをインストールしてください。</p>
 
 <table border="1">
 <tr><td>RedHat 系の場合</td><td>
-# yum -y install gcc ncurses-devel readline-devel help2man
+# yum -y install gcc ncurses-devel wget make
 </td></tr>
 <tr><td>Debian 系の場合</td><td>
-# apt-get -y install gcc libncurses-dev libreadline-dev help2man
+# apt-get -y install gcc libncurses-dev wget make
 </td></tr>
 </table>
 
-<p>次に、以下のコマンドを実行してツールをインストールしてください。</p>
-
-<table border="1">
-<tr><td>
-# cd /tmp/<br>
-# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
-# tar -zxf ccs-tools.tar.gz<br>
-# cd ccstools/<br>
-# make -s<br>
-# make -s install
-</td></tr>
-</table>
-
-<hr>
-
-<h2>ステップ２：カーネルモジュールのインストール</h2>
-
-<p>LSM (Linux Security Modules) のサポートが有効な状態（ CONFIG_SECURITY=y ）でコンパイルされているカーネルの開発用パッケージをインストールして、そのディレクトリに移動してください。</p>
+<p>次に、カーネルの開発用パッケージをインストールして、そのディレクトリに移動してください。</p>
 
 <table border="1">
 <tr><td>RedHat 系の場合</td><td>
@@ -69,6 +52,46 @@
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
+</td></tr>
+</table>
+
+<p>もし、</p>
+
+<pre>
+You must choose CONFIG_SECURITY=y for building this module.
+You must choose CONFIG_KALLSYMS=y for building this module.
+You must choose CONFIG_PROC_FS=y for building this module.
+You must choose CONFIG_MODULES=y for building this module.
+This version is not supported because I cannot resolve vfsmount_lock .
+</pre>
+
+<p>の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
+
+<hr>
+
+<h2>ステップ２：ツールのインストール</h2>
+
+<p>ツールのコンパイル時に利用可能であることが望ましいパッケージをインストールしてください。（インストールできなくてもそのまま続行して構いません。）</p>
+
+<table border="1">
+<tr><td>RedHat 系の場合</td><td>
+# yum -y install readline-devel help2man
+</td></tr>
+<tr><td>Debian 系の場合</td><td>
+# apt-get -y install libreadline-dev help2man
+</td></tr>
+</table>
+
+<p>次に、以下のコマンドを実行してツールをインストールしてください。</p>
+
+<table border="1">
+<tr><td>
+# cd /tmp/<br>
+# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
+# tar -zxf ccs-tools.tar.gz<br>
+# cd ccstools/<br>
+# make -s<br>
+# make -s install
 </td></tr>
 </table>
 

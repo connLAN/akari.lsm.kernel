@@ -92,6 +92,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 # cd ccstools/<br>
 # make -s<br>
 # make -s install
+# ldconfig
 </td></tr>
 </table>
 

@@ -223,18 +223,16 @@ no_obj_info:
 /**
  * ccs_init_log - Allocate buffer for audit logs.
  *
- * @len: Allocated size.
  * @r:   Pointer to "struct ccs_request_info".
+ * @len: Buffer size needed for @fmt and following parameters.
  * @fmt: The printf()'s format string, followed by parameters.
  *
  * Returns pointer to allocated memory.
  *
- * The @len is updated to allocated size on success.
- *
  * This function uses kzalloc(), so caller must kfree() if this function
  * didn't return NULL.
  */
-char *ccs_init_log(int *len, struct ccs_request_info *r, const char *fmt,
+char *ccs_init_log(struct ccs_request_info *r, int len, const char *fmt,
 		   va_list args)
 {
 	char *buf = NULL;
@@ -243,13 +241,12 @@ char *ccs_init_log(int *len, struct ccs_request_info *r, const char *fmt,
 	const char *symlink = NULL;
 	const char *header = NULL;
 	int pos;
-	char c;
 	const char *domainname = ccs_current_domain()->domainname->name;
-	*len = 0;
 	header = ccs_print_header(r);
 	if (!header)
 		return NULL;
-	pos = strlen(domainname) + strlen(header) + 10;
+	/* +10 is for '\n' etc. and '\0'. */
+	len += strlen(domainname) + strlen(header) + 10;
 	if (r->ee) {
 		struct file *file = r->ee->bprm->file;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
@@ -262,30 +259,28 @@ char *ccs_init_log(int *len, struct ccs_request_info *r, const char *fmt,
 		if (!realpath || !bprm_info)
 			goto out;
 		/* +80 is for " exec={ realpath=\"%s\" argc=%d envc=%d %s }" */
-		pos += strlen(realpath) + 80 + strlen(bprm_info);
+		len += strlen(realpath) + 80 + strlen(bprm_info);
 	} else if (r->obj && r->obj->symlink_target) {
 		symlink = r->obj->symlink_target->name;
 		/* +18 is for " symlink.target=\"%s\"" */
-		pos += 18 + strlen(symlink);
+		len += 18 + strlen(symlink);
 	}
-	/* +1 is for '\0'. */
-	pos += vsnprintf(&c, sizeof(c), fmt, args) + 1;
-	pos = ccs_round2(pos);
-	buf = kzalloc(pos, CCS_GFP_FLAGS);
+	len = ccs_round2(len);
+	buf = kzalloc(len, CCS_GFP_FLAGS);
 	if (!buf)
 		goto out;
-	*len = pos;
-	pos = snprintf(buf, (*len) - 1, "%s", header);
+	len--;
+	pos = snprintf(buf, len, "%s", header);
 	if (realpath) {
 		struct linux_binprm *bprm = r->ee->bprm;
-		pos += snprintf(buf + pos, (*len) - 1 - pos,
+		pos += snprintf(buf + pos, len - pos,
 				" exec={ realpath=\"%s\" argc=%d envc=%d %s }",
 				realpath, bprm->argc, bprm->envc, bprm_info);
 	} else if (symlink)
-		pos += snprintf(buf + pos, (*len) - 1 - pos,
-				" symlink.target=\"%s\"", symlink);
-	pos += snprintf(buf + pos, (*len) - 1 - pos, "\n%s\n", domainname);
-	vsnprintf(buf + pos, (*len) - 1 - pos, fmt, args);
+		pos += snprintf(buf + pos, len - pos, " symlink.target=\"%s\"",
+				symlink);
+	pos += snprintf(buf + pos, len - pos, "\n%s\n", domainname);
+	vsnprintf(buf + pos, len - pos, fmt, args);
 out:
 	kfree(realpath);
 	kfree(bprm_info);
@@ -394,18 +389,19 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
  * ccs_write_log - Write audit log.
  *
  * @r:   Pointer to "struct ccs_request_info".
+ * @len: Buffer size needed for @fmt and following parameters.
  * @fmt: The printf()'s format string, followed by parameters.
  */
-void ccs_write_log2(struct ccs_request_info *r, const char *fmt, va_list args)
+void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
+		    va_list args)
 {
-	int len;
 	char *buf;
 	struct ccs_log *entry;
 	bool quota_exceeded = false;
 	const bool is_granted = r->granted;
 	if (!ccs_get_audit(r->profile, r->type, r->matched_acl, is_granted))
 		goto out;
-	buf = ccs_init_log(&len, r, fmt, args);
+	buf = ccs_init_log(r, len, fmt, args);
 	if (!buf)
 		goto out;
 	entry = kzalloc(sizeof(*entry), CCS_GFP_FLAGS);
@@ -414,6 +410,7 @@ void ccs_write_log2(struct ccs_request_info *r, const char *fmt, va_list args)
 		goto out;
 	}
 	entry->log = buf;
+	len = ccs_round2(strlen(buf) + 1);
 	/*
 	 * The entry->size is used for memory quota checks.
 	 * Don't go beyond strlen(entry->log).
@@ -443,8 +440,12 @@ out:
 void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 {
 	va_list args;
+	int len;
 	va_start(args, fmt);
-	ccs_write_log2(r, fmt, args);
+	len = vsnprintf((char *) &len, 1, fmt, args) + 1;
+	va_end(args);
+	va_start(args, fmt);
+	ccs_write_log2(r, len, fmt, args);
 	va_end(args);
 }
 

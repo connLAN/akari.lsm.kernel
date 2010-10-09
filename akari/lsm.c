@@ -884,6 +884,67 @@ out:
 
 #endif
 
+/*
+ * ccs_find_variable - Find variable's address using dummy.
+ *
+ * @function: Pointer to dummy function's entry point.
+ * @variable: Pointer to variable which is used within @function.
+ * @symbol:   Name of symbol to resolve.
+ *
+ * This trick depends on below assumptions.
+ *
+ * (1) @variable is found within 128 bytes from @function, even if additional
+ *     code (e.g. debug symbols) is added.
+ * (2) It is safe to read 128 bytes from @function.
+ * (3) @variable != Byte code except @variable.
+ */
+static const u8 * __init ccs_find_variable(void *function, u64 variable,
+					   const char *symbol)
+{
+	int i;
+	const u8 *base;
+	const u8 *cp = (const u8 *) function;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	if (*symbol == ' ')
+		base = ccs_find_symbol(symbol);
+	else
+#endif
+		base = __symbol_get(symbol);
+	if (!base)
+		return NULL;
+	/* First, assume absolute adressing mode is used. */
+	for (i = 0; i < 128; i++) {
+		if (sizeof(void *) == sizeof(u32)) {
+			if (*(u32 *) cp == (u32) variable)
+				break;
+		} else if (sizeof(void *) == sizeof(u64)) {
+			if (*(u64 *) cp == variable)
+				break;
+		}
+		cp++;
+	}
+	if (i < 128) {
+		cp = (const u8 *) base;
+		return base + i;
+	}
+	/* Next, assume PC-relative mode is used. (x86_64) */
+	if (sizeof(void *) == sizeof(u64)) {
+		cp = (const u8 *) function;
+		for (i = 0; i < 128; i++) {
+			if ((u64) (cp + sizeof(int) + *(int *)(cp)) ==
+			    variable)
+				break;
+			cp++;
+		}
+		if (i < 128) {
+			cp = (const u8 *) base;
+			cp += i;
+			return cp + sizeof(int) + *(int *)(cp);
+		}
+	}
+	return NULL;
+}
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
 /* Never mark this variable as __initdata . */
@@ -902,42 +963,21 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	struct security_operations **ptr;
 	struct security_operations *ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	int i;
 	const u8 *cp;
 	/*
 	 * Guess "struct security_operations *security_ops;".
-	 * This trick depends on below assumptions.
-	 *
-	 * (1) Compiler generates identical code for security_file_alloc() and
-	 *     lsm_addr_calculator().
-	 * (2) ccs_security_ops is found within 128 bytes from
-	 *     lsm_addr_calculator, even if additional code (e.g. debug
-	 *     symbols) is added.
-	 * (3) It is safe to read 128 bytes from lsm_addr_calculator.
-	 * (4) ccs_security_ops != Byte code except ccs_security_ops.
+	 * This trick assumes that compiler generates identical code for
+	 * security_file_alloc() and lsm_addr_calculator().
 	 */
-	cp = (const u8 *) lsm_addr_calculator;
-	for (i = 0; i < 128; i++) {
-		if (sizeof(ccs_security_ops) == sizeof(u32)) {
-			if (*(u32 *) cp == (u32) &ccs_security_ops)
-				break;
-		} else if (sizeof(ccs_security_ops) == sizeof(u64)) {
-			if (*(u64 *) cp == (u64) &ccs_security_ops)
-				break;
-		}
-		cp++;
-	}
-	if (i == 128) {
-		printk(KERN_ERR "Can't resolve ccs_security_ops structure.\n");
-		goto out;
-	}
-	cp = (const u8 *) ccs_find_symbol(" security_file_alloc\n");
+	cp = ccs_find_variable(lsm_addr_calculator, (u64) &ccs_security_ops,
+			       " security_file_alloc\n");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve security_file_alloc().\n");
 		goto out;
 	}
 	/* This should be "struct security_operations *security_ops;". */
-	ptr = *(struct security_operations ***) (cp + i);
+	ptr = *(struct security_operations ***) cp;
+	//ptr = (struct security_operations **) cp;
 #else
 	/* This is "struct security_operations *security_ops;". */
 	ptr = (struct security_operations **) __symbol_get("security_ops");
@@ -1054,42 +1094,20 @@ static void lsm_pin(struct vfsmount *mnt)
 static bool __init ccs_find_vfsmount_lock(void)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-	int i;
 	const u8 *cp;
 	spinlock_t *ptr;
 	/*
 	 * Guess "spinlock_t vfsmount_lock;".
-	 * This trick depends on below assumptions.
-	 *
-	 * (1) Compiler generates identical code for follow_up() and
-	 *     lsm_flwup().
-	 * (2) ccs_vfsmount_lock is found within 128 bytes from lsm_flwup,
-	 *     even if additional code (e.g. debug symbols) is added.
-	 * (3) It is safe to read 128 bytes from lsm_flwup.
-	 * (4) ccs_vfsmount_lock != Byte code except ccs_vfsmount_lock.
+	 * This trick assumes that compiler generates identical code for
+	 * follow_up() and lsm_flwup().
 	 */
-	cp = (const u8 *) lsm_flwup;
-	for (i = 0; i < 128; i++) {
-		if (sizeof(void *) == sizeof(u32)) {
-			if (*(u32 *) cp == (u32) &ccs_vfsmount_lock)
-				break;
-		} else if (sizeof(void *) == sizeof(u64)) {
-			if (*(u64 *) cp == (u64) &ccs_vfsmount_lock)
-				break;
-		}
-		cp++;
-	}
-	if (i == 128) {
-		printk(KERN_ERR "Can't resolve ccs_vfsmount_lock .\n");
-		goto out;
-	}
-	cp = (const u8 *) __symbol_get("follow_up");
+	cp = ccs_find_variable(lsm_flwup, &ccs_vfsmount_lock, "follow_up");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve follow_up().\n");
 		goto out;
 	}
 	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = *(spinlock_t **) (cp + i);
+	ptr = *(spinlock_t **) cp;
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
 		goto out;
@@ -1100,41 +1118,20 @@ static bool __init ccs_find_vfsmount_lock(void)
 out:
 	return false;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	int i;
 	const u8 *cp;
 	spinlock_t *ptr;
 	/*
 	 * Guess "spinlock_t vfsmount_lock;".
-	 * This trick depends on below assumptions.
-	 *
-	 * (1) Compiler generates identical code for mnt_pin() and lsm_pin().
-	 * (2) ccs_vfsmount_lock is found within 128 bytes from lsm_pin,
-	 *     even if additional code (e.g. debug symbols) is added.
-	 * (3) It is safe to read 128 bytes from lsm_pin.
-	 * (4) ccs_vfsmount_lock != Byte code except ccs_vfsmount_lock.
+	 * This trick assumes that compiler generates identical code for
+	 * mnt_pin() and lsm_pin().
 	 */
-	cp = (const u8 *) lsm_pin;
-	for (i = 0; i < 128; i++) {
-		if (sizeof(void *) == sizeof(u32)) {
-			if (*(u32 *) cp == (u32) &ccs_vfsmount_lock)
-				break;
-		} else if (sizeof(void *) == sizeof(u64)) {
-			if (*(u64 *) cp == (u64) &ccs_vfsmount_lock)
-				break;
-		}
-		cp++;
-	}
-	if (i == 128) {
-		printk(KERN_ERR "Can't resolve ccs_vfsmount_lock .\n");
-		goto out;
-	}
-	cp = (const u8 *) __symbol_get("mnt_pin");
+	cp = ccs_find_variable(lsm_pin, &ccs_vfsmount_lock, "mnt_pin");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve mnt_pin().\n");
 		goto out;
 	}
 	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = *(spinlock_t **) (cp + i);
+	ptr = *(spinlock_t **) cp;
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
 		goto out;

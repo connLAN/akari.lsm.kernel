@@ -1393,19 +1393,23 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	 * failed.
 	 */
 	if (ptr->task && ptr->cred) {
+		/*
 		printk(KERN_DEBUG
 		       "Dropping refcount on \"struct cred\" in "
 		       "\"struct linux_binprm\" because some "
 		       "\"struct task_struct\" has exit()ed immediately after "
 		       "do_execve() has failed.\n");
+		*/
 		put_cred(ptr->cred);
 	}
 #endif
 	if (ee) {
+		/*
 		printk(KERN_DEBUG
 		       "Releasing memory in \"struct ccs_execve\" because "
 		       "some \"struct task_struct\" has exit()ed immediately "
 		       "after do_execve() has failed.\n");
+		*/
 		kfree(ee->handler_path);
 		kfree(ee->tmp);
 		kfree(ee->dump.data);

@@ -244,6 +244,20 @@
 </td></tr>
 </table>
 
+<p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
+
+<pre>
+&amp;security_ops=c07cf204
+vfsmount_lock=c0702980
+AKARI: 1.0   2010/10/10
+Access Keeping And Regulating Instrument registered.
+Calling /sbin/ccs-init to load policy. Please wait.
+CCSecurity: 1.8.0-pre   2010/10/10
+Mandatory Access Control activated.
+</pre>
+
+<p>AKARI モジュールを登録する処理は環境依存であるため、問題が起こる場合があります。もし問題が発生した場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
+
 <hr>
 
 <p><a href="index.html.ja">目次へ戻る</a></p>

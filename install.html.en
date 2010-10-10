@@ -47,8 +47,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari.tar.gz 'http://sourceforge.jp/projects/akari/svn/view/trunk/akari.tar.gz?root=akari&amp;view=tar'<br>
-# tar -zxf akari.tar.gz<br>
+# wget -O akari-1.0-20101010.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0-20101010.tar.gz'<br>
+# wget -O akari-1.0-20101010.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0-20101010.tar.gz.asc'<br>
+# gpg akari-1.0-20101010.tar.gz.asc<br>
+# tar -zxf akari-1.0-20101010.tar.gz<br>
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
@@ -91,7 +93,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 # tar -zxf ccs-tools.tar.gz<br>
 # cd ccstools/<br>
 # make -s<br>
-# make -s install
+# make -s install<br>
 # ldconfig
 </td></tr>
 </table>

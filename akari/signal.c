@@ -30,6 +30,14 @@ static int ccs_audit_signal_log(struct ccs_request_info *r)
 			      r->param.signal.dest_pattern);
 }
 
+/**
+ * ccs_check_signal_acl - Check permission for signal operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_signal_acl(struct ccs_request_info *r,
 				 const struct ccs_acl_info *ptr)
 {
@@ -141,8 +149,16 @@ static int ccs_signal_acl0(pid_t tgid, pid_t pid, int sig)
 	return ccs_signal_acl(pid, sig);
 }
 
-static bool ccs_same_signal_entry(const struct ccs_acl_info *a,
-				  const struct ccs_acl_info *b)
+/**
+ * ccs_same_signal_acl - Check for duplicated "struct ccs_signal_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
+static bool ccs_same_signal_acl(const struct ccs_acl_info *a,
+				const struct ccs_acl_info *b)
 {
 	const struct ccs_signal_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_signal_acl *p2 = container_of(b, typeof(*p2), head);
@@ -171,7 +187,7 @@ static int ccs_write_signal(struct ccs_acl_param *param)
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,
-					  ccs_same_signal_entry, NULL);
+					  ccs_same_signal_acl, NULL);
 	ccs_put_name(e.domainname);
 	return error;
 }

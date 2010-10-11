@@ -12,6 +12,9 @@
 
 #include "internal.h"
 
+/*
+ * Mapping table from "enum ccs_capability_acl_index" to "enum ccs_mac_index".
+ */
 const u8 ccs_c2mac[CCS_MAX_CAPABILITY_INDEX] = {
 	[CCS_USE_ROUTE_SOCKET]  = CCS_MAC_CAPABILITY_USE_ROUTE_SOCKET,
 	[CCS_USE_PACKET_SOCKET] = CCS_MAC_CAPABILITY_USE_PACKET_SOCKET,
@@ -28,7 +31,7 @@ const u8 ccs_c2mac[CCS_MAX_CAPABILITY_INDEX] = {
 /**
  * ccs_audit_capability_log - Audit capability log.
  *
- * @r:     Pointer to "struct ccs_request_info".
+ * @r: Pointer to "struct ccs_request_info".
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -38,6 +41,14 @@ static int ccs_audit_capability_log(struct ccs_request_info *r)
 			      [ccs_c2mac[r->param.capability.operation]]);
 }
 
+/**
+ * ccs_check_capability_acl - Check permission for capability operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_capability_acl(struct ccs_request_info *r,
 				     const struct ccs_acl_info *ptr)
 {
@@ -76,8 +87,16 @@ static int __ccs_ptrace_permission(long request, long pid)
 	return !__ccs_capable(CCS_SYS_PTRACE);
 }
 
-static bool ccs_same_capability_entry(const struct ccs_acl_info *a,
-				      const struct ccs_acl_info *b)
+/**
+ * ccs_same_capability_acl - Check for duplicated "struct ccs_capability_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
+static bool ccs_same_capability_acl(const struct ccs_acl_info *a,
+				    const struct ccs_acl_info *b)
 {
 	const struct ccs_capability_acl *p1 = container_of(a, typeof(*p1),
 							   head);
@@ -103,7 +122,7 @@ int ccs_write_capability(struct ccs_acl_param *param)
 			   ccs_mac_keywords[ccs_c2mac[e.operation]]))
 			continue;
 		return ccs_update_domain(&e.head, sizeof(e), param,
-					 ccs_same_capability_entry, NULL);
+					 ccs_same_capability_acl, NULL);
 	}
 	return -EINVAL;
 }

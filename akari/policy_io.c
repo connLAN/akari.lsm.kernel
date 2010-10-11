@@ -614,6 +614,14 @@ next:
 		goto next;
 }
 
+/**
+ * ccs_same_manager - Check for duplicated "struct ccs_manager" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_manager(const struct ccs_acl_head *a,
 			     const struct ccs_acl_head *b)
 {
@@ -801,6 +809,14 @@ static bool ccs_select_one(struct ccs_io_buffer *head, const char *data)
 	return true;
 }
 
+/**
+ * ccs_same_handler_acl - Check for duplicated "struct ccs_handler_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_handler_acl(const struct ccs_acl_info *a,
 				 const struct ccs_acl_info *b)
 {
@@ -809,6 +825,14 @@ static bool ccs_same_handler_acl(const struct ccs_acl_info *a,
 	return p1->handler == p2->handler;
 }
 
+/**
+ * ccs_same_task_acl - Check for duplicated "struct ccs_task_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_task_acl(const struct ccs_acl_info *a,
 			      const struct ccs_acl_info *b)
 {
@@ -1154,9 +1178,10 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 		head->r.cond_step++;
 		/* fall through */
 	case 3:
-		if (cond->grant_log)
+		if (cond->grant_log != CCS_GRANTLOG_AUTO)
 			ccs_io_printf(head, " grant_log=%s",
-				      ccs_yesno(cond->grant_log == 2));
+				      ccs_yesno(cond->grant_log ==
+						CCS_GRANTLOG_YES));
 		if (cond->transit) {
 			ccs_set_string(head, " auto_domain_transitition=\"");
 			ccs_set_string(head, cond->transit->name);

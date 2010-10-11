@@ -421,6 +421,15 @@ enum ccs_mode_value {
 	CCS_CONFIG_USE_DEFAULT     = 255
 };
 
+enum ccs_grant_log {
+	/* Follow profile's configuration. */
+	CCS_GRANTLOG_AUTO,
+	/* Do not generate grant log. */
+	CCS_GRANTLOG_NO,
+	/* Generate grant_log. */
+	CCS_GRANTLOG_YES
+};
+
 #define CCS_OPEN_FOR_READ_TRUNCATE        1
 #define CCS_OPEN_FOR_IOCTL_ONLY           2
 #define CCS_TASK_IS_IN_EXECVE             4

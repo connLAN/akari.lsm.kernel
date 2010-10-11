@@ -489,12 +489,12 @@ rerun:
 		if (!strncmp(word, "grant_log=", 10)) {
 			if (!dry_run) {
 				word += 10;
-				if (entry->grant_log)
+				if (entry->grant_log != CCS_GRANTLOG_AUTO)
 					goto out;
 				else if (!strcmp(word, "yes"))
-					entry->grant_log = 2;
+					entry->grant_log = CCS_GRANTLOG_YES;
 				else if (!strcmp(word, "no"))
-					entry->grant_log = 1;
+					entry->grant_log = CCS_GRANTLOG_NO;
 				else
 					goto out;
 			}

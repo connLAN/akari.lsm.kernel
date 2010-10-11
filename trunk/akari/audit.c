@@ -288,6 +288,13 @@ out:
 	return buf;
 }
 
+/**
+ * ccs_transition_failed - Print waning message and send signal when domain transition failed.
+ *
+ * @domainname: Name of domain to transit.
+ *
+ * Note that if current->pid == 1, sending SIGKILL won't work.
+ */
 void ccs_transition_failed(const char *domainname)
 {
 	printk(KERN_WARNING
@@ -299,6 +306,9 @@ void ccs_transition_failed(const char *domainname)
  * ccs_update_task_domain - Update task's domain.
  *
  * @r: Pointer to "struct ccs_request_info".
+ *
+ * The task will retry as hard as possible. But if domain transition failed,
+ * the task will be killed by SIGKILL.
  */
 static void ccs_update_task_domain(struct ccs_request_info *r)
 {
@@ -324,11 +334,12 @@ static void ccs_update_task_domain(struct ccs_request_info *r)
 	kfree(buf);
 }
 
+/* Wait queue for /proc/ccs/grant_log and /proc/ccs/reject_log . */
 static wait_queue_head_t ccs_log_wait[2] = {
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[0]),
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[1]),
 };
-
+/* Lock for "struct list_head ccs_log[2]". */
 static DEFINE_SPINLOCK(ccs_log_lock);
 
 /* Structure for audit log. */
@@ -343,15 +354,16 @@ static struct list_head ccs_log[2] = {
 	LIST_HEAD_INIT(ccs_log[0]), LIST_HEAD_INIT(ccs_log[1]),
 };
 
+/* Length of "stuct list_head ccs_log[2]". */
 static unsigned int ccs_log_count[2];
 
 /**
  * ccs_get_audit - Get audit mode.
  *
- * @profile:    Profile number.
- * @index:      Index number of functionality.
- * @cond:       Pointer to "struct ccs_condition". Maybe NULL.
- * @is_granted: True if granted log, false otherwise.
+ * @profile:     Profile number.
+ * @index:       Index number of functionality.
+ * @matched_acl: Pointer to "struct ccs_acl_info". Maybe NULL.
+ * @is_granted:  True if granted log, false otherwise.
  *
  * Returns mode.
  */
@@ -373,8 +385,8 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
 	if (ccs_log_count[is_granted] >= len)
 		return false;
 	if (is_granted && matched_acl && matched_acl->cond &&
-	    matched_acl->cond->grant_log)
-		return matched_acl->cond->grant_log == 2;
+	    matched_acl->cond->grant_log != CCS_GRANTLOG_AUTO)
+		return matched_acl->cond->grant_log == CCS_GRANTLOG_YES;
 	mode = p->config[index];
 	if (mode == CCS_CONFIG_USE_DEFAULT)
 		mode = p->config[category];
@@ -386,11 +398,12 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
 }
 
 /**
- * ccs_write_log - Write audit log.
+ * ccs_write_log2 - Write an audit log.
  *
- * @r:   Pointer to "struct ccs_request_info".
- * @len: Buffer size needed for @fmt and following parameters.
- * @fmt: The printf()'s format string, followed by parameters.
+ * @r:    Pointer to "struct ccs_request_info".
+ * @len:  Buffer size needed for @fmt and @args.
+ * @fmt:  The printf()'s format string.
+ * @args: va_list structure for @fmt.
  */
 void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		    va_list args)
@@ -437,6 +450,12 @@ out:
 	ccs_update_task_domain(r);
 }
 
+/**
+ * ccs_write_log - Write an audit log.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @fmt: The printf()'s format string, followed by parameters.
+ */
 void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 {
 	va_list args;

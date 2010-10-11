@@ -12,6 +12,14 @@
 
 #include "internal.h"
 
+/**
+ * ccs_same_path_group - Check for duplicated "struct ccs_path_group" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_path_group(const struct ccs_acl_head *a,
 				const struct ccs_acl_head *b)
 {
@@ -19,6 +27,14 @@ static bool ccs_same_path_group(const struct ccs_acl_head *a,
 		container_of(b, struct ccs_path_group, head)->member_name;
 }
 
+/**
+ * ccs_same_number_group - Check for duplicated "struct ccs_number_group" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_number_group(const struct ccs_acl_head *a,
 				  const struct ccs_acl_head *b)
 {
@@ -28,6 +44,14 @@ static bool ccs_same_number_group(const struct ccs_acl_head *a,
 			      ->number));
 }
 
+/**
+ * ccs_same_address_group - Check for duplicated "struct ccs_address_group" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_address_group(const struct ccs_acl_head *a,
 				   const struct ccs_acl_head *b)
 {
@@ -118,17 +142,16 @@ out:
 /**
  * ccs_path_matches_group - Check whether the given pathname matches members of the given pathname group.
  *
- * @pathname:        The name of pathname.
- * @group:           Pointer to "struct ccs_path_group".
+ * @pathname: The name of pathname.
+ * @group:    Pointer to "struct ccs_path_group".
  *
  * Returns matched member's pathname if @pathname matches pathnames in @group,
  * NULL otherwise.
  *
  * Caller holds ccs_read_lock().
  */
-const struct ccs_path_info *
-ccs_path_matches_group(const struct ccs_path_info *pathname,
-		       const struct ccs_group *group)
+const struct ccs_path_info *ccs_path_matches_group
+(const struct ccs_path_info *pathname, const struct ccs_group *group)
 {
 	struct ccs_path_group *member;
 	list_for_each_entry_srcu(member, &group->member_list, head.list,

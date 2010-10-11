@@ -12,7 +12,14 @@
 
 #include "internal.h"
 
-
+/**
+ * ccs_check_env_acl - Check permission for environment variable's name.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_env_acl(struct ccs_request_info *r,
 			      const struct ccs_acl_info *ptr)
 {
@@ -59,8 +66,16 @@ int ccs_env_perm(struct ccs_request_info *r, const char *env)
 	return error;
 }
 
-static bool ccs_same_env_entry(const struct ccs_acl_info *a,
-			       const struct ccs_acl_info *b)
+/**
+ * ccs_same_env_acl - Check for duplicated "struct ccs_env_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
+static bool ccs_same_env_acl(const struct ccs_acl_info *a,
+			     const struct ccs_acl_info *b)
 {
 	const struct ccs_env_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_env_acl *p2 = container_of(b, typeof(*p2), head);
@@ -86,7 +101,7 @@ static int ccs_write_env(struct ccs_acl_param *param)
 	if (!e.env)
 		return error;
 	error = ccs_update_domain(&e.head, sizeof(e), param,
-				  ccs_same_env_entry, NULL);
+				  ccs_same_env_acl, NULL);
 	ccs_put_name(e.env);
 	return error;
 }

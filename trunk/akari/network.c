@@ -22,17 +22,20 @@
 #include <net/udp.h>
 #include "internal.h"
 
+/* Structure for holding inet domain socket's address. */
 struct ccs_inet_addr_info {
 	u16 port;           /* In network byte order. */
 	const u32 *address; /* In network byte order. */
 	bool is_ipv6;
 };
 
+/* Structure for holding unix domain socket's address. */
 struct ccs_unix_addr_info {
-	u8 *addr;
+	u8 *addr; /* This may not be '\0' terminated string. */
 	unsigned int addr_len;
 };
 
+/* Structure for holding socket address. */
 struct ccs_addr_info {
 	u8 protocol;
 	u8 operation;
@@ -40,15 +43,17 @@ struct ccs_addr_info {
 	struct ccs_unix_addr_info unix0;
 };
 
+/* String table for socket's protocols. */
 const char * const ccs_proto_keyword[CCS_SOCK_MAX] = {
 	[SOCK_STREAM]    = "stream",
 	[SOCK_DGRAM]     = "dgram",
 	[SOCK_RAW]       = "raw",
 	[SOCK_SEQPACKET] = "seqpacket",
-	[0] = " ",
-	[4] = " ",
+	[0] = " ", /* Dummy for avoiding NULL pointer dereference. */
+	[4] = " ", /* Dummy for avoiding NULL pointer dereference. */
 };
 
+/* String table for socket's operation. */
 const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
 	[CCS_NETWORK_BIND]    = "bind",
 	[CCS_NETWORK_LISTEN]  = "listen",
@@ -58,6 +63,17 @@ const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
 	[CCS_NETWORK_RECV]    = "recv",
 };
 
+/**
+ * ccs_audit_net_log - Audit network log.
+ *
+ * @r:         Pointer to "struct ccs_request_info".
+ * @family:    Name of socket family ("inet" or "unix").
+ * @protocol:  Name of protocol in @family.
+ * @operation: Name of socket operation.
+ * @address:   Name of address.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_audit_net_log(struct ccs_request_info *r, const char *family,
 			     const u8 protocol, const u8 operation,
 			     const char *address)
@@ -200,6 +216,14 @@ void ccs_print_ipv6(char *buffer, const int buffer_len,
 		 NIP6(*max_ip));
 }
 
+/**
+ * ccs_check_inet_acl - Check permission for inet domain socket operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_inet_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr)
 {
@@ -230,6 +254,14 @@ static bool ccs_check_inet_acl(struct ccs_request_info *r,
 	return ret;
 }
 
+/**
+ * ccs_check_unix_acl - Check permission for unix domain socket operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_unix_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr)
 {
@@ -239,8 +271,11 @@ static bool ccs_check_unix_acl(struct ccs_request_info *r,
 				       &acl->name);
 }
 
-static const u8
-ccs_inet2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
+/*
+ * Mapping table from "enum ccs_network_acl_index" to "enum ccs_mac_index" for
+ * inet domain socket.
+ */
+static const u8 ccs_inet2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
 	[SOCK_STREAM] = {
 		[CCS_NETWORK_BIND]    = CCS_MAC_NETWORK_INET_STREAM_BIND,
 		[CCS_NETWORK_LISTEN]  = CCS_MAC_NETWORK_INET_STREAM_LISTEN,
@@ -259,8 +294,11 @@ ccs_inet2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
 	},
 };
 
-static const u8
-ccs_unix2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
+/*
+ * Mapping table from "enum ccs_network_acl_index" to "enum ccs_mac_index" for
+ * unix domain socket.
+ */
+static const u8 ccs_unix2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
 	[SOCK_STREAM] = {
 		[CCS_NETWORK_BIND]    = CCS_MAC_NETWORK_UNIX_STREAM_BIND,
 		[CCS_NETWORK_LISTEN]  = CCS_MAC_NETWORK_UNIX_STREAM_LISTEN,
@@ -280,8 +318,16 @@ ccs_unix2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
 	},
 };
 
+/**
+ * ccs_same_inet_acl - Check for duplicated "struct ccs_inet_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a == @b except permission bits, false otherwise.
+ */
 static bool ccs_same_inet_acl(const struct ccs_acl_info *a,
-				      const struct ccs_acl_info *b)
+			      const struct ccs_acl_info *b)
 {
 	const struct ccs_inet_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_inet_acl *p2 = container_of(b, typeof(*p2), head);
@@ -295,8 +341,16 @@ static bool ccs_same_inet_acl(const struct ccs_acl_info *a,
 		ccs_same_number_union(&p1->port, &p2->port);
 }
 
+/**
+ * ccs_same_unix_acl - Check for duplicated "struct ccs_unix_acl" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a == @b except permission bits, false otherwise.
+ */
 static bool ccs_same_unix_acl(const struct ccs_acl_info *a,
-				      const struct ccs_acl_info *b)
+			      const struct ccs_acl_info *b)
 {
 	const struct ccs_unix_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_unix_acl *p2 = container_of(b, typeof(*p2), head);
@@ -304,6 +358,15 @@ static bool ccs_same_unix_acl(const struct ccs_acl_info *a,
 		ccs_same_name_union(&p1->name, &p2->name);
 }
 
+/**
+ * ccs_merge_inet_acl - Merge duplicated "struct ccs_inet_acl" entry.
+ *
+ * @a:         Pointer to "struct ccs_acl_info".
+ * @b:         Pointer to "struct ccs_acl_info".
+ * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ *
+ * Returns true if @a is empty, false otherwise.
+ */
 static bool ccs_merge_inet_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
 			       const bool is_delete)
 {
@@ -318,6 +381,15 @@ static bool ccs_merge_inet_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
 	return !perm;
 }
 
+/**
+ * ccs_merge_unix_acl - Merge duplicated "struct ccs_unix_acl" entry.
+ *
+ * @a:         Pointer to "struct ccs_acl_info".
+ * @b:         Pointer to "struct ccs_acl_info".
+ * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ *
+ * Returns true if @a is empty, false otherwise.
+ */
 static bool ccs_merge_unix_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
 			       const bool is_delete)
 {
@@ -430,6 +502,9 @@ int ccs_write_unix_network(struct ccs_acl_param *param)
 
 #ifndef CONFIG_NET
 
+/**
+ * ccs_network_init - Dummy initialize function for CONFIG_NET=n case.
+ */
 void __init ccs_network_init(void)
 {
 }
@@ -476,6 +551,16 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
 	return error;
 }
 
+/**
+ * ccs_check_inet_address - Check permission for inet domain socket's operation.
+ *
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr .
+ * @port:     Port number.
+ * @address:  Pointer to "struct ccs_addr_info".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_check_inet_address(const struct sockaddr *addr,
 				  const unsigned int addr_len, const u16 port,
 				  struct ccs_addr_info *address)
@@ -561,6 +646,15 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
 	return error;
 }
 
+/**
+ * ccs_check_unix_address - Check permission for unix domain socket's operation.
+ *
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr .
+ * @address:  Pointer to "struct ccs_addr_info".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_check_unix_address(struct sockaddr *addr,
 				  const unsigned int addr_len,
 				  struct ccs_addr_info *address)
@@ -581,12 +675,24 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 	return ccs_unix_entry(address);
 }
 
+/**
+ * ccs_kernel_service - Check whether I'm kernel service or not.
+ *
+ * Returns true if I'm kernel service, false otherwise.
+ */
 static bool ccs_kernel_service(void)
 {
 	/* Nothing to do if I am a kernel service. */
 	return segment_eq(get_fs(), KERNEL_DS);
 }
 
+/**
+ * ccs_sock_family - Get socket's family.
+ *
+ * @sk: Pointer to "struct sock".
+ *
+ * Returns one of PF_INET, PF_INET6, PF_UNIX or 0.
+ */
 static u8 ccs_sock_family(struct sock *sk)
 {
 	u8 family;
@@ -603,7 +709,15 @@ static u8 ccs_sock_family(struct sock *sk)
 	}
 }
 
-/* Check permission for creating a socket. */
+/**
+ * __ccs_socket_create_permission - Check permission for creating a socket.
+ *
+ * @family:   Protocol family.
+ * @type:     Unused.
+ * @protocol: Unused.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_create_permission(int family, int type, int protocol)
 {
 	if (ccs_kernel_service())
@@ -615,7 +729,13 @@ static int __ccs_socket_create_permission(int family, int type, int protocol)
 	return 0;
 }
 
-/* Check permission for listening a socket. */
+/**
+ * __ccs_socket_listen_permission - Check permission for listening a socket.
+ *
+ * @sock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_listen_permission(struct socket *sock)
 {
 	struct ccs_addr_info address;
@@ -640,7 +760,15 @@ static int __ccs_socket_listen_permission(struct socket *sock)
 				      &address);
 }
 
-/* Check permission for setting the remote address of a socket. */
+/**
+ * __ccs_socket_connect_permission - Check permission for setting the remote address of a socket.
+ *
+ * @sock:     Pointer to "struct socket".
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr .
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_connect_permission(struct socket *sock,
 					   struct sockaddr *addr, int addr_len)
 {
@@ -668,7 +796,15 @@ static int __ccs_socket_connect_permission(struct socket *sock,
 				      &address);
 }
 
-/* Check permission for setting the local address of a socket. */
+/**
+ * __ccs_socket_bind_permission - Check permission for setting the local address of a socket.
+ *
+ * @sock:     Pointer to "struct socket".
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr .
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_bind_permission(struct socket *sock,
 					struct sockaddr *addr, int addr_len)
 {
@@ -694,7 +830,15 @@ static int __ccs_socket_bind_permission(struct socket *sock,
 				      &address);
 }
 
-/* Check permission for sending a datagram. */
+/**
+ * __ccs_socket_sendmsg_permission - Check permission for sending a datagram.
+ *
+ * @sock:  Pointer to "struct socket".
+ * @msg:   Pointer to "struct msghdr".
+ * @size:  Unused.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_sendmsg_permission(struct socket *sock,
 					   struct msghdr *msg, int size)
 {
@@ -715,7 +859,14 @@ static int __ccs_socket_sendmsg_permission(struct socket *sock,
 				      &address);
 }
 
-/* Check permission for accepting a socket. */
+/**
+ * __ccs_socket_post_accept_permission - Check permission for accepting a socket.
+ *
+ * @sock:    Pointer to "struct socket".
+ * @newsock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_post_accept_permission(struct socket *sock,
 					       struct socket *newsock)
 {
@@ -765,7 +916,14 @@ static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
 #endif
 #endif
 
-/* Check permission for receiving a datagram. */
+/**
+ * __ccs_socket_post_recvmsg_permission - Check permission for receiving a datagram.
+ *
+ * @sk:  Pointer to "struct sock".
+ * @skb: Pointer to "struct sk_buff".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 						struct sk_buff *skb)
 {
@@ -832,6 +990,9 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 	return ccs_inet_entry(&address);
 }
 
+/**
+ * ccs_network_init - Initialize function.
+ */
 void __init ccs_network_init(void)
 {
 	ccsecurity_ops.socket_create_permission =

@@ -12,14 +12,15 @@
 
 #include "internal.h"
 
+/* Bitmap for reserved local port numbers.*/
 static u8 ccs_reserved_port_map[8192];
 
 /**
- * ccs_lport_reserved - Check permission for bind()'s automatic port number selection.
+ * ccs_lport_reserved - Check whether local port is reserved or not.
  *
  * @port: Port number.
  *
- * Returns true on success, false otherwise.
+ * Returns true if local port is reserved, false otherwise.
  */
 static bool __ccs_lport_reserved(const u16 port)
 {
@@ -27,6 +28,14 @@ static bool __ccs_lport_reserved(const u16 port)
 		? true : false;
 }
 
+/**
+ * ccs_same_reserved - Check for duplicated "struct ccs_reserved" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a and @b are duplicated, false otherwise.
+ */
 static bool ccs_same_reserved(const struct ccs_acl_head *a,
 			      const struct ccs_acl_head *b)
 {
@@ -38,11 +47,13 @@ static bool ccs_same_reserved(const struct ccs_acl_head *a,
 /**
  * ccs_update_reserved_entry - Update "struct ccs_reserved" list.
  *
- * @min_port: Start of port number range.
- * @max_port: End of port number range.
+ * @min_port:  Start of port number range.
+ * @max_port:  End of port number range.
  * @is_delete: True if it is a delete request.
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static int ccs_update_reserved_entry(const u16 min_port, const u16 max_port,
 				     const bool is_delete)
@@ -56,11 +67,11 @@ static int ccs_update_reserved_entry(const u16 min_port, const u16 max_port,
 		ccs_update_policy(&e.head, sizeof(e), is_delete,
 				  &ccs_policy_list[CCS_ID_RESERVEDPORT],
 				  ccs_same_reserved);
-	u8 *ccs_tmp_map;
+	u8 *tmp;
 	if (error)
 		return error;
-	ccs_tmp_map = kzalloc(8192, CCS_GFP_FLAGS);
-	if (!ccs_tmp_map)
+	tmp = kzalloc(sizeof(ccs_reserved_port_map), CCS_GFP_FLAGS);
+	if (!tmp)
 		return -ENOMEM;
 	list_for_each_entry_srcu(ptr, &ccs_policy_list[CCS_ID_RESERVEDPORT],
 				 head.list, &ccs_ss) {
@@ -68,11 +79,10 @@ static int ccs_update_reserved_entry(const u16 min_port, const u16 max_port,
 		if (ptr->head.is_deleted)
 			continue;
 		for (port = ptr->min_port; port <= ptr->max_port; port++)
-			ccs_tmp_map[port >> 3] |= 1 << (port & 7);
+			tmp[port >> 3] |= 1 << (port & 7);
 	}
-	memmove(ccs_reserved_port_map, ccs_tmp_map,
-		sizeof(ccs_reserved_port_map));
-	kfree(ccs_tmp_map);
+	memmove(ccs_reserved_port_map, tmp, sizeof(ccs_reserved_port_map));
+	kfree(tmp);
 	/*
 	 * Since this feature is no-op by default, we don't need to register
 	 * this callback hook unless the first entry is added.

@@ -48,6 +48,15 @@ static DEFINE_SPINLOCK(ccs_security_list_lock);
 static atomic_t ccs_security_counter[2];
 #endif
 
+/**
+ * ccs_add_security - Add "struct ccs_security" to list.
+ *
+ * @ptr:     Pointer to "struct ccs_security".
+ * @is_cred: True if @ptr is associated with "struct cred *", false if @ptr is
+ *           associated with "struct task_struct *".
+ *
+ * Returns nothing.
+ */
 static void ccs_add_security(struct ccs_security *ptr, const bool is_cred)
 {
 	unsigned long flags;
@@ -61,6 +70,14 @@ static void ccs_add_security(struct ccs_security *ptr, const bool is_cred)
 	spin_unlock_irqrestore(&ccs_security_list_lock, flags);
 }
 
+/**
+ * ccs_clear_execve - Release memory used by do_execve().
+ *
+ * @ret: 0 if do_execve() succeeded, negative value otherwise.
+ * @security: Pointer to "struct ccs_security".
+ *
+ * Returns nothing.
+ */
 static void ccs_clear_execve(int ret, struct ccs_security *security)
 {
 	struct ccs_execve *ee;
@@ -84,6 +101,15 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
+/**
+ * ccs_cred_prepare - Allocate memory for new credentials.
+ *
+ * @new: Pointer to "struct cred".
+ * @old: Pointer to "struct cred".
+ * @gfp: Memory allocation flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 			    gfp_t gfp)
 {
@@ -98,6 +124,13 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 	return rc;
 }
 
+/**
+ * ccs_cred_free - Release memory used by credentials.
+ *
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns nothing.
+ */
 static void ccs_cred_free(struct cred *cred)
 {
 	original_security_ops.cred_free(cred);
@@ -106,6 +139,14 @@ static void ccs_cred_free(struct cred *cred)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
 
+/**
+ * ccs_alloc_cred_security - Allocate memory for new credentials.
+ *
+ * @cred: Pointer to "struct cred".
+ * @gfp:  Memory allocation flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_alloc_cred_security(const struct cred *cred, gfp_t gfp)
 {
 	struct ccs_security *new_security = kzalloc(sizeof(*new_security),
@@ -117,6 +158,14 @@ static int ccs_alloc_cred_security(const struct cred *cred, gfp_t gfp)
 	return 0;
 }
 
+/**
+ * ccs_cred_alloc_blank - Allocate memory for new credentials.
+ *
+ * @new: Pointer to "struct cred".
+ * @gfp:  Memory allocation flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 {
 	int rc = ccs_alloc_cred_security(new, gfp);
@@ -128,6 +177,14 @@ static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 	return rc;
 }
 
+/**
+ * ccs_cred_transfer - Transfer "struct ccs_security" between credentials.
+ *
+ * @cred: Pointer to "struct cred".
+ * @gfp:  Memory allocation flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 {
 	struct ccs_security *new_security;
@@ -148,6 +205,13 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 
 static void ccs_free_task_security(const struct task_struct *task);
 
+/**
+ * ccs_copy_task_security - Allocate memory for new tasks.
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_copy_task_security(struct task_struct *task)
 {
 	struct ccs_security *old_security = ccs_current_security();
@@ -161,6 +225,13 @@ static int ccs_copy_task_security(struct task_struct *task)
 	return 0;
 }
 
+/**
+ * ccs_task_alloc_security - Allocate memory for new tasks.
+ *
+ * @p: Pointer to "struct task_struct".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_task_alloc_security(struct task_struct *p)
 {
 	int rc = ccs_copy_task_security(p);
@@ -172,15 +243,35 @@ static int ccs_task_alloc_security(struct task_struct *p)
 	return rc;
 }
 
+/**
+ * ccs_task_free_security - Release memory for "struct task_struct".
+ *
+ * @p: Pointer to "struct task_struct".
+ *
+ * Returns nothing.
+ */
 static void ccs_task_free_security(struct task_struct *p)
 {
 	original_security_ops.task_free_security(p);
 	ccs_free_task_security(p);
 }
 
+/**
+ * ccs_bprm_free_security - Release memory for "struct linux_binprm".
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns nothing.
+ */
 static void ccs_bprm_free_security(struct linux_binprm *bprm)
 {
 	original_security_ops.bprm_free_security(bprm);
+	/*
+	 * If do_execve() succeeded,
+	 * ccs_clear_execve(0, ccs_current_security());
+	 * is called before calling below one.
+	 * Thus, below call becomes no-op if do_execve() succeeded. 
+	 */
 	ccs_clear_execve(-1, ccs_current_security());
 }
 
@@ -188,6 +279,13 @@ static void ccs_bprm_free_security(struct linux_binprm *bprm)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 6)
 
+/**
+ * ccs_bprm_compute_creds - A hook which is called when do_execve() succeeded.
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns nothing.
+ */
 static void ccs_bprm_compute_creds(struct linux_binprm *bprm)
 {
 	original_security_ops.bprm_compute_creds(bprm);
@@ -196,6 +294,14 @@ static void ccs_bprm_compute_creds(struct linux_binprm *bprm)
 
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
 
+/**
+ * ccs_bprm_apply_creds - A hook which is called when do_execve() succeeded.
+ *
+ * @bprm:   Pointer to "struct linux_binprm".
+ * @unsafe: Unsafe flag.
+ *
+ * Returns nothing.
+ */
 static void ccs_bprm_apply_creds(struct linux_binprm *bprm, int unsafe)
 {
 	original_security_ops.bprm_apply_creds(bprm, unsafe);
@@ -204,6 +310,13 @@ static void ccs_bprm_apply_creds(struct linux_binprm *bprm, int unsafe)
 
 #else
 
+/**
+ * ccs_bprm_committing_creds - A hook which is called when do_execve() succeeded.
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns nothing.
+ */
 static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 {
 	struct ccs_security *old_security;
@@ -221,6 +334,13 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 
 #endif
 
+/**
+ * ccs_bprm_check_security - Check permission for execve().
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_bprm_check_security(struct linux_binprm *bprm)
 {
 	int rc;
@@ -258,6 +378,13 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
+/**
+ * ccs_open - Check permission for open().
+ *
+ * @f: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_open(struct file *f)
 {
 	struct dentry *dentry = f->f_path.dentry;
@@ -279,6 +406,14 @@ static int ccs_open(struct file *f)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
+/**
+ * ccs_dentry_open - Check permission for open().
+ *
+ * @f:    Pointer to "struct file".
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_dentry_open(struct file *f, const struct cred *cred)
 {
 	int rc = ccs_open(f);
@@ -289,6 +424,13 @@ static int ccs_dentry_open(struct file *f, const struct cred *cred)
 
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
+/**
+ * ccs_dentry_open - Check permission for open().
+ *
+ * @f: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_dentry_open(struct file *f)
 {
 	int rc = ccs_open(f);
@@ -299,11 +441,24 @@ static int ccs_dentry_open(struct file *f)
 
 #else
 
+/**
+ * ccs_open - Check permission for open().
+ *
+ * @inode: Pointer to "struct inode".
+ * @mask:  Open mode.
+ * @nd:    Pointer to "struct nameidata".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_open(struct inode *inode, int mask, struct nameidata *nd)
 {
 	int flags;
 	if (!inode || S_ISDIR(inode->i_mode) || !nd || !nd->dentry)
 		return 0;
+	/*
+	 * This flags value is passed to ACC_MODE().
+	 * ccs_open_permission() for older versions uses old ACC_MODE().
+	 */
 	switch (mask & (MAY_READ | MAY_WRITE)) {
 	case MAY_READ:
 		flags = 01;
@@ -320,7 +475,18 @@ static int ccs_open(struct inode *inode, int mask, struct nameidata *nd)
 	return ccs_open_permission(nd->dentry, nd->mnt, flags);
 }
 
-/* TODO: Use security_file_permission()? */
+/**
+ * ccs_inode_permission - Check permission for open().
+ *
+ * @inode: Pointer to "struct inode".
+ * @mask:  Open mode.
+ * @nd:    Pointer to "struct nameidata".
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Note that this hook is called from permission(), and may not be called for
+ * open(). Maybe it is better to use security_file_permission().
+ */
 static int ccs_inode_permission(struct inode *inode, int mask,
 				struct nameidata *nd)
 {
@@ -1150,6 +1316,13 @@ out:
 out:
 	return false;
 #else
+	void *ptr = ccs_find_symbol(" __d_path\n");
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve __d_path().\n");
+		return false;
+	}
+	ccsecurity_exports.__d_path = ptr;
+	printk(KERN_INFO "__d_path=%p\n", ptr);
 	return true;
 #endif
 }
@@ -1249,6 +1422,13 @@ static int __init ccs_init(void)
 module_init(ccs_init);
 MODULE_LICENSE("GPL");
 
+/**
+ * ccs_domain_in_use - Check whether the given domain is in use or not.
+ *
+ * @domain: Pointer to "struct ccs_domain_info".
+ *
+ * Returns true if @domain is in use, false otherwise.
+ */
 bool ccs_domain_in_use(const struct ccs_domain_info *domain)
 {
 	u8 i;
@@ -1268,6 +1448,19 @@ found:
 	return i < 2;
 }
 
+/**
+ * ccs_find_task_security - Find "struct ccs_security" for given task.
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns pointer to "struct ccs_security" on success, &ccs_null_security
+ * otherwise.
+ *
+ * If @task is current thread "struct ccs_security" for current thread was not
+ * found, I try to allocate it. But if allocation failed, current thread will
+ * be killed by SIGKILL. Note that if current->pid == 1, sending SIGKILL won't
+ * work.
+ */
 struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 {
 	struct ccs_security *ptr;
@@ -1320,6 +1513,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	rcu_read_unlock();
 	if (task != current)
 		return &ccs_null_security;
+	/* Use GFP_ATOMIC because caller may have called rcu_read_lock(). */
 	ptr = kzalloc(sizeof(*ptr), GFP_ATOMIC);
 	if (!ptr) {
 		printk(KERN_WARNING "Unable to allocate memory for pid=%u\n",
@@ -1334,6 +1528,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 #endif
 	get_task_struct((struct task_struct *) task);
 	ptr->task = (struct task_struct *) task;
+	/* ptr->cred may point to garbage. I need to explicitly clear. */
 	ptr->cred = NULL;
 	ccs_add_security(ptr, 0);
 	return ptr;
@@ -1457,6 +1652,13 @@ static void ccs_del_security(struct ccs_security *ptr, const bool is_cred)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
 
+/**
+ * ccs_free_task_security - Release memory associated with "struct task_struct".
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns nothing.
+ */
 static void ccs_free_task_security(const struct task_struct *task)
 {
 	struct ccs_security *ptr = ccs_find_task_security(task);
@@ -1466,6 +1668,13 @@ static void ccs_free_task_security(const struct task_struct *task)
 
 #else
 
+/**
+ * ccs_free_cred_security - Release memory associated with "struct cred".
+ *
+ * @cred: Pointer to "struct task_cred".
+ *
+ * Returns nothing.
+ */
 static void ccs_free_cred_security(const struct cred *cred)
 {
 	struct ccs_security *ptr = ccs_find_cred_security(cred);
@@ -1476,6 +1685,16 @@ static void ccs_free_cred_security(const struct cred *cred)
 		       cred);
 }
 
+/**
+ * ccs_task_security_gc - Do garbage collection for "struct task_struct".
+ *
+ * Returns nothing.
+ *
+ * Since security_task_free_security() is missing, I can't release memory
+ * associated with "struct task_struct" when a task dies. Therefore, I hold
+ * a reference on "struct taskstruct" and runs garbage collection when I became
+ * the last user who refers that "struct task_struct".
+ */
 static void ccs_task_security_gc(void)
 {
 	static DEFINE_MUTEX(lock);

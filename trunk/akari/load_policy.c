@@ -249,7 +249,9 @@ extern spinlock_t vfsmount_lock;
 /* Jump table for loadable kernel module. */
 const struct ccsecurity_exports ccsecurity_exports = {
 	.load_policy = ccs_load_policy,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	.__d_path = __d_path,
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	.vfsmount_lock = &vfsmount_lock,
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)

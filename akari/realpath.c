@@ -34,6 +34,73 @@ static const int ccs_lookup_flags = LOOKUP_FOLLOW | LOOKUP_POSITIVE;
 #include <linux/proc_fs.h>
 #include "internal.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+
+static inline void ccs_realpath_lock(void)
+{
+	spin_lock(&dcache_lock);
+	/* vfsmount_lock is locked by __d_path(). */
+}
+static inline void ccs_realpath_unlock(void)
+{
+	/* vfsmount_lock is unlocked by __d_path(). */
+	spin_unlock(&dcache_lock);
+}
+
+#elif defined(D_PATH_DISCONNECT) && !defined(CONFIG_SUSE_KERNEL)
+
+/*
+ * Original unambiguous-__d_path.diff in patches.apparmor.tar.bz2 inversed the
+ * order of holding dcache_lock and vfsmount_lock . That patch was applied on
+ * (at least) SUSE 11.1 and Ubuntu 8.10 and Ubuntu 9.04 kernels.
+ *
+ * However, that patch was updated to use original order and the updated patch
+ * is applied to (as far as I know) only SUSE kernels.
+ *
+ * Therefore, I need to use original order for SUSE 11.1 kernels and inversed
+ * order for other kernels. I detect it by checking D_PATH_DISCONNECT and
+ * CONFIG_SUSE_KERNEL. I don't know whether other distributions are using the
+ * updated patch or not. If you got deadlock, check fs/dcache.c for locking
+ * order, and add " && 0" to this "#elif " block if fs/dcache.c uses original
+ * order.
+ */
+static inline void ccs_realpath_lock(void)
+{
+	spin_lock(ccsecurity_exports.vfsmount_lock);
+	spin_lock(&dcache_lock);
+}
+static inline void ccs_realpath_unlock(void)
+{
+	spin_unlock(&dcache_lock);
+	spin_unlock(ccsecurity_exports.vfsmount_lock);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+
+static inline void ccs_realpath_lock(void)
+{
+	spin_lock(&dcache_lock);
+	spin_lock(ccsecurity_exports.vfsmount_lock);
+}
+static inline void ccs_realpath_unlock(void)
+{
+	spin_unlock(ccsecurity_exports.vfsmount_lock);
+	spin_unlock(&dcache_lock);
+}
+
+#else
+
+static inline void ccs_realpath_lock(void)
+{
+	spin_lock(&dcache_lock);
+}
+static inline void ccs_realpath_unlock(void)
+{
+	spin_unlock(&dcache_lock);
+}
+
+#endif
+
 static int ccs_kern_path(const char *pathname, int flags, struct path *path)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
@@ -70,6 +137,22 @@ static int ccs_kern_path(const char *pathname, int flags, struct path *path)
 static char *ccs_get_absolute_path(struct path *path, char * const buffer,
 				   const int buflen)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		struct path root = { };
+		pos = ccsecurity_exports.__d_path(path, &root, buffer,
+						  buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
+			struct inode *inode = path->dentry->d_inode;
+			if (inode && S_ISDIR(inode->i_mode)) {
+				buffer[buflen - 2] = '/';
+				buffer[buflen - 1] = '\0';
+			}
+		}
+	}
+	return pos;
+#else
 	char *pos = buffer + buflen - 1;
 	struct dentry *dentry = path->dentry;
 	struct vfsmount *vfsmnt = path->mnt;
@@ -111,6 +194,7 @@ static char *ccs_get_absolute_path(struct path *path, char * const buffer,
 	return pos;
 out:
 	return ERR_PTR(-ENOMEM);
+#endif
 }
 
 /**

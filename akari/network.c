@@ -671,7 +671,7 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 	 */
 	if (u->addr[0] && addr_len > sizeof(short) &&
 	    addr_len <= sizeof(struct sockaddr_un))
-		((char *) u->addr)[addr_len] = '\0';
+		((char *) addr)[addr_len] = '\0';
 	return ccs_unix_entry(address);
 }
 

@@ -1104,15 +1104,12 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 
 #ifdef CONFIG_SECURITY_NETWORK
 
-/*
- * Updated to point to &socket_file_ops by first security_socket_accept() call.
- */
-static const struct file_operations *ccs_socket_file_ops;
+#include <net/sock.h>
 
 /* Structure for remembering an accept()ed socket's status. */
 struct ccs_socket_tag {
 	struct list_head list;
-	struct socket *socket;
+	struct inode *inode;
 	int status;
 	struct rcu_head rcu;
 };
@@ -1157,7 +1154,7 @@ static void ccs_socket_rcu_free(void *arg)
 /**
  * ccs_update_socket_tag - Update tag associated with accept()ed sockets.
  *
- * @sock:   Pointer to "struct socket".
+ * @inode:  Pointer to "struct inode".
  * @status: New status.
  *
  * Returns nothing.
@@ -1165,7 +1162,7 @@ static void ccs_socket_rcu_free(void *arg)
  * If @status == 0, memory for that socket will be released after RCU grace
  * period.
  */
-static void ccs_update_socket_tag(struct socket *sock, int status)
+static void ccs_update_socket_tag(struct inode *inode, int status)
 {
 	struct ccs_socket_tag *ptr;
 	/*
@@ -1175,7 +1172,7 @@ static void ccs_update_socket_tag(struct socket *sock, int status)
 	spin_lock(&ccs_accepted_socket_list_lock);
 	rcu_read_lock();
 	list_for_each_entry_rcu(ptr, &ccs_accepted_socket_list, list) {
-		if (ptr->socket != sock)
+		if (ptr->inode != inode)
 			continue;
 		ptr->status = status;
 		if (status)
@@ -1201,11 +1198,12 @@ static void ccs_update_socket_tag(struct socket *sock, int status)
  */
 static int ccs_validate_socket(struct socket *sock)
 {
+	struct inode *inode = SOCK_INODE(sock);
 	struct ccs_socket_tag *ptr;
 	int ret = 0;
 	rcu_read_lock();
 	list_for_each_entry_rcu(ptr, &ccs_accepted_socket_list, list) {
-		if (ptr->socket != sock)
+		if (ptr->inode != inode)
 			continue;
 		ret = ptr->status;
 		break;
@@ -1232,11 +1230,9 @@ static int ccs_validate_socket(struct socket *sock)
 	 * socket. Otherwise, we remember that this socket needs to return
 	 * error for subsequent socketcalls.
 	 */
-	ccs_update_socket_tag(sock, ret);
+	ccs_update_socket_tag(inode, ret);
 	return ret;
 }
-
-#include <net/sock.h>
 
 /**
  * ccs_socket_accept - Check permission for accept().
@@ -1258,34 +1254,25 @@ static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	rc = original_security_ops.socket_accept(sock, newsock);
-	if (rc)
-		return rc;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 17)
-	/*
-	 * Subsequent LSM hooks will receive "newsock". Therefore, I mark
-	 * "newsock" as "an accept()ed socket but post accept() permission
-	 * check is not done yet" by allocating memory using "newsock" as a
-	 * search key.
-	 */
 	ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
 		return -ENOMEM;
-	ptr->socket = newsock;
+	rc = original_security_ops.socket_accept(sock, newsock);
+	if (rc) {
+		kfree(ptr);
+		return rc;
+	}
+	/*
+	 * Subsequent LSM hooks will receive "newsock". Therefore, I mark
+	 * "newsock" as "an accept()ed socket but post accept() permission
+	 * check is not done yet" by allocating memory using inode of the
+	 * "newsock" as a search key.
+	 */
+	ptr->inode = SOCK_INODE(newsock);
 	ptr->status = 1; /* Check post accept() permission later. */
 	spin_lock(&ccs_accepted_socket_list_lock);
 	list_add_tail_rcu(&ptr->list, &ccs_accepted_socket_list);
 	spin_unlock(&ccs_accepted_socket_list_lock);
-	/*
-	 * Remember address of &socket_file_ops for security_file_free().
-	 *
-	 * Since sock->file->f_op was set to &socket_file_ops by
-	 * sock_alloc_file(), we can release memory associated with "newsock"
-	 * in security_file_free() hook (even if sock->ops->accept() failed).
-	 */
-	if (!ccs_socket_file_ops)
-		ccs_socket_file_ops = sock->file->f_op;
-#endif
 	return 0;
 }
 
@@ -1454,24 +1441,22 @@ static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
 	return original_security_ops.socket_setsockopt(sock, level, optname);
 }
 
+#define SOCKFS_MAGIC 0x534F434B
+
 /**
- * ccs_file_free_security - Release memory associated with a file.
+ * ccs_inode_free_security - Release memory associated with an inode.
  *
- * @file: Pointer to "struct file".
+ * @inode: Pointer to "struct inode".
  *
  * Returns nothing.
  *
  * We use this hook for releasing memory associated with an accept()ed socket.
  */
-static void ccs_file_free_security(struct file *file)
+static void ccs_inode_free_security(struct inode *inode)
 {
-	original_security_ops.file_free_security(file);
-	/*
-	 * sock_from_file() says that file->private_data points to
-	 * "struct socket" if file->f_op points to &socket_file_ops.
-	 */
-	if (ccs_socket_file_ops && file->f_op == ccs_socket_file_ops)
-		ccs_update_socket_tag(file->private_data, 0);
+	original_security_ops.inode_free_security(inode);
+	if (inode->i_sb && inode->i_sb->s_magic == SOCKFS_MAGIC)
+		ccs_update_socket_tag(inode, 0);
 }
 
 #endif
@@ -2126,7 +2111,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	ops->socket_getsockopt     = ccs_socket_getsockopt;
 	ops->socket_setsockopt     = ccs_socket_setsockopt;
 	ops->socket_accept         = ccs_socket_accept;
-	ops->file_free_security    = ccs_file_free_security;
+	ops->inode_free_security   = ccs_inode_free_security;
 #endif
 }
 

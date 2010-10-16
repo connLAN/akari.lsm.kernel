@@ -10,37 +10,38 @@
  *
  */
 
-#include <linux/string.h>
-#include <linux/mm.h>
-#include <linux/utime.h>
-#include <linux/file.h>
-#include <linux/smp_lock.h>
-#include <linux/module.h>
-#include <linux/slab.h>
-#include <asm/uaccess.h>
-#include <asm/atomic.h>
-#include <linux/version.h>
+#include "internal.h"
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 #include <linux/namei.h>
 #include <linux/mount.h>
-static const int ccs_lookup_flags = LOOKUP_FOLLOW;
+#define ccs_lookup_flags LOOKUP_FOLLOW
 #else
-static const int ccs_lookup_flags = LOOKUP_FOLLOW | LOOKUP_POSITIVE;
+#define ccs_lookup_flags (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
 #endif
 #include <net/sock.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
 #include <linux/kthread.h>
 #endif
 #include <linux/proc_fs.h>
-#include "internal.h"
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 
+/**
+ * ccs_realpath_lock - Take locks for __d_path().
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_lock(void)
 {
 	spin_lock(&dcache_lock);
 	/* vfsmount_lock is locked by __d_path(). */
 }
+
+/**
+ * ccs_realpath_unlock - Release locks for __d_path().
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_unlock(void)
 {
 	/* vfsmount_lock is unlocked by __d_path(). */
@@ -49,7 +50,11 @@ static inline void ccs_realpath_unlock(void)
 
 #elif defined(D_PATH_DISCONNECT) && !defined(CONFIG_SUSE_KERNEL)
 
-/*
+/**
+ * ccs_realpath_lock - Take locks for __d_path().
+ *
+ * Returns nothing.
+ *
  * Original unambiguous-__d_path.diff in patches.apparmor.tar.bz2 inversed the
  * order of holding dcache_lock and vfsmount_lock . That patch was applied on
  * (at least) SUSE 11.1 and Ubuntu 8.10 and Ubuntu 9.04 kernels.
@@ -69,6 +74,12 @@ static inline void ccs_realpath_lock(void)
 	spin_lock(ccsecurity_exports.vfsmount_lock);
 	spin_lock(&dcache_lock);
 }
+
+/**
+ * ccs_realpath_unlock - Release locks for __d_path().
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_unlock(void)
 {
 	spin_unlock(&dcache_lock);
@@ -77,11 +88,22 @@ static inline void ccs_realpath_unlock(void)
 
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 
+/**
+ * ccs_realpath_lock - Take locks for __d_path().
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_lock(void)
 {
 	spin_lock(&dcache_lock);
 	spin_lock(ccsecurity_exports.vfsmount_lock);
 }
+
+/**
+ * ccs_realpath_unlock - Release locks for __d_path()).
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_unlock(void)
 {
 	spin_unlock(ccsecurity_exports.vfsmount_lock);
@@ -90,10 +112,21 @@ static inline void ccs_realpath_unlock(void)
 
 #else
 
+/**
+ * ccs_realpath_lock - Take locks for __d_path()).
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_lock(void)
 {
 	spin_lock(&dcache_lock);
 }
+
+/**
+ * ccs_realpath_unlock - Release locks for __d_path()).
+ *
+ * Returns nothing.
+ */
 static inline void ccs_realpath_unlock(void)
 {
 	spin_unlock(&dcache_lock);
@@ -101,6 +134,14 @@ static inline void ccs_realpath_unlock(void)
 
 #endif
 
+/**
+ * ccs_kern_path - Wrapper for kern_path().
+ *
+ * @pathname: Pathname to resolve. Maybe NULL.
+ * @path:     Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_kern_path(const char *pathname, int flags, struct path *path)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)

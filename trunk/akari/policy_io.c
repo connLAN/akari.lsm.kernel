@@ -18,7 +18,7 @@ static unsigned int ccs_profile_version;
 /* Profile table. Memory is allocated as needed. */
 static struct ccs_profile *ccs_profile_ptr[CCS_MAX_PROFILES];
 
-/* String table for functionality that takes 4 modes. */
+/* String table for operation mode. */
 const char * const ccs_mode[CCS_CONFIG_MAX_MODE] = {
 	[CCS_CONFIG_DISABLED]   = "disabled",
 	[CCS_CONFIG_LEARNING]   = "learning",
@@ -26,9 +26,10 @@ const char * const ccs_mode[CCS_CONFIG_MAX_MODE] = {
 	[CCS_CONFIG_ENFORCING]  = "enforcing"
 };
 
-/* String table for /proc/ccs/profile */
+/* String table for /proc/ccs/profile interface. */
 const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 				    + CCS_MAX_MAC_CATEGORY_INDEX] = {
+	/* CONFIG::file group */
 	[CCS_MAC_FILE_EXECUTE]    = "execute",
 	[CCS_MAC_FILE_OPEN]       = "open",
 	[CCS_MAC_FILE_CREATE]     = "create",
@@ -51,7 +52,9 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_FILE_MOUNT]      = "mount",
 	[CCS_MAC_FILE_UMOUNT]     = "unmount",
 	[CCS_MAC_FILE_PIVOT_ROOT] = "pivot_root",
+	/* CONFIG::misc group */
 	[CCS_MAC_ENVIRON] = "env",
+	/* CONFIG::network group */
 	[CCS_MAC_NETWORK_INET_STREAM_BIND]       = "inet_stream_bind",
 	[CCS_MAC_NETWORK_INET_STREAM_LISTEN]     = "inet_stream_listen",
 	[CCS_MAC_NETWORK_INET_STREAM_CONNECT]    = "inet_stream_connect",
@@ -73,7 +76,9 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_LISTEN]  = "unix_seqpacket_listen",
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_CONNECT] = "unix_seqpacket_connect",
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_ACCEPT]  = "unix_seqpacket_accept",
+	/* CONFIG::ipc group */
 	[CCS_MAC_SIGNAL] = "signal",
+	/* CONFIG::capability group */
 	[CCS_MAC_CAPABILITY_USE_ROUTE_SOCKET]  = "use_route",
 	[CCS_MAC_CAPABILITY_USE_PACKET_SOCKET] = "use_packet",
 	[CCS_MAC_CAPABILITY_SYS_REBOOT]        = "SYS_REBOOT",
@@ -84,6 +89,7 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_CAPABILITY_USE_KERNEL_MODULE] = "use_kernel_module",
 	[CCS_MAC_CAPABILITY_SYS_KEXEC_LOAD]    = "SYS_KEXEC_LOAD",
 	[CCS_MAC_CAPABILITY_SYS_PTRACE]        = "SYS_PTRACE",
+	/* CONFIG group */
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_FILE]       = "file",
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_NETWORK]    = "network",
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_MISC]       = "misc",
@@ -91,6 +97,7 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_CAPABILITY] = "capability",
 };
 
+/* String table for path operation. */
 const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_EXECUTE]    = "execute",
 	[CCS_TYPE_READ]       = "read",
@@ -104,6 +111,7 @@ const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_UMOUNT]     = "unmount",
 };
 
+/* String table for categories. */
 static const char * const ccs_category_keywords[CCS_MAX_MAC_CATEGORY_INDEX] = {
 	[CCS_MAC_CATEGORY_FILE]       = "file",
 	[CCS_MAC_CATEGORY_NETWORK]    = "network",
@@ -112,6 +120,7 @@ static const char * const ccs_category_keywords[CCS_MAX_MAC_CATEGORY_INDEX] = {
 	[CCS_MAC_CATEGORY_CAPABILITY] = "capability",
 };
 
+/* String table for conditions. */
 const char * const ccs_condition_keyword[CCS_MAX_CONDITION_KEYWORD] = {
 	[CCS_TASK_UID]             = "task.uid",
 	[CCS_TASK_EUID]            = "task.euid",
@@ -176,6 +185,7 @@ const char * const ccs_condition_keyword[CCS_MAX_CONDITION_KEYWORD] = {
 	[CCS_PATH2_PARENT_PERM]    = "path2.parent.perm",
 };
 
+/* String table for PREFERENCE keyword. */
 static const char * const ccs_pref_keywords[CCS_MAX_PREF] = {
 	[CCS_PREF_MAX_GRANT_LOG]      = "max_grant_log",
 	[CCS_PREF_MAX_REJECT_LOG]     = "max_reject_log",
@@ -190,15 +200,27 @@ static bool ccs_manage_by_non_root;
  * ccs_yesno - Return "yes" or "no".
  *
  * @value: Bool value.
+ *
+ * Returns "yes" if @value is not 0, "no" otherwise.
  */
 static const char *ccs_yesno(const unsigned int value)
 {
 	return value ? "yes" : "no";
 }
 
+/* Prototype fpr ccs_addprintf(). */
 static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
-     __attribute__ ((format(printf, 3, 4)));
+	__attribute__ ((format(printf, 3, 4)));
 
+/**
+ * ccs_addprintf - snprint()-like-strncat().
+ *
+ * @buffer: Buffer to write to. Must be '\0'-terminated.
+ * @len:    Size of @buffer.
+ * @fmt:    The printf()'s format string, followed by parameters.
+ *
+ * Returns nothing.
+ */
 static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
 {
 	va_list args;
@@ -211,7 +233,7 @@ static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
 /**
  * ccs_flush - Flush queued string to userspace's buffer.
  *
- * @head:   Pointer to "struct ccs_io_buffer".
+ * @head: Pointer to "struct ccs_io_buffer".
  *
  * Returns true if all data was flushed, false otherwise.
  */
@@ -260,6 +282,8 @@ static bool ccs_flush(struct ccs_io_buffer *head)
  * Note that @string has to be kept valid until @head is kfree()d.
  * This means that char[] allocated on stack memory cannot be passed to
  * this function. Use ccs_io_printf() for char[] allocated on stack memory.
+ *
+ * Returns nothing.
  */
 static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
 {
@@ -275,6 +299,8 @@ static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
  *
  * @head: Pointer to "struct ccs_io_buffer".
  * @fmt:  The printf()'s format string, followed by parameters.
+ *
+ * Returns nothing.
  */
 void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 {
@@ -295,11 +321,25 @@ void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 	ccs_set_string(head, head->read_buf + pos);
 }
 
+/**
+ * ccs_set_space - Put a space to "struct ccs_io_buffer" structure.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
 static void ccs_set_space(struct ccs_io_buffer *head)
 {
 	ccs_set_string(head, " ");
 }
 
+/**
+ * ccs_set_lf - Put a line feed to "struct ccs_io_buffer" structure.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
 static bool ccs_set_lf(struct ccs_io_buffer *head)
 {
 	ccs_set_string(head, "\n");
@@ -350,6 +390,8 @@ out:
 
 /**
  * ccs_check_profile - Check all profiles currently assigned to domains are defined.
+ *
+ * Returns nothing.
  */
 static void ccs_check_profile(void)
 {
@@ -396,6 +438,14 @@ struct ccs_profile *ccs_profile(const u8 profile)
 	return ptr;
 }
 
+/**
+ * ccs_find_yesno - Find values for specified keyword.
+ *
+ * @string: String to check.
+ * @find:   Name of keyword.
+ *
+ * Returns 1 if "@find=yes" was found, 0 if "@find=no" was found, -1 otherwise.
+ */
 static s8 ccs_find_yesno(const char *string, const char *find)
 {
 	const char *cp = strstr(string, find);
@@ -409,6 +459,15 @@ static s8 ccs_find_yesno(const char *string, const char *find)
 	return -1;
 }
 
+/**
+ * ccs_set_uint - Set value for specified preference.
+ *
+ * @i:      Pointer to "unsigned int".
+ * @string: String to check.
+ * @find:   Name of keyword.
+ *
+ * Returns nothing.
+ */
 static void ccs_set_uint(unsigned int *i, const char *string, const char *find)
 {
 	const char *cp = strstr(string, find);
@@ -416,6 +475,15 @@ static void ccs_set_uint(unsigned int *i, const char *string, const char *find)
 		sscanf(cp + strlen(find), "=%u", i);
 }
 
+/**
+ * ccs_set_mode - Set mode for specified profile.
+ *
+ * @name:    Name of functionality.
+ * @value:   Mode for @name.
+ * @profile: Pointer to "struct ccs_profile".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_set_mode(char *name, const char *value,
 			struct ccs_profile *profile)
 {
@@ -526,6 +594,16 @@ static int ccs_write_profile(struct ccs_io_buffer *head)
 	return ccs_set_mode(data, cp, profile);
 }
 
+/**
+ * ccs_print_config - Print mode for specified functionality.
+ *
+ * @head:   Pointer to "struct ccs_io_buffer".
+ * @config: Mode for that functionality.
+ *
+ * Returns nothing.
+ *
+ * Caller prints functionality's name.
+ */
 static void ccs_print_config(struct ccs_io_buffer *head, const u8 config)
 {
 	ccs_io_printf(head, "={ mode=%s grant_log=%s reject_log=%s }\n",
@@ -892,6 +970,15 @@ static int ccs_write_task(struct ccs_acl_param *param)
 	return error;
 }
 
+/**
+ * ccs_write_domain2 - Write domain policy.
+ *
+ * @data:      Policy to be interpreted.
+ * @domain:    Pointer to "struct ccs_domain_info".
+ * @is_delete: True if it is a delete request.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_write_domain2(char *data, struct ccs_domain_info *domain,
 			     const bool is_delete)
 {
@@ -921,6 +1008,7 @@ static int ccs_write_domain2(char *data, struct ccs_domain_info *domain,
 	return -EINVAL;
 }
 
+/* String table for domain flags. */
 const char * const ccs_dif[CCS_MAX_DOMAIN_INFO_FLAGS] = {
 	[CCS_DIF_QUOTA_WARNED]      = "quota_exceeded\n",
 	[CCS_DIF_TRANSITION_FAILED] = "transition_failed\n",
@@ -989,6 +1077,8 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
  *
  * @head: Pointer to "struct ccs_io_buffer".
  * @ptr:  Pointer to "struct ccs_name_union".
+ *
+ * Returns nothing.
  */
 static void ccs_print_name_union(struct ccs_io_buffer *head,
 				 const struct ccs_name_union *ptr)
@@ -1013,6 +1103,8 @@ static void ccs_print_name_union(struct ccs_io_buffer *head,
  *
  * @head: Pointer to "struct ccs_io_buffer".
  * @ptr:  Pointer to "struct ccs_number_union".
+ *
+ * Returns nothing.
  */
 static void ccs_print_number_union(struct ccs_io_buffer *head,
 				   const struct ccs_number_union *ptr)
@@ -1209,6 +1301,13 @@ static u8 ccs_fns(const u8 perm, u8 bit)
 	return bit;
 }
 
+/**
+ * ccs_set_group - Print "acl_group " header keyword.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
 static void ccs_set_group(struct ccs_io_buffer *head)
 {
 	if (head->type == CCS_EXCEPTIONPOLICY)
@@ -1629,6 +1728,7 @@ static void ccs_read_pid(struct ccs_io_buffer *head)
 	}
 }
 
+/* String table for domain transition control keywords. */
 static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
 	[CCS_TRANSITION_CONTROL_NO_INITIALIZE] = "no_initialize_domain ",
 	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
@@ -1636,6 +1736,7 @@ static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
 	[CCS_TRANSITION_CONTROL_KEEP]          = "keep_domain ",
 };
 
+/* String table for grouping keywords. */
 static const char * const ccs_group_name[CCS_MAX_GROUP] = {
 	[CCS_PATH_GROUP]    = "path_group ",
 	[CCS_NUMBER_GROUP]  = "number_group ",
@@ -1840,8 +1941,9 @@ static void ccs_read_exception(struct ccs_io_buffer *head)
 	head->r.eof = true;
 }
 
-/* Wait queue for ccs_query_list. */
+/* Wait queue for kernel -> userspace notification. */
 static DECLARE_WAIT_QUEUE_HEAD(ccs_query_wait);
+/* Wait queue for userspace -> kernel notification. */
 static DECLARE_WAIT_QUEUE_HEAD(ccs_answer_wait);
 
 /* Lock for manipulating ccs_query_list. */
@@ -1864,6 +1966,13 @@ static LIST_HEAD(ccs_query_list);
 /* Number of "struct file" referring /proc/ccs/query interface. */
 static atomic_t ccs_query_observers = ATOMIC_INIT(0);
 
+/**
+ * ccs_truncate - Truncate a line.
+ *
+ * @str: String to truncate.
+ *
+ * Returns length of truncated @str.
+ */
 static int ccs_truncate(char *str)
 {
 	char *start = str;
@@ -1873,6 +1982,13 @@ static int ccs_truncate(char *str)
 	return strlen(start) + 1;
 }
 
+/**
+ * ccs_add_entry - Add an ACL to current thread's domain. Used by learning mode.
+ *
+ * @header: Lines containing ACL.
+ *
+ * Returns nothing.
+ */
 static void ccs_add_entry(char *header)
 {
 	char *buffer;
@@ -2079,6 +2195,8 @@ static int ccs_poll_query(struct file *file, poll_table *wait)
  * ccs_read_query - Read access requests which violated policy in enforcing mode.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  */
 static void ccs_read_query(struct ccs_io_buffer *head)
 {
@@ -2176,6 +2294,8 @@ static int ccs_write_answer(struct ccs_io_buffer *head)
  * ccs_read_version: Get version.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  */
 static void ccs_read_version(struct ccs_io_buffer *head)
 {
@@ -2302,6 +2422,8 @@ int ccs_open_control(const u8 type, struct file *file)
  *
  * @file: Pointer to "struct file".
  * @wait: Pointer to "poll_table".
+ *
+ * Returns return value of poll().
  *
  * Waits for read readiness.
  * /proc/ccs/query is handled by /usr/sbin/ccs-queryd and
@@ -2459,6 +2581,11 @@ int ccs_close_control(struct file *file)
 	return 0;
 }
 
+/**
+ * ccs_policy_io_init - Register hooks for policy I/O.
+ *
+ * Returns nothing.
+ */
 void __init ccs_policy_io_init(void)
 {
 	ccsecurity_ops.check_profile = ccs_check_profile;

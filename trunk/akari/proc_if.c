@@ -18,6 +18,14 @@
 #include <linux/version.h>
 #include "internal.h"
 
+/**
+ * ccs_check_task_acl - Check permission for task operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
 static bool ccs_check_task_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr)
 {
@@ -34,6 +42,9 @@ static bool ccs_check_task_acl(struct ccs_request_info *r,
  * @ppos:  Unused.
  *
  * Returns @count on success, negative value otherwise.
+ *
+ * If domain transition was permitted but the domain transition failed, this
+ * function returns error rather than terminating current thread with SIGKILL.
  */
 static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 			      size_t count, loff_t *ppos)
@@ -112,9 +123,18 @@ struct file_operations ccs_self_operations = {
 	.read  = ccs_read_self,
 };
 
+/* Timestamp counter for last updated. */
 static u32 ccs_stat_updated[CCS_MAX_POLICY_STAT];
+/* Counter for number of updates. */
 static u32 ccs_stat_modified[CCS_MAX_POLICY_STAT];
 
+/**
+ * ccs_update_stat - Update statistic counters.
+ *
+ * @index: Index for policy type.
+ *
+ * Returns nothing.
+ */
 void ccs_update_stat(const u8 index)
 {
 	struct timeval tv;
@@ -196,12 +216,13 @@ struct file_operations ccs_stat_operations = {
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 4, 23)
 #if !defined(RHEL_VERSION) || RHEL_VERSION != 3 || !defined(RHEL_UPDATE) || RHEL_UPDATE != 9
+
 /**
  * PDE - Get "struct proc_dir_entry".
  *
  * @inode: Pointer to "struct inode".
  *
- * Returns pointer to "struct proc_dir_entry"
+ * Returns pointer to "struct proc_dir_entry".
  *
  * This is for compatibility with older kernels.
  */
@@ -209,6 +230,7 @@ static inline struct proc_dir_entry *PDE(const struct inode *inode)
 {
 	return (struct proc_dir_entry *) inode->u.generic_ip;
 }
+
 #endif
 #endif
 
@@ -412,6 +434,11 @@ static void __init ccs_proc_init(void)
 	}
 }
 
+/**
+ * ccs_init_module - Initialize this module.
+ *
+ * Returns 0 on success, negative valkue otherwise.
+ */
 static int __init ccs_init_module(void)
 {
 	int i;

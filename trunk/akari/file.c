@@ -1590,7 +1590,9 @@ static int ccs_old_chroot_permission(struct nameidata *nd)
 #endif
 
 /**
- * ccs_file_init - Initialize function.
+ * ccs_file_init - Register file related hooks.
+ *
+ * Returns nothing.
  */
 void __init ccs_file_init(void)
 {

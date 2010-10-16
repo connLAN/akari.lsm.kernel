@@ -18,8 +18,9 @@ DEFINE_MUTEX(ccs_policy_lock);
 /* Has /sbin/init started? */
 bool ccs_policy_loaded;
 
-/* Index table for searching parent category. */
+/* Mapping table from "enum ccs_mac_index" to "enum ccs_mac_category_index". */
 const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
+	/* CONFIG::file group */
 	[CCS_MAC_FILE_EXECUTE]    = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_OPEN]       = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_CREATE]     = CCS_MAC_CATEGORY_FILE,
@@ -42,7 +43,9 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 	[CCS_MAC_FILE_MOUNT]      = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_UMOUNT]     = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_PIVOT_ROOT] = CCS_MAC_CATEGORY_FILE,
+	/* CONFIG::misc group */
 	[CCS_MAC_ENVIRON]         = CCS_MAC_CATEGORY_MISC,
+	/* CONFIG::network group */
 	[CCS_MAC_NETWORK_INET_STREAM_BIND]       = CCS_MAC_CATEGORY_NETWORK,
 	[CCS_MAC_NETWORK_INET_STREAM_LISTEN]     = CCS_MAC_CATEGORY_NETWORK,
 	[CCS_MAC_NETWORK_INET_STREAM_CONNECT]    = CCS_MAC_CATEGORY_NETWORK,
@@ -64,7 +67,9 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_LISTEN]  = CCS_MAC_CATEGORY_NETWORK,
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_CONNECT] = CCS_MAC_CATEGORY_NETWORK,
 	[CCS_MAC_NETWORK_UNIX_SEQPACKET_ACCEPT]  = CCS_MAC_CATEGORY_NETWORK,
+	/* CONFIG::ipc group */
 	[CCS_MAC_SIGNAL]          = CCS_MAC_CATEGORY_IPC,
+	/* CONFIG::capability group */
 	[CCS_MAC_CAPABILITY_USE_ROUTE_SOCKET]  = CCS_MAC_CATEGORY_CAPABILITY,
 	[CCS_MAC_CAPABILITY_USE_PACKET_SOCKET] = CCS_MAC_CATEGORY_CAPABILITY,
 	[CCS_MAC_CAPABILITY_SYS_REBOOT]        = CCS_MAC_CATEGORY_CAPABILITY,
@@ -79,6 +84,16 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 
 /* Utility functions. */
 
+/**
+ * ccs_permstr - Find permission keywords.
+ *
+ * @string: String representation for permissions in foo/bar/buz format.
+ * @keyword: Keyword to find from @string/
+ *
+ * Returns ture if @keyword was found in @string , false otherwise.
+ *
+ * This function assumes that strncmp(w1, w2, strlen(w1)) != 0 if w1 != w2.
+ */
 bool ccs_permstr(const char *string, const char *keyword)
 {
 	const char *cp = strstr(string, keyword);
@@ -87,6 +102,16 @@ bool ccs_permstr(const char *string, const char *keyword)
 	return false;
 }
 
+/**
+ * ccs_read_token - Read a word from a line.
+ *
+ * @param: Pointer to "struct ccs_acl_param".
+ *
+ * Returns a word on success, "" otherwise.
+ *
+ * To allow the caller to skip NULL check, this function returns "" rather than
+ * NULL if there is no more words to read.
+ */
 char *ccs_read_token(struct ccs_acl_param *param)
 {
 	char *pos = param->data;
@@ -99,6 +124,13 @@ char *ccs_read_token(struct ccs_acl_param *param)
 	return pos;
 }
 
+/**
+ * ccs_get_domainname - Read a domainname from a line.
+ *
+ * @param: Pointer to "struct ccs_acl_param".
+ *
+ * Returns a domainname on success, NULL otherwise.
+ */
 const struct ccs_path_info *ccs_get_domainname(struct ccs_acl_param *param)
 {
 	char *start = param->data;
@@ -388,7 +420,7 @@ bool ccs_tokenize(char *buffer, char *w[], size_t size)
 /**
  * ccs_correct_word2 - Validate a string.
  *
- * @string: The string to check. Maybe non-'\0'-terminated.
+ * @string: The byte sequence to check. Not '\0'-terminated.
  * @len:    Length of @string.
  *
  * Check whether the given string follows the naming rules.
@@ -915,12 +947,17 @@ const char *ccs_get_exe(void)
 }
 
 /**
- * ccs_get_config - Get config.
+ * ccs_get_config - Get config for specified profile's specified functionality.
  *
  * @profile: Profile number.
  * @index:   Index number of functionality.
  *
  * Returns config.
+ *
+ * First, check for CONFIG::category::functionality .
+ * If CONFIG::category::functionality is set to use default, then check
+ * CONFIG::category . If CONFIG::category is set to use default, then use
+ * CONFIG . CONFIG cannot be set to use default.
  */
 u8 ccs_get_config(const u8 profile, const u8 index)
 {
@@ -941,10 +978,15 @@ u8 ccs_get_config(const u8 profile, const u8 index)
 /**
  * ccs_init_request_info - Initialize "struct ccs_request_info" members.
  *
- * @r:      Pointer to "struct ccs_request_info" to initialize.
- * @index:  Index number of functionality.
+ * @r:     Pointer to "struct ccs_request_info" to initialize.
+ * @index: Index number of functionality.
  *
  * Returns mode.
+ *
+ * "task auto_domain_transition" keyword is evaluated before returning mode for
+ * @index. If "task auto_domain_transition" keyword was specified and
+ * transition to that domain failed, the current thread will be killed by
+ * SIGKILL.
  */
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 {

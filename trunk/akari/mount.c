@@ -28,26 +28,19 @@
 #define MS_SHARED	(1<<20)	/* change to shared */
 #endif
 
-/* Keywords for mount restrictions. */
-
+/* Index numbers for special mount operations. */
 enum ccs_special_mount {
-	/* Allow to call 'mount --bind /source_dir /dest_dir' */
-	CCS_MOUNT_BIND,
-	/* Allow to call 'mount --move /old_dir    /new_dir ' */
-	CCS_MOUNT_MOVE,
-	/* Allow to call 'mount -o remount /dir             ' */
-	CCS_MOUNT_REMOUNT,
-	/* Allow to call 'mount --make-unbindable /dir'       */
-	CCS_MOUNT_MAKE_UNBINDABLE,
-	/* Allow to call 'mount --make-private /dir'          */
-	CCS_MOUNT_MAKE_PRIVATE,
-	/* Allow to call 'mount --make-slave /dir'            */
-	CCS_MOUNT_MAKE_SLAVE,
-	/* Allow to call 'mount --make-shared /dir'           */
-	CCS_MOUNT_MAKE_SHARED,
+	CCS_MOUNT_BIND,            /* mount --bind /source /dest   */
+	CCS_MOUNT_MOVE,            /* mount --move /old /new       */
+	CCS_MOUNT_REMOUNT,         /* mount -o remount /dir        */
+	CCS_MOUNT_MAKE_UNBINDABLE, /* mount --make-unbindable /dir */
+	CCS_MOUNT_MAKE_PRIVATE,    /* mount --make-private /dir    */
+	CCS_MOUNT_MAKE_SLAVE,      /* mount --make-slave /dir      */
+	CCS_MOUNT_MAKE_SHARED,     /* mount --make-shared /dir     */
 	CCS_MAX_REMOUNT_PATTERNS,
 };
 
+/* String table for special mount operations. */
 static const char * const ccs_mounts[CCS_MAX_REMOUNT_PATTERNS] = {
 	[CCS_MOUNT_BIND]            = "--bind",
 	[CCS_MOUNT_MOVE]            = "--move",
@@ -94,13 +87,33 @@ static bool ccs_check_mount_acl(struct ccs_request_info *r,
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
+/**
+ * module_put - Put a reference on module.
+ *
+ * @module: Pointer to "struct module". Maybe NULL.
+ *
+ * Returns nothing.
+ *
+ * This is for compatibility with older kernels.
+ */
 static inline void module_put(struct module *module)
 {
 	if (module)
 		__MOD_DEC_USE_COUNT(module);
 }
+
 #endif
 
+/**
+ * ccs_put_filesystem - Wrapper for put_filesystem().
+ *
+ * @fstype: Pointer to "struct file_system_type".
+ *
+ * Returns nothing.
+ *
+ * Since put_filesystem() is not exported, I embed put_filesystem() here.
+ */
 static inline void ccs_put_filesystem(struct file_system_type *fstype)
 {
 	module_put(fstype->owner);
@@ -279,6 +292,17 @@ static int __ccs_mount_permission(char *dev_name, struct path *path,
 }
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+/**
+ * ccs_old_mount_permission - Check permission for mount() operation.
+ *
+ * @dev_name:  Name of device file.
+ * @nd:        Pointer to "struct nameidata".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
 				    const char *type, unsigned long flags,
 				    void *data_page)
@@ -288,6 +312,14 @@ static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
 }
 #endif
 
+/**
+ * ccs_mount_init - Register hooks for mount() operation.
+ *
+ * Returns nothing.
+ *
+ * Since checking permission for mount() operation is complicated compared to
+ * other file related operations, I split code for mount() operation.
+ */
 void __init ccs_mount_init(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)

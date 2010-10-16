@@ -897,16 +897,43 @@ static int __ccs_socket_post_accept_permission(struct socket *sock,
 #if !defined(RHEL_MAJOR) || RHEL_MAJOR != 5
 #if !defined(AX_MAJOR) || AX_MAJOR != 3 || !defined(AX_MINOR) || AX_MINOR < 2
 
+/**
+ * ip_hdr - Get "struct iphdr".
+ *
+ * @skb: Pointer to "struct sk_buff".
+ *
+ * Returns pointer to "struct iphdr".
+ *
+ * This is for compatibility with older kernels.
+ */
 static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
 {
 	return skb->nh.iph;
 }
 
+/**
+ * udp_hdr - Get "struct udphdr".
+ *
+ * @skb: Pointer to "struct sk_buff".
+ *
+ * Returns pointer to "struct udphdr".
+ *
+ * This is for compatibility with older kernels.
+ */
 static inline struct udphdr *udp_hdr(const struct sk_buff *skb)
 {
 	return skb->h.uh;
 }
 
+/**
+ * ipv6_hdr - Get "struct ipv6hdr".
+ *
+ * @skb: Pointer to "struct sk_buff".
+ *
+ * Returns pointer to "struct ipv6hdr".
+ *
+ * This is for compatibility with older kernels.
+ */
 static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
 {
 	return skb->nh.ipv6h;
@@ -991,7 +1018,9 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 }
 
 /**
- * ccs_network_init - Initialize function.
+ * ccs_network_init - Register network related hooks.
+ *
+ * Returns nothing.
  */
 void __init ccs_network_init(void)
 {

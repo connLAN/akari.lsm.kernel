@@ -139,7 +139,7 @@ static int ccs_signal_acl(const int pid, const int sig)
  * ccs_signal_acl0 - Permission check for signal().
  *
  * @tgid: Unused.
- * @pid:  PID
+ * @pid:  Target's PID.
  * @sig:  Signal number.
  *
  * Returns 0 on success, negative value otherwise.
@@ -192,6 +192,13 @@ static int ccs_write_signal(struct ccs_acl_param *param)
 	return error;
 }
 
+/**
+ * ccs_write_ipc - Update ipc related list.
+ *
+ * @param: Pointer to "struct ccs_acl_param".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 int ccs_write_ipc(struct ccs_acl_param *param)
 {
 	if (ccs_str_starts(&param->data, "signal "))
@@ -199,6 +206,11 @@ int ccs_write_ipc(struct ccs_acl_param *param)
 	return -EINVAL;
 }
 
+/**
+ * ccs_file_init - Register ipc related hooks.
+ *
+ * Returns nothing.
+ */
 void __init ccs_signal_init(void)
 {
 	ccsecurity_ops.kill_permission = ccs_signal_acl;

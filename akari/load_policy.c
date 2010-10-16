@@ -20,7 +20,7 @@
 #include <linux/kmod.h>
 #define __KERNEL_SYSCALLS__
 #include <linux/unistd.h>
-#define ccs_lookup_flags  (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
+#define ccs_lookup_flags (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
 #else
 #include <linux/fs.h>
 #include <linux/namei.h>

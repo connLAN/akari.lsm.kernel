@@ -73,7 +73,7 @@ static void ccs_add_security(struct ccs_security *ptr, const bool is_cred)
 /**
  * ccs_clear_execve - Release memory used by do_execve().
  *
- * @ret: 0 if do_execve() succeeded, negative value otherwise.
+ * @ret:      0 if do_execve() succeeded, negative value otherwise.
  * @security: Pointer to "struct ccs_security".
  *
  * Returns nothing.
@@ -162,7 +162,7 @@ static int ccs_alloc_cred_security(const struct cred *cred, gfp_t gfp)
  * ccs_cred_alloc_blank - Allocate memory for new credentials.
  *
  * @new: Pointer to "struct cred".
- * @gfp:  Memory allocation flags.
+ * @gfp: Memory allocation flags.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -501,6 +501,16 @@ static int ccs_inode_permission(struct inode *inode, int mask,
 #if defined(CONFIG_SECURITY_PATH)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+
+/**
+ * ccs_path_chown - Check permission for chown()/chgrp().
+ *
+ * @path:  Pointer to "struct path".
+ * @user:  User ID.
+ * @group: Group ID.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
 {
 	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
@@ -509,6 +519,15 @@ static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
 	return original_security_ops.path_chown(path, user, group);
 }
 
+/**
+ * ccs_path_chmod - Check permission for chmod().
+ *
+ * @dentry: Pointer to "struct dentry".
+ * @vfsmnt: Pointer to "struct vfsmount".
+ * @mode:   Mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
 			  mode_t mode)
 {
@@ -518,6 +537,13 @@ static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
 	return original_security_ops.path_chmod(dentry, vfsmnt, mode);
 }
 
+/**
+ * ccs_path_chroot - Check permission for chroot().
+ *
+ * @path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_chroot(struct path *path)
 {
 	int rc = ccs_chroot_permission(path);
@@ -525,9 +551,18 @@ static int ccs_path_chroot(struct path *path)
 		return rc;
 	return original_security_ops.path_chroot(path);
 }
+
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+
+/**
+ * ccs_path_truncate - Check permission for truncate().
+ *
+ * @path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_truncate(struct path *path)
 {
 	int rc = ccs_truncate_permission(path->dentry, path->mnt);
@@ -535,7 +570,18 @@ static int ccs_path_truncate(struct path *path)
 		return rc;
 	return original_security_ops.path_truncate(path);
 }
+
 #else
+
+/**
+ * ccs_path_truncate - Check permission for truncate().
+ *
+ * @path:       Pointer to "struct path".
+ * @length:     New length.
+ * @time_attrs: New time attributes.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_truncate(struct path *path, loff_t length,
 			     unsigned int time_attrs)
 {
@@ -544,11 +590,22 @@ static int ccs_path_truncate(struct path *path, loff_t length,
 		return rc;
 	return original_security_ops.path_truncate(path, length, time_attrs);
 }
+
 #endif
 
 #endif
 
 #ifdef CCS_INODE_HOOK_HAS_MNT
+
+/**
+ * ccs_inode_setattr - Check permission for chown()/chgrp()/chmod()/truncate().
+ *
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @iattr:  Pointer to "struct iattr".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
 			     struct iattr *attr)
 {
@@ -569,7 +626,17 @@ static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
 		return rc;
 	return original_security_ops.inode_setattr(dentry, mnt, attr);
 }
+
 #else
+
+/**
+ * ccs_inode_setattr - Check permission for chown()/chgrp()/chmod()/truncate().
+ *
+ * @dentry: Pointer to "struct dentry".
+ * @iattr:  Pointer to "struct iattr".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	int rc = 0;
@@ -589,9 +656,21 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 		return rc;
 	return original_security_ops.inode_setattr(dentry, attr);
 }
+
 #endif
 
 #if defined(CONFIG_SECURITY_PATH)
+
+/**
+ * ccs_path_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 			  unsigned int dev)
 {
@@ -602,6 +681,15 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 	return original_security_ops.path_mknod(dir, dentry, mode, dev);
 }
 
+/**
+ * ccs_path_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 {
 	int rc = ccs_mkdir_permission(dir->dentry->d_inode, dentry, dir->mnt,
@@ -611,6 +699,14 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 	return original_security_ops.path_mkdir(dir, dentry, mode);
 }
 
+/**
+ * ccs_path_rmdir - Check permission for rmdir().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
 {
 	int rc = ccs_rmdir_permission(dir->dentry->d_inode, dentry, dir->mnt);
@@ -619,6 +715,14 @@ static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
 	return original_security_ops.path_rmdir(dir, dentry);
 }
 
+/**
+ * ccs_path_unlink - Check permission for unlink().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 {
 	int rc = ccs_unlink_permission(dir->dentry->d_inode, dentry, dir->mnt);
@@ -627,6 +731,15 @@ static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 	return original_security_ops.path_unlink(dir, dentry);
 }
 
+/**
+ * ccs_path_symlink - Check permission for symlink().
+ *
+ * @dir:      Pointer to "struct path".
+ * @dentry:   Pointer to "struct dentry".
+ * @old_name: Content of symbolic link.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 			    const char *old_name)
 {
@@ -637,6 +750,16 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 	return original_security_ops.path_symlink(dir, dentry, old_name);
 }
 
+/**
+ * ccs_path_rename - Check permission for rename().
+ *
+ * @old_dir:    Pointer to "struct path".
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dir:    Pointer to "struct path".
+ * @new_dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 			   struct path *new_dir, struct dentry *new_dentry)
 {
@@ -649,6 +772,15 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 						 new_dentry);
 }
 
+/**
+ * ccs_path_link - Check permission for link().
+ *
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dir:    Pointer to "struct path".
+ * @new_dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 			 struct dentry *new_dentry)
 {
@@ -659,7 +791,20 @@ static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 	return original_security_ops.path_link(old_dentry, new_dir,
 					       new_dentry);
 }
+
 #elif defined(CCS_INODE_HOOK_HAS_MNT)
+
+/**
+ * ccs_inode_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt, int mode, dev_t dev)
 {
@@ -668,6 +813,17 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_mknod(dir, dentry, mnt, mode, dev);
 }
+
+/**
+ * ccs_inode_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt, int mode)
 {
@@ -676,6 +832,16 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_mkdir(dir, dentry, mnt, mode);
 }
+
+/**
+ * ccs_inode_rmdir - Check permission for rmdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt)
 {
@@ -684,6 +850,16 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_rmdir(dir, dentry, mnt);
 }
+
+/**
+ * ccs_inode_unlink - Check permission for unlink().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
 			    struct vfsmount *mnt)
 {
@@ -693,6 +869,16 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
 	return original_security_ops.inode_unlink(dir, dentry, mnt);
 }
 
+/**
+ * ccs_inode_symlink - Check permission for symlink().
+ *
+ * @dir:      Pointer to "struct inode".
+ * @dentry:   Pointer to "struct dentry".
+ * @mnt:      Pointer to "struct vfsmount". Maybe NULL.
+ * @old_name: Content of symbolic link.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 			     struct vfsmount *mnt, const char *old_name)
 {
@@ -702,6 +888,18 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	return original_security_ops.inode_symlink(dir, dentry, mnt, old_name);
 }
 
+/**
+ * ccs_inode_rename - Check permission for rename().
+ *
+ * @old_dir:    Pointer to "struct inode".
+ * @old_dentry: Pointer to "struct dentry".
+ * @old_mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @new_dir:    Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ * @new_mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct vfsmount *old_mnt, struct inode *new_dir,
 			    struct dentry *new_dentry,
@@ -716,6 +914,17 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 						  new_mnt);
 }
 
+/**
+ * ccs_inode_link - Check permission for link().
+ *
+ * @old_dentry: Pointer to "struct dentry".
+ * @old_mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @dir:        Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ * @new_mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
 			  struct inode *dir, struct dentry *new_dentry,
 			  struct vfsmount *new_mnt)
@@ -727,6 +936,16 @@ static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
 						new_dentry, new_mnt);
 }
 
+/**
+ * ccs_inode_create - Check permission for creat().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 			    struct vfsmount *mnt, int mode)
 {
@@ -735,7 +954,19 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_create(dir, dentry, mnt, mode);
 }
+
 #else
+
+/**
+ * ccs_inode_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
 			   dev_t dev)
 {
@@ -744,6 +975,16 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
 		return rc;
 	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
 }
+
+/**
+ * ccs_inode_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
 	int rc = ccs_mkdir_permission(dir, dentry, NULL, mode);
@@ -751,6 +992,15 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 		return rc;
 	return original_security_ops.inode_mkdir(dir, dentry, mode);
 }
+
+/**
+ * ccs_inode_rmdir - Check permission for rmdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
 {
 	int rc = ccs_rmdir_permission(dir, dentry, NULL);
@@ -758,6 +1008,15 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
 		return rc;
 	return original_security_ops.inode_rmdir(dir, dentry);
 }
+
+/**
+ * ccs_inode_unlink - Check permission for unlink().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
 	int rc = ccs_unlink_permission(dir, dentry, NULL);
@@ -766,6 +1025,15 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 	return original_security_ops.inode_unlink(dir, dentry);
 }
 
+/**
+ * ccs_inode_symlink - Check permission for symlink().
+ *
+ * @dir:      Pointer to "struct inode".
+ * @dentry:   Pointer to "struct dentry".
+ * @old_name: Content of symbolic link.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 			     const char *old_name)
 {
@@ -775,6 +1043,16 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	return original_security_ops.inode_symlink(dir, dentry, old_name);
 }
 
+/**
+ * ccs_inode_rename - Check permission for rename().
+ *
+ * @old_dir:    Pointer to "struct inode".
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dir:    Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct inode *new_dir, struct dentry *new_dentry)
 {
@@ -786,6 +1064,15 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 						  new_dentry);
 }
 
+/**
+ * ccs_inode_link - Check permission for link().
+ *
+ * @old_dentry: Pointer to "struct dentry".
+ * @dir:        Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 			  struct dentry *new_dentry)
 {
@@ -795,6 +1082,15 @@ static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 	return original_security_ops.inode_link(old_dentry, dir, new_dentry);
 }
 
+/**
+ * ccs_inode_create - Check permission for creat().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 			    int mode)
 {
@@ -803,65 +1099,393 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 		return rc;
 	return original_security_ops.inode_create(dir, dentry, mode);
 }
+
 #endif
 
 #ifdef CONFIG_SECURITY_NETWORK
+
+/*
+ * Updated to point to &socket_file_ops by first security_socket_accept() call.
+ */
+static const struct file_operations *ccs_socket_file_ops;
+
+/* Structure for remembering an accept()ed socket's status. */
+struct ccs_socket_tag {
+	struct list_head list;
+	struct socket *socket;
+	int status;
+	struct rcu_head rcu;
+};
+
+/* List for managing accept()ed sockets. */
+static LIST_HEAD(ccs_accepted_socket_list);
+/* Lock for protecting ccs_accepted_socket_list . */
+static DEFINE_SPINLOCK(ccs_accepted_socket_list_lock);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
+
+/**
+ * ccs_socket_rcu_free - RCU callback for releasing "struct ccs_socket_tag".
+ *
+ * @rcu: Pointer to "struct rcu_head".
+ *
+ * Returns nothing.
+ */
+static void ccs_socket_rcu_free(struct rcu_head *rcu)
+{
+	struct ccs_socket_tag *ptr = container_of(rcu, typeof(*ptr), rcu);
+	kfree(ptr);
+}
+
+#else
+
+/**
+ * ccs_socket_rcu_free - RCU callback for releasing "struct ccs_socket_tag".
+ *
+ * @arg: Pointer to "void".
+ *
+ * Returns nothing.
+ */
+static void ccs_socket_rcu_free(void *arg)
+{
+	struct ccs_socket_tag *ptr = arg;
+	kfree(ptr);
+}
+
+#endif
+
+/**
+ * ccs_update_socket_tag - Update tag associated with accept()ed sockets.
+ *
+ * @sock:   Pointer to "struct socket".
+ * @status: New status.
+ *
+ * Returns nothing.
+ *
+ * If @status == 0, memory for that socket will be released after RCU grace
+ * period.
+ */
+static void ccs_update_socket_tag(struct socket *sock, int status)
+{
+	struct ccs_socket_tag *ptr;
+	/*
+	 * Protect whole section because multiple threads may call this
+	 * function with same "sock" via ccs_validate_socket().
+	 */
+	spin_lock(&ccs_accepted_socket_list_lock);
+	rcu_read_lock();
+	list_for_each_entry_rcu(ptr, &ccs_accepted_socket_list, list) {
+		if (ptr->socket != sock)
+			continue;
+		ptr->status = status;
+		if (status)
+			break;
+		list_del_rcu(&ptr->list);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
+		call_rcu(&ptr->rcu, ccs_socket_rcu_free);
+#else
+		call_rcu(&ptr->rcu, ccs_socket_rcu_free, ptr);
+#endif
+		break;
+	}
+	rcu_read_unlock();
+	spin_unlock(&ccs_accepted_socket_list_lock);
+}
+
+/**
+ * ccs_validate_socket - Check post accept() permission if needed.
+ *
+ * @sock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_validate_socket(struct socket *sock)
+{
+	struct ccs_socket_tag *ptr;
+	int ret = 0;
+	rcu_read_lock();
+	list_for_each_entry_rcu(ptr, &ccs_accepted_socket_list, list) {
+		if (ptr->socket != sock)
+			continue;
+		ret = ptr->status;
+		break;
+	}
+	rcu_read_unlock();
+	if (ret <= 0)
+		/*
+		 * This socket is not an accept()ed socket or this socket is
+		 * an accept()ed socket and post accept() permission is done.
+		 */
+		return ret;
+	/*
+	 * Check post accept() permission now.
+	 *
+	 * Strictly speaking, we need to pass both listen()ing socket and
+	 * accept()ed socket to __ccs_socket_post_accept_permission().
+	 * But since socket's family and type are same for both sockets,
+	 * passing the accept()ed socket in place for the listen()ing socket
+	 * will work.
+	 */
+	ret = ccs_socket_post_accept_permission(sock, sock);
+	/*
+	 * If permission was granted, we forget that this is an accept()ed
+	 * socket. Otherwise, we remember that this socket needs to return
+	 * error for subsequent socketcalls.
+	 */
+	ccs_update_socket_tag(sock, ret);
+	return ret;
+}
+
+#include <net/sock.h>
+
+/**
+ * ccs_socket_accept - Check permission for accept().
+ *
+ * @sock:    Pointer to "struct socket".
+ * @newsock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * This hook is used for setting up environment for doing post accept()
+ * permission check. Although it seems to me that we can do post accept()
+ * check before returning to userspace by replacing sock->ops with a wrapper,
+ * we check post accept() permission upon next socket syscalls rather than
+ * between sock->ops->accept() and returning to userspace.
+ */
+static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
+{
+	struct ccs_socket_tag *ptr;
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	rc = original_security_ops.socket_accept(sock, newsock);
+	if (rc)
+		return rc;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 17)
+	/*
+	 * Subsequent LSM hooks will receive "newsock". Therefore, I mark
+	 * "newsock" as "an accept()ed socket but post accept() permission
+	 * check is not done yet" by allocating memory using "newsock" as a
+	 * search key.
+	 */
+	ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
+	if (!ptr)
+		return -ENOMEM;
+	ptr->socket = newsock;
+	ptr->status = 1; /* Check post accept() permission later. */
+	spin_lock(&ccs_accepted_socket_list_lock);
+	list_add_tail_rcu(&ptr->list, &ccs_accepted_socket_list);
+	spin_unlock(&ccs_accepted_socket_list_lock);
+	/*
+	 * Remember address of &socket_file_ops for security_file_free().
+	 *
+	 * Since sock->file->f_op was set to &socket_file_ops by
+	 * sock_alloc_file(), we can release memory associated with "newsock"
+	 * in security_file_free() hook (even if sock->ops->accept() failed).
+	 */
+	if (!ccs_socket_file_ops)
+		ccs_socket_file_ops = sock->file->f_op;
+#endif
+	return 0;
+}
+
+/**
+ * ccs_socket_listen - Check permission for listen().
+ *
+ * @sock:    Pointer to "struct socket".
+ * @backlog: Backlog parameter.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_socket_listen(struct socket *sock, int backlog)
 {
-	int rc = ccs_socket_listen_permission(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	rc = ccs_socket_listen_permission(sock);
 	if (rc)
 		return rc;
 	return original_security_ops.socket_listen(sock, backlog);
 }
 
+/**
+ * ccs_socket_connect - Check permission for connect().
+ *
+ * @sock:     Pointer to "struct socket".
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_socket_connect(struct socket *sock, struct sockaddr *addr,
 			      int addr_len)
 {
-	int rc = ccs_socket_connect_permission(sock, addr, addr_len);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	rc = ccs_socket_connect_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
 	return original_security_ops.socket_connect(sock, addr, addr_len);
 }
 
+/**
+ * ccs_socket_bind - Check permission for bind().
+ *
+ * @sock:     Pointer to "struct socket".
+ * @addr:     Pointer to "struct sockaddr".
+ * @addr_len: Size of @addr.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_socket_bind(struct socket *sock, struct sockaddr *addr,
 			   int addr_len)
 {
-	int rc = ccs_socket_bind_permission(sock, addr, addr_len);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	rc = ccs_socket_bind_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
 	return original_security_ops.socket_bind(sock, addr, addr_len);
 }
 
+/**
+ * ccs_socket_sendmsg - Check permission for sendmsg().
+ *
+ * @sock: Pointer to "struct socket".
+ * @msg:  Pointer to "struct msghdr".
+ * @size: Size of message.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 			      int size)
 {
-	int rc = ccs_socket_sendmsg_permission(sock, msg, size);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	rc = ccs_socket_sendmsg_permission(sock, msg, size);
 	if (rc)
 		return rc;
 	return original_security_ops.socket_sendmsg(sock, msg, size);
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
-static void ccs_socket_post_accept(struct socket *sock, struct socket *newsock)
+/**
+ * ccs_socket_recvmsg - Check permission for recvmsg().
+ *
+ * @sock:  Pointer to "struct socket".
+ * @msg:   Pointer to "struct msghdr".
+ * @size:  Size of message.
+ * @flags: Flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_recvmsg(struct socket *sock, struct msghdr *msg,
+			      int size, int flags)
 {
-	original_security_ops.socket_post_accept(sock, newsock);
-	/*
-	 * This hook is called after the accept()ed socket became visible to
-	 * userspace. Therefore, this hook is useless for security purpose.
-	 * But for analyzing purpose, it would be fine.
-	 */
-	if (ccs_socket_post_accept_permission(sock, newsock)) {
-		static u8 counter = 20;
-		if (counter) {
-			counter--;
-			printk(KERN_INFO "I can't drop accept()ed socket.\n");
-		}
-	}
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_recvmsg(sock, msg, size, flags);
 }
-#endif
+
+/**
+ * ccs_socket_getsockname - Check permission for getsockname().
+ *
+ * @sock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_getsockname(struct socket *sock)
+{
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_getsockname(sock);
+}
+
+/**
+ * ccs_socket_getpeername - Check permission for getpeername().
+ *
+ * @sock: Pointer to "struct socket".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_getpeername(struct socket *sock)
+{
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_getpeername(sock);
+}
+
+/**
+ * ccs_socket_getsockopt - Check permission for getsockopt().
+ *
+ * @sock:    Pointer to "struct socket".
+ * @level:   Level.
+ * @optname: Option's name,
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_getsockopt(struct socket *sock, int level, int optname)
+{
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_getsockopt(sock, level, optname);
+}
+
+/**
+ * ccs_socket_setsockopt - Check permission for setsockopt().
+ *
+ * @sock:    Pointer to "struct socket".
+ * @level:   Level.
+ * @optname: Option's name,
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
+{
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_setsockopt(sock, level, optname);
+}
+
+/**
+ * ccs_file_free_security - Release memory associated with a file.
+ *
+ * @file: Pointer to "struct file".
+ *
+ * Returns nothing.
+ *
+ * We use this hook for releasing memory associated with an accept()ed socket.
+ */
+static void ccs_file_free_security(struct file *file)
+{
+	original_security_ops.file_free_security(file);
+	/*
+	 * sock_from_file() says that file->private_data points to
+	 * "struct socket" if file->f_op points to &socket_file_ops.
+	 */
+	if (ccs_socket_file_ops && file->f_op == ccs_socket_file_ops)
+		ccs_update_socket_tag(file->private_data, 0);
+}
+
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+
+/**
+ * ccs_sb_pivotroot - Check permission for pivot_root().
+ *
+ * @old_nd: Pointer to "struct nameidata".
+ * @new_nd: Pointer to "struct nameidata".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 {
 	int rc = ccs_pivot_root_permission(old_nd, new_nd);
@@ -870,6 +1494,17 @@ static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
+/**
+ * ccs_sb_mount - Check permission for mount().
+ *
+ * @dev_name:  Name of device file.
+ * @nd:        Pointer to "struct nameidata".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 			unsigned long flags, void *data_page)
 {
@@ -879,7 +1514,17 @@ static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 	return original_security_ops.sb_mount(dev_name, nd, type, flags,
 					      data_page);
 }
+
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+
+/**
+ * ccs_sb_pivotroot - Check permission for pivot_root().
+ *
+ * @old_nd: Pointer to "struct nameidata".
+ * @new_nd: Pointer to "struct nameidata".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 {
 	int rc = ccs_pivot_root_permission(&old_nd->path, &new_nd->path);
@@ -888,6 +1533,17 @@ static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
+/**
+ * ccs_sb_mount - Check permission for mount().
+ *
+ * @dev_name:  Name of device file.
+ * @nd:        Pointer to "struct nameidata".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 			unsigned long flags, void *data_page)
 {
@@ -898,7 +1554,17 @@ static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 	return original_security_ops.sb_mount(dev_name, nd, type, flags,
 					      data_page);
 }
+
 #else
+
+/**
+ * ccs_sb_pivotroot - Check permission for pivot_root().
+ *
+ * @old_path: Pointer to "struct path".
+ * @new_path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 {
 	int rc = ccs_pivot_root_permission(old_path, new_path);
@@ -907,6 +1573,17 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 	return original_security_ops.sb_pivotroot(old_path, new_path);
 }
 
+/**
+ * ccs_sb_mount - Check permission for mount().
+ *
+ * @dev_name:  Name of device file.
+ * @path:      Pointer to "struct path".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
 			unsigned long flags, void *data_page)
 {
@@ -916,8 +1593,17 @@ static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
 	return original_security_ops.sb_mount(dev_name, path, type, flags,
 					      data_page);
 }
+
 #endif
 
+/**
+ * ccs_sb_umount - Check permission for umount().
+ *
+ * @mnt:   Pointer to "struct vfsmount".
+ * @flags: Unmount flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 {
 	int rc = ccs_umount_permission(mnt, flags);
@@ -926,6 +1612,15 @@ static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 	return original_security_ops.sb_umount(mnt, flags);
 }
 
+/**
+ * ccs_file_fcntl - Check permission for fcntl().
+ *
+ * @file: Pointer to "struct file".
+ * @cmd:  Command number.
+ * @arg:  Value for @cmd.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 			  unsigned long arg)
 {
@@ -935,6 +1630,15 @@ static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 	return original_security_ops.file_fcntl(file, cmd, arg);
 }
 
+/**
+ * ccs_file_ioctl - Check permission for ioctl().
+ *
+ * @file: Pointer to "struct file".
+ * @cmd:  Command number.
+ * @arg:  Value for @cmd.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 			  unsigned long arg)
 {
@@ -949,6 +1653,16 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 #include <linux/mount.h>
 #include <linux/fs_struct.h>
 
+/**
+ * ccs_kernel_read - Wrapper for kernel_read().
+ *
+ * @file:   Pointer to "struct file".
+ * @offset: Starting position.
+ * @addr:   Buffer.
+ * @count:  Size of @addr.
+ *
+ * Returns return value from kernel_read().
+ */
 static int __init ccs_kernel_read(struct file *file, unsigned long offset,
 				  char *addr, unsigned long count)
 {
@@ -972,6 +1686,13 @@ static int __init ccs_kernel_read(struct file *file, unsigned long offset,
 #endif
 }
 
+/**
+ * ccs_find_symbol - Find function's address from /proc/kallsyms .
+ *
+ * @keyline: Function to find.
+ *
+ * Returns address if specified function on success, NULL otherwise.
+ */
 static void *__init ccs_find_symbol(const char *keyline)
 {
 	struct file *file = NULL;
@@ -1050,7 +1771,7 @@ out:
 
 #endif
 
-/*
+/**
  * ccs_find_variable - Find variable's address using dummy.
  *
  * @function: Pointer to dummy function's entry point.
@@ -1399,9 +2120,13 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	ops->socket_connect        = ccs_socket_connect;
 	ops->socket_listen         = ccs_socket_listen;
 	ops->socket_sendmsg        = ccs_socket_sendmsg;
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 29)
-	ops->socket_post_accept    = ccs_socket_post_accept;
-#endif
+	ops->socket_recvmsg        = ccs_socket_recvmsg;
+	ops->socket_getsockname    = ccs_socket_getsockname;
+	ops->socket_getpeername    = ccs_socket_getpeername;
+	ops->socket_getsockopt     = ccs_socket_getsockopt;
+	ops->socket_setsockopt     = ccs_socket_setsockopt;
+	ops->socket_accept         = ccs_socket_accept;
+	ops->file_free_security    = ccs_file_free_security;
 #endif
 }
 
@@ -1576,6 +2301,13 @@ static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
 
+/**
+ * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
+ *
+ * @rcu: Pointer to "struct rcu_head".
+ *
+ * Returns nothing.
+ */
 static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
@@ -1615,6 +2347,13 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 
 #else
 
+/**
+ * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
+ *
+ * @arg: Pointer to "void".
+ *
+ * Returns nothing.
+ */
 static void ccs_rcu_free(void *arg)
 {
 	struct ccs_security *ptr = arg;

@@ -1243,7 +1243,7 @@ int ccs_write_file(struct ccs_acl_param *param)
  * @mode:   Device type and permission.
  * @dev:    Device number for block or character device.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
 				  struct vfsmount *mnt,
@@ -1285,7 +1285,7 @@ static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @mode:   Create mode.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
 				  struct vfsmount *mnt, unsigned int mode)
@@ -1300,7 +1300,7 @@ static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
 				  struct vfsmount *mnt)
@@ -1315,7 +1315,7 @@ static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
 				   struct vfsmount *mnt)
@@ -1331,7 +1331,7 @@ static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @from:   Content of symlink.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_symlink_permission(struct inode *dir, struct dentry *dentry,
 				    struct vfsmount *mnt, const char *from)
@@ -1345,7 +1345,7 @@ static int __ccs_symlink_permission(struct inode *dir, struct dentry *dentry,
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_truncate_permission(struct dentry *dentry,
 				     struct vfsmount *mnt)
@@ -1362,7 +1362,7 @@ static int __ccs_truncate_permission(struct dentry *dentry,
  * @new_dentry:  Pointer to "struct dentry".
  * @mnt:         Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_rename_permission(struct inode *old_dir,
 				   struct dentry *old_dentry,
@@ -1382,7 +1382,7 @@ static int __ccs_rename_permission(struct inode *old_dir,
  * @new_dentry:  Pointer to "struct dentry".
  * @mnt:         Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_link_permission(struct dentry *old_dentry,
 				 struct inode *new_dir,
@@ -1400,7 +1400,7 @@ static int __ccs_link_permission(struct dentry *old_dentry,
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount".
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_open_exec_permission(struct dentry *dentry,
 				      struct vfsmount *mnt)
@@ -1416,7 +1416,7 @@ static int __ccs_open_exec_permission(struct dentry *dentry,
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount".
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_uselib_permission(struct dentry *dentry, struct vfsmount *mnt)
 {
@@ -1439,7 +1439,7 @@ static int __ccs_uselib_permission(struct dentry *dentry, struct vfsmount *mnt)
  * @newval: Pointer to "void __user".
  * @table:  Pointer to "struct ctl_table".
  *
- * Returns 0 on success, negative value othwerise.
+ * Returns 0 on success, negative value otherwise.
  *
  * Note that this function is racy because this function checks values in
  * userspace memory which could be changed after permission check.

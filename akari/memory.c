@@ -19,6 +19,8 @@
  * ccs_warn_oom - Print out of memory warning message.
  *
  * @function: Function's name.
+ *
+ * Returns nothing.
  */
 void ccs_warn_oom(const char *function)
 {
@@ -34,9 +36,16 @@ void ccs_warn_oom(const char *function)
 		panic("MAC Initialization failed.\n");
 }
 
+/*
+ * Lock for protecting ccs_memory_used .
+ *
+ * I don't use atomic_t because it can handle only 16MB in 2.4 kernels.
+ */
 static DEFINE_SPINLOCK(ccs_policy_memory_lock);
-unsigned int ccs_memory_used[3];
-unsigned int ccs_memory_quota[3];
+/* Memoy currently used by policy/audit log/query . */
+unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
+/* Memory quota for policy/audit log/query . */
+unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
 
 /**
  * ccs_memory_ok - Check memory quota.
@@ -67,8 +76,8 @@ bool ccs_memory_ok(const void *ptr, const unsigned int size)
 /**
  * ccs_commit_ok - Allocate memory and check memory quota.
  *
- * @data:   Data to copy from.
- * @size:   Size in byte.
+ * @data: Data to copy from.
+ * @size: Size in byte.
  *
  * Returns pointer to allocated memory on success, NULL otherwise.
  * @data is zero-cleared on success.
@@ -90,6 +99,8 @@ void *ccs_commit_ok(void *data, const unsigned int size)
  *
  * @ptr:  Pointer to allocated memory.
  * @size: Size in byte.
+ *
+ * Returns nothing.
  */
 void ccs_memory_free(const void *ptr, size_t size)
 {
@@ -150,8 +161,6 @@ out:
  * @addr: Pointer to "struct in6_addr".
  *
  * Returns pointer to "struct in6_addr" on success, NULL otherwise.
- *
- * The RAM is shared, so NEVER try to modify or kfree() the returned address.
  */
 const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr)
 {
@@ -276,6 +285,7 @@ void __init ccs_mm_init(void)
 	ccs_read_unlock(idx);
 }
 
+/* String table for /proc/ccs/meminfo interface. */
 static const char * const ccs_memory_header[CCS_MAX_MEMORY_STAT] = {
 	[CCS_MEMORY_POLICY] = "Policy:",
 	[CCS_MEMORY_AUDIT]  = "Audit logs:",
@@ -283,9 +293,11 @@ static const char * const ccs_memory_header[CCS_MAX_MEMORY_STAT] = {
 };
 
 /**
- * ccs_read_memory_counter - Check for memory usage.
+ * ccs_read_memory_counter - Read memory usage.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  */
 void ccs_read_memory_counter(struct ccs_io_buffer *head)
 {

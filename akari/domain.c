@@ -24,7 +24,13 @@
 
 /* Variables definitions.*/
 
-/* The global domain. */
+/*
+ * The global domains referred by "use_group" keyword.
+ *
+ * Although "use_group" needs only "struct list_head acl_info_list[2]",
+ * we define structure for "use_group" as "struct ccs_domain_info" in order to
+ * use common code.
+ */
 struct ccs_domain_info ccs_acl_group[CCS_MAX_ACL_GROUPS];
 
 /* The initial domain. */
@@ -33,8 +39,11 @@ struct ccs_domain_info ccs_kernel_domain;
 /* The list for "struct ccs_domain_info". */
 LIST_HEAD(ccs_domain_list);
 
+/* List of domain policy. */
 struct list_head ccs_policy_list[CCS_MAX_POLICY];
+/* List of "struct ccs_group". */
 struct list_head ccs_group_list[CCS_MAX_GROUP];
+/* List of "struct ccs_condition" and "struct ccs_ipv6addr". */
 struct list_head ccs_shared_list[CCS_MAX_LIST];
 
 /**
@@ -77,6 +86,14 @@ int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
 	return error;
 }
 
+/**
+ * ccs_same_acl_head - Check for duplicated "struct ccs_acl_info" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_info".
+ * @b: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if @a == @b, false otherwise.
+ */
 static inline bool ccs_same_acl_head(const struct ccs_acl_info *p1,
 				     const struct ccs_acl_info *p2)
 {
@@ -146,6 +163,17 @@ out:
 	return error;
 }
 
+/**
+ * ccs_check_acl - Do permission check.
+ *
+ * @r:           Pointer to "struct ccs_request_info".
+ * @check_entry: Callback function to check type specific parameters.
+ *               Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
 void ccs_check_acl(struct ccs_request_info *r,
 		   bool (*check_entry) (struct ccs_request_info *,
 					const struct ccs_acl_info *))
@@ -177,6 +205,14 @@ retry:
 	r->granted = false;
 }
 
+/**
+ * ccs_same_transition_control - Check for duplicated "struct ccs_transition_control" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a == @b, false otherwise.
+ */
 static bool ccs_same_transition_control(const struct ccs_acl_head *a,
 					const struct ccs_acl_head *b)
 {
@@ -328,6 +364,14 @@ done:
 	return type;
 }
 
+/**
+ * ccs_same_aggregator - Check for duplicated "struct ccs_aggregator" entry.
+ *
+ * @a: Pointer to "struct ccs_acl_head".
+ * @b: Pointer to "struct ccs_acl_head".
+ *
+ * Returns true if @a == @b, false otherwise.
+ */
 static bool ccs_same_aggregator(const struct ccs_acl_head *a,
 				const struct ccs_acl_head *b)
 {
@@ -404,7 +448,7 @@ int ccs_delete_domain(char *domainname)
 		return 0;
 	/* Is there an active domain? */
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
-		/* Never delete ccs_kernel_domain */
+		/* Never delete ccs_kernel_domain . */
 		if (domain == &ccs_kernel_domain)
 			continue;
 		if (domain->is_deleted ||
@@ -747,6 +791,14 @@ static void ccs_unescape(unsigned char *dest)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+/**
+ * ccs_copy_argv - Wrapper for copy_strings_kernel().
+ *
+ * @arg:  String to copy.
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns return value of copy_strings_kernel().
+ */
 static int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
 {
 	const int ret = copy_strings_kernel(1, &arg, bprm);
@@ -755,6 +807,14 @@ static int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
 	return ret;
 }
 #else
+/**
+ * ccs_copy_argv - Wrapper for copy_strings_kernel().
+ *
+ * @arg:  String to copy.
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns return value of copy_strings_kernel().
+ */
 static int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
 {
 	const int ret = copy_strings_kernel(1, &arg, bprm);
@@ -1142,6 +1202,22 @@ void ccs_finish_execve(int retval, struct ccs_execve *ee)
 	kfree(ee);
 }
 
+/**
+ * __ccs_search_binary_handler - Main routine for do_execve().
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ * @regs: Pointer to "struct pt_regs".
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Performs permission checks for do_execve() and domain transition.
+ * Domain transition by "struct ccs_domain_transition_control" and
+ * "auto_domain_transition=" parameter of "struct ccs_condition" are reverted
+ * if do_execve() failed.
+ * Garbage collector does not remove "struct ccs_domain_info" from
+ * ccs_domain_list nor kfree("struct ccs_domain_info") if the current thread is
+ * marked as CCS_TASK_IS_IN_EXECVE .
+ */
 static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 				       struct pt_regs *regs)
 {
@@ -1156,6 +1232,11 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 	return retval;
 }
 
+/**
+ * ccs_domain_init - Register program execution hook.
+ *
+ * Returns nothing.
+ */
 void __init ccs_domain_init(void)
 {
 	ccsecurity_ops.search_binary_handler = __ccs_search_binary_handler;

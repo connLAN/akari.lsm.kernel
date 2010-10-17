@@ -82,9 +82,21 @@ static bool __ccs_capable(const u8 operation)
 	return !error;
 }
 
+/**
+ * __ccs_ptrace_permission - Check permission for ptrace().
+ *
+ * @request: Unused.
+ * @pid:     Unused.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Since this function is called from location where it is permitted to sleep,
+ * it is racy to check target process's domainname anyway. Therefore, we don't
+ * use target process's domainname.
+ */
 static int __ccs_ptrace_permission(long request, long pid)
 {
-	return !__ccs_capable(CCS_SYS_PTRACE);
+	return __ccs_capable(CCS_SYS_PTRACE) ? 0 : -EPERM;
 }
 
 /**
@@ -127,6 +139,11 @@ int ccs_write_capability(struct ccs_acl_param *param)
 	return -EINVAL;
 }
 
+/**
+ * ccs_capability_init - Register capability related hooks.
+ *
+ * Returns nothing.
+ */
 void __init ccs_capability_init(void)
 {
 	ccsecurity_ops.capable = __ccs_capable;

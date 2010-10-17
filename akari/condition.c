@@ -217,6 +217,15 @@ out:
 	return result;
 }
 
+/**
+ * ccs_scan_exec_realpath - Check "exec.realpath" parameter of "struct ccs_condition".
+ *
+ * @file:  Pointer to "struct file".
+ * @ptr:   Pointer to "struct ccs_name_union".
+ * @match: True if "exec.realpath=", false if "exec.realpath!=".
+ *
+ * Returns true on success, false otherwise.
+ */
 static bool ccs_scan_exec_realpath(struct file *file,
 				   const struct ccs_name_union *ptr,
 				   const bool match)
@@ -243,6 +252,14 @@ static bool ccs_scan_exec_realpath(struct file *file,
 	return result == match;
 }
 
+/**
+ * ccs_parse_name_union_quoted - Parse a quoted word.
+ *
+ * @filename: A line containing a quoted word.
+ * @ptr:      Pointer to "struct ccs_name_union".
+ *
+ * Returns true on success, false otherwise.
+ */
 static bool ccs_parse_name_union_quoted(char *filename,
 					struct ccs_name_union *ptr)
 {
@@ -255,6 +272,10 @@ static bool ccs_parse_name_union_quoted(char *filename,
 		*cp = '\0';
 		filename++;
 	}
+	/*
+	 * If invalid character (e.g. ' ') was within the quoted qord,
+	 * ccs_parse_name_union() will return false.
+	 */
 	result = ccs_parse_name_union(filename, ptr);
 	if (cp)
 		*cp = '"';
@@ -380,6 +401,14 @@ out:
 	return false;
 }
 
+/**
+ * ccs_same_condition - Check for duplicated "struct ccs_condition" entry.
+ *
+ * @a: Pointer to "struct ccs_condition".
+ * @b: Pointer to "struct ccs_condition".
+ *
+ * Returns true if @a == @b, false otherwise.
+ */
 static inline bool ccs_same_condition(const struct ccs_condition *p1,
 				      const struct ccs_condition *p2)
 {
@@ -390,7 +419,14 @@ static inline bool ccs_same_condition(const struct ccs_condition *p1,
 		p1->grant_log == p2->grant_log && p1->transit == p2->transit &&
 		!memcmp(p1 + 1, p2 + 1, p1->size - sizeof(*p1));
 }
-
+/**
+ * ccs_condition_type - Get condition type.
+ *
+ * @word: Keyword string.
+ *
+ * Returns one of values in "enum ccs_conditions_index" on success,
+ * CCS_MAX_CONDITION_KEYWORD otherwise.
+ */
 static u8 ccs_condition_type(const char *word)
 {
 	u8 i;
@@ -401,6 +437,7 @@ static u8 ccs_condition_type(const char *word)
 	return i;
 }
 
+/* Define this to enable debug mode. */
 /* #define DEBUG_CONDITION */
 
 #ifdef DEBUG_CONDITION
@@ -409,6 +446,16 @@ static u8 ccs_condition_type(const char *word)
 #define dprintk(...) do { } while (0)
 #endif
 
+/**
+ * ccs_commit_condition - Commit "struct ccs_condition".
+ *
+ * @entry: Pointer to "struct ccs_condition".
+ *
+ * Returns pointer to "struct ccs_condition" on success, NULL otherwise.
+ *
+ * This function merges duplicated entries. This function returns NULL if
+ * @entry is not duplicated but memory quota for policy has exceeded.
+ */
 static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 {
 	struct ccs_condition *ptr;

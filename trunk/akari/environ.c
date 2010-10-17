@@ -42,8 +42,8 @@ static int ccs_audit_env_log(struct ccs_request_info *r)
 /**
  * ccs_env_perm - Check permission for environment variable's name.
  *
- * @r:       Pointer to "struct ccs_request_info".
- * @env:     The name of environment variable.
+ * @r:   Pointer to "struct ccs_request_info".
+ * @env: The name of environment variable.
  *
  * Returns 0 on success, negative value otherwise.
  *
@@ -106,6 +106,13 @@ static int ccs_write_env(struct ccs_acl_param *param)
 	return error;
 }
 
+/**
+ * ccs_write_misc - Update environment variable list.
+ *
+ * @param: Pointer to "struct ccs_acl_param".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 int ccs_write_misc(struct ccs_acl_param *param)
 {
 	if (ccs_str_starts(&param->data, "env "))

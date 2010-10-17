@@ -24,7 +24,7 @@ struct ccs_gc {
 };
 /* List of entries to be deleted. */
 static LIST_HEAD(ccs_gc_list);
-/* Length of list. */
+/* Length of ccs_gc_list . */
 static int ccs_gc_list_len;
 
 /**
@@ -485,27 +485,33 @@ static inline size_t ccs_del_name(struct list_head *element)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-/* Lock for syscall users. */
+/*
+ * Lock for syscall users.
+ *
+ * This lock is held for only protecting single SRCU section. Accessing
+ * /proc/ccs/ interface cannot be finished within single SRCU section.
+ * Therefore, we use ccs_lock()/ccs_unlock() for protecting /proc/ccs/ users.
+ * Garbage collector waits for both this SRCU grace period and ccs_counter .
+ */
 struct srcu_struct ccs_ss;
 #endif
 
 /*
  * Lock for /proc/ccs/ users.
  *
- * Currently, we hold SRCU lock upon open() and release upon close().
- * Thus, kernel complains about returning to userspace with SRCU lock held.
- * Therefore, non-SRCU lock is used for suppressing the kernel's complain
- * messages. Modifying to hold/release SRCU lock upon each read()/write() is
- * to-do list.
+ * Holding SRCU lock upon open() and release upon close() causes lockdep to
+ * complain about returning to userspace with SRCU lock held.
+ * Therefore, non-SRCU lock is used in order to suppress the lockdep warning.
+ * Modifying to hold/release SRCU lock upon each read()/write() is to-do list.
  *
- * Also used for syscall users for 2.6.18 and earlier kernels because
- * they don't have SRCU support.
+ * This lock is also used for protecting single SRCU section for 2.6.18 and
+ * earlier kernels because they don't have SRCU support.
  */
 static struct {
-	int counter_idx;
-	int counter[2];
+	int counter_idx; /* Currently active index (0 or 1). */
+	int counter[2];  /* Current users. Protected by ccs_counter_lock .*/
 } ccs_counter;
-/* Lock for protecting counter. */
+/* Lock for protecting ccs_counter . */
 static DEFINE_SPINLOCK(ccs_counter_lock);
 
 /**
@@ -527,6 +533,8 @@ int ccs_lock(void)
  * ccs_unlock - Release non-SRCU lock.
  *
  * @idx: Index number returned by ccs_lock().
+ *
+ * Returns nothing.
  */
 void ccs_unlock(const int idx)
 {
@@ -537,16 +545,29 @@ void ccs_unlock(const int idx)
 
 /**
  * ccs_synchronize_counter - Wait for SRCU grace period.
+ *
+ * Returns nothing.
  */
 static void ccs_synchronize_counter(void)
 {
 	int idx;
 	int v;
+	/*
+	 * Change currently active counter's index. Make it visible to other
+	 * threads by doing it with ccs_counter_lock held.
+	 * This function is called by garbage collector thread, and the garbage
+	 * collector thread is exclusive. Therefore, it is guaranteed that
+	 * SRCU grace period has expired when returning from this function.
+	 */
 	spin_lock(&ccs_counter_lock);
 	idx = ccs_counter.counter_idx;
 	ccs_counter.counter_idx ^= 1;
 	v = ccs_counter.counter[idx];
 	spin_unlock(&ccs_counter_lock);
+	/*
+	 * Waiting for /proc/ccs/ interface users to close() may take more than
+	 * a few seconds. Therefore, we should use ssleep() here.
+	 */
 	while (v) {
 		ssleep(1);
 		spin_lock(&ccs_counter_lock);
@@ -555,6 +576,14 @@ static void ccs_synchronize_counter(void)
 	}
 }
 
+/**
+ * ccs_collect_member - Delete elements with "struct ccs_acl_head".
+ *
+ * @member_list: Pointer to "struct list_head".
+ * @id:          One of "enum ccs_policy_id" value.
+ *
+ * Returns true if some elements are deleted, false otherwise.
+ */
 static bool ccs_collect_member(struct list_head *member_list, int id)
 {
 	struct ccs_acl_head *member;
@@ -567,6 +596,13 @@ static bool ccs_collect_member(struct list_head *member_list, int id)
 	return true;
 }
 
+/**
+ * ccs_collect_acl - Delete elements in "struct ccs_domain_info".
+ *
+ * @domain: Pointer to "struct ccs_domain_info".
+ *
+ * Returns true if some elements are deleted, false otherwise.
+ */
 static bool ccs_collect_acl(struct ccs_domain_info *domain)
 {
 	struct ccs_acl_info *acl;
@@ -584,6 +620,8 @@ static bool ccs_collect_acl(struct ccs_domain_info *domain)
 
 /**
  * ccs_collect_entry - Scan lists for deleted elements.
+ *
+ * Returns nothing.
  */
 static void ccs_collect_entry(void)
 {
@@ -731,6 +769,8 @@ static bool ccs_kfree_entry(void)
 /**
  * ccs_gc_thread - Garbage collector thread function.
  *
+ * @unused: Unused.
+ *
  * In case OOM-killer choose this thread for termination, we create this thread
  * as a short live thread whenever /proc/ccs/ interface was close()d.
  *
@@ -738,7 +778,10 @@ static bool ccs_kfree_entry(void)
  */
 static int ccs_gc_thread(void *unused)
 {
+	/* Garbage collector thread is exclusive. */
 	static DEFINE_MUTEX(ccs_gc_mutex);
+	if (!mutex_trylock(&ccs_gc_mutex))
+		goto out;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	daemonize("GC for CCS");
 #else
@@ -763,23 +806,25 @@ static int ccs_gc_thread(void *unused)
 #endif
 	snprintf(current->comm, sizeof(current->comm) - 1, "GC for CCS");
 #endif
-	if (mutex_trylock(&ccs_gc_mutex)) {
-		do {
-			ccs_collect_entry();
-			if (list_empty(&ccs_gc_list))
-				break;
-			ccs_synchronize_counter();
+	do {
+		ccs_collect_entry();
+		if (list_empty(&ccs_gc_list))
+			break;
+		ccs_synchronize_counter();
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-			synchronize_srcu(&ccs_ss);
+		synchronize_srcu(&ccs_ss);
 #endif
-		} while (ccs_kfree_entry());
-		mutex_unlock(&ccs_gc_mutex);
-	}
+	} while (ccs_kfree_entry());
+	mutex_unlock(&ccs_gc_mutex);
+out:
+	/* This acts as do_exit(0). */
 	return 0;
 }
 
 /**
  * ccs_run_gc - Start garbage collector thread.
+ *
+ * Returns nothing.
  */
 void ccs_run_gc(void)
 {

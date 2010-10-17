@@ -1243,10 +1243,17 @@ static int ccs_validate_socket(struct socket *sock)
  * Returns 0 on success, negative value otherwise.
  *
  * This hook is used for setting up environment for doing post accept()
- * permission check. Although it seems to me that we can do post accept()
- * check before returning to userspace by replacing sock->ops with a wrapper,
- * we check post accept() permission upon next socket syscalls rather than
- * between sock->ops->accept() and returning to userspace.
+ * permission check. If dereferencing sock->ops->something() were ordered by
+ * rcu_dereference(), we could replace sock->ops with "a copy of original
+ * sock->ops with modified sock->ops->accept()" using rcu_assign_pointer()
+ * in order to do post accept() permission check before returning to userspace.
+ * If we make the copy in security_socket_post_create(), it would be possible
+ * to safely replace sock->ops here, but we don't do so because we don't want
+ * to allocate memory for sockets which do not call sock->ops->accept().
+ * Therefore, we do post accept() permission check upon next socket syscalls
+ * rather than between sock->ops->accept() and returning to userspace.
+ * This means that if a socket was close()d before calling some socket
+ * syscalls, post accept() permission check will not be done.
  */
 static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
 {
@@ -1439,6 +1446,22 @@ static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
 	if (rc < 0)
 		return rc;
 	return original_security_ops.socket_setsockopt(sock, level, optname);
+}
+
+/**
+ * ccs_socket_shutdown - Check permission for shutdown().
+ *
+ * @sock: Pointer to "struct socket".
+ * @how:  Shutdown mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_socket_shutdown(struct socket *sock, int how)
+{
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	return original_security_ops.socket_shutdown(sock, how);
 }
 
 #define SOCKFS_MAGIC 0x534F434B
@@ -2110,6 +2133,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	ops->socket_getpeername    = ccs_socket_getpeername;
 	ops->socket_getsockopt     = ccs_socket_getsockopt;
 	ops->socket_setsockopt     = ccs_socket_setsockopt;
+	ops->socket_shutdown       = ccs_socket_shutdown;
 	ops->socket_accept         = ccs_socket_accept;
 	ops->inode_free_security   = ccs_inode_free_security;
 #endif

@@ -96,8 +96,8 @@ out:
  *
  * Returns read size on success, negative value otherwise.
  */
-static int ccs_read_self(struct file *file, char __user *buf, size_t count,
-			 loff_t *ppos)
+static ssize_t ccs_read_self(struct file *file, char __user *buf, size_t count,
+			     loff_t *ppos)
 {
 	const char *domain = ccs_current_domain()->domainname->name;
 	loff_t len = strlen(domain);
@@ -156,8 +156,8 @@ void ccs_update_stat(const u8 index)
  *
  * Returns read size on success, negative value otherwise.
  */
-static int ccs_read_stat(struct file *file, char __user *buf, size_t count,
-			 loff_t *ppos)
+static ssize_t ccs_read_stat(struct file *file, char __user *buf, size_t count,
+			     loff_t *ppos)
 {
 	static const char * const headers[CCS_MAX_POLICY_STAT] = {
 		[CCS_STAT_POLICY_UPDATES]    = "update:",

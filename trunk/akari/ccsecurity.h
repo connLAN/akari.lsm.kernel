@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/10
+ * Version: 1.8.0-pre   2010/10/18
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -132,7 +132,7 @@ struct ccsecurity_operations {
 	int (*socket_sendmsg_permission) (struct socket *sock,
 					  struct msghdr *msg, int size);
 	int (*socket_post_recvmsg_permission) (struct sock *sk,
-					       struct sk_buff *skb);
+					       struct sk_buff *skb, int flags);
 	int (*chown_permission) (struct dentry *dentry, struct vfsmount *mnt,
 				 uid_t user, gid_t group);
 	int (*chmod_permission) (struct dentry *dentry, struct vfsmount *mnt,
@@ -444,11 +444,12 @@ static inline int ccs_socket_sendmsg_permission(struct socket *sock,
 }
 
 static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
-						     struct sk_buff *skb)
+						     struct sk_buff *skb,
+						     int flags)
 {
-	int (*func) (struct sock *, struct sk_buff *)
+	int (*func) (struct sock *, struct sk_buff *, int)
 		= ccsecurity_ops.socket_post_recvmsg_permission;
-	return func ? func(sk, skb) : 0;
+	return func ? func(sk, skb, flags) : 0;
 }
 
 static inline int ccs_chown_permission(struct dentry *dentry,
@@ -485,65 +486,6 @@ static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 {
 	return ccsecurity_ops.search_binary_handler(bprm, regs);
 }
-
-/* for net/ipv4/raw.c and net/ipv6/raw.c and net/unix/af_unix.c */
-#if defined(_RAW_H) || defined(_NET_RAWV6_H) || defined(__LINUX_NET_AFUNIX_H)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
-static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
-				     unsigned int flags)
-{
-	/* Clear queue. */
-	if (flags & MSG_PEEK) {
-		int clear = 0;
-		spin_lock_irq(&sk->receive_queue.lock);
-		if (skb == skb_peek(&sk->receive_queue)) {
-			__skb_unlink(skb, &sk->receive_queue);
-			clear = 1;
-		}
-		spin_unlock_irq(&sk->receive_queue.lock);
-		if (clear)
-			kfree_skb(skb);
-	}
-	skb_free_datagram(sk, skb);
-}
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 12)
-static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
-				     unsigned int flags)
-{
-	/* Clear queue. */
-	if (flags & MSG_PEEK) {
-		int clear = 0;
-		spin_lock_irq(&sk->sk_receive_queue.lock);
-		if (skb == skb_peek(&sk->sk_receive_queue)) {
-			__skb_unlink(skb, &sk->sk_receive_queue);
-			clear = 1;
-		}
-		spin_unlock_irq(&sk->sk_receive_queue.lock);
-		if (clear)
-			kfree_skb(skb);
-	}
-	skb_free_datagram(sk, skb);
-}
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
-static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
-				     unsigned int flags)
-{
-	/* Clear queue. */
-	if (flags & MSG_PEEK) {
-		int clear = 0;
-		spin_lock_bh(&sk->sk_receive_queue.lock);
-		if (skb == skb_peek(&sk->sk_receive_queue)) {
-			__skb_unlink(skb, &sk->sk_receive_queue);
-			clear = 1;
-		}
-		spin_unlock_bh(&sk->sk_receive_queue.lock);
-		if (clear)
-			kfree_skb(skb);
-	}
-	skb_free_datagram(sk, skb);
-}
-#endif
-#endif
 
 #else
 
@@ -774,7 +716,8 @@ static inline int ccs_socket_sendmsg_permission(struct socket *sock,
 }
 
 static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
-						     struct sk_buff *skb)
+						     struct sk_buff *skb,
+						     int flags)
 {
 	return 0;
 }
@@ -807,12 +750,6 @@ static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 {
 	return search_binary_handler(bprm, regs);
 }
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
-static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
-				     unsigned int flags) {
-}
-#endif
 
 #endif
 

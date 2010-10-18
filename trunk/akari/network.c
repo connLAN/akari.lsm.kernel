@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/10
+ * Version: 1.8.0-pre   2010/10/18
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -943,16 +943,100 @@ static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
 #endif
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+/**
+ * skb_kill_datagram - Kill a datagram forcibly.
+ *
+ * @sk:    Pointer to "struct sock".
+ * @skb:   Pointer to "struct sk_buff".
+ * @flags: Flags passed to skb_recv_datagram(). 
+ *
+ * Returns nothing.
+ */
+static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
+				     int flags)
+{
+	/* Clear queue. */
+	if (flags & MSG_PEEK) {
+		int clear = 0;
+		spin_lock_irq(&sk->receive_queue.lock);
+		if (skb == skb_peek(&sk->receive_queue)) {
+			__skb_unlink(skb, &sk->receive_queue);
+			clear = 1;
+		}
+		spin_unlock_irq(&sk->receive_queue.lock);
+		if (clear)
+			kfree_skb(skb);
+	}
+	skb_free_datagram(sk, skb);
+}
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 12)
+/**
+ * skb_kill_datagram - Kill a datagram forcibly.
+ *
+ * @sk:    Pointer to "struct sock".
+ * @skb:   Pointer to "struct sk_buff".
+ * @flags: Flags passed to skb_recv_datagram(). 
+ *
+ * Returns nothing.
+ */
+static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
+				     int flags)
+{
+	/* Clear queue. */
+	if (flags & MSG_PEEK) {
+		int clear = 0;
+		spin_lock_irq(&sk->sk_receive_queue.lock);
+		if (skb == skb_peek(&sk->sk_receive_queue)) {
+			__skb_unlink(skb, &sk->sk_receive_queue);
+			clear = 1;
+		}
+		spin_unlock_irq(&sk->sk_receive_queue.lock);
+		if (clear)
+			kfree_skb(skb);
+	}
+	skb_free_datagram(sk, skb);
+}
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+/**
+ * skb_kill_datagram - Kill a datagram forcibly.
+ *
+ * @sk:    Pointer to "struct sock".
+ * @skb:   Pointer to "struct sk_buff".
+ * @flags: Flags passed to skb_recv_datagram(). 
+ *
+ * Returns nothing.
+ */
+static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
+				     int flags)
+{
+	/* Clear queue. */
+	if (flags & MSG_PEEK) {
+		int clear = 0;
+		spin_lock_bh(&sk->sk_receive_queue.lock);
+		if (skb == skb_peek(&sk->sk_receive_queue)) {
+			__skb_unlink(skb, &sk->sk_receive_queue);
+			clear = 1;
+		}
+		spin_unlock_bh(&sk->sk_receive_queue.lock);
+		if (clear)
+			kfree_skb(skb);
+	}
+	skb_free_datagram(sk, skb);
+}
+#endif
+
 /**
  * __ccs_socket_post_recvmsg_permission - Check permission for receiving a datagram.
  *
- * @sk:  Pointer to "struct sock".
- * @skb: Pointer to "struct sk_buff".
+ * @sk:    Pointer to "struct sock".
+ * @skb:   Pointer to "struct sk_buff".
+ * @flags: Flags passed to skb_recv_datagram(). 
  *
  * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
-						struct sk_buff *skb)
+						struct sk_buff *skb, int flags)
 {
 	struct ccs_addr_info address;
 	const u8 family = ccs_sock_family(sk);
@@ -1004,9 +1088,10 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 			if (addr_len >= sizeof(addr))
 				return 0;
 			memcpy(&addr, u->name, addr_len);
-			return ccs_check_unix_address((struct sockaddr *)
-						      &addr, addr_len,
-						      &address);
+			if (ccs_check_unix_address((struct sockaddr *) &addr,
+						   addr_len, &address))
+				goto out;
+			return 0;
 		}
 	}
 	address.inet.address = (u32 *) &addr;
@@ -1014,7 +1099,35 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 		address.inet.port = udp_hdr(skb)->source;
 	else
 		address.inet.port = htons(sk->sk_protocol);
-	return ccs_inet_entry(&address);
+	if (ccs_inet_entry(&address))
+		goto out;
+	return 0;
+out:
+	/*
+	 * Remove from queue if MSG_PEEK is used so that
+	 * the head message from unwanted source in receive queue will not
+	 * prevent the caller from picking up next message from wanted source
+	 * when the caller is using MSG_PEEK flag for picking up.
+	 */
+	{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
+		bool slow = false;
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			slow = lock_sock_fast(sk);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			lock_sock(sk);
+#endif
+		skb_kill_datagram(sk, skb, flags);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			unlock_sock_fast(sk, slow);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			release_sock(sk);
+#endif
+	}
+	return -EPERM;
 }
 
 /**

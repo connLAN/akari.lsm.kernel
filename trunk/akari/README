@@ -17,3 +17,11 @@ Project URL: http://akari.sourceforge.jp/
 ChangeLog:
 
 Version 1.0   2010/10/10   First release.
+
+Version 1.0.1   2010/10/18   Minor update release.
+
+   Synchronize with TOMOYO revision 4069.
+
+   Fix off-by-two in ccs_check_unix_address().
+
+   Implement post accept() LSM hook.

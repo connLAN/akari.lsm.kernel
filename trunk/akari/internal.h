@@ -67,6 +67,7 @@ struct in6_addr;
 
 /**
  * list_for_each_cookie - iterate over a list with cookie.
+ *
  * @pos:        the &struct list_head to use as a loop cursor.
  * @head:       the head for your list.
  */
@@ -74,6 +75,7 @@ struct in6_addr;
 	for (pos = pos ? pos : srcu_dereference((head)->next, &ccs_ss); \
 	     pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
 
+/* Index numbers for /proc/ccs/stat interface. */
 enum ccs_policy_stat_type {
 	/* Do not change this order. */
 	CCS_STAT_POLICY_UPDATES,
@@ -83,6 +85,7 @@ enum ccs_policy_stat_type {
 	CCS_MAX_POLICY_STAT
 };
 
+/* Index numbers for profile's PREFERENCE values. */
 enum ccs_pref_index {
 	CCS_PREF_MAX_GRANT_LOG,
 	CCS_PREF_MAX_REJECT_LOG,
@@ -91,6 +94,7 @@ enum ccs_pref_index {
 	CCS_MAX_PREF,
 };
 
+/* Index numbers for /proc/ccs/meminfo interface. */
 enum ccs_memory_stat_type {
 	CCS_MEMORY_POLICY,
 	CCS_MEMORY_AUDIT,
@@ -98,6 +102,7 @@ enum ccs_memory_stat_type {
 	CCS_MAX_MEMORY_STAT,
 };
 
+/* Index numbers for domain transition control keywords. */
 enum ccs_transition_type {
 	/* Do not change this order, */
 	CCS_TRANSITION_CONTROL_NO_INITIALIZE,
@@ -125,6 +130,7 @@ enum ccs_acl_entry_type_index {
 	CCS_TYPE_MANUAL_TASK_ACL,
 };
 
+/* Index numbers for access controls with one pathname. */
 enum ccs_path_acl_index {
 	CCS_TYPE_EXECUTE,
 	CCS_TYPE_READ,
@@ -139,12 +145,14 @@ enum ccs_path_acl_index {
 	CCS_MAX_PATH_OPERATION
 };
 
+/* Index numbers for access controls with one pathname and three numbers. */
 enum ccs_mkdev_acl_index {
 	CCS_TYPE_MKBLOCK,
 	CCS_TYPE_MKCHAR,
 	CCS_MAX_MKDEV_OPERATION
 };
 
+/* Index numbers for access controls with two pathnames. */
 enum ccs_path2_acl_index {
 	CCS_TYPE_LINK,
 	CCS_TYPE_RENAME,
@@ -152,6 +160,7 @@ enum ccs_path2_acl_index {
 	CCS_MAX_PATH2_OPERATION
 };
 
+/* Index numbers for access controls with one pathname and one number. */
 enum ccs_path_number_acl_index {
 	CCS_TYPE_CREATE,
 	CCS_TYPE_MKDIR,
@@ -164,6 +173,7 @@ enum ccs_path_number_acl_index {
 	CCS_MAX_PATH_NUMBER_OPERATION
 };
 
+/* Index numbers for socket operations. */
 enum ccs_network_acl_index {
 	CCS_NETWORK_BIND,    /* bind() operation. */
 	CCS_NETWORK_LISTEN,  /* listen() operation. */
@@ -174,13 +184,14 @@ enum ccs_network_acl_index {
 	CCS_MAX_NETWORK_OPERATION
 };
 
+/* Index numbers for type of IP address. */
 enum ccs_ip_address_type {
 	CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP,
 	CCS_IP_ADDRESS_TYPE_IPv4,
 	CCS_IP_ADDRESS_TYPE_IPv6
 };
 
-/* Indexes for /proc/ccs/ interfaces. */
+/* Index numbers for /proc/ccs/ interfaces. */
 enum ccs_proc_interface_index {
 	CCS_DOMAINPOLICY,
 	CCS_EXCEPTIONPOLICY,
@@ -196,6 +207,7 @@ enum ccs_proc_interface_index {
 	CCS_EXECUTE_HANDLER
 };
 
+/* Index numbers for functionality. */
 enum ccs_mac_index {
 	CCS_MAC_FILE_EXECUTE,
 	CCS_MAC_FILE_OPEN,
@@ -255,6 +267,7 @@ enum ccs_mac_index {
 	CCS_MAX_MAC_INDEX
 };
 
+/* Index numbers for category of functionality. */
 enum ccs_mac_category_index {
 	CCS_MAC_CATEGORY_FILE,
 	CCS_MAC_CATEGORY_NETWORK,
@@ -264,6 +277,7 @@ enum ccs_mac_category_index {
 	CCS_MAX_MAC_CATEGORY_INDEX
 };
 
+/* Index numbers for "struct ccs_condition". */
 enum ccs_conditions_index {
 	CCS_TASK_UID,             /* current_uid()   */
 	CCS_TASK_EUID,            /* current_euid()  */
@@ -334,6 +348,7 @@ enum ccs_conditions_index {
 	CCS_ENVP_ENTRY
 };
 
+/* Index numbers for stat(). */
 enum ccs_path_stat_index {
 	CCS_PATH1,
 	CCS_PATH1_PARENT,
@@ -342,17 +357,29 @@ enum ccs_path_stat_index {
 	CCS_MAX_PATH_STAT
 };
 
-#define CCS_HASH_BITS 8
-#define CCS_MAX_HASH (1 << CCS_HASH_BITS)
 
+/*
+ * TOMOYO uses this hash only when appending a string into the string table.
+ * Frequency of appending strings is very low. So we don't need large (e.g.
+ * 64k) hash size. 256 will be sufficient.
+ */
+#define CCS_HASH_BITS 8
+#define CCS_MAX_HASH (1u << CCS_HASH_BITS)
+
+/*
+ * TOMOYO checks only SOCK_STREAM, SOCK_DGRAM, SOCK_RAW, SOCK_SEQPACKET.
+ * Therefore, we don't need SOCK_MAX.
+ */
 #define CCS_SOCK_MAX 6
 
+/* Index numbers for shared entries. */
 enum ccs_shared_acl_id {
 	CCS_CONDITION_LIST,
 	CCS_IPV6ADDRESS_LIST,
 	CCS_MAX_LIST
 };
 
+/* Index numbers for group entries. */
 enum ccs_group_id {
 	CCS_PATH_GROUP,
 	CCS_NUMBER_GROUP,
@@ -360,6 +387,7 @@ enum ccs_group_id {
 	CCS_MAX_GROUP
 };
 
+/* Index numbers for domain's attributes. */
 enum ccs_domain_info_flags_index {
 	/* Quota warnning flag.   */
 	CCS_DIF_QUOTA_WARNED,
@@ -373,7 +401,7 @@ enum ccs_domain_info_flags_index {
 	CCS_MAX_DOMAIN_INFO_FLAGS
 };
 
-/* Index numbers for garbage collection. */
+/* Index numbers for entry type. */
 enum ccs_policy_id {
 	CCS_ID_RESERVEDPORT,
 	CCS_ID_GROUP,
@@ -395,7 +423,7 @@ enum ccs_policy_id {
 #define CCS_ROOT_NAME                         "<kernel>"
 #define CCS_ROOT_NAME_LEN                     (sizeof(CCS_ROOT_NAME) - 1)
 
-/* Value type definition. */
+/* Index numbers for type of numeric values. */
 enum ccs_value_type {
 	CCS_VALUE_TYPE_INVALID,
 	CCS_VALUE_TYPE_DECIMAL,
@@ -403,13 +431,16 @@ enum ccs_value_type {
 	CCS_VALUE_TYPE_HEXADECIMAL
 };
 
+/* Size of temporary buffer for execve() operation. */
 #define CCS_EXEC_TMPSIZE     4096
 
 /* Profile number is an integer between 0 and 255. */
 #define CCS_MAX_PROFILES 256
 
+/* Group number is an integer between 0 and 255. */
 #define CCS_MAX_ACL_GROUPS 256
 
+/* Index numbers for operation mode. */
 enum ccs_mode_value {
 	CCS_CONFIG_DISABLED,
 	CCS_CONFIG_LEARNING,
@@ -421,6 +452,7 @@ enum ccs_mode_value {
 	CCS_CONFIG_USE_DEFAULT     = 255
 };
 
+/* Index numbers for audit type. */
 enum ccs_grant_log {
 	/* Follow profile's configuration. */
 	CCS_GRANTLOG_AUTO,
@@ -430,15 +462,29 @@ enum ccs_grant_log {
 	CCS_GRANTLOG_YES
 };
 
+/* Current thread is doing open(O_RDONLY | O_TRUNC) ? */
 #define CCS_OPEN_FOR_READ_TRUNCATE        1
+/* Current thread is doing open(3) ? */
 #define CCS_OPEN_FOR_IOCTL_ONLY           2
+/* Current thread is doing do_execve() ? */
 #define CCS_TASK_IS_IN_EXECVE             4
+/* Current thread should not be carried sleep penalty? */
 #define CCS_DONT_SLEEP_ON_ENFORCE_ERROR   8
+/* Current thread is running as an execute handler program? */
 #define CCS_TASK_IS_EXECUTE_HANDLER      16
+/* Curren thread is allowed to modify policy via /proc/ccs/ interface? */
 #define CCS_TASK_IS_MANAGER              32
 
-#define CCS_RETRY_REQUEST 1 /* Retry this request. */
+/*
+ * Retry this request. Returned by ccs_supervisor() if policy violation has
+ * occurred in enforcing mode and the userspace daemon decided to retry.
+ *
+ * We must choose a positive value in order to distinguish "granted" (which is
+ * 0) and "rejected" (which is a negative value) and "retry".
+ */
+#define CCS_RETRY_REQUEST 1
 
+/* Ignore gfp flags which are not supported. */
 #ifndef __GFP_HIGHIO
 #define __GFP_HIGHIO 0
 #endif
@@ -452,6 +498,7 @@ enum ccs_grant_log {
 #define __GFP_NOMEMALLOC 0
 #endif
 
+/* The gfp flags used by TOMOYO. */
 #define CCS_GFP_FLAGS (__GFP_WAIT | __GFP_IO | __GFP_HIGHIO | __GFP_NOWARN | \
 		       __GFP_NORETRY | __GFP_NOMEMALLOC)
 
@@ -461,35 +508,48 @@ struct ccs_acl_head {
 	bool is_deleted;
 } __attribute__((__packed__));
 
+/* Common header for shared entries. */
 struct ccs_shared_acl_head {
 	struct list_head list;
 	atomic_t users;
 } __attribute__((__packed__));
 
+/* Common header for individual entries. */
 struct ccs_acl_info {
 	struct list_head list;
-	struct ccs_condition *cond;
+	struct ccs_condition *cond; /* Maybe NULL. */
 	bool is_deleted;
 	u8 type; /* = one of values in "enum ccs_acl_entry_type_index" */
 } __attribute__((__packed__));
 
+/* Structure for holding a word. */
 struct ccs_name_union {
+	/* Either @filename or @group is NULL. */
 	const struct ccs_path_info *filename;
 	struct ccs_group *group;
+	/* True if @group != NULL, false if @filename != NULL. */
 	u8 is_group;
 };
 
+/* Structure for holding a number. */
 struct ccs_number_union {
 	unsigned long values[2];
-	struct ccs_group *group;
+	struct ccs_group *group; /* Maybe NULL. */
+	/* One of values in "enum ccs_value_type". */
 	u8 value_type[2];
+	/* True if @group != NULL, false otherwise. */
 	u8 is_group;
 };
 
 /* Structure for "path_group"/"number_group"/"address_group" directive. */
 struct ccs_group {
 	struct ccs_shared_acl_head head;
+	/* Name of group (without leading '@'). */
 	const struct ccs_path_info *group_name;
+	/*
+	 * List of "struct ccs_path_group" or "struct ccs_number_group" or
+	 * "struct ccs_address_group".
+	 */
 	struct list_head member_list;
 };
 
@@ -508,14 +568,14 @@ struct ccs_number_group {
 /* Structure for "address_group" directive. */
 struct ccs_address_group {
 	struct ccs_acl_head head;
-	bool is_ipv6;
+	bool is_ipv6; /* True if IPv6 address, false if IPv4 address. */
 	union {
 		u32 ipv4;                    /* Host byte order    */
 		const struct in6_addr *ipv6; /* Network byte order */
 	} min, max;
 };
 
-/* Subset of "struct stat". */
+/* Subset of "struct stat". Used by conditional ACL and audit logs. */
 struct ccs_mini_stat {
 	uid_t uid;
 	gid_t gid;
@@ -533,14 +593,27 @@ struct ccs_page_dump {
 
 /* Structure for attribute checks in addition to pathname checks. */
 struct ccs_obj_info {
+	/* True if ccs_get_attributes() was already called, false otherwise. */
 	bool validate_done;
+	/* True if @stat[] is valid. */
 	bool stat_valid[CCS_MAX_PATH_STAT];
+	/* First pathname. Initialized with { NULL, NULL } if no path. */
 	struct path path1;
+	/* Second pathname. Initialized with { NULL, NULL } if no path. */
 	struct path path2;
+	/*
+	 * Information on @path1, @path1's parent directory, @path2, @path2's
+	 * parent directory.
+	 */
 	struct ccs_mini_stat stat[CCS_MAX_PATH_STAT];
+	/*
+	 * Content of symbolic link to be created. NULL for operations other
+	 * than symlink().
+	 */
 	struct ccs_path_info *symlink_target;
 };
 
+/* Structure for entries which follows "struct ccs_condition". */
 struct ccs_condition_element {
 	/*
 	 * Left hand operand. A "struct ccs_argv" for CCS_ARGV_ENTRY, a
@@ -554,20 +627,20 @@ struct ccs_condition_element {
 	 * attached to the tail of the array of this struct.
 	 */
 	u8 right;
-	/* Equation operator. true if equals or overlaps, false otherwise. */
+	/* Equation operator. True if equals or overlaps, false otherwise. */
 	bool equals;
 };
 
 /* Structure for optional arguments. */
 struct ccs_condition {
 	struct ccs_shared_acl_head head;
-	u32 size;
-	u16 condc;
-	u16 numbers_count;
-	u16 names_count;
-	u16 argc;
-	u16 envc;
-	u8 grant_log;
+	u32 size; /* Memory size allocated for this entry. */
+	u16 condc; /* Number of conditions in this struct. */
+	u16 numbers_count; /* Number of "struct ccs_number_union values". */
+	u16 names_count; /* Number of "struct ccs_name_union names". */
+	u16 argc; /* Number of "struct ccs_argv". */
+	u16 envc; /* Number of "struct ccs_envp". */
+	u8 grant_log; /* One of values in "enum ccs_grant_log". */
 	const struct ccs_path_info *transit; /* This may be NULL. */
 	/*
 	 * struct ccs_condition_element condition[condc];
@@ -584,23 +657,37 @@ struct ccs_execve;
 struct ccs_request_info {
 	/*
 	 * For holding parameters specific to operations which deal files.
+	 * NULL if not dealing files.
 	 */
 	struct ccs_obj_info *obj;
 	/*
 	 * For holding parameters specific to execve() request.
+	 * NULL if not dealing do_execve().
 	 */
 	struct ccs_execve *ee;
-	/* For holding parameters. */
+	/*
+	 * For holding parameters.
+	 * Pointers in this union are not NULL except path->matched_path .
+	 */
 	union {
 		struct {
 			const struct ccs_path_info *filename;
-			/* For using wildcards at ccs_find_next_domain(). */
+			/*
+			 * For using wildcards at ccs_find_next_domain().
+			 *
+			 * The matched_acl cannot be used because it may refer
+			 * a "struct ccs_path_acl" with ->is_group == true.
+			 * We want to use exact "struct ccs_path_info" rather
+			 * than "struct ccs_path_acl".
+			 */
 			const struct ccs_path_info *matched_path;
+			/* One of values in "enum ccs_path_acl_index". */
 			u8 operation;
 		} path;
 		struct {
 			const struct ccs_path_info *filename1;
 			const struct ccs_path_info *filename2;
+			/* One of values in "enum ccs_path2_acl_index". */
 			u8 operation;
 		} path2;
 		struct {
@@ -608,30 +695,39 @@ struct ccs_request_info {
 			unsigned int mode;
 			unsigned int major;
 			unsigned int minor;
+			/* One of values in "enum ccs_mkdev_acl_index". */
 			u8 operation;
 		} mkdev;
 		struct {
 			const struct ccs_path_info *filename;
 			unsigned long number;
+			/*
+			 * One of values in "enum ccs_path_number_acl_index".
+			 */
 			u8 operation;
 		} path_number;
 		struct {
 			const u32 *address;
 			u32 ip;
 			u16 port;
+			/* One of values smaller than CCS_SOCK_MAX. */
 			u8 protocol;
+			/* One of values in "enum ccs_network_acl_index". */
 			u8 operation;
 			bool is_ipv6;
 		} inet_network;
 		struct {
 			const struct ccs_path_info *address;
+			/* One of values smaller than CCS_SOCK_MAX. */
 			u8 protocol;
+			/* One of values in "enum ccs_network_acl_index". */
 			u8 operation;
 		} unix_network;
 		struct {
 			const struct ccs_path_info *name;
 		} environ;
 		struct {
+			/* One of values in "enum ccs_capability_acl_index". */
 			u8 operation;
 		} capability;
 		struct {
@@ -649,8 +745,8 @@ struct ccs_request_info {
 			const struct ccs_path_info *domainname;
 		} task;
 	} param;
-	u8 param_type;
-	bool granted;
+	u8 param_type; /* One of values in "enum ccs_acl_entry_type_index". */
+	bool granted; /* True if granted, false otherwise. */
 	/*
 	 * For updating current->ccs_domain_info at ccs_update_task_domain().
 	 * Initialized to NULL at ccs_init_request_info().
@@ -670,7 +766,7 @@ struct ccs_request_info {
 	 */
 	u8 profile;
 	/*
-	 * For holding access control mode used for this request.
+	 * For holding operation mode used for this request.
 	 * One of CCS_CONFIG_DISABLED, CCS_CONFIG_LEARNING,
 	 * CCS_CONFIG_PERMISSIVE, CCS_CONFIG_ENFORCING.
 	 */
@@ -770,21 +866,22 @@ struct ccs_envp {
 };
 
 /*
- * Structure for "auto_execute_handler" and "denied_execute_handler" directive.
+ * Structure for "task auto_execute_handler" and "task denied_execute_handler"
+ * directive.
  *
- * If "auto_execute_handler" directive exists and the current process is not
- * an execute handler, all execve() requests are replaced by execve() requests
- * of a program specified by "auto_execute_handler" directive.
- * If the current process is an execute handler,
- * "auto_execute_handler" and "denied_execute_handler" directives are ignored.
- * The program specified by "execute_handler" validates execve() parameters
- * and executes the original execve() requests if appropriate.
+ * If "task auto_execute_handler" directive exists and the current process is
+ * not an execute handler, all execve() requests are replaced by execve()
+ * requests of a program specified by "task auto_execute_handler" directive.
+ * If the current process is an execute handler, "task auto_execute_handler"
+ * and "task denied_execute_handler" directives are ignored.
+ * The program specified by "task execute_handler" validates execve()
+ * parameters and executes the original execve() requests if appropriate.
  *
- * "denied_execute_handler" directive is used only when execve() request was
- * rejected in enforcing mode (i.e. CONFIG::file::execute={ mode=enforcing }).
- * The program specified by "denied_execute_handler" does whatever it wants
- * to do (e.g. silently terminate, change firewall settings,
- * redirect the user to honey pot etc.).
+ * "task denied_execute_handler" directive is used only when execve() request
+ * was rejected in enforcing mode (i.e. CONFIG::file::execute={ mode=enforcing
+ * }). The program specified by "task denied_execute_handler" does whatever it
+ * wants to do (e.g. silently terminate, change firewall settings, redirect the
+ * user to honey pot etc.).
  */
 struct ccs_handler_acl {
 	struct ccs_acl_info head;       /* type = CCS_TYPE_*_EXECUTE_HANDLER */
@@ -808,7 +905,7 @@ struct ccs_task_acl {
  */
 struct ccs_path_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_PATH_ACL */
-	u16 perm; /* Bitmask of values in "enum ccs_path_acl_index" */
+	u16 perm; /* Bitmask of values in "enum ccs_path_acl_index". */
 	struct ccs_name_union name;
 };
 
@@ -817,7 +914,7 @@ struct ccs_path_acl {
  */
 struct ccs_path2_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_PATH2_ACL */
-	u8 perm; /* Bitmask of values in "enum ccs_path2_acl_index" */
+	u8 perm; /* Bitmask of values in "enum ccs_path2_acl_index". */
 	struct ccs_name_union name1;
 	struct ccs_name_union name2;
 };
@@ -828,7 +925,7 @@ struct ccs_path2_acl {
  */
 struct ccs_path_number_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_PATH_NUMBER_ACL */
-	u8 perm; /* Bitmask of values in "enum ccs_path_number_acl_index" */
+	u8 perm; /* Bitmask of values in "enum ccs_path_number_acl_index". */
 	struct ccs_name_union name;
 	struct ccs_number_union number;
 };
@@ -836,14 +933,14 @@ struct ccs_path_number_acl {
 /* Structure for "file mkblock" and "file mkchar" directive. */
 struct ccs_mkdev_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_MKDEV_ACL */
-	u8 perm; /* Bitmask of values in "enum ccs_mkdev_acl_index" */
+	u8 perm; /* Bitmask of values in "enum ccs_mkdev_acl_index". */
 	struct ccs_name_union name;
 	struct ccs_number_union mode;
 	struct ccs_number_union major;
 	struct ccs_number_union minor;
 };
 
-/* Structure for "file mount" keyword. */
+/* Structure for "file mount" directive. */
 struct ccs_mount_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_MOUNT_ACL */
 	struct ccs_name_union dev_name;
@@ -861,7 +958,7 @@ struct ccs_env_acl {
 /* Structure for "capability" directive. */
 struct ccs_capability_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_CAPABILITY_ACL */
-	u8 operation;
+	u8 operation; /* one of values in "enum ccs_capability_acl_index". */
 };
 
 /* Structure for "ipc signal" directive. */
@@ -872,6 +969,7 @@ struct ccs_signal_acl {
 	const struct ccs_path_info *domainname;
 };
 
+/* Structure for holding an IPv6 address. */
 struct ccs_ipv6addr {
 	struct ccs_shared_acl_head head;
 	struct in6_addr addr;
@@ -885,11 +983,11 @@ struct ccs_inet_acl {
 	/*
 	 * address_type takes one of the following constants.
 	 *   CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP
-	 *                if address points to "address_group" directive.
+	 *                if @address points to "address_group" directive.
 	 *   CCS_IP_ADDRESS_TYPE_IPv4
-	 *                if address points to an IPv4 address.
+	 *                if @address points to an IPv4 address.
 	 *   CCS_IP_ADDRESS_TYPE_IPv6
-	 *                if address points to an IPv6 address.
+	 *                if @address points to an IPv6 address.
 	 */
 	u8 address_type;
 	union {
@@ -919,19 +1017,21 @@ struct ccs_unix_acl {
 	struct ccs_name_union name;
 };
 
-/* Structure for string data. */
+/* Structure for holding string data. */
 struct ccs_name {
 	struct ccs_shared_acl_head head;
-	int size;
+	int size; /* Memory size allocated for this entry. */
 	struct ccs_path_info entry;
 };
 
+/* Structure for holding a line from /proc/ccs/ interface. */
 struct ccs_acl_param {
 	char *data;
 	struct ccs_domain_info *domain;
 	bool is_delete;
 };
 
+/* Size of read buffer for /proc/ccs/ interface. */
 #define CCS_MAX_IO_READ_QUEUE 32
 
 /* Structure for reading/writing policy via /proc interfaces. */
@@ -976,10 +1076,11 @@ struct ccs_io_buffer {
 	char *write_buf;
 	/* Size of write buffer.                */
 	int writebuf_size;
-	/* Type of this interface.              */
+	/* One of values in "enum ccs_proc_interface_index". */
 	u8 type;
 };
 
+/* Structure for /proc/ccs/profile interface. */
 struct ccs_profile {
 	const struct ccs_path_info *comment;
 	u8 default_config;

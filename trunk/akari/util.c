@@ -85,6 +85,45 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 /* Utility functions. */
 
 /**
+ * ccs_convert_time - Convert time_t to YYYY/MM/DD hh/mm/ss.
+ * @time:  Seconds since 1970/01/01 00:00:00.
+ * @stamp: Pointer to "struct ccs_time".
+ *
+ * Returns nothing.
+ *
+ * This function does not handle Y2038 problem.
+ */
+void ccs_convert_time(time_t time, struct ccs_time *stamp)
+{
+	static const u16 ccs_eom[2][12] = {
+		{ 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
+		{ 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
+	};
+	u16 y;
+	u8 m;
+	bool r;
+	stamp->sec = time % 60;
+	time /= 60;
+	stamp->min = time % 60;
+	time /= 60;
+	stamp->hour = time % 24;
+	time /= 24;
+	for (y = 1970; ; y++) {
+		const unsigned short days = (y & 3) ? 365 : 366;
+		if (time < days)
+			break;
+		time -= days;
+	}
+	r = (y & 3) == 0;
+	for (m = 0; m < 11 && time >= ccs_eom[r][m]; m++);
+	if (m)
+		time -= ccs_eom[r][m - 1];
+	stamp->year = y;
+	stamp->month = ++m;
+	stamp->day = ++time;
+}
+
+/**
  * ccs_permstr - Find permission keywords.
  *
  * @string: String representation for permissions in foo/bar/buz format.

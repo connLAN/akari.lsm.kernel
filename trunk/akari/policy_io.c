@@ -2305,6 +2305,154 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 	head->r.eof = true;
 }
 
+/* String table for /proc/ccs/meminfo interface. */
+static const char * const ccs_policy_headers[CCS_MAX_POLICY_STAT] = {
+	[CCS_STAT_POLICY_UPDATES]    = "update:",
+	[CCS_STAT_POLICY_LEARNING]   = "violation in learning mode:",
+	[CCS_STAT_POLICY_PERMISSIVE] = "violation in permissive mode:",
+	[CCS_STAT_POLICY_ENFORCING]  = "violation in enforcing mode:",
+};
+
+/* String table for /proc/ccs/meminfo interface. */
+static const char * const ccs_memory_headers[CCS_MAX_MEMORY_STAT] = {
+	[CCS_MEMORY_POLICY] = "policy:",
+	[CCS_MEMORY_AUDIT]  = "audit log:",
+	[CCS_MEMORY_QUERY]  = "query message:",
+};
+
+/* Timestamp counter for last updated. */
+static unsigned int ccs_stat_updated[CCS_MAX_POLICY_STAT];
+/* Counter for number of updates. */
+static unsigned int ccs_stat_modified[CCS_MAX_POLICY_STAT];
+
+/**
+ * ccs_update_stat - Update statistic counters.
+ *
+ * @index: Index for policy type.
+ *
+ * Returns nothing.
+ */
+void ccs_update_stat(const u8 index)
+{
+	struct timeval tv;
+	do_gettimeofday(&tv);
+	/*
+	 * I don't use atomic operations because race condition is not fatal.
+	 */
+	ccs_stat_updated[index]++;
+	ccs_stat_modified[index] = tv.tv_sec;
+}
+
+/**
+ * ccs_read_stat - Read statistic data.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
+static void ccs_read_stat(struct ccs_io_buffer *head)
+{
+	u8 i;
+	unsigned int total = 0;
+	if (head->r.eof)
+		return;
+	for (i = 0; i < CCS_MAX_POLICY_STAT; i++) {
+		ccs_io_printf(head, "Policy %-30s %10u", ccs_policy_headers[i],
+			      ccs_stat_updated[i]);
+		if (ccs_stat_modified[i]) {
+			struct ccs_time stamp;
+			ccs_convert_time(ccs_stat_modified[i], &stamp);
+			ccs_io_printf(head, " (Last: %04u/%02u/%02u "
+				      "%02u:%02u:%02u)",
+				      stamp.year, stamp.month, stamp.day,
+				      stamp.hour, stamp.min, stamp.sec);
+		}
+		ccs_set_lf(head);
+	}
+	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++) {
+		unsigned int used = ccs_memory_used[i];
+		total += used;
+		ccs_io_printf(head, "Memory used by %-22s %10u",
+			      ccs_memory_headers[i], used);
+		used = ccs_memory_quota[i];
+		if (used)
+			ccs_io_printf(head, " (Quota: %10u)", used);
+		ccs_set_lf(head);
+	}
+	ccs_io_printf(head, "Total memory used:                    %10u\n",
+		      total);
+	head->r.eof = true;
+}
+
+/**
+ * ccs_write_stat - Set memory quota.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns 0.
+ */
+static int ccs_write_stat(struct ccs_io_buffer *head)
+{
+	char *data = head->write_buf;
+	u8 i;
+	if (ccs_str_starts(&data, "Memory used by "))
+		for (i = 0; i < CCS_MAX_MEMORY_STAT; i++)
+			if (ccs_str_starts(&data, ccs_memory_headers[i]))
+				sscanf(data, "%u", &ccs_memory_quota[i]);
+	return 0;
+}
+
+/* String table for /proc/ccs/meminfo interface. */
+static const char * const ccs_old_memory_header[CCS_MAX_MEMORY_STAT] = {
+	[CCS_MEMORY_POLICY] = "Policy:",
+	[CCS_MEMORY_AUDIT]  = "Audit logs:",
+	[CCS_MEMORY_QUERY]  = "Query lists:",
+};
+
+/**
+ * ccs_read_memory_counter - Read memory usage.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
+static void ccs_read_memory_counter(struct ccs_io_buffer *head)
+{
+	unsigned int total = 0;
+	int i;
+	if (head->r.eof)
+		return;
+	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++) {
+		unsigned int used = ccs_memory_used[i];
+		total += used;
+		ccs_io_printf(head, "%-12s %10u", ccs_old_memory_header[i],
+			      used);
+		if (ccs_memory_quota[i])
+			ccs_io_printf(head, "   (Quota: %10u)",
+				      ccs_memory_quota[i]);
+		ccs_io_printf(head, "\n");
+	}
+	ccs_io_printf(head, "%-12s %10u\n", "Total:", total);
+	head->r.eof = true;
+}
+
+/**
+ * ccs_write_memory_quota - Set memory quota.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns 0.
+ */
+static int ccs_write_memory_quota(struct ccs_io_buffer *head)
+{
+	char *data = head->write_buf;
+	u8 i;
+	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++)
+		if (ccs_str_starts(&data, ccs_old_memory_header[i]))
+			sscanf(data, "%u", &ccs_memory_quota[i]);
+	return 0;
+}
+
 /**
  * ccs_open_control - open() for /proc/ccs/ interface.
  *
@@ -2352,6 +2500,11 @@ int ccs_open_control(const u8 type, struct file *file)
 	case CCS_VERSION: /* /proc/ccs/version */
 		head->read = ccs_read_version;
 		head->readbuf_size = 128;
+		break;
+	case CCS_STAT: /* /proc/ccs/stat */
+		head->write = ccs_write_stat;
+		head->read = ccs_read_stat;
+		head->readbuf_size = 1024;
 		break;
 	case CCS_MEMINFO: /* /proc/ccs/meminfo */
 		head->write = ccs_write_memory_quota;
@@ -2411,7 +2564,9 @@ int ccs_open_control(const u8 type, struct file *file)
 	 */
 	if (type == CCS_QUERY)
 		atomic_inc(&ccs_query_observers);
-	else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG)
+	else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG &&
+		 type != CCS_VERSION && type != CCS_MEMINFO &&
+		 type != CCS_STAT)
 		head->reader_idx = ccs_lock();
 	file->private_data = head;
 	return 0;
@@ -2566,7 +2721,9 @@ int ccs_close_control(struct file *file)
 	if (type == CCS_QUERY) {
 		if (atomic_dec_and_test(&ccs_query_observers))
 			wake_up_all(&ccs_answer_wait);
-	} else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG)
+	} else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG &&
+		   type != CCS_VERSION && type != CCS_MEMINFO &&
+		   type != CCS_STAT)
 		ccs_unlock(head->reader_idx);
 	/* Release memory used for policy I/O. */
 	kfree(head->read_buf);

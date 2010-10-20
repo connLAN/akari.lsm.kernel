@@ -123,97 +123,6 @@ struct file_operations ccs_self_operations = {
 	.read  = ccs_read_self,
 };
 
-/* Timestamp counter for last updated. */
-static u32 ccs_stat_updated[CCS_MAX_POLICY_STAT];
-/* Counter for number of updates. */
-static u32 ccs_stat_modified[CCS_MAX_POLICY_STAT];
-
-/**
- * ccs_update_stat - Update statistic counters.
- *
- * @index: Index for policy type.
- *
- * Returns nothing.
- */
-void ccs_update_stat(const u8 index)
-{
-	struct timeval tv;
-	do_gettimeofday(&tv);
-	/*
-	 * I don't use atomic operations because race condition is not fatal.
-	 */
-	ccs_stat_updated[index]++;
-	ccs_stat_modified[index] = tv.tv_sec;
-}
-
-/**
- * ccs_read_stat - read() for /proc/ccs/stat interface.
- *
- * @file:  Pointer to "struct file".
- * @buf:   Buffer.
- * @count: Size of @buf.
- * @ppos:  Bytes read by now.
- *
- * Returns read size on success, negative value otherwise.
- */
-static ssize_t ccs_read_stat(struct file *file, char __user *buf, size_t count,
-			     loff_t *ppos)
-{
-	static const char * const headers[CCS_MAX_POLICY_STAT] = {
-		[CCS_STAT_POLICY_UPDATES]    = "update:",
-		[CCS_STAT_POLICY_LEARNING]   = "violation (learning mode):",
-		[CCS_STAT_POLICY_PERMISSIVE] = "violation (permissive mode):",
-		[CCS_STAT_POLICY_ENFORCING]  = "violation (enforcing mode):",
-	};
-	static const char * const headers2[CCS_MAX_MEMORY_STAT] = {
-		[CCS_MEMORY_POLICY] = "policy:",
-		[CCS_MEMORY_AUDIT]  = "audit log:",
-		[CCS_MEMORY_QUERY]  = "query message:",
-	};
-	char buffer[800];
-	loff_t len = 0;
-	loff_t pos = *ppos;
-	u8 i;
-	unsigned int total = 0;
-	buf[sizeof(buf) - 1] = '\0';
-	for (i = 0; i < CCS_MAX_POLICY_STAT; i++)
-		len += snprintf(buffer + len, sizeof(buffer) - len - 1,
-				"Last policy %-29s %10u\n"
-				"Total policy %-28s %10u\n",
-				headers[i], ccs_stat_modified[i],
-				headers[i], ccs_stat_updated[i]);
-	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++) {
-		unsigned int used = ccs_memory_used[i];
-		total += used;
-		len += snprintf(buffer + len, sizeof(buffer) - len - 1,
-				"Memory used by %-26s %10u\n"
-				"Memory quota for %-24s %10u\n",
-				headers2[i], used,
-				headers2[i], ccs_memory_quota[i]);
-	}
-	snprintf(buffer + len, sizeof(buffer) - len - 1,
-		 "Total memory used:                        %10u\n", total);
-	len = strlen(buffer);
-	if (pos >= len || !count)
-		return 0;
-	len -= pos;
-	if (count < len)
-		len = count;
-	if (copy_to_user(buf, buffer + pos, len))
-		return -EFAULT;
-	*ppos += len;
-	return len;
-}
-
-/* Operations for /proc/ccs/stat interface. */
-static
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 17)
-const
-#endif
-struct file_operations ccs_stat_operations = {
-	.read  = ccs_read_stat,
-};
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 4, 23)
 #if !defined(RHEL_VERSION) || RHEL_VERSION != 3 || !defined(RHEL_UPDATE) || RHEL_UPDATE != 9
 
@@ -418,6 +327,7 @@ static void __init ccs_proc_init(void)
 	ccs_create_entry(".process_status",  0600, ccs_dir,
 			 CCS_PROCESS_STATUS);
 	ccs_create_entry("meminfo",          0600, ccs_dir, CCS_MEMINFO);
+	ccs_create_entry("stat",             0644, ccs_dir, CCS_STAT);
 	ccs_create_entry("profile",          0600, ccs_dir, CCS_PROFILE);
 	ccs_create_entry("manager",          0600, ccs_dir, CCS_MANAGER);
 	ccs_create_entry("version",          0400, ccs_dir, CCS_VERSION);
@@ -428,9 +338,6 @@ static void __init ccs_proc_init(void)
 							     0666, ccs_dir);
 		if (e)
 			e->proc_fops = &ccs_self_operations;
-		e = create_proc_entry("stat", 0444, ccs_dir);
-		if (e)
-			e->proc_fops = &ccs_stat_operations;
 	}
 }
 

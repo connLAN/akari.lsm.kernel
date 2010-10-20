@@ -198,6 +198,7 @@ enum ccs_proc_interface_index {
 	CCS_DOMAIN_STATUS,
 	CCS_PROCESS_STATUS,
 	CCS_MEMINFO,
+	CCS_STAT,
 	CCS_GRANTLOG,
 	CCS_REJECTLOG,
 	CCS_VERSION,
@@ -1088,6 +1089,16 @@ struct ccs_profile {
 	unsigned int pref[CCS_MAX_PREF];
 };
 
+/* Structure for representing YYYY/MM/DD hh/mm/ss. */
+struct ccs_time {
+	u16 year;
+	u8 month;
+	u8 day;
+	u8 hour;
+	u8 min;
+	u8 sec;
+};
+
 /* Prototype definition for "struct ccsecurity_operations". */
 
 void __init ccs_capability_init(void);
@@ -1177,7 +1188,6 @@ int ccs_write_control(struct file *file, const char __user *buffer,
 int ccs_write_file(struct ccs_acl_param *param);
 int ccs_write_group(char *data, const bool is_delete, const u8 type);
 int ccs_write_ipc(struct ccs_acl_param *param);
-int ccs_write_memory_quota(struct ccs_io_buffer *head);
 int ccs_write_misc(struct ccs_acl_param *param);
 int ccs_write_inet_network(struct ccs_acl_param *param);
 int ccs_write_unix_network(struct ccs_acl_param *param);
@@ -1198,6 +1208,7 @@ void *ccs_commit_ok(void *data, const unsigned int size);
 void ccs_check_acl(struct ccs_request_info *r,
 		   bool (*check_entry) (struct ccs_request_info *,
 					const struct ccs_acl_info *));
+void ccs_convert_time(time_t time, struct ccs_time *p);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 void ccs_get_attributes(struct ccs_obj_info *obj);
 void ccs_memory_free(const void *ptr, size_t size);
@@ -1212,7 +1223,6 @@ void ccs_print_ulong(char *buffer, const int buffer_len,
 void ccs_put_name_union(struct ccs_name_union *ptr);
 void ccs_put_number_union(struct ccs_number_union *ptr);
 void ccs_read_log(struct ccs_io_buffer *head);
-void ccs_read_memory_counter(struct ccs_io_buffer *head);
 void ccs_run_gc(void);
 void ccs_transition_failed(const char *domainname);
 void ccs_unlock(const int idx);

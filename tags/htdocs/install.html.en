@@ -89,7 +89,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 <table border="1">
 <tr><td>
 # cd /tmp/<br>
-# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
+# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar&amp;revision=4073'<br>
 # tar -zxf ccs-tools.tar.gz<br>
 # cd ccstools/<br>
 # make -s<br>

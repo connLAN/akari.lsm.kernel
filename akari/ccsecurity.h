@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/18
+ * Version: 1.8.0-pre   2010/10/22
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -137,6 +137,7 @@ struct ccsecurity_operations {
 				 uid_t user, gid_t group);
 	int (*chmod_permission) (struct dentry *dentry, struct vfsmount *mnt,
 				 mode_t mode);
+	int (*getattr_permission) (struct vfsmount *mnt, struct dentry *dentry);
 	int (*sigqueue_permission) (pid_t pid, int sig);
 	int (*tgsigqueue_permission) (pid_t tgid, pid_t pid, int sig);
 	int (*search_binary_handler) (struct linux_binprm *bprm,
@@ -469,6 +470,14 @@ static inline int ccs_chmod_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt, mode) : 0;
 }
 
+static inline int ccs_getattr_permission(struct vfsmount *mnt,
+					 struct dentry *dentry)
+{
+	int (*func) (struct vfsmount *, struct dentry *)
+		= ccsecurity_ops.getattr_permission;
+	return func ? func(mnt, dentry) : 0;
+}
+
 static inline int ccs_sigqueue_permission(pid_t pid, int sig)
 {
 	int (*func) (pid_t, int) = ccsecurity_ops.sigqueue_permission;
@@ -731,6 +740,12 @@ static inline int ccs_chown_permission(struct dentry *dentry,
 
 static inline int ccs_chmod_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, mode_t mode)
+{
+	return 0;
+}
+
+static inline int ccs_getattr_permission(struct vfsmount *mnt,
+					 struct dentry *dentry)
 {
 	return 0;
 }

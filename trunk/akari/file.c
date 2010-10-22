@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/18
+ * Version: 1.8.0-pre   2010/10/22
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -37,6 +37,7 @@ static const u8 ccs_p2mac[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_WRITE]      = CCS_MAC_FILE_OPEN,
 	[CCS_TYPE_APPEND]     = CCS_MAC_FILE_OPEN,
 	[CCS_TYPE_UNLINK]     = CCS_MAC_FILE_UNLINK,
+	[CCS_TYPE_GETATTR]    = CCS_MAC_FILE_GETATTR,
 	[CCS_TYPE_RMDIR]      = CCS_MAC_FILE_RMDIR,
 	[CCS_TYPE_TRUNCATE]   = CCS_MAC_FILE_TRUNCATE,
 	[CCS_TYPE_SYMLINK]    = CCS_MAC_FILE_SYMLINK,
@@ -695,8 +696,10 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 	if (current->in_execve && !(ccs_flags & CCS_TASK_IS_IN_EXECVE))
 		return 0;
 #endif
+	/*
 	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
 		return 0;
+	*/
 	buf.name = NULL;
 	r.mode = CCS_CONFIG_DISABLED;
 	idx = ccs_read_lock();
@@ -1324,6 +1327,20 @@ static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
 }
 
 /**
+ * __ccs_getattr_permission - Check permission for vfs_getattr().
+ *
+ * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_getattr_permission(struct vfsmount *mnt,
+				    struct dentry *dentry)
+{
+	return ccs_path_perm(CCS_TYPE_GETATTR, NULL, dentry, mnt, NULL);
+}
+
+/**
  * __ccs_symlink_permission - Check permission for vfs_symlink().
  *
  * @dir:    Pointer to "struct inode".
@@ -1607,6 +1624,7 @@ void __init ccs_file_init(void)
 	ccsecurity_ops.ioctl_permission = __ccs_ioctl_permission;
 	ccsecurity_ops.chmod_permission = __ccs_chmod_permission;
 	ccsecurity_ops.chown_permission = __ccs_chown_permission;
+	ccsecurity_ops.getattr_permission = __ccs_getattr_permission;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 	ccsecurity_ops.pivot_root_permission = __ccs_pivot_root_permission;
 	ccsecurity_ops.chroot_permission = __ccs_chroot_permission;

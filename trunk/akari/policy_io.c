@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/18
+ * Version: 1.8.0-pre   2010/10/22
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -34,6 +34,7 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_FILE_OPEN]       = "open",
 	[CCS_MAC_FILE_CREATE]     = "create",
 	[CCS_MAC_FILE_UNLINK]     = "unlink",
+	[CCS_MAC_FILE_GETATTR]    = "getattr",
 	[CCS_MAC_FILE_MKDIR]      = "mkdir",
 	[CCS_MAC_FILE_RMDIR]      = "rmdir",
 	[CCS_MAC_FILE_MKFIFO]     = "mkfifo",
@@ -104,6 +105,7 @@ const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_WRITE]      = "write",
 	[CCS_TYPE_APPEND]     = "append",
 	[CCS_TYPE_UNLINK]     = "unlink",
+	[CCS_TYPE_GETATTR]    = "getattr",
 	[CCS_TYPE_RMDIR]      = "rmdir",
 	[CCS_TYPE_TRUNCATE]   = "truncate",
 	[CCS_TYPE_SYMLINK]    = "symlink",
@@ -418,7 +420,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0-pre   2010/10/18\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0-pre   2010/10/22\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 

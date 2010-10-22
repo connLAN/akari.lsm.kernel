@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/18
+ * Version: 1.8.0-pre   2010/10/22
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -25,6 +25,7 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 	[CCS_MAC_FILE_OPEN]       = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_CREATE]     = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_UNLINK]     = CCS_MAC_CATEGORY_FILE,
+	[CCS_MAC_FILE_GETATTR]    = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_MKDIR]      = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_RMDIR]      = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_MKFIFO]     = CCS_MAC_CATEGORY_FILE,

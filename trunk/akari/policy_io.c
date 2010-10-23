@@ -12,6 +12,78 @@
 
 #include "internal.h"
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
+/**
+ * __wait_event_interruptible_timeout - Sleep until a condition gets true or a timeout elapses.
+ *
+ * @wq:        The waitqueue to wait on.
+ * @condition: A C expression for the event to wait for.
+ * @ret:       Timeout, in jiffies.
+ *
+ * Returns 0 if the @timeout elapsed, -ERESTARTSYS if it was interrupted by a
+ * signal, and the remaining jiffies otherwise if the condition evaluated to
+ * true before the timeout elapsed.
+ *
+ * This is for compatibility with older kernels.
+ */
+#define __wait_event_interruptible_timeout(wq, condition, ret)		\
+do {									\
+	wait_queue_t __wait;						\
+	init_waitqueue_entry(&__wait, current);				\
+									\
+	add_wait_queue(&wq, &__wait);					\
+	for (;;) {							\
+		set_current_state(TASK_INTERRUPTIBLE);			\
+		if (condition)						\
+			break;						\
+		if (!signal_pending(current)) {				\
+			ret = schedule_timeout(ret);			\
+			if (!ret)					\
+				break;					\
+			continue;					\
+		}							\
+		ret = -ERESTARTSYS;					\
+		break;							\
+	}								\
+	current->state = TASK_RUNNING;					\
+	remove_wait_queue(&wq, &__wait);				\
+} while (0)
+
+/**
+ * wait_event_interruptible_timeout - Sleep until a condition gets true or a timeout elapses.
+ *
+ * @wq:        The waitqueue to wait on.
+ * @condition: A C expression for the event to wait for.
+ * @timeout:   Timeout, in jiffies.
+ *
+ * Returns 0 if the @timeout elapsed, -ERESTARTSYS if it was interrupted by a
+ * signal, and the remaining jiffies otherwise if the condition evaluated to
+ * true before the timeout elapsed.
+ *
+ * This is for compatibility with older kernels.
+ */
+#define wait_event_interruptible_timeout(wq, condition, timeout)	\
+({									\
+	long __ret = timeout;						\
+	if (!(condition))						\
+		__wait_event_interruptible_timeout(wq, condition, __ret); \
+	__ret;								\
+})
+
+#endif
+
+/**
+ * list_for_each_cookie - iterate over a list with cookie.
+ *
+ * @pos:  Pointer to "struct list_head".
+ * @head: Pointer to "struct list_head".
+ */
+#define list_for_each_cookie(pos, head)					\
+	for (pos = pos ? pos : srcu_dereference((head)->next, &ccs_ss); \
+	     pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
+
+
 /* Profile version. Currently only 20100903 is defined. */
 static unsigned int ccs_profile_version;
 
@@ -215,7 +287,7 @@ static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
 	__attribute__ ((format(printf, 3, 4)));
 
 /**
- * ccs_addprintf - snprint()-like-strncat().
+ * ccs_addprintf - strncat()-like-snprint().
  *
  * @buffer: Buffer to write to. Must be '\0'-terminated.
  * @len:    Size of @buffer.

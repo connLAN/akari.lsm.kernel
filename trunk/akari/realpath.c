@@ -12,17 +12,31 @@
 
 #include "internal.h"
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#include <linux/namei.h>
-#include <linux/mount.h>
 #define ccs_lookup_flags LOOKUP_FOLLOW
 #else
 #define ccs_lookup_flags (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
 #endif
-#include <net/sock.h>
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
-#include <linux/kthread.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+#define s_fs_info u.generic_sbp
 #endif
-#include <linux/proc_fs.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
+/**
+ * SOCKET_I - Get "struct socket".
+ *
+ * @inode: Pointer to "struct inode".
+ *
+ * Returns pointer to "struct socket".
+ *
+ * This is for compatibility with older kernels.
+ */
+static inline struct socket *SOCKET_I(struct inode *inode)
+{
+	return inode->i_sock ? &inode->u.socket_i : NULL;
+}
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 

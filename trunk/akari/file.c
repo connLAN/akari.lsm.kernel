@@ -11,16 +11,8 @@
  */
 
 #include "internal.h"
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
-#include <linux/mount.h>
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#include <linux/namespace.h>
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#include <linux/dcache.h>
-#include <linux/namei.h>
-#endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
+
 /*
  * ACC_MODE() in this file uses old definition because may_open() receives
  * open flags modified by open_to_namei_flags() until 2.6.33.
@@ -28,6 +20,7 @@
  */
 #undef ACC_MODE
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
+
 #endif
 
 /* Mapping table from "enum ccs_path_acl_index" to "enum ccs_mac_index". */
@@ -632,6 +625,7 @@ int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+
 /*
  * Save original flags passed to sys_open().
  *
@@ -660,6 +654,7 @@ static void __ccs_clear_open_mode(void)
 	ccs_current_security()->ccs_flags &= ~(CCS_OPEN_FOR_IOCTL_ONLY |
 					       CCS_OPEN_FOR_READ_TRUNCATE);
 }
+
 #endif
 
 /**
@@ -738,6 +733,13 @@ out:
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+/**
+ * ccs_new_open_permission - Check permission for "read" and "write".
+ *
+ * @filp: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_new_open_permission(struct file *filp)
 {
 	return __ccs_open_permission(filp->f_path.dentry, filp->f_path.mnt,
@@ -1118,6 +1120,7 @@ static int __ccs_chown_permission(struct dentry *dentry,
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+
 /**
  * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
  *
@@ -1136,7 +1139,9 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 					     01);
 	return 0;
 }
+
 #else
+
 /**
  * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
  *
@@ -1155,6 +1160,7 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 					     02);
 	return 0;
 }
+
 #endif
 
 /**
@@ -1411,6 +1417,7 @@ static int __ccs_link_permission(struct dentry *old_dentry,
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+
 /**
  * __ccs_open_exec_permission - Check permission for open_exec().
  *
@@ -1440,12 +1447,10 @@ static int __ccs_uselib_permission(struct dentry *dentry, struct vfsmount *mnt)
 	/* 01 means "read". */
 	return __ccs_open_permission(dentry, mnt, 01);
 }
+
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18) || defined(CONFIG_SYSCTL_SYSCALL)
-
-#include <linux/sysctl.h>
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18) || (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL))
 
 /**
  * __ccs_parse_table - Check permission for parse_table().
@@ -1572,10 +1577,11 @@ out:
 	kfree(buffer);
 	return error;
 }
-#endif
+
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+
 /**
  * ccs_old_pivot_root_permission - Check permission for pivot_root().
  *
@@ -1604,6 +1610,7 @@ static int ccs_old_chroot_permission(struct nameidata *nd)
 	struct path path = { nd->mnt, nd->dentry };
 	return __ccs_chroot_permission(&path);
 }
+
 #endif
 
 /**

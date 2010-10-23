@@ -10,8 +10,23 @@
  *
  */
 
-#include <linux/slab.h>
 #include "internal.h"
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
+
+/**
+ * fatal_signal_pending - Check whether SIGKILL is pending or not.
+ *
+ * @p: Pointer to "struct task_struct".
+ *
+ * Returns true if SIGKILL is pending on @p, false otherwise.
+ *
+ * This is for compatibility with older kernels.
+ */
+#define fatal_signal_pending(p) (signal_pending(p) &&			\
+				 sigismember(&p->pending.signal, SIGKILL))
+
+#endif
 
 /**
  * ccs_print_bprm - Print "struct linux_binprm" for auditing.

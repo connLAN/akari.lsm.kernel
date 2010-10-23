@@ -10,12 +10,6 @@
  *
  */
 
-#include <linux/types.h>
-#include <linux/kernel.h>
-#include <asm/io.h>
-#include <linux/proc_fs.h>
-#include <linux/module.h>
-#include <linux/version.h>
 #include "internal.h"
 
 /**
@@ -376,6 +370,11 @@ static int __init ccs_init_module(void)
 	return 0;
 }
 
+/**
+ * ccs_main_init - Initialize this module.
+ *
+ * Returns nothing.
+ */
 void __init ccs_main_init(void)
 {
 	ccs_init_module();

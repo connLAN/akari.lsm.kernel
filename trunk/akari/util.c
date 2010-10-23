@@ -194,7 +194,7 @@ const struct ccs_path_info *ccs_get_domainname(struct ccs_acl_param *param)
  * @result: Pointer to "unsigned long".
  * @str:    Pointer to string to parse.
  *
- * Returns value type on success, 0 otherwise.
+ * Returns one of values in "enum ccs_value_type".
  *
  * The @src is updated to point the first character after the value
  * on success.
@@ -216,7 +216,7 @@ u8 ccs_parse_ulong(unsigned long *result, char **str)
 	}
 	*result = simple_strtoul(cp, &ep, base);
 	if (cp == ep)
-		return 0;
+		return CCS_VALUE_TYPE_INVALID;
 	*str = ep;
 	switch (base) {
 	case 16:
@@ -294,7 +294,7 @@ bool ccs_parse_number_union(char *data, struct ccs_number_union *num)
 		return num->group != NULL;
 	}
 	type = ccs_parse_ulong(&v, &data);
-	if (!type)
+	if (type == CCS_VALUE_TYPE_INVALID)
 		return false;
 	num->values[0] = v;
 	num->value_type[0] = type;
@@ -306,7 +306,7 @@ bool ccs_parse_number_union(char *data, struct ccs_number_union *num)
 	if (*data++ != '-')
 		return false;
 	type = ccs_parse_ulong(&v, &data);
-	if (!type || *data)
+	if (type == CCS_VALUE_TYPE_INVALID || *data)
 		return false;
 	num->values[1] = v;
 	num->value_type[1] = type;

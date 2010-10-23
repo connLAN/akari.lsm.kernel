@@ -10,11 +10,50 @@
  *
  */
 
-#include <linux/version.h>
 #include "internal.h"
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
-#include <linux/kthread.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
+#ifndef LIST_POISON2
+#define LIST_POISON2  ((void *) 0x00200200)
 #endif
+
+/**
+ * list_del_rcu - Deletes entry from list without re-initialization.
+ *
+ * @entry: Pointer to "struct list_head".
+ *
+ * Returns nothing.
+ *
+ * This is for compatibility with older kernels.
+ */
+static inline void list_del_rcu(struct list_head *entry)
+{
+	__list_del(entry->prev, entry->next);
+	entry->prev = LIST_POISON2;
+}
+
+#endif
+
+#ifndef list_for_each_entry_safe
+/**
+ * list_for_each_entry_safe - Iterate over list of given type safe against removal of list entry.
+ *
+ * @pos:    The "type *" to use as a loop cursor.
+ * @n:      Another "type *" to use as temporary storage.
+ * @head:   Pointer to "struct list_head".
+ * @member: The name of the list_struct within the struct.
+ *
+ * This is for compatibility with older kernels.
+ */
+#define list_for_each_entry_safe(pos, n, head, member)                  \
+	for (pos = list_entry((head)->next, typeof(*pos), member),      \
+		     n = list_entry(pos->member.next, typeof(*pos), member); \
+	     &pos->member != (head);					\
+	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
+
+#endif
+
 
 /* Structure for garbage collection. */
 struct ccs_gc {

@@ -2205,10 +2205,10 @@ found:
  * Returns pointer to "struct ccs_security" on success, &ccs_null_security
  * otherwise.
  *
- * If @task is current thread "struct ccs_security" for current thread was not
- * found, I try to allocate it. But if allocation failed, current thread will
- * be killed by SIGKILL. Note that if current->pid == 1, sending SIGKILL won't
- * work.
+ * If @task is current thread and "struct ccs_security" for current thread was
+ * not found, I try to allocate it. But if allocation failed, current thread
+ * will be killed by SIGKILL. Note that if current->pid == 1, sending SIGKILL
+ * won't work.
  */
 struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 {

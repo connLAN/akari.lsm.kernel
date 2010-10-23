@@ -10,38 +10,10 @@
  *
  */
 
-#include <linux/slab.h>
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#include <linux/dcache.h>
-#include <linux/namei.h>
-#endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
-#include <linux/namespace.h>
-#endif
 #include "internal.h"
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-#define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
-#define MS_PRIVATE	(1<<18)	/* change to private */
-#define MS_SLAVE	(1<<19)	/* change to slave */
-#define MS_SHARED	(1<<20)	/* change to shared */
-#endif
-
-/* Index numbers for special mount operations. */
-enum ccs_special_mount {
-	CCS_MOUNT_BIND,            /* mount --bind /source /dest   */
-	CCS_MOUNT_MOVE,            /* mount --move /old /new       */
-	CCS_MOUNT_REMOUNT,         /* mount -o remount /dir        */
-	CCS_MOUNT_MAKE_UNBINDABLE, /* mount --make-unbindable /dir */
-	CCS_MOUNT_MAKE_PRIVATE,    /* mount --make-private /dir    */
-	CCS_MOUNT_MAKE_SLAVE,      /* mount --make-slave /dir      */
-	CCS_MOUNT_MAKE_SHARED,     /* mount --make-shared /dir     */
-	CCS_MAX_REMOUNT_PATTERNS,
-};
-
 /* String table for special mount operations. */
-static const char * const ccs_mounts[CCS_MAX_REMOUNT_PATTERNS] = {
+static const char * const ccs_mounts[CCS_MAX_SPECIAL_MOUNT] = {
 	[CCS_MOUNT_BIND]            = "--bind",
 	[CCS_MOUNT_MOVE]            = "--move",
 	[CCS_MOUNT_REMOUNT]         = "--remount",
@@ -292,6 +264,7 @@ static int __ccs_mount_permission(char *dev_name, struct path *path,
 }
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
+
 /**
  * ccs_old_mount_permission - Check permission for mount() operation.
  *
@@ -310,6 +283,7 @@ static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
 	struct path path = { nd->mnt, nd->dentry };
 	return __ccs_mount_permission(dev_name, &path, type, flags, data_page);
 }
+
 #endif
 
 /**

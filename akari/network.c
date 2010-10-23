@@ -10,16 +10,6 @@
  *
  */
 
-#include <linux/net.h>
-#include <linux/inet.h>
-#include <linux/in.h>
-#include <linux/in6.h>
-#include <linux/un.h>
-#include <net/sock.h>
-#include <net/af_unix.h>
-#include <net/ip.h>
-#include <net/ipv6.h>
-#include <net/udp.h>
 #include "internal.h"
 
 /* Structure for holding inet domain socket's address. */
@@ -167,6 +157,20 @@ int ccs_parse_ip_address(char *address, u16 *min, u16 *max)
 	}
 	return CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP;
 }
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
+#if defined(__LITTLE_ENDIAN)
+#define HIPQUAD(addr)				\
+	((unsigned char *)&addr)[3],		\
+		((unsigned char *)&addr)[2],	\
+		((unsigned char *)&addr)[1],	\
+		((unsigned char *)&addr)[0]
+#elif defined(__BIG_ENDIAN)
+#define HIPQUAD NIPQUAD
+#else
+#error "Please fix asm/byteorder.h"
+#endif /* __LITTLE_ENDIAN */
+#endif
 
 /**
  * ccs_print_ipv4 - Print an IPv4 address.

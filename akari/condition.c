@@ -10,7 +10,6 @@
  *
  */
 
-#include <linux/slab.h>
 #include "internal.h"
 
 /**

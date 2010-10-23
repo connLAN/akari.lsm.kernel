@@ -10,16 +10,6 @@
  *
  */
 
-#include <linux/slab.h>
-#include <linux/highmem.h>
-#include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#include <linux/namei.h>
-#include <linux/mount.h>
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-#include <linux/fs_struct.h>
-#endif
 #include "internal.h"
 
 /* Variables definitions.*/
@@ -822,6 +812,31 @@ static int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
 		bprm->argc++;
 	return ret;
 }
+#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)
+
+/**
+ * get_fs_root - Get reference on root directory.
+ *
+ * @fs:   Pointer to "struct fs_struct".
+ * @root: Pointer to "struct path".
+ *
+ * Returns nothing.
+ */
+static inline void get_fs_root(struct fs_struct *fs, struct path *root)
+{
+	read_lock(&fs->lock);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+	*root = fs->root;
+	path_get(root);
+#else
+	root->dentry = dget(fs->root);
+	root->mnt = mntget(fs->rootmnt);
+#endif
+	read_unlock(&fs->lock);
+}
+
 #endif
 
 /**

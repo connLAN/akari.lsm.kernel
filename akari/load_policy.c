@@ -15,17 +15,27 @@
 #include <linux/init.h>
 #include <linux/binfmts.h>
 #include <linux/sched.h>
-#include "internal.h"
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
 #include <linux/kmod.h>
+/*
+ * Regarding 2.4 kernels, we need to define __KERNEL_SYSCALLS__ in order to use
+ * waitpid() because call_usermodehelper() does not support UMH_WAIT_PROC.
+ */
 #define __KERNEL_SYSCALLS__
 #include <linux/unistd.h>
-#define ccs_lookup_flags (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
 #else
 #include <linux/fs.h>
 #include <linux/namei.h>
-#define ccs_lookup_flags LOOKUP_FOLLOW
 #endif
+#ifndef LOOKUP_POSITIVE
+#define LOOKUP_POSITIVE 0
+#endif
+
+/*
+ * TOMOYO specific part start.
+ */
+
+#include "internal.h"
 
 /* Path to the policy loader. (default = CONFIG_CCSECURITY_DEFAULT_LOADER) */
 static const char *ccs_loader;
@@ -83,7 +93,7 @@ static _Bool ccs_policy_loader_exists(void)
 	struct path path;
 	if (!ccs_loader)
 		ccs_loader = CONFIG_CCSECURITY_DEFAULT_LOADER;
-	if (kern_path(ccs_loader, ccs_lookup_flags, &path) == 0) {
+	if (kern_path(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE, &path) == 0) {
 		path_put(&path);
 		return 1;
 	}
@@ -91,7 +101,8 @@ static _Bool ccs_policy_loader_exists(void)
 	struct nameidata nd;
 	if (!ccs_loader)
 		ccs_loader = CONFIG_CCSECURITY_DEFAULT_LOADER;
-	if (path_lookup(ccs_loader, ccs_lookup_flags, &nd) == 0) {
+	if (path_lookup(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE,
+			&nd) == 0) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 		path_put(&nd.path);
 #else

@@ -980,7 +980,7 @@ struct ccs_request_info {
 	struct ccs_execve *ee;
 	/*
 	 * For holding parameters.
-	 * Pointers in this union are not NULL except path->matched_path .
+	 * Pointers in this union are not NULL except path->matched_path.
 	 */
 	union {
 		struct {
@@ -1718,7 +1718,7 @@ static inline void ccs_tasklist_unlock(void)
  * Returns parent process's PID.
  *
  * Alpha does not have getppid() defined. To be able to build this module on
- * Alpha, I have to copy getppid() from kernel/timer.c .
+ * Alpha, I have to copy getppid() from kernel/timer.c.
  */
 static inline pid_t ccs_sys_getppid(void)
 {
@@ -1787,7 +1787,7 @@ static inline pid_t ccs_sys_getppid(void)
  * Returns current thread's PID.
  *
  * Alpha does not have getpid() defined. To be able to build this module on
- * Alpha, I have to copy getpid() from kernel/timer.c .
+ * Alpha, I have to copy getpid() from kernel/timer.c.
  */
 static inline pid_t ccs_sys_getpid(void)
 {

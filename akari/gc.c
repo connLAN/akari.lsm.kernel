@@ -36,6 +36,7 @@ static inline void list_del_rcu(struct list_head *entry)
 #endif
 
 #ifndef list_for_each_entry_safe
+
 /**
  * list_for_each_entry_safe - Iterate over list of given type safe against removal of list entry.
  *
@@ -58,12 +59,12 @@ static inline void list_del_rcu(struct list_head *entry)
 /* Structure for garbage collection. */
 struct ccs_gc {
 	struct list_head list;
-	int type; /* = one of values in "enum ccs_policy_id" */
+	int type; /* One of values in "enum ccs_policy_id". */
 	struct list_head *element;
 };
 /* List of entries to be deleted. */
 static LIST_HEAD(ccs_gc_list);
-/* Length of ccs_gc_list . */
+/* Length of ccs_gc_list. */
 static int ccs_gc_list_len;
 
 /**
@@ -164,8 +165,8 @@ static bool ccs_used_by_task(struct ccs_domain_info *domain)
 	 * Don't delete this domain if somebody is doing execve().
 	 *
 	 * Since ccs_finish_execve() first reverts ccs_domain_info and then
-	 * updates ccs_flags , we need smp_mb() to make sure that GC first
-	 * checks ccs_flags and then checks ccs_domain_info .
+	 * updates ccs_flags, we need smp_mb() to make sure that GC first
+	 * checks ccs_flags and then checks ccs_domain_info.
 	 */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
 	struct task_struct *g;
@@ -357,7 +358,7 @@ static inline size_t ccs_del_domain(struct list_head *element)
 	 * (4) Garbage collector removes this domain from ccs_domain_list
 	 *     because this domain is marked as deleted and used by nobody.
 	 * (5) Reader saves reference to this domain into
-	 *     "struct task_struct"->ccs_domain_info .
+	 *     "struct task_struct"->ccs_domain_info.
 	 * (6) Reader finishes execve() operation and starts using this domain.
 	 * (7) Garbage collector waits for SRCU synchronization.
 	 * (8) Garbage collector kfree() this domain.
@@ -530,7 +531,7 @@ static inline size_t ccs_del_name(struct list_head *element)
  * This lock is held for only protecting single SRCU section. Accessing
  * /proc/ccs/ interface cannot be finished within single SRCU section.
  * Therefore, we use ccs_lock()/ccs_unlock() for protecting /proc/ccs/ users.
- * Garbage collector waits for both this SRCU grace period and ccs_counter .
+ * Garbage collector waits for both this SRCU grace period and ccs_counter.
  */
 struct srcu_struct ccs_ss;
 #endif
@@ -548,9 +549,9 @@ struct srcu_struct ccs_ss;
  */
 static struct {
 	int counter_idx; /* Currently active index (0 or 1). */
-	int counter[2];  /* Current users. Protected by ccs_counter_lock .*/
+	int counter[2];  /* Current users. Protected by ccs_counter_lock. */
 } ccs_counter;
-/* Lock for protecting ccs_counter . */
+/* Lock for protecting ccs_counter. */
 static DEFINE_SPINLOCK(ccs_counter_lock);
 
 /**
@@ -619,7 +620,7 @@ static void ccs_synchronize_counter(void)
  * ccs_collect_member - Delete elements with "struct ccs_acl_head".
  *
  * @member_list: Pointer to "struct list_head".
- * @id:          One of "enum ccs_policy_id" value.
+ * @id:          One of values in "enum ccs_policy_id".
  *
  * Returns true if some elements are deleted, false otherwise.
  */
@@ -741,7 +742,7 @@ unlock:
 }
 
 /**
- * ccs_kfree_entry - Delete entries in ccs_gc_list .
+ * ccs_kfree_entry - Delete entries in ccs_gc_list.
  *
  * Returns true if some entries were kfree()d, false otherwise.
  */

@@ -438,7 +438,7 @@ int ccs_delete_domain(char *domainname)
 		return 0;
 	/* Is there an active domain? */
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
-		/* Never delete ccs_kernel_domain . */
+		/* Never delete ccs_kernel_domain. */
 		if (domain == &ccs_kernel_domain)
 			continue;
 		if (domain->is_deleted ||
@@ -624,7 +624,7 @@ retry:
 	task->ccs_flags |= CCS_TASK_IS_IN_EXECVE;
 	/*
 	 * Make task->ccs_flags visible to GC before changing
-	 * task->ccs_domain_info .
+	 * task->ccs_domain_info.
 	 */
 	smp_mb();
 	/*
@@ -1060,7 +1060,7 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type)
 	struct ccs_request_info *r = &ee->r;
 	/*
 	 * To avoid infinite execute handler loop, don't use execute handler
-	 * if the current process is marked as execute handler .
+	 * if the current process is marked as execute handler.
 	 */
 	if (ccs_current_flags() & CCS_TASK_IS_EXECUTE_HANDLER)
 		return false;
@@ -1076,9 +1076,9 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type)
 #ifdef CONFIG_MMU
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 23)
 #define CCS_BPRM_MMU
-#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5 && defined(RHEL_MINOR) && RHEL_MINOR >= 3
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5
 #define CCS_BPRM_MMU
-#elif defined(AX_MAJOR) && AX_MAJOR == 3 && defined(AX_MINOR) && AX_MINOR >= 2
+#elif defined(AX_MAJOR) && AX_MAJOR == 3
 #define CCS_BPRM_MMU
 #endif
 #endif
@@ -1197,7 +1197,7 @@ void ccs_finish_execve(int retval, struct ccs_execve *ee)
 		task->ccs_domain_info = ee->previous_domain;
 		/*
 		 * Make task->ccs_domain_info visible to GC before changing
-		 * task->ccs_flags .
+		 * task->ccs_flags.
 		 */
 		smp_mb();
 	} else {
@@ -1231,7 +1231,7 @@ void ccs_finish_execve(int retval, struct ccs_execve *ee)
  * if do_execve() failed.
  * Garbage collector does not remove "struct ccs_domain_info" from
  * ccs_domain_list nor kfree("struct ccs_domain_info") if the current thread is
- * marked as CCS_TASK_IS_IN_EXECVE .
+ * marked as CCS_TASK_IS_IN_EXECVE.
  */
 static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 				       struct pt_regs *regs)

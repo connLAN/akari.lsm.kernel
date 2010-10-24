@@ -36,6 +36,7 @@ static inline struct socket *SOCKET_I(struct inode *inode)
 {
 	return inode->i_sock ? &inode->u.socket_i : NULL;
 }
+
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
@@ -70,7 +71,7 @@ static inline void ccs_realpath_unlock(void)
  * Returns nothing.
  *
  * Original unambiguous-__d_path.diff in patches.apparmor.tar.bz2 inversed the
- * order of holding dcache_lock and vfsmount_lock . That patch was applied on
+ * order of holding dcache_lock and vfsmount_lock. That patch was applied on
  * (at least) SUSE 11.1 and Ubuntu 8.10 and Ubuntu 9.04 kernels.
  *
  * However, that patch was updated to use original order and the updated patch

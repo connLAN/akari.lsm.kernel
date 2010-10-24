@@ -117,8 +117,9 @@ static _Bool ccs_policy_loader_exists(void)
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
 /**
- * ccs_run_loader - Start /sbin/ccs-init .
+ * ccs_run_loader - Start /sbin/ccs-init.
  *
  * @unused: Not used.
  *
@@ -137,6 +138,7 @@ static int ccs_run_loader(void *unused)
 	envp[2] = NULL;
 	return exec_usermodehelper(argv[0], argv, envp);
 }
+
 #endif
 
 /**
@@ -144,13 +146,13 @@ static int ccs_run_loader(void *unused)
  *
  * @filename: The program about to start.
  *
- * This function checks whether @filename is /sbin/init , and if so
+ * Returns nothing.
+ *
+ * This function checks whether @filename is /sbin/init, and if so
  * invoke /sbin/ccs-init and wait for the termination of /sbin/ccs-init
  * and then continues invocation of /sbin/init.
  * /sbin/ccs-init reads policy files in /etc/ccs/ directory and
  * writes to /proc/ccs/ interfaces.
- *
- * Returns nothing.
  */
 void ccs_load_policy(const char *filename)
 {
@@ -234,7 +236,7 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 	ccs_load_policy(bprm->filename);
 	/*
 	 * ccs_load_policy() executes /sbin/ccs-init if bprm->filename is
-	 * /sbin/init . /sbin/ccs-init executes /etc/ccs/ccs-load-module to
+	 * /sbin/init. /sbin/ccs-init executes /etc/ccs/ccs-load-module to
 	 * load loadable kernel module. The loadable kernel module modifies
 	 * "struct ccsecurity_ops". Thus, we need to transfer control to
 	 * __ccs_search_binary_handler() in security/ccsecurity/domain.c

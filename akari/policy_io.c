@@ -287,7 +287,7 @@ static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
 	__attribute__ ((format(printf, 3, 4)));
 
 /**
- * ccs_addprintf - strncat()-like-snprint().
+ * ccs_addprintf - strncat()-like-snprintf().
  *
  * @buffer: Buffer to write to. Must be '\0'-terminated.
  * @len:    Size of @buffer.
@@ -353,11 +353,11 @@ static bool ccs_flush(struct ccs_io_buffer *head)
  * @head:   Pointer to "struct ccs_io_buffer".
  * @string: String to print.
  *
+ * Returns nothing.
+ *
  * Note that @string has to be kept valid until @head is kfree()d.
  * This means that char[] allocated on stack memory cannot be passed to
  * this function. Use ccs_io_printf() for char[] allocated on stack memory.
- *
- * Returns nothing.
  */
 static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
 {
@@ -690,6 +690,8 @@ static void ccs_print_config(struct ccs_io_buffer *head, const u8 config)
  * ccs_read_profile - Read profile table.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  */
 static void ccs_read_profile(struct ccs_io_buffer *head)
 {
@@ -833,6 +835,8 @@ static int ccs_write_manager(struct ccs_io_buffer *head)
  * ccs_read_manager - Read manager policy.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  *
  * Caller holds ccs_read_lock().
  */
@@ -1592,9 +1596,9 @@ done:
  * @domain: Pointer to "struct ccs_domain_info".
  * @index:  Index number.
  *
- * Caller holds ccs_read_lock().
- *
  * Returns true on success, false otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static bool ccs_read_domain2(struct ccs_io_buffer *head,
 			     struct ccs_domain_info *domain,
@@ -1614,6 +1618,8 @@ static bool ccs_read_domain2(struct ccs_io_buffer *head,
  * ccs_read_domain - Read domain policy.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  *
  * Caller holds ccs_read_lock().
  */
@@ -1700,6 +1706,8 @@ static int ccs_write_domain_profile(struct ccs_io_buffer *head)
  * ccs_read_domain_profile - Read only domainname and profile.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  *
  * This is equivalent to doing
  *
@@ -1986,6 +1994,8 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
  *
  * @head: Pointer to "struct ccs_io_buffer".
  *
+ * Returns nothing.
+ *
  * Caller holds ccs_read_lock().
  */
 static void ccs_read_exception(struct ccs_io_buffer *head)
@@ -2020,9 +2030,6 @@ static DECLARE_WAIT_QUEUE_HEAD(ccs_query_wait);
 /* Wait queue for userspace -> kernel notification. */
 static DECLARE_WAIT_QUEUE_HEAD(ccs_answer_wait);
 
-/* Lock for manipulating ccs_query_list. */
-static DEFINE_SPINLOCK(ccs_query_list_lock);
-
 /* Structure for query. */
 struct ccs_query {
 	struct list_head list;
@@ -2036,6 +2043,9 @@ struct ccs_query {
 
 /* The list for "struct ccs_query". */
 static LIST_HEAD(ccs_query_list);
+
+/* Lock for manipulating ccs_query_list. */
+static DEFINE_SPINLOCK(ccs_query_list_lock);
 
 /* Number of "struct file" referring /proc/ccs/query interface. */
 static atomic_t ccs_query_observers = ATOMIC_INIT(0);
@@ -2138,7 +2148,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 	va_start(args, fmt);
 	len = vsnprintf((char *) &len, 1, fmt, args) + 1;
 	va_end(args);
-	/* Write /proc/ccs/grant_log or /proc/ccs/reject_log . */
+	/* Write /proc/ccs/grant_log or /proc/ccs/reject_log. */
 	va_start(args, fmt);
 	ccs_write_log2(r, len, fmt, args);
 	va_end(args);
@@ -2533,7 +2543,7 @@ static int ccs_write_memory_quota(struct ccs_io_buffer *head)
  * @type: Type of interface.
  * @file: Pointer to "struct file".
  *
- * Associates policy handler and returns 0 on success, -ENOMEM otherwise.
+ * Returns 0 on success, negative value otherwise.
  */
 int ccs_open_control(const u8 type, struct file *file)
 {
@@ -2632,7 +2642,7 @@ int ccs_open_control(const u8 type, struct file *file)
 		}
 	}
 	/*
-	 * If the file is /proc/ccs/query , increment the observer counter.
+	 * If the file is /proc/ccs/query, increment the observer counter.
 	 * The obserber counter is used by ccs_supervisor() to see if
 	 * there is some process monitoring /proc/ccs/query.
 	 */
@@ -2657,7 +2667,7 @@ int ccs_open_control(const u8 type, struct file *file)
  * Waits for read readiness.
  * /proc/ccs/query is handled by /usr/sbin/ccs-queryd and
  * /proc/ccs/grant_log and /proc/ccs/reject_log are handled by
- * /usr/sbin/ccs-auditd .
+ * /usr/sbin/ccs-auditd.
  */
 int ccs_poll_control(struct file *file, poll_table *wait)
 {
@@ -2782,7 +2792,7 @@ int ccs_write_control(struct file *file, const char __user *buffer,
  *
  * @file: Pointer to "struct file".
  *
- * Releases memory and returns 0.
+ * Returns 0.
  */
 int ccs_close_control(struct file *file)
 {
@@ -2790,7 +2800,7 @@ int ccs_close_control(struct file *file)
 	const bool is_write = head->write_buf != NULL;
 	const u8 type = head->type;
 	/*
-	 * If the file is /proc/ccs/query , decrement the observer counter.
+	 * If the file is /proc/ccs/query, decrement the observer counter.
 	 */
 	if (type == CCS_QUERY) {
 		if (atomic_dec_and_test(&ccs_query_observers))

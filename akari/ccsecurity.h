@@ -197,6 +197,7 @@ static inline int ccs_mount_permission(char *dev_name, struct nameidata *nd,
 	return func ? func(dev_name, nd, (const char *) type, flags,
 			   data_page) : 0;
 }
+
 #endif
 
 static inline int ccs_umount_permission(struct vfsmount *mnt, int flags)
@@ -219,6 +220,7 @@ static inline int ccs_ptrace_permission(long request, long pid)
 }
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
+
 static inline void ccs_save_open_mode(int mode)
 {
 	void (*func) (int) = ccsecurity_ops.save_open_mode;
@@ -240,12 +242,15 @@ static inline int ccs_open_permission(struct dentry *dentry,
 		= ccsecurity_ops.open_permission;
 	return func ? func(dentry, mnt, flag) : 0;
 }
+
 #else
+
 static inline int ccs_open_permission(struct file *filp)
 {
 	int (*func) (struct file *) = ccsecurity_ops.open_permission;
 	return func ? func(filp) : 0;
 }
+
 #endif
 
 static inline int ccs_fcntl_permission(struct file *file, unsigned int cmd,
@@ -358,6 +363,7 @@ static inline int ccs_link_permission(struct dentry *old_dentry,
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
+
 static inline int ccs_open_exec_permission(struct dentry *dentry,
 					   struct vfsmount *mnt)
 {
@@ -373,6 +379,7 @@ static inline int ccs_uselib_permission(struct dentry *dentry,
 		= ccsecurity_ops.uselib_permission;
 	return func ? func(dentry, mnt) : 0;
 }
+
 #endif
 
 static inline int ccs_kill_permission(pid_t pid, int sig)
@@ -561,17 +568,21 @@ static inline void ccs_clear_open_mode(void)
 {
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
+
 static inline int ccs_open_permission(struct dentry *dentry,
 				      struct vfsmount *mnt, const int flag)
 {
 	return 0;
 }
+
 #else
+
 static inline int ccs_open_permission(struct file *filp)
 {
 	return 0;
 }
+
 #endif
 
 static inline int ccs_ioctl_permission(struct file *filp, unsigned int cmd,

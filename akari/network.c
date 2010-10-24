@@ -367,7 +367,7 @@ static bool ccs_same_unix_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -390,7 +390,7 @@ static bool ccs_merge_inet_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -508,6 +508,8 @@ int ccs_write_unix_network(struct ccs_acl_param *param)
 
 /**
  * ccs_network_init - Dummy initialize function for CONFIG_NET=n case.
+ *
+ * Returns nothing.
  */
 void __init ccs_network_init(void)
 {
@@ -559,7 +561,7 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
  * ccs_check_inet_address - Check permission for inet domain socket's operation.
  *
  * @addr:     Pointer to "struct sockaddr".
- * @addr_len: Size of @addr .
+ * @addr_len: Size of @addr.
  * @port:     Port number.
  * @address:  Pointer to "struct ccs_addr_info".
  *
@@ -654,7 +656,7 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
  * ccs_check_unix_address - Check permission for unix domain socket's operation.
  *
  * @addr:     Pointer to "struct sockaddr".
- * @addr_len: Size of @addr .
+ * @addr_len: Size of @addr.
  * @address:  Pointer to "struct ccs_addr_info".
  *
  * Returns 0 on success, negative value otherwise.
@@ -769,7 +771,7 @@ static int __ccs_socket_listen_permission(struct socket *sock)
  *
  * @sock:     Pointer to "struct socket".
  * @addr:     Pointer to "struct sockaddr".
- * @addr_len: Size of @addr .
+ * @addr_len: Size of @addr.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -805,7 +807,7 @@ static int __ccs_socket_connect_permission(struct socket *sock,
  *
  * @sock:     Pointer to "struct socket".
  * @addr:     Pointer to "struct sockaddr".
- * @addr_len: Size of @addr .
+ * @addr_len: Size of @addr.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -837,9 +839,9 @@ static int __ccs_socket_bind_permission(struct socket *sock,
 /**
  * __ccs_socket_sendmsg_permission - Check permission for sending a datagram.
  *
- * @sock:  Pointer to "struct socket".
- * @msg:   Pointer to "struct msghdr".
- * @size:  Unused.
+ * @sock: Pointer to "struct socket".
+ * @msg:  Pointer to "struct msghdr".
+ * @size: Unused.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -899,7 +901,7 @@ static int __ccs_socket_post_accept_permission(struct socket *sock,
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
 #if !defined(RHEL_MAJOR) || RHEL_MAJOR != 5
-#if !defined(AX_MAJOR) || AX_MAJOR != 3 || !defined(AX_MINOR) || AX_MINOR < 2
+#if !defined(AX_MAJOR) || AX_MAJOR != 3
 
 /**
  * ip_hdr - Get "struct iphdr".

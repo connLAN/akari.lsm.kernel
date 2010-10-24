@@ -206,7 +206,7 @@ out:
 }
 
 /**
- * ccs_mount_permission - Check permission for mount() operation.
+ * __ccs_mount_permission - Check permission for mount() operation.
  *
  * @dev_name:  Name of device file.
  * @path:      Pointer to "struct path".

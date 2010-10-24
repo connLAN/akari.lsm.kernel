@@ -15,8 +15,8 @@
 
 /*
  * may_open() receives open flags modified by open_to_namei_flags() until
- * 2.6.32. may_open() receives unmodified flags after 2.6.33. In case some
- * distributions backported ACC_MODE changes, we #undef before #define .
+ * 2.6.32. In case some distributions backported ACC_MODE changes,
+ * we #undef before #define.
  */
 #undef ACC_MODE
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
@@ -65,10 +65,8 @@ const u8 ccs_pn2mac[CCS_MAX_PATH_NUMBER_OPERATION] = {
 	[CCS_TYPE_CHGRP]  = CCS_MAC_FILE_CHGRP,
 };
 
-/* Main functions. */
-
 /**
- * ccs_put_name_union - Free elements in "struct ccs_name_union".
+ * ccs_put_name_union - Drop reference on "struct ccs_name_union".
  *
  * @ptr: Pointer to "struct ccs_name_union".
  *
@@ -85,7 +83,7 @@ void ccs_put_name_union(struct ccs_name_union *ptr)
 }
 
 /**
- * ccs_put_name_union - Free elements in "struct ccs_number_union".
+ * ccs_put_name_union - Drop reference on "struct ccs_number_union".
  *
  * @ptr: Pointer to "struct ccs_number_union".
  *
@@ -355,7 +353,7 @@ static bool ccs_same_path_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -424,7 +422,7 @@ static bool ccs_same_mkdev_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -497,7 +495,7 @@ static bool ccs_same_path2_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -626,8 +624,12 @@ int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 
-/*
- * Save original flags passed to sys_open().
+/**
+ * __ccs_save_open_mode - Remember original flags passed to sys_open().
+ *
+ * @mode: Flags passed to sys_open().
+ *
+ * Returns nothing.
  *
  * TOMOYO does not check "file write" if open(path, O_TRUNC | O_RDONLY) was
  * requested because write() is not permitted. Instead, TOMOYO checks
@@ -649,6 +651,11 @@ static void __ccs_save_open_mode(int mode)
 #endif
 }
 
+/**
+ * __ccs_clear_open_mode - Forget original flags passed to sys_open().
+ *
+ * Returns nothing.
+ */
 static void __ccs_clear_open_mode(void)
 {
 	ccs_current_security()->ccs_flags &= ~(CCS_OPEN_FOR_IOCTL_ONLY |
@@ -658,7 +665,7 @@ static void __ccs_clear_open_mode(void)
 #endif
 
 /**
- * ccs_open_permission - Check permission for "read" and "write".
+ * __ccs_open_permission - Check permission for "read" and "write".
  *
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
@@ -675,7 +682,7 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 		.path1.mnt = mnt,
 	};
 	const u32 ccs_flags = ccs_current_flags();
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	const u8 acc_mode = (flag & 3) == 3 ? 0 : ACC_MODE(flag);
 #else
 	const u8 acc_mode = (ccs_flags & CCS_OPEN_FOR_IOCTL_ONLY) ? 0 :
@@ -691,10 +698,6 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 	if (current->in_execve && !(ccs_flags & CCS_TASK_IS_IN_EXECVE))
 		return 0;
 #endif
-	/*
-	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
-		return 0;
-	*/
 	buf.name = NULL;
 	r.mode = CCS_CONFIG_DISABLED;
 	idx = ccs_read_lock();
@@ -712,7 +715,7 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 						    CCS_TYPE_APPEND :
 						    CCS_TYPE_WRITE, &buf);
 	}
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 	if (!error && (flag & O_TRUNC) &&
 	    ccs_init_request_info(&r, CCS_MAC_FILE_TRUNCATE)
 	    != CCS_CONFIG_DISABLED) {
@@ -733,6 +736,7 @@ out:
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+
 /**
  * ccs_new_open_permission - Check permission for "read" and "write".
  *
@@ -745,16 +749,18 @@ static int ccs_new_open_permission(struct file *filp)
 	return __ccs_open_permission(filp->f_path.dentry, filp->f_path.mnt,
 				     filp->f_flags);
 }
+
 #endif
 
 /**
- * ccs_path_perm - Check permission for "unlink", "rmdir", "truncate", "symlink", "chroot" and "unmount".
+ * ccs_path_perm - Check permission for "unlink", "rmdir", "truncate", "symlink", "getattr", "chroot" and "unmount".
  *
  * @operation: Type of operation.
  * @dir:       Pointer to "struct inode". Maybe NULL.
  * @dentry:    Pointer to "struct dentry".
  * @mnt:       Pointer to "struct vfsmount". Maybe NULL.
  * @target:    Symlink's target if @operation is CCS_TYPE_SYMLINK.
+ *             NULL otherwise.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -786,7 +792,6 @@ static int ccs_path_perm(const u8 operation, struct inode *dir,
 	switch (operation) {
 	case CCS_TYPE_RMDIR:
 	case CCS_TYPE_CHROOT:
-	case CCS_TYPE_UMOUNT:
 		ccs_add_slash(&buf);
 		break;
 	case CCS_TYPE_SYMLINK:
@@ -960,7 +965,7 @@ static bool ccs_same_path_number_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b . 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b. 
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -1060,11 +1065,11 @@ out:
 }
 
 /**
- * ccs_ioctl_permission - Check permission for "ioctl".
+ * __ccs_ioctl_permission - Check permission for "ioctl".
  *
  * @file: Pointer to "struct file".
  * @cmd:  Ioctl command number.
- * @arg:  Param for @cmd .
+ * @arg:  Param for @cmd.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -1076,10 +1081,10 @@ static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 }
 
 /**
- * ccs_chmod_permission - Check permission for "chmod".
+ * __ccs_chmod_permission - Check permission for "chmod".
  *
  * @dentry: Pointer to "struct dentry".
- * @vfsmnt: Pointer to "struct vfsmount".
+ * @vfsmnt: Pointer to "struct vfsmount". Maybe NULL.
  * @mode:   Mode.
  *
  * Returns 0 on success, negative value otherwise.
@@ -1094,10 +1099,10 @@ static int __ccs_chmod_permission(struct dentry *dentry,
 }
 
 /**
- * ccs_chown_permission - Check permission for "chown/chgrp".
+ * __ccs_chown_permission - Check permission for "chown/chgrp".
  *
  * @dentry: Pointer to "struct dentry".
- * @vfsmnt: Pointer to "struct vfsmount".
+ * @vfsmnt: Pointer to "struct vfsmount". Maybe NULL.
  * @user:   User ID.
  * @group:  Group ID.
  *
@@ -1119,52 +1124,31 @@ static int __ccs_chown_permission(struct dentry *dentry,
 	return error;
 }
 
+/**
+ * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
+ *
+ * @file: Pointer to "struct file".
+ * @cmd:  Command number.
+ * @arg:  Value for @cmd.
+ * 
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
+				  unsigned long arg)
+{
+	if (!(cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND)))
+		return 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-
-/**
- * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
- *
- * @file: Pointer to "struct file".
- * @cmd:  Command number.
- * @arg:  Value for @cmd.
- * 
- * Returns 0 on success, negative value otherwise.
- */
-static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
-				  unsigned long arg)
-{
-	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
-		/* 01 means "write". */
-		return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
-					     01);
-	return 0;
-}
-
+	/* 01 means "write". */
+	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt, 01);
 #else
-
-/**
- * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
- *
- * @file: Pointer to "struct file".
- * @cmd:  Command number.
- * @arg:  Value for @cmd.
- * 
- * Returns 0 on success, negative value otherwise.
- */
-static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
-				  unsigned long arg)
-{
-	if (cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND))
-		/* 02 means "write". */
-		return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
-					     02);
-	return 0;
+	/* 02 means "write". */
+	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt, 02);
+#endif
 }
 
-#endif
-
 /**
- * ccs_pivot_root_permission - Check permission for pivot_root().
+ * __ccs_pivot_root_permission - Check permission for pivot_root().
  *
  * @old_path: Pointer to "struct path".
  * @new_path: Pointer to "struct path".
@@ -1180,7 +1164,7 @@ static int __ccs_pivot_root_permission(struct path *old_path,
 }
 
 /**
- * ccs_chroot_permission - Check permission for chroot().
+ * __ccs_chroot_permission - Check permission for chroot().
  *
  * @path: Pointer to "struct path".
  *
@@ -1193,7 +1177,7 @@ static int __ccs_chroot_permission(struct path *path)
 }
 
 /**
- * ccs_umount_permission - Check permission for unmount.
+ * __ccs_umount_permission - Check permission for unmount.
  *
  * @mnt:   Pointer to "struct vfsmount".
  * @flags: Unused.
@@ -1246,7 +1230,7 @@ int ccs_write_file(struct ccs_acl_param *param)
 /**
  * __ccs_mknod_permission - Check permission for vfs_mknod().
  *
- * @dir: Pointer to "struct inode".
+ * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @mode:   Device type and permission.

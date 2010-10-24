@@ -83,10 +83,9 @@ const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 	[CCS_MAC_CAPABILITY_SYS_PTRACE]        = CCS_MAC_CATEGORY_CAPABILITY,
 };
 
-/* Utility functions. */
-
 /**
  * ccs_convert_time - Convert time_t to YYYY/MM/DD hh/mm/ss.
+ *
  * @time:  Seconds since 1970/01/01 00:00:00.
  * @stamp: Pointer to "struct ccs_time".
  *
@@ -130,7 +129,7 @@ void ccs_convert_time(time_t time, struct ccs_time *stamp)
  * @string: String representation for permissions in foo/bar/buz format.
  * @keyword: Keyword to find from @string/
  *
- * Returns ture if @keyword was found in @string , false otherwise.
+ * Returns ture if @keyword was found in @string, false otherwise.
  *
  * This function assumes that strncmp(w1, w2, strlen(w1)) != 0 if w1 != w2.
  */
@@ -406,10 +405,10 @@ bool ccs_str_starts(char **src, const char *find)
  *
  * @buffer: The line to normalize.
  *
+ * Returns nothing.
+ *
  * Leading and trailing whitespaces are removed.
  * Multiple whitespaces are packed into single space.
- *
- * Returns nothing.
  */
 void ccs_normalize_line(unsigned char *buffer)
 {
@@ -435,7 +434,7 @@ void ccs_normalize_line(unsigned char *buffer)
  *
  * @buffer: The line to tokenize.
  * @w:      Pointer to "char *".
- * @size:   Sizeof @w .
+ * @size:   Sizeof @w.
  *
  * Returns true on success, false otherwise.
  */
@@ -458,12 +457,11 @@ bool ccs_tokenize(char *buffer, char *w[], size_t size)
 }
 
 /**
- * ccs_correct_word2 - Validate a string.
+ * ccs_correct_word2 - Check whether the given string follows the naming rules.
  *
  * @string: The byte sequence to check. Not '\0'-terminated.
  * @len:    Length of @string.
  *
- * Check whether the given string follows the naming rules.
  * Returns true if @string follows the naming rules, false otherwise.
  */
 static bool ccs_correct_word2(const char *string, size_t len)
@@ -536,11 +534,10 @@ out:
 }
 
 /**
- * ccs_correct_word - Validate a string.
+ * ccs_correct_word - Check whether the given string follows the naming rules.
  *
  * @string: The string to check.
  *
- * Check whether the given string follows the naming rules.
  * Returns true if @string follows the naming rules, false otherwise.
  */
 bool ccs_correct_word(const char *string)
@@ -549,11 +546,10 @@ bool ccs_correct_word(const char *string)
 }
 
 /**
- * ccs_correct_path - Validate a pathname.
+ * ccs_correct_path - Check whether the given pathname follows the naming rules.
  *
  * @filename: The pathname to check.
  *
- * Check whether the given pathname follows the naming rules.
  * Returns true if @filename follows the naming rules, false otherwise.
  */
 bool ccs_correct_path(const char *filename)
@@ -994,10 +990,10 @@ const char *ccs_get_exe(void)
  *
  * Returns config.
  *
- * First, check for CONFIG::category::functionality .
+ * First, check for CONFIG::category::functionality.
  * If CONFIG::category::functionality is set to use default, then check
- * CONFIG::category . If CONFIG::category is set to use default, then use
- * CONFIG . CONFIG cannot be set to use default.
+ * CONFIG::category. If CONFIG::category is set to use default, then use
+ * CONFIG. CONFIG cannot be set to use default.
  */
 u8 ccs_get_config(const u8 profile, const u8 index)
 {
@@ -1026,7 +1022,7 @@ u8 ccs_get_config(const u8 profile, const u8 index)
  * "task auto_domain_transition" keyword is evaluated before returning mode for
  * @index. If "task auto_domain_transition" keyword was specified and
  * transition to that domain failed, the current thread will be killed by
- * SIGKILL.
+ * SIGKILL. Note that if current->pid == 1, sending SIGKILL won't work.
  */
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 {

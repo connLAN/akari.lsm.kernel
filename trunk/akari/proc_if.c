@@ -234,7 +234,7 @@ struct iattr;
  *
  * Returns 0 on success, negative value otherwise.
  *
- * The 2.4 kernels don't allow chmod()/chown() for files in /proc ,
+ * The 2.4 kernels don't allow chmod()/chown() for files in /proc,
  * while the 2.6 kernels allow.
  * To permit management of /proc/ccs/ interface by non-root user,
  * I modified to allow chmod()/chown() of /proc/ccs/ interface like 2.6 kernels
@@ -266,6 +266,7 @@ static struct inode_operations ccs_dir_inode_operations;
 
 /* The inode operations for files under /proc/ccs/ directory. */
 static struct inode_operations ccs_file_inode_operations;
+
 #endif
 
 /**

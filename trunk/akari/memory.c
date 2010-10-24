@@ -34,14 +34,14 @@ void ccs_warn_oom(const char *function)
 }
 
 /*
- * Lock for protecting ccs_memory_used .
+ * Lock for protecting ccs_memory_used.
  *
  * I don't use atomic_t because it can handle only 16MB in 2.4 kernels.
  */
 static DEFINE_SPINLOCK(ccs_policy_memory_lock);
-/* Memoy currently used by policy/audit log/query . */
+/* Memoy currently used by policy/audit log/query. */
 unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
-/* Memory quota for policy/audit log/query . */
+/* Memory quota for "policy"/"audit log"/"query". */
 unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
 
 /**
@@ -247,6 +247,8 @@ out:
 
 /**
  * ccs_mm_init - Initialize mm related code.
+ *
+ * Returns nothing.
  */
 void __init ccs_mm_init(void)
 {

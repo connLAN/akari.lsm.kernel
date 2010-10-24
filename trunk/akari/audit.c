@@ -355,7 +355,7 @@ static void ccs_update_task_domain(struct ccs_request_info *r)
 	kfree(buf);
 }
 
-/* Wait queue for /proc/ccs/grant_log and /proc/ccs/reject_log . */
+/* Wait queue for /proc/ccs/grant_log and /proc/ccs/reject_log. */
 static wait_queue_head_t ccs_log_wait[2] = {
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[0]),
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[1]),

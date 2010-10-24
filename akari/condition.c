@@ -272,7 +272,7 @@ static bool ccs_parse_name_union_quoted(char *filename,
 		filename++;
 	}
 	/*
-	 * If invalid character (e.g. ' ') was within the quoted qord,
+	 * If invalid character (e.g. ' ') was within the quoted word,
 	 * ccs_parse_name_union() will return false.
 	 */
 	result = ccs_parse_name_union(filename, ptr);

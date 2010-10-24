@@ -380,7 +380,7 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 #endif
 		}
 	} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 		rc = ccs_open_permission(bprm->file);
 #else
 		/* 01 means "read". */
@@ -412,7 +412,7 @@ static int ccs_open(struct file *f)
 	if (current->in_execve)
 		return 0;
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	return ccs_open_permission(f);
 #else
 	return ccs_open_permission(dentry, f->f_path.mnt, f->f_flags + 1);

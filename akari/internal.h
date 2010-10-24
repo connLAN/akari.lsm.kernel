@@ -1919,6 +1919,9 @@ static inline void ccs_put_name(const struct ccs_path_info *name)
 			   head.users);
 }
 
+/* For importing variables and functions. */
+extern struct ccsecurity_exports ccsecurity_exports;
+
 /*
  * Structure for holding "struct ccs_domain_info *" and "struct ccs_execve *"
  * and "u32 ccs_flags" for each "struct task_struct".

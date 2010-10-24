@@ -250,14 +250,14 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
  * Some exports for loadable kernel module part.
  *
  * Although scripts/checkpatch.pl complains about use of "extern" in C file,
- * we don't put these into security/ccsecurity/compat.h because we want to
+ * we don't put these into security/ccsecurity/internal.h because we want to
  * split built-in part and loadable kernel module part.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)
 extern spinlock_t vfsmount_lock;
 #endif
 
-/* Jump table for loadable kernel module. */
+/* For exporting variables and functions. */
 const struct ccsecurity_exports ccsecurity_exports = {
 	.load_policy = ccs_load_policy,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)

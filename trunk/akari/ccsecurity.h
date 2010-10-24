@@ -33,7 +33,6 @@ struct sockaddr;
 struct sock;
 struct sk_buff;
 struct msghdr;
-struct file_system_type;
 struct pid_namespace;
 int search_binary_handler(struct linux_binprm *bprm, struct pt_regs *regs);
 
@@ -75,7 +74,7 @@ struct ccsecurity_operations {
 #endif
 	int (*umount_permission) (struct vfsmount *mnt, int flags);
 	_Bool (*lport_reserved) (const u16 port);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 	void (*save_open_mode) (int mode);
 	void (*clear_open_mode) (void);
 	int (*open_permission) (struct dentry *dentry, struct vfsmount *mnt,
@@ -145,7 +144,6 @@ struct ccsecurity_operations {
 	_Bool disabled;
 };
 
-extern struct ccsecurity_exports ccsecurity_exports;
 extern struct ccsecurity_operations ccsecurity_ops;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
@@ -220,7 +218,7 @@ static inline int ccs_ptrace_permission(long request, long pid)
 	return func ? func(request, pid) : 0;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 static inline void ccs_save_open_mode(int mode)
 {
 	void (*func) (int) = ccsecurity_ops.save_open_mode;

@@ -11,12 +11,12 @@
  */
 
 #include "internal.h"
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 
 /*
- * ACC_MODE() in this file uses old definition because may_open() receives
- * open flags modified by open_to_namei_flags() until 2.6.33.
- * may_open() receives unmodified flags after 2.6.34.
+ * may_open() receives open flags modified by open_to_namei_flags() until
+ * 2.6.32. may_open() receives unmodified flags after 2.6.33. In case some
+ * distributions backported ACC_MODE changes, we #undef before #define .
  */
 #undef ACC_MODE
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
@@ -219,7 +219,7 @@ static int ccs_audit_mkdev_log(struct ccs_request_info *r)
 /**
  * ccs_audit_path_number_log - Audit path/number request log.
  *
- * @r:     Pointer to "struct ccs_request_info".
+ * @r: Pointer to "struct ccs_request_info".
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -624,7 +624,7 @@ int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 	return error;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 
 /*
  * Save original flags passed to sys_open().
@@ -732,7 +732,7 @@ out:
 	return error;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 /**
  * ccs_new_open_permission - Check permission for "read" and "write".
  *
@@ -1119,7 +1119,7 @@ static int __ccs_chown_permission(struct dentry *dentry,
 	return error;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 
 /**
  * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
@@ -1620,7 +1620,7 @@ static int ccs_old_chroot_permission(struct nameidata *nd)
  */
 void __init ccs_file_init(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 34)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 	ccsecurity_ops.save_open_mode = __ccs_save_open_mode;
 	ccsecurity_ops.clear_open_mode = __ccs_clear_open_mode;
 	ccsecurity_ops.open_permission = __ccs_open_permission;

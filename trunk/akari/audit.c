@@ -243,9 +243,10 @@ no_obj_info:
 /**
  * ccs_init_log - Allocate buffer for audit logs.
  *
- * @r:   Pointer to "struct ccs_request_info".
- * @len: Buffer size needed for @fmt and following parameters.
- * @fmt: The printf()'s format string, followed by parameters.
+ * @r:    Pointer to "struct ccs_request_info".
+ * @len:  Buffer size needed for @fmt and @args.
+ * @fmt:  The printf()'s format string.
+ * @args: va_list structure for @fmt.
  *
  * Returns pointer to allocated memory.
  *
@@ -524,7 +525,7 @@ void ccs_read_log(struct ccs_io_buffer *head)
  * @file: Pointer to "struct file".
  * @wait: Pointer to "poll_table".
  *
- * Returns POLLIN | POLLRDNORM when ready to read a grant log.
+ * Returns POLLIN | POLLRDNORM when ready to read an audit log.
  */
 int ccs_poll_log(struct file *file, poll_table *wait)
 {

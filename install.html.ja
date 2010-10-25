@@ -47,10 +47,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.1-20101018.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.1-20101018.tar.gz'<br>
-# wget -O akari-1.0.1-20101018.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.1-20101018.tar.gz.asc'<br>
-# gpg akari-1.0.1-20101018.tar.gz.asc<br>
-# tar -zxf akari-1.0.1-20101018.tar.gz<br>
+# wget -O akari-1.0.2-20101025.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.2-20101025.tar.gz'<br>
+# wget -O akari-1.0.2-20101025.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.2-20101025.tar.gz.asc'<br>
+# gpg akari-1.0.2-20101025.tar.gz.asc<br>
+# tar -zxf akari-1.0.2-20101025.tar.gz<br>
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
@@ -89,7 +89,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 <table border="1">
 <tr><td>
 # cd /tmp/<br>
-# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar&amp;revision=4073'<br>
+# wget -O ccs-tools.tar.gz 'http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools.tar.gz?root=tomoyo&amp;view=tar'<br>
 # tar -zxf ccs-tools.tar.gz<br>
 # cd ccstools/<br>
 # make -s<br>

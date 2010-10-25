@@ -155,7 +155,7 @@ static int ccs_signal_acl0(pid_t tgid, pid_t pid, int sig)
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_signal_acl(const struct ccs_acl_info *a,
 				const struct ccs_acl_info *b)

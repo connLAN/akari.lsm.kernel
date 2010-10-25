@@ -12,8 +12,6 @@
 
 #include "internal.h"
 
-/* Variables definitions.*/
-
 /*
  * The global domains referred by "use_group" keyword.
  *
@@ -84,10 +82,10 @@ int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
  *
  * Returns true if @a == @b, false otherwise.
  */
-static inline bool ccs_same_acl_head(const struct ccs_acl_info *p1,
-				     const struct ccs_acl_info *p2)
+static inline bool ccs_same_acl_head(const struct ccs_acl_info *a,
+				     const struct ccs_acl_info *b)
 {
-	return p1->type == p2->type && p1->cond == p2->cond;
+	return a->type == b->type && a->cond == b->cond;
 }
 
 /**
@@ -781,6 +779,7 @@ static void ccs_unescape(unsigned char *dest)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+
 /**
  * ccs_copy_argv - Wrapper for copy_strings_kernel().
  *
@@ -796,7 +795,9 @@ static int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
 		bprm->argc++;
 	return ret;
 }
+
 #else
+
 /**
  * ccs_copy_argv - Wrapper for copy_strings_kernel().
  *
@@ -812,6 +813,7 @@ static int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
 		bprm->argc++;
 	return ret;
 }
+
 #endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)
@@ -823,6 +825,8 @@ static int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
  * @root: Pointer to "struct path".
  *
  * Returns nothing.
+ *
+ * This is for compatibility with older kernels.
  */
 static inline void get_fs_root(struct fs_struct *fs, struct path *root)
 {
@@ -1185,6 +1189,8 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
  *
  * @retval: Return code of an execve() operation.
  * @ee:     Pointer to "struct ccs_execve".
+ *
+ * Returns nothing.
  *
  * Caller holds ccs_read_lock().
  */

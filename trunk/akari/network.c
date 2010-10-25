@@ -54,65 +54,6 @@ const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
 };
 
 /**
- * ccs_audit_net_log - Audit network log.
- *
- * @r:         Pointer to "struct ccs_request_info".
- * @family:    Name of socket family ("inet" or "unix").
- * @protocol:  Name of protocol in @family.
- * @operation: Name of socket operation.
- * @address:   Name of address.
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_audit_net_log(struct ccs_request_info *r, const char *family,
-			     const u8 protocol, const u8 operation,
-			     const char *address)
-{
-	return ccs_supervisor(r, "network %s %s %s %s\n", family,
-			      ccs_proto_keyword[protocol],
-			      ccs_socket_keyword[operation], address);
-}
-
-/**
- * ccs_audit_inet_log - Audit INET network log.
- *
- * @r: Pointer to "struct ccs_request_info".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_audit_inet_log(struct ccs_request_info *r)
-{
-	char buf[128];
-	int len;
-	const u32 *address = r->param.inet_network.address;
-	if (r->param.inet_network.is_ipv6)
-		ccs_print_ipv6(buf, sizeof(buf), (const struct in6_addr *)
-			       address, (const struct in6_addr *) address);
-	else
-		ccs_print_ipv4(buf, sizeof(buf), r->param.inet_network.ip,
-			       r->param.inet_network.ip);
-	len = strlen(buf);
-	snprintf(buf + len, sizeof(buf) - len, " %u",
-		 r->param.inet_network.port);
-	return ccs_audit_net_log(r, "inet", r->param.inet_network.protocol,
-				 r->param.inet_network.operation, buf);
-}
-
-/**
- * ccs_audit_unix_log - Audit UNIX network log.
- *
- * @r: Pointer to "struct ccs_request_info".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_audit_unix_log(struct ccs_request_info *r)
-{
-	return ccs_audit_net_log(r, "unix", r->param.unix_network.protocol,
-				 r->param.unix_network.operation,
-				 r->param.unix_network.address->name);
-}
-
-/**
  * ccs_parse_ip_address - Parse an IP address.
  *
  * @address: String to parse.
@@ -218,61 +159,6 @@ void ccs_print_ipv6(char *buffer, const int buffer_len,
 		 "%x:%x:%x:%x:%x:%x:%x:%x%c%x:%x:%x:%x:%x:%x:%x:%x",
 		 NIP6(*min_ip), min_ip == max_ip ? '\0' : '-',
 		 NIP6(*max_ip));
-}
-
-/**
- * ccs_check_inet_acl - Check permission for inet domain socket operation.
- *
- * @r:   Pointer to "struct ccs_request_info".
- * @ptr: Pointer to "struct ccs_acl_info".
- *
- * Returns true if granted, false otherwise.
- */
-static bool ccs_check_inet_acl(struct ccs_request_info *r,
-			       const struct ccs_acl_info *ptr)
-{
-	const struct ccs_inet_acl *acl = container_of(ptr, typeof(*acl), head);
-	bool ret;
-	if (!(acl->perm & (1 << r->param.inet_network.operation)) ||
-	    !ccs_compare_number_union(r->param.inet_network.port, &acl->port))
-		return false;
-	switch (acl->address_type) {
-	case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
-		ret = ccs_address_matches_group(r->param.inet_network.is_ipv6,
-						r->param.inet_network.address,
-						acl->address.group);
-		break;
-	case CCS_IP_ADDRESS_TYPE_IPv4:
-		ret = !r->param.inet_network.is_ipv6 &&
-			acl->address.ipv4.min <= r->param.inet_network.ip &&
-			r->param.inet_network.ip <= acl->address.ipv4.max;
-		break;
-	default:
-		ret = r->param.inet_network.is_ipv6 &&
-			memcmp(acl->address.ipv6.min,
-			       r->param.inet_network.address, 16) <= 0 &&
-			memcmp(r->param.inet_network.address,
-			       acl->address.ipv6.max, 16) <= 0;
-		break;
-	}
-	return ret;
-}
-
-/**
- * ccs_check_unix_acl - Check permission for unix domain socket operation.
- *
- * @r:   Pointer to "struct ccs_request_info".
- * @ptr: Pointer to "struct ccs_acl_info".
- *
- * Returns true if granted, false otherwise.
- */
-static bool ccs_check_unix_acl(struct ccs_request_info *r,
-			       const struct ccs_acl_info *ptr)
-{
-	const struct ccs_unix_acl *acl = container_of(ptr, typeof(*acl), head);
-	return (acl->perm & (1 << r->param.unix_network.operation)) &&
-		ccs_compare_name_union(r->param.unix_network.address,
-				       &acl->name);
 }
 
 /*
@@ -516,6 +402,120 @@ void __init ccs_network_init(void)
 }
 
 #else
+
+/**
+ * ccs_audit_net_log - Audit network log.
+ *
+ * @r:         Pointer to "struct ccs_request_info".
+ * @family:    Name of socket family ("inet" or "unix").
+ * @protocol:  Name of protocol in @family.
+ * @operation: Name of socket operation.
+ * @address:   Name of address.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_audit_net_log(struct ccs_request_info *r, const char *family,
+			     const u8 protocol, const u8 operation,
+			     const char *address)
+{
+	return ccs_supervisor(r, "network %s %s %s %s\n", family,
+			      ccs_proto_keyword[protocol],
+			      ccs_socket_keyword[operation], address);
+}
+
+/**
+ * ccs_audit_inet_log - Audit INET network log.
+ *
+ * @r: Pointer to "struct ccs_request_info".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_audit_inet_log(struct ccs_request_info *r)
+{
+	char buf[128];
+	int len;
+	const u32 *address = r->param.inet_network.address;
+	if (r->param.inet_network.is_ipv6)
+		ccs_print_ipv6(buf, sizeof(buf), (const struct in6_addr *)
+			       address, (const struct in6_addr *) address);
+	else
+		ccs_print_ipv4(buf, sizeof(buf), r->param.inet_network.ip,
+			       r->param.inet_network.ip);
+	len = strlen(buf);
+	snprintf(buf + len, sizeof(buf) - len, " %u",
+		 r->param.inet_network.port);
+	return ccs_audit_net_log(r, "inet", r->param.inet_network.protocol,
+				 r->param.inet_network.operation, buf);
+}
+
+/**
+ * ccs_audit_unix_log - Audit UNIX network log.
+ *
+ * @r: Pointer to "struct ccs_request_info".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_audit_unix_log(struct ccs_request_info *r)
+{
+	return ccs_audit_net_log(r, "unix", r->param.unix_network.protocol,
+				 r->param.unix_network.operation,
+				 r->param.unix_network.address->name);
+}
+
+/**
+ * ccs_check_inet_acl - Check permission for inet domain socket operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
+static bool ccs_check_inet_acl(struct ccs_request_info *r,
+			       const struct ccs_acl_info *ptr)
+{
+	const struct ccs_inet_acl *acl = container_of(ptr, typeof(*acl), head);
+	bool ret;
+	if (!(acl->perm & (1 << r->param.inet_network.operation)) ||
+	    !ccs_compare_number_union(r->param.inet_network.port, &acl->port))
+		return false;
+	switch (acl->address_type) {
+	case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
+		ret = ccs_address_matches_group(r->param.inet_network.is_ipv6,
+						r->param.inet_network.address,
+						acl->address.group);
+		break;
+	case CCS_IP_ADDRESS_TYPE_IPv4:
+		ret = !r->param.inet_network.is_ipv6 &&
+			acl->address.ipv4.min <= r->param.inet_network.ip &&
+			r->param.inet_network.ip <= acl->address.ipv4.max;
+		break;
+	default:
+		ret = r->param.inet_network.is_ipv6 &&
+			memcmp(acl->address.ipv6.min,
+			       r->param.inet_network.address, 16) <= 0 &&
+			memcmp(r->param.inet_network.address,
+			       acl->address.ipv6.max, 16) <= 0;
+		break;
+	}
+	return ret;
+}
+
+/**
+ * ccs_check_unix_acl - Check permission for unix domain socket operation.
+ *
+ * @r:   Pointer to "struct ccs_request_info".
+ * @ptr: Pointer to "struct ccs_acl_info".
+ *
+ * Returns true if granted, false otherwise.
+ */
+static bool ccs_check_unix_acl(struct ccs_request_info *r,
+			       const struct ccs_acl_info *ptr)
+{
+	const struct ccs_unix_acl *acl = container_of(ptr, typeof(*acl), head);
+	return (acl->perm & (1 << r->param.unix_network.operation)) &&
+		ccs_compare_name_union(r->param.unix_network.address,
+				       &acl->name);
+}
 
 /**
  * ccs_inet_entry - Check permission for INET network operation.

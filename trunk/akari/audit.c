@@ -314,6 +314,8 @@ out:
  *
  * @domainname: Name of domain to transit.
  *
+ * Returns nothing.
+ *
  * Note that if current->pid == 1, sending SIGKILL won't work.
  */
 void ccs_transition_failed(const char *domainname)
@@ -327,6 +329,8 @@ void ccs_transition_failed(const char *domainname)
  * ccs_update_task_domain - Update task's domain.
  *
  * @r: Pointer to "struct ccs_request_info".
+ *
+ * Returns nothing.
  *
  * The task will retry as hard as possible. But if domain transition failed,
  * the task will be killed by SIGKILL.
@@ -360,8 +364,6 @@ static wait_queue_head_t ccs_log_wait[2] = {
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[0]),
 	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[1]),
 };
-/* Lock for "struct list_head ccs_log[2]". */
-static DEFINE_SPINLOCK(ccs_log_lock);
 
 /* Structure for audit log. */
 struct ccs_log {
@@ -374,6 +376,8 @@ struct ccs_log {
 static struct list_head ccs_log[2] = {
 	LIST_HEAD_INIT(ccs_log[0]), LIST_HEAD_INIT(ccs_log[1]),
 };
+/* Lock for "struct list_head ccs_log[2]". */
+static DEFINE_SPINLOCK(ccs_log_lock);
 
 /* Length of "stuct list_head ccs_log[2]". */
 static unsigned int ccs_log_count[2];
@@ -386,7 +390,7 @@ static unsigned int ccs_log_count[2];
  * @matched_acl: Pointer to "struct ccs_acl_info". Maybe NULL.
  * @is_granted:  True if granted log, false otherwise.
  *
- * Returns mode.
+ * Returns true if this request should be audited, false otherwise.
  */
 static bool ccs_get_audit(const u8 profile, const u8 index,
 			  const struct ccs_acl_info *matched_acl,
@@ -425,6 +429,8 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
  * @len:  Buffer size needed for @fmt and @args.
  * @fmt:  The printf()'s format string.
  * @args: va_list structure for @fmt.
+ *
+ * Returns nothing.
  */
 void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		    va_list args)
@@ -476,6 +482,8 @@ out:
  *
  * @r:   Pointer to "struct ccs_request_info".
  * @fmt: The printf()'s format string, followed by parameters.
+ *
+ * Returns nothing.
  */
 void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 {
@@ -493,6 +501,8 @@ void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
  * ccs_read_log - Read an audit log.
  *
  * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
  */
 void ccs_read_log(struct ccs_io_buffer *head)
 {

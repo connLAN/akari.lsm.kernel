@@ -105,7 +105,7 @@ static int __ccs_ptrace_permission(long request, long pid)
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_capability_acl(const struct ccs_acl_info *a,
 				    const struct ccs_acl_info *b)

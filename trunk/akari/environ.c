@@ -72,7 +72,7 @@ int ccs_env_perm(struct ccs_request_info *r, const char *env)
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_env_acl(const struct ccs_acl_info *a,
 			     const struct ccs_acl_info *b)

@@ -155,7 +155,7 @@ static void ccs_add_slash(struct ccs_path_info *buf)
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
- * Returns true success, false otherwise.
+ * Returns true on success, false otherwise.
  */
 static bool ccs_get_realpath(struct ccs_path_info *buf, struct dentry *dentry,
 			     struct vfsmount *mnt)
@@ -1067,7 +1067,7 @@ out:
 /**
  * __ccs_ioctl_permission - Check permission for "ioctl".
  *
- * @file: Pointer to "struct file".
+ * @filp: Pointer to "struct file".
  * @cmd:  Ioctl command number.
  * @arg:  Param for @cmd.
  *
@@ -1363,11 +1363,11 @@ static int __ccs_truncate_permission(struct dentry *dentry,
 /**
  * __ccs_rename_permission - Check permission for vfs_rename().
  *
- * @old_dir:     Pointer to "struct inode".
- * @old_dentry:  Pointer to "struct dentry".
- * @new_dir:     Pointer to "struct inode".
- * @new_dentry:  Pointer to "struct dentry".
- * @mnt:         Pointer to "struct vfsmount". Maybe NULL.
+ * @old_dir:    Pointer to "struct inode".
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dir:    Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ * @mnt:        Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -1384,10 +1384,10 @@ static int __ccs_rename_permission(struct inode *old_dir,
 /**
  * __ccs_link_permission - Check permission for vfs_link().
  *
- * @old_dentry:  Pointer to "struct dentry".
- * @new_dir:     Pointer to "struct inode".
- * @new_dentry:  Pointer to "struct dentry".
- * @mnt:         Pointer to "struct vfsmount". Maybe NULL.
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dir:    Pointer to "struct inode".
+ * @new_dentry: Pointer to "struct dentry".
+ * @mnt:        Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -1440,7 +1440,7 @@ static int __ccs_uselib_permission(struct dentry *dentry, struct vfsmount *mnt)
  * __ccs_parse_table - Check permission for parse_table().
  *
  * @name:   Pointer to "int __user".
- * @nlem:   Number of elements in @name.
+ * @nlen:   Number of elements in @name.
  * @oldval: Pointer to "void __user".
  * @newval: Pointer to "void __user".
  * @table:  Pointer to "struct ctl_table".
@@ -1636,9 +1636,7 @@ void __init ccs_file_init(void)
 	ccsecurity_ops.open_exec_permission = __ccs_open_exec_permission;
 	ccsecurity_ops.uselib_permission = __ccs_uselib_permission;
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18) || defined(CONFIG_SYSCTL_SYSCALL)
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18) || (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL))
 	ccsecurity_ops.parse_table = __ccs_parse_table;
-#endif
 #endif
 };

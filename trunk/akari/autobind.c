@@ -34,7 +34,7 @@ static bool __ccs_lport_reserved(const u16 port)
  * @a: Pointer to "struct ccs_acl_head".
  * @b: Pointer to "struct ccs_acl_head".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_reserved(const struct ccs_acl_head *a,
 			      const struct ccs_acl_head *b)

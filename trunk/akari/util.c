@@ -278,28 +278,28 @@ bool ccs_parse_name_union(const char *filename, struct ccs_name_union *ptr)
  *
  * Returns true on success, false otherwise.
  */
-bool ccs_parse_number_union(char *data, struct ccs_number_union *num)
+bool ccs_parse_number_union(char *data, struct ccs_number_union *ptr)
 {
 	u8 type;
 	unsigned long v;
-	memset(num, 0, sizeof(*num));
+	memset(ptr, 0, sizeof(*ptr));
 	if (!data[0])
 		return false;
 	if (data[0] == '@') {
 		if (!ccs_correct_word(data))
 			return false;
-		num->group = ccs_get_group(data + 1, CCS_NUMBER_GROUP);
-		num->is_group = true;
-		return num->group != NULL;
+		ptr->group = ccs_get_group(data + 1, CCS_NUMBER_GROUP);
+		ptr->is_group = true;
+		return ptr->group != NULL;
 	}
 	type = ccs_parse_ulong(&v, &data);
 	if (type == CCS_VALUE_TYPE_INVALID)
 		return false;
-	num->values[0] = v;
-	num->value_type[0] = type;
+	ptr->values[0] = v;
+	ptr->value_type[0] = type;
 	if (!*data) {
-		num->values[1] = v;
-		num->value_type[1] = type;
+		ptr->values[1] = v;
+		ptr->value_type[1] = type;
 		return true;
 	}
 	if (*data++ != '-')
@@ -307,8 +307,8 @@ bool ccs_parse_number_union(char *data, struct ccs_number_union *num)
 	type = ccs_parse_ulong(&v, &data);
 	if (type == CCS_VALUE_TYPE_INVALID || *data)
 		return false;
-	num->values[1] = v;
-	num->value_type[1] = type;
+	ptr->values[1] = v;
+	ptr->value_type[1] = type;
 	return true;
 }
 

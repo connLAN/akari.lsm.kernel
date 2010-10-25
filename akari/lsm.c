@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0   2010/10/25
+ * Version: 1.0.2   2010/10/25
  */
 #include "internal.h"
 #include <linux/security.h>
@@ -404,9 +404,6 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
  */
 static int ccs_open(struct file *f)
 {
-	struct dentry *dentry = f->f_path.dentry;
-	if (!dentry->d_inode || S_ISDIR(dentry->d_inode->i_mode))
-		return 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
 	/* Don't check read permission here if called from do_execve(). */
 	if (current->in_execve)
@@ -415,7 +412,8 @@ static int ccs_open(struct file *f)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	return ccs_open_permission(f);
 #else
-	return ccs_open_permission(dentry, f->f_path.mnt, f->f_flags + 1);
+	return ccs_open_permission(f->f_path.dentry, f->f_path.mnt,
+				   f->f_flags + 1);
 #endif
 }
 
@@ -470,7 +468,7 @@ static int ccs_dentry_open(struct file *f)
 static int ccs_open(struct inode *inode, int mask, struct nameidata *nd)
 {
 	int flags;
-	if (!inode || S_ISDIR(inode->i_mode) || !nd || !nd->dentry)
+	if (!nd || !nd->dentry)
 		return 0;
 	/*
 	 * This flags value is passed to ACC_MODE().
@@ -675,6 +673,22 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 }
 
 #endif
+
+/**
+ * ccs_inode_getattr - Check permission for stat().
+ *
+ * @mnt:    Pointer to "struct vfsmount".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
+{
+	int rc = ccs_getattr_permission(mnt, dentry);
+	if (rc)
+		return rc;
+	return lsm_dereference()->inode_getattr(mnt, dentry);
+}
 
 #if defined(CONFIG_SECURITY_PATH)
 
@@ -2138,6 +2152,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	ops->inode_create          = ccs_inode_create;
 #endif
 	ops->inode_setattr         = ccs_inode_setattr;
+	ops->inode_getattr         = ccs_inode_getattr;
 #ifdef CONFIG_SECURITY_NETWORK
 	ops->socket_bind           = ccs_socket_bind;
 	ops->socket_connect        = ccs_socket_connect;
@@ -2162,7 +2177,7 @@ static int __init ccs_init(void)
 		return -EINVAL;
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0   2010/10/25\n");
+	printk(KERN_INFO "AKARI: 1.0.2   2010/10/25\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

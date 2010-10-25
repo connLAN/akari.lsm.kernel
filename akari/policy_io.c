@@ -774,7 +774,7 @@ next:
  * @a: Pointer to "struct ccs_acl_head".
  * @b: Pointer to "struct ccs_acl_head".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_manager(const struct ccs_acl_head *a,
 			     const struct ccs_acl_head *b)
@@ -971,7 +971,7 @@ static bool ccs_select_one(struct ccs_io_buffer *head, const char *data)
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_handler_acl(const struct ccs_acl_info *a,
 				 const struct ccs_acl_info *b)
@@ -987,7 +987,7 @@ static bool ccs_same_handler_acl(const struct ccs_acl_info *a,
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_task_acl(const struct ccs_acl_info *a,
 			      const struct ccs_acl_info *b)
@@ -1737,7 +1737,7 @@ static void ccs_read_domain_profile(struct ccs_io_buffer *head)
 }
 
 /**
- * ccs_write_pid: Specify PID to obtain domainname.
+ * ccs_write_pid - Specify PID to obtain domainname.
  *
  * @head: Pointer to "struct ccs_io_buffer".
  *
@@ -2375,7 +2375,7 @@ static int ccs_write_answer(struct ccs_io_buffer *head)
 }
 
 /**
- * ccs_read_version: Get version.
+ * ccs_read_version - Get version.
  *
  * @head: Pointer to "struct ccs_io_buffer".
  *

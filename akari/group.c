@@ -18,7 +18,7 @@
  * @a: Pointer to "struct ccs_acl_head".
  * @b: Pointer to "struct ccs_acl_head".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_path_group(const struct ccs_acl_head *a,
 				const struct ccs_acl_head *b)
@@ -33,7 +33,7 @@ static bool ccs_same_path_group(const struct ccs_acl_head *a,
  * @a: Pointer to "struct ccs_acl_head".
  * @b: Pointer to "struct ccs_acl_head".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_number_group(const struct ccs_acl_head *a,
 				  const struct ccs_acl_head *b)
@@ -50,7 +50,7 @@ static bool ccs_same_number_group(const struct ccs_acl_head *a,
  * @a: Pointer to "struct ccs_acl_head".
  * @b: Pointer to "struct ccs_acl_head".
  *
- * Returns true if @a and @b are duplicated, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_address_group(const struct ccs_acl_head *a,
 				   const struct ccs_acl_head *b)

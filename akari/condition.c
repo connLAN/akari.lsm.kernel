@@ -408,15 +408,15 @@ out:
  *
  * Returns true if @a == @b, false otherwise.
  */
-static inline bool ccs_same_condition(const struct ccs_condition *p1,
-				      const struct ccs_condition *p2)
+static inline bool ccs_same_condition(const struct ccs_condition *a,
+				      const struct ccs_condition *b)
 {
-	return p1->size == p2->size && p1->condc == p2->condc &&
-		p1->numbers_count == p2->numbers_count &&
-		p1->names_count == p2->names_count &&
-		p1->argc == p2->argc && p1->envc == p2->envc &&
-		p1->grant_log == p2->grant_log && p1->transit == p2->transit &&
-		!memcmp(p1 + 1, p2 + 1, p1->size - sizeof(*p1));
+	return a->size == b->size && a->condc == b->condc &&
+		a->numbers_count == b->numbers_count &&
+		a->names_count == b->names_count &&
+		a->argc == b->argc && a->envc == b->envc &&
+		a->grant_log == b->grant_log && a->transit == b->transit &&
+		!memcmp(a + 1, b + 1, a->size - sizeof(*a));
 }
 /**
  * ccs_condition_type - Get condition type.

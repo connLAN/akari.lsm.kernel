@@ -153,6 +153,7 @@ static inline void ccs_realpath_unlock(void)
  * ccs_kern_path - Wrapper for kern_path().
  *
  * @pathname: Pathname to resolve. Maybe NULL.
+ * @flags:    Lookup flags.
  * @path:     Pointer to "struct path".
  *
  * Returns 0 on success, negative value otherwise.
@@ -483,7 +484,7 @@ int ccs_symlink_path(const char *pathname, struct ccs_path_info *name)
 }
 
 /**
- * ccs_encode2: Encode binary string to ascii string.
+ * ccs_encode2 - Encode binary string to ascii string.
  *
  * @str:     String in binary format.
  * @str_len: Size of @str in byte.
@@ -536,7 +537,7 @@ char *ccs_encode2(const char *str, int str_len)
 }
 
 /**
- * ccs_encode: Encode binary string to ascii string.
+ * ccs_encode - Encode binary string to ascii string.
  *
  * @str: String in binary format.
  *

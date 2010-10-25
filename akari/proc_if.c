@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/22
+ * Version: 1.8.0-pre   2010/10/25
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -118,7 +118,7 @@ struct file_operations ccs_self_operations = {
 };
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 4, 23)
-#if !defined(RHEL_VERSION) || RHEL_VERSION != 3 || !defined(RHEL_UPDATE) || RHEL_UPDATE != 9
+#if !defined(RHEL_VERSION) || RHEL_VERSION != 3
 
 /**
  * PDE - Get "struct proc_dir_entry".

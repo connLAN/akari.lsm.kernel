@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/22
+ * Version: 1.8.0-pre   2010/10/25
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -15,10 +15,13 @@
 
 /*
  * may_open() receives open flags modified by open_to_namei_flags() until
- * 2.6.32. In case some distributions backported ACC_MODE changes,
- * we #undef before #define.
+ * 2.6.32. We stop here in case some distributions backported ACC_MODE changes,
+ * for we can't determine whether may_open() receives open flags modified by
+ * open_to_namei_flags() or not.
  */
-#undef ACC_MODE
+#ifdef ACC_MODE
+#error ACC_MODE already defined.
+#endif
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
 
 #endif

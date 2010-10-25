@@ -25,3 +25,13 @@ Version 1.0.1   2010/10/18   Minor update release.
    Fix off-by-two in ccs_check_unix_address().
 
    Implement post accept() LSM hook.
+
+Version 1.0.2   2010/10/25   Minor update release.
+
+   Synchronize with TOMOYO revision 4090.
+
+   Add getattr() and readdir() checks.
+
+   Use "YYYY/MM/DD hh:mm:ss" format for /proc/ccs/ interface.
+
+   Do not automatically add / for umount().

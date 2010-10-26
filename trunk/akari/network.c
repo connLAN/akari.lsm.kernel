@@ -612,15 +612,15 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
 	int error = 0;
 	const u8 type = ccs_unix2mac[address->protocol][address->operation];
 	if (type && ccs_init_request_info(&r, type) != CCS_CONFIG_DISABLED) {
-		char *buf;
-		if (address->unix0.addr_len <= sizeof(sa_family_t))
-			buf = ccs_encode2("anonymous", 9);
-		else if (address->unix0.addr[0])
-			buf = ccs_encode(address->unix0.addr);
-		else
-			buf = ccs_encode2(address->unix0.addr,
-					  address->unix0.addr_len
-					  - sizeof(sa_family_t));
+		char *buf = address->unix0.addr;
+		int len = address->unix0.addr_len - sizeof(sa_family_t);
+		if (len <= 0) {
+			buf = "anonymous";
+			len = 9;
+		} else if (buf[0]) {
+			len = strnlen(buf, len);
+		}
+		buf = ccs_encode2(buf, len);
 		if (buf) {
 			struct ccs_security * const task =
 				ccs_current_security();
@@ -666,18 +666,18 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 				  struct ccs_addr_info *address)
 {
 	struct ccs_unix_addr_info *u = &address->unix0;
+	/*
+	 * Reject bad parameters here because pathname was copied by
+	 * move_addr_to_kernel() but unix_mkname() is not yet called.
+	 * We must allow sa_family != AF_UNIX for disconnect operation and
+	 * addr_len == sizeof(short) for unix_autobind().
+	 */
 	if (addr->sa_family != AF_UNIX)
 		return 0;
+	if (addr_len < sizeof(short) || addr_len > sizeof(struct sockaddr_un))
+		return -EINVAL;
 	u->addr = ((struct sockaddr_un *) addr)->sun_path;
 	u->addr_len = addr_len;
-	/*
-	 * Terminate pathname with '\0' like unix_mkname() does.
-	 * This is needed because pathname was copied by move_addr_to_kernel()
-	 * but not yet terminated by unix_mkname().
-	 */
-	if (u->addr[0] && addr_len > sizeof(short) &&
-	    addr_len <= sizeof(struct sockaddr_un))
-		((char *) addr)[addr_len] = '\0';
 	return ccs_unix_entry(address);
 }
 

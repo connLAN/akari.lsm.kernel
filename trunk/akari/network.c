@@ -666,16 +666,8 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 				  struct ccs_addr_info *address)
 {
 	struct ccs_unix_addr_info *u = &address->unix0;
-	/*
-	 * Reject bad parameters here because pathname was copied by
-	 * move_addr_to_kernel() but unix_mkname() is not yet called.
-	 * We must allow sa_family != AF_UNIX for disconnect operation and
-	 * addr_len == sizeof(short) for unix_autobind().
-	 */
 	if (addr->sa_family != AF_UNIX)
 		return 0;
-	if (addr_len < sizeof(short) || addr_len > sizeof(struct sockaddr_un))
-		return -EINVAL;
 	u->addr = ((struct sockaddr_un *) addr)->sun_path;
 	u->addr_len = addr_len;
 	return ccs_unix_entry(address);

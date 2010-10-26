@@ -1812,17 +1812,17 @@ out:
  * ccs_find_variable - Find variable's address using dummy.
  *
  * @function: Pointer to dummy function's entry point.
- * @variable: Pointer to variable which is used within @function.
+ * @addr:     Address of the variable which is used within @function.
  * @symbol:   Name of symbol to resolve.
  *
  * This trick depends on below assumptions.
  *
- * (1) @variable is found within 128 bytes from @function, even if additional
+ * (1) @addr is found within 128 bytes from @function, even if additional
  *     code (e.g. debug symbols) is added.
  * (2) It is safe to read 128 bytes from @function.
- * (3) @variable != Byte code except @variable.
+ * (3) @addr != Byte code except @addr.
  */
-static void * __init ccs_find_variable(void *function, u64 variable,
+static void * __init ccs_find_variable(void *function, unsigned long addr,
 				       const char *symbol)
 {
 	int i;
@@ -1838,41 +1838,32 @@ static void * __init ccs_find_variable(void *function, u64 variable,
 		return NULL;
 	/* First, assume absolute adressing mode is used. */
 	for (i = 0; i < 128; i++) {
-		if (sizeof(void *) == sizeof(u32)) {
-			if (*(u32 *) cp == (u32) variable)
-				return base + i;
-		} else if (sizeof(void *) == sizeof(u64)) {
-			if (*(u64 *) cp == variable)
-				return base + i;
+		if (*(unsigned long *) cp == addr)
+			return base + i;
+		cp++;
+	}
+	/* Next, assume PC-relative addressing mode is used. */
+	cp = function;
+	for (i = 0; i < 128; i++) {
+		if ((unsigned long) (cp + sizeof(int) + *(int *) cp) == addr) {
+			static void *cp4ret;
+			cp = base + i;
+			cp += sizeof(int) + *(int *) cp;
+			cp4ret = cp;
+			return &cp4ret;
 		}
 		cp++;
 	}
-	/* Next, assume absolute 32bit addressing mode is used. */
-	if (sizeof(void *) == sizeof(u64)) {
-		cp = function;
-		for (i = 0; i < 128; i++) {
-			if (*(u32 *) cp == (u32) variable) {
-				static void *cp4ret;
-				cp4ret = *(int *) (base + i);
-				return &cp4ret;
-			}
-			cp++;
+	cp = function;
+	for (i = 0; i < 128; i++) {
+		if ((unsigned long) (long) (*(int *) cp) == addr) {
+			static void *cp4ret;
+			cp = base + i;
+			cp = (void *) (long) (*(int *) cp);
+			cp4ret = cp;
+			return &cp4ret;
 		}
-	}
-	/* Next, assume PC-relative mode is used. (x86_64) */
-	if (sizeof(void *) == sizeof(u64)) {
-		cp = function;
-		for (i = 0; i < 128; i++) {
-			if ((u64) (cp + sizeof(int) + *(int *)(cp)) ==
-			    variable) {
-				static const u8 *cp4ret;
-				cp = base + i;
-				cp += sizeof(int) + *(int *)(cp);
-				cp4ret = cp;
-				return &cp4ret;
-			}
-			cp++;
-		}
+		cp++;
 	}
 	return NULL;
 }
@@ -1901,8 +1892,8 @@ static struct security_operations * __init ccs_find_security_ops(void)
 	 * This trick assumes that compiler generates identical code for
 	 * security_file_alloc() and lsm_addr_calculator().
 	 */
-	cp = ccs_find_variable(lsm_addr_calculator, (u64) &ccs_security_ops,
-			       " security_file_alloc\n");
+	cp = ccs_find_variable(lsm_addr_calculator, (unsigned long)
+			       &ccs_security_ops, " security_file_alloc\n");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve security_file_alloc().\n");
 		goto out;
@@ -2039,7 +2030,7 @@ static bool __init ccs_find_vfsmount_lock(void)
 	 * This trick assumes that compiler generates identical code for
 	 * follow_up() and lsm_flwup().
 	 */
-	cp = ccs_find_variable(lsm_flwup, (u64) &ccs_vfsmount_lock,
+	cp = ccs_find_variable(lsm_flwup, (unsigned long) &ccs_vfsmount_lock,
 			       "follow_up");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve follow_up().\n");
@@ -2064,7 +2055,8 @@ out:
 	 * This trick assumes that compiler generates identical code for
 	 * mnt_pin() and lsm_pin().
 	 */
-	cp = ccs_find_variable(lsm_pin, (u64) &ccs_vfsmount_lock, "mnt_pin");
+	cp = ccs_find_variable(lsm_pin, (unsigned long) &ccs_vfsmount_lock,
+			       "mnt_pin");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve mnt_pin().\n");
 		goto out;

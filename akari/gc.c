@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/25
+ * Version: 1.8.0-pre   2010/10/28
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -158,8 +158,6 @@ static inline size_t ccs_del_manager(struct list_head *element)
  */
 static bool ccs_used_by_task(struct ccs_domain_info *domain)
 {
-	return ccs_domain_in_use(domain);
-#if 0
 	bool in_use = false;
 	/*
 	 * Don't delete this domain if somebody is doing execve().
@@ -168,7 +166,26 @@ static bool ccs_used_by_task(struct ccs_domain_info *domain)
 	 * updates ccs_flags, we need smp_mb() to make sure that GC first
 	 * checks ccs_flags and then checks ccs_domain_info.
 	 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+	int idx;
+	rcu_read_lock();
+	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
+		struct ccs_security *ptr;
+		struct list_head *list = &ccs_task_security_list[idx];
+		list_for_each_entry_rcu(ptr, list, list) {
+			if (!(ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
+				smp_mb(); /* Avoid out of order execution. */
+				if (ptr->ccs_domain_info != domain)
+					continue;
+			}
+			in_use = true;
+			goto out;
+		}
+	}
+	in_use = ccs_used_by_cred(domain);
+out:
+	rcu_read_unlock();
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
 	struct task_struct *g;
 	struct task_struct *t;
 	ccs_tasklist_lock();
@@ -198,7 +215,6 @@ out:
 	ccs_tasklist_unlock();
 #endif
 	return in_use;
-#endif
 }
 
 /**

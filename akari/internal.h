@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/25
+ * Version: 1.8.0-pre   2010/10/28
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -346,6 +346,9 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 #define CONFIG_CCSECURITY_DEFAULT_LOADER "/sbin/ccs-init"
 #define CONFIG_CCSECURITY_ALTERNATIVE_TRIGGER "/sbin/ccs-start"
 #define CONFIG_CCSECURITY_BUILTIN_INITIALIZERS ""
+#endif
+#ifndef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+#define CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 #endif
 #include "ccsecurity.h"
 #ifndef CONFIG_SECURITY
@@ -1922,6 +1925,8 @@ static inline void ccs_put_name(const struct ccs_path_info *name)
 /* For importing variables and functions. */
 extern struct ccsecurity_exports ccsecurity_exports;
 
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+
 /*
  * Structure for holding "struct ccs_domain_info *" and "struct ccs_execve *"
  * and "u32 ccs_flags" for each "struct task_struct".
@@ -1937,7 +1942,7 @@ extern struct ccsecurity_exports ccsecurity_exports;
  */
 struct ccs_security {
 	struct list_head list;
-	struct task_struct *task; /* May be NULL. */
+	const struct task_struct *task; /* May be NULL. */
 	const struct cred *cred;  /* May be NULL. */
 	struct ccs_domain_info *ccs_domain_info;
 	u32 ccs_flags;
@@ -1945,10 +1950,18 @@ struct ccs_security {
 	struct rcu_head rcu;
 };
 
-extern void __init ccs_main_init(void);
-extern bool ccs_domain_in_use(const struct ccs_domain_info *domain);
-extern struct ccs_security *ccs_find_task_security(const struct task_struct *
-						   task);
+void __init ccs_main_init(void);
+bool ccs_used_by_cred(const struct ccs_domain_info *domain);
+int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep);
+void ccs_finish_execve(int retval, struct ccs_execve *ee);
+void ccs_load_policy(const char *filename);
+extern spinlock_t ccs_task_security_list_lock;
+
+#define CCS_TASK_SECURITY_HASH_BITS 12
+#define CCS_MAX_TASK_SECURITY_HASH (1u << CCS_TASK_SECURITY_HASH_BITS)
+extern struct list_head ccs_task_security_list[CCS_MAX_TASK_SECURITY_HASH];
+
+struct ccs_security *ccs_find_task_security(const struct task_struct *task);
 
 /**
  * ccs_current_security - Get "struct ccs_security" for current thread.
@@ -2011,5 +2024,92 @@ static inline u32 ccs_current_flags(void)
 {
 	return ccs_find_task_security(current)->ccs_flags;
 }
+
+#else
+
+/*
+ * "struct ccs_domain_info *" and "u32 ccs_flags" for each "struct task_struct"
+ * are maintained inside that "struct task_struct". Therefore, ccs_security ==
+ * task_struct . This allows fast access but breaks KABI checks for
+ * distributor's prebuilt kernels due to changes in "struct task_struct".
+ */
+#define ccs_security task_struct
+
+/**
+ * ccs_find_task_security - Find "struct ccs_security" for given task.
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns pointer to "struct ccs_security".
+ */
+static inline struct ccs_security *ccs_find_task_security(struct task_struct *
+							  task)
+{
+	return task;
+}
+
+/**
+ * ccs_current_security - Get "struct ccs_security" for current thread.
+ *
+ * Returns pointer to "struct ccs_security" for current thread.
+ */
+static inline struct ccs_security *ccs_current_security(void)
+{
+	return ccs_find_task_security(current);
+}
+
+/**
+ * ccs_task_security - Get "struct ccs_security" for specified thread.
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns pointer to "struct ccs_security" for specified thread.
+ */
+static inline struct ccs_domain_info *ccs_task_domain(struct task_struct *task)
+{
+	struct ccs_domain_info *domain = task->ccs_domain_info;
+	return domain ? domain : &ccs_kernel_domain;
+}
+
+/**
+ * ccs_current_domain - Get "struct ccs_domain_info" for current thread.
+ *
+ * Returns pointer to "struct ccs_domain_info" for current thread.
+ *
+ * If current thread does not belong to a domain (which is true for initial
+ * init_task in order to hide ccs_kernel_domain from this module), current
+ * thread enters into ccs_kernel_domain.
+ */
+static inline struct ccs_domain_info *ccs_current_domain(void)
+{
+	struct task_struct *task = current;
+	if (!task->ccs_domain_info)
+		task->ccs_domain_info = &ccs_kernel_domain;
+	return task->ccs_domain_info;
+}
+
+/**
+ * ccs_task_flags - Get flags for specified thread.
+ *
+ * @task: Pointer to "struct task_struct".
+ *
+ * Returns flags for specified thread.
+ */
+static inline u32 ccs_task_flags(struct task_struct *task)
+{
+	return ccs_find_task_security(task)->ccs_flags;
+}
+
+/**
+ * ccs_task_flags - Get flags for current thread.
+ *
+ * Returns flags for current thread.
+ */
+static inline u32 ccs_current_flags(void)
+{
+	return ccs_find_task_security(current)->ccs_flags;
+}
+
+#endif
 
 #endif

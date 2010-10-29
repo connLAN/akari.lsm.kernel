@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/25
+ * Version: 1.8.0-pre   2010/10/28
  *
  * This file is applicable to both 2.4.30 and 2.6.11 and later.
  * See README.ccs for ChangeLog.
@@ -141,6 +141,10 @@ struct ccsecurity_operations {
 	int (*tgsigqueue_permission) (pid_t tgid, pid_t pid, int sig);
 	int (*search_binary_handler) (struct linux_binprm *bprm,
 				      struct pt_regs *regs);
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+	int (*alloc_task_security) (const struct task_struct *task);
+	void (*free_task_security) (const struct task_struct *task);
+#endif
 	_Bool disabled;
 };
 
@@ -501,6 +505,36 @@ static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 	return ccsecurity_ops.search_binary_handler(bprm, regs);
 }
 
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+
+static inline int ccs_alloc_task_security(const struct task_struct *task)
+{
+	int (*func) (const struct task_struct *)
+		= ccsecurity_ops.alloc_task_security;
+	return func ? func(task) : 0;
+}
+
+static inline void ccs_free_task_security(const struct task_struct *task)
+{
+	void (*func) (const struct task_struct *)
+		= ccsecurity_ops.free_task_security;
+	if (func)
+		func(task);
+}
+
+#else
+
+static inline int ccs_alloc_task_security(const struct task_struct *task)
+{
+	return 0;
+}
+
+static inline void ccs_free_task_security(const struct task_struct *task)
+{
+}
+
+#endif
+
 #else
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
@@ -773,6 +807,15 @@ static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 					    struct pt_regs *regs)
 {
 	return search_binary_handler(bprm, regs);
+}
+
+static inline int ccs_alloc_task_security(const struct task_struct *task)
+{
+	return 0;
+}
+
+static inline void ccs_free_task_security(const struct task_struct *task)
+{
 }
 
 #endif

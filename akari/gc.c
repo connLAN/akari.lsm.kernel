@@ -163,7 +163,7 @@ static bool ccs_used_by_task(struct ccs_domain_info *domain)
 	 * Don't delete this domain if somebody is doing execve().
 	 *
 	 * Since ccs_finish_execve() first reverts ccs_domain_info and then
-	 * updates ccs_flags, we need smp_mb() to make sure that GC first
+	 * updates ccs_flags, we need smp_rmb() to make sure that GC first
 	 * checks ccs_flags and then checks ccs_domain_info.
 	 */
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
@@ -174,7 +174,7 @@ static bool ccs_used_by_task(struct ccs_domain_info *domain)
 		struct list_head *list = &ccs_task_security_list[idx];
 		list_for_each_entry_rcu(ptr, list, list) {
 			if (!(ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
-				smp_mb(); /* Avoid out of order execution. */
+				smp_rmb(); /* Avoid out of order execution. */
 				if (ptr->ccs_domain_info != domain)
 					continue;
 			}
@@ -191,7 +191,7 @@ out:
 	ccs_tasklist_lock();
 	do_each_thread(g, t) {
 		if (!(t->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
-			smp_mb(); /* Avoid out of order execution. */
+			smp_rmb(); /* Avoid out of order execution. */
 			if (t->ccs_domain_info != domain)
 				continue;
 		}
@@ -205,7 +205,7 @@ out:
 	ccs_tasklist_lock();
 	for_each_process(p) {
 		if (!(p->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
-			smp_mb(); /* Avoid out of order execution. */
+			smp_rmb(); /* Avoid out of order execution. */
 			if (p->ccs_domain_info != domain)
 				continue;
 		}

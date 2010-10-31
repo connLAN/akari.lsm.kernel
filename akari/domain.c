@@ -624,7 +624,7 @@ retry:
 	 * Make task->ccs_flags visible to GC before changing
 	 * task->ccs_domain_info.
 	 */
-	smp_mb();
+	smp_wmb();
 	/*
 	 * Proceed to the next domain in order to allow reaching via PID.
 	 * It will be reverted if execve() failed. Reverting is not good.
@@ -1205,7 +1205,7 @@ void ccs_finish_execve(int retval, struct ccs_execve *ee)
 		 * Make task->ccs_domain_info visible to GC before changing
 		 * task->ccs_flags.
 		 */
-		smp_mb();
+		smp_wmb();
 	} else {
 		/* Mark the current process as execute handler. */
 		if (ee->handler)

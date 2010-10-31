@@ -39,7 +39,31 @@ static inline struct socket *SOCKET_I(struct inode *inode)
 
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
+
+/**
+ * ccs_realpath_lock - Take locks for __d_path().
+ *
+ * Returns nothing.
+ */
+static inline void ccs_realpath_lock(void)
+{
+	/* dcache_lock is locked by __d_path(). */
+	/* vfsmount_lock is locked by __d_path(). */
+}
+
+/**
+ * ccs_realpath_unlock - Release locks for __d_path().
+ *
+ * Returns nothing.
+ */
+static inline void ccs_realpath_unlock(void)
+{
+	/* vfsmount_lock is unlocked by __d_path(). */
+	/* dcache_lock is unlocked by __d_path(). */
+}
+
+#elif LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 36)
 
 /**
  * ccs_realpath_lock - Take locks for __d_path().

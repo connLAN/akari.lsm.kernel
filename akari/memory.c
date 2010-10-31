@@ -315,9 +315,8 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	struct ccs_security *ptr;
 	struct list_head *list = &ccs_task_security_list
 		[hash_ptr((void *) task, CCS_TASK_SECURITY_HASH_BITS)];
-	if (unlikely(!list->next))
-		/* Make sure INIT_LIST_HEAD() in ccs_mm_init() takes effect. */
-		smp_mb();
+	/* Make sure INIT_LIST_HEAD() in ccs_mm_init() takes effect. */
+	while (!list->next);
 	rcu_read_lock();
 	list_for_each_entry_rcu(ptr, list, list) {
 		if (ptr->task != task)
@@ -419,7 +418,9 @@ void __init ccs_mm_init(void)
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_task_security_list[idx]);
-	smp_mb(); /* Avoid out of order execution. */
+#endif
+	smp_wmb(); /* Avoid out of order execution. */
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 	ccsecurity_ops.alloc_task_security = __ccs_alloc_task_security;
 	ccsecurity_ops.free_task_security = __ccs_free_task_security;
 #endif

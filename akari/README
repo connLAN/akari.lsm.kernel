@@ -35,3 +35,9 @@ Version 1.0.2   2010/10/25   Minor update release.
    Use "YYYY/MM/DD hh:mm:ss" format for /proc/ccs/ interface.
 
    Do not automatically add / for umount().
+
+Version 1.0.3   2010/11/01   Minor update release.
+
+   Synchronize with TOMOYO revision 4104.
+
+   Fix pathname handling in ccs_unix_entry().

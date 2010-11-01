@@ -1,0 +1,43 @@
+Notes for AKARI project
+
+AKARI is Access Keeping And Regulating Instrument for Linux 2.6 kernels.
+
+You can use AKARI for analyzing your system's behavior (i.e. reports which
+application accesses which resources like strace command does) and optionally
+restricting your system's behavior (i.e. controls which application can
+access which resources like TOMOYO/AppArmor does).
+
+AKARI is forked from TOMOYO 1.8 and made as a LKM (loadable kernel module)
+so that you don't need to replace your kernels installed in your system.
+
+This patch is released under the GPLv2.
+
+Project URL: http://akari.sourceforge.jp/
+
+ChangeLog:
+
+Version 1.0   2010/10/10   First release.
+
+Version 1.0.1   2010/10/18   Minor update release.
+
+   Synchronize with TOMOYO revision 4069.
+
+   Fix off-by-two in ccs_check_unix_address().
+
+   Implement post accept() LSM hook.
+
+Version 1.0.2   2010/10/25   Minor update release.
+
+   Synchronize with TOMOYO revision 4090.
+
+   Add getattr() and readdir() checks.
+
+   Use "YYYY/MM/DD hh:mm:ss" format for /proc/ccs/ interface.
+
+   Do not automatically add / for umount().
+
+Version 1.0.3   2010/11/01   Minor update release.
+
+   Synchronize with TOMOYO revision 4104.
+
+   Fix pathname handling in ccs_unix_entry().

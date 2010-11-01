@@ -957,7 +957,7 @@ struct ccs_condition {
 	u16 argc; /* Number of "struct ccs_argv". */
 	u16 envc; /* Number of "struct ccs_envp". */
 	u8 grant_log; /* One of values in "enum ccs_grant_log". */
-	const struct ccs_path_info *transit; /* This may be NULL. */
+	const struct ccs_path_info *transit; /* Maybe NULL. */
 	/*
 	 * struct ccs_condition_element condition[condc];
 	 * struct ccs_number_union values[numbers_count];
@@ -1942,11 +1942,11 @@ extern struct ccsecurity_exports ccsecurity_exports;
  */
 struct ccs_security {
 	struct list_head list;
-	const struct task_struct *task; /* May be NULL. */
-	const struct cred *cred;  /* May be NULL. */
+	const struct task_struct *task; /* Maybe NULL. */
+	const struct cred *cred;  /* Maybe NULL. */
 	struct ccs_domain_info *ccs_domain_info;
 	u32 ccs_flags;
-	struct ccs_execve *ee; /* May be NULL. */
+	struct ccs_execve *ee; /* Maybe NULL. */
 	struct rcu_head rcu;
 };
 

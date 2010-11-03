@@ -21,19 +21,11 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/lib/ccs/init_policy
+[root@akari ~]# /usr/lib/ccs/init_policy --module_name=akari
 </td></tr>
 </table>
 
 <p>AKARI のポリシーファイルが /etc/ccs/ ディレクトリの中に作成されます。</p>
-
-<p>/etc/ccs/ccs-load-module の ccsecurity という部分を akari に書き換えてください。</p>
-
-<table border="1">
-<tr><td>
-[root@akari ~]# sed -i -e 's/ccsecurity/akari/' /etc/ccs/ccs-load-module
-</td></tr>
-</table>
 
 <hr>
 

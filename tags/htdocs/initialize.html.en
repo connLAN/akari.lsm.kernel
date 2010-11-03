@@ -21,19 +21,11 @@
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/lib/ccs/init_policy
+[root@akari ~]# /usr/lib/ccs/init_policy --module_name=akari
 </td></tr>
 </table>
 
 <p>AKARI's policy files will be saved in /etc/ccs/ directory.</p>
-
-<p>Rewrite from ccsecurity in /etc/ccs/ccs-load-module to akari .</p>
-
-<table border="1">
-<tr><td>
-[root@akari ~]# sed -i -e 's/ccsecurity/akari/' /etc/ccs/ccs-load-module
-</td></tr>
-</table>
 
 <hr>
 

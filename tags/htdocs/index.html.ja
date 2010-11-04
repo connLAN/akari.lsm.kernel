@@ -30,6 +30,7 @@
 <li><a href="tools-doc.html.ja">各種ツールのドキュメント</a></li>
 <li><a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a></li>
 <li><a href="policy-reference.html.ja">AKARI ポリシー解説書</a></li>
+<li><a href="comparison.html.en">AKARI / TOMOYO functionality comparison table</a></li>
 </ul>
 
 <hr>

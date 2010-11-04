@@ -43,7 +43,7 @@ Kernel package is built with below configuration options.<br>
 <li>CONFIG_SECURITY_PATH=y</li>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
-Requires kernel 2.6.30 or later.<br>
+Requires kernel 2.6.36 or later.<br>
 </td></tr>
 </table>
 

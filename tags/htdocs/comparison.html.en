@@ -1,0 +1,168 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI / TOMOYO functionality comparison table</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<!--<p style="text-align:right;"><a href="comparison.html.ja">Japanese Page</a></p>-->
+<p style="text-align:right;">Last modified: $Date: 2010-08-20 17:29:59 +0900 (Fri, 20 Aug 2010) $</p>
+
+<h1>AKARI / TOMOYO functionality comparison table</h1>
+
+<p>Since AKARI is based on TOMOYO Linux 1.8, AKARI provides similar functionality and syntax which TOMOYO Linux 1.8 provides. This page describes the difference.</p>
+
+<table summary="comparison" border="1">
+<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
+<tr><td>Advantages</td><td>Complete functionality and syntax are supported.</td><td>No need to replace kernel package.</td><td>Included in upstream kernels.<br>No need to replace kernel package if built into the kernel.</td></tr>
+<tr><td>Disadvantages</td><td>Need to replace kernel package.</td><td>Supported functionality and syntax depend on kernel's version and kernel's configuration options.</td><td>Supported functionality and syntax depend on kernel's version.</td>
+</tr>
+<tr><td>Dependency</td><td>
+Requires patching against kernel's source and rebuilding from source.
+</td><td>
+Kernel package is built with below configuration options.<br>
+<ul>
+<li>CONFIG_SECURITY=y</li>
+<li>CONFIG_KALLSYMS=y</li>
+<li>CONFIG_PROC_FS=y</li>
+<li>CONFIG_MODULES=y</li>
+</ul>
+The kernel package should be built with below configuration options in addition to above configuration options for supporting further functionality.<br>
+<ul>
+<li>CONFIG_SECURITY_NETWORK=y</li>
+<li>CONFIG_SECURITY_PATH=y</li>
+</ul>
+Currently known to work on x86_32 and x86_64. Other architectures are not tested yet.
+</td><td>
+Kernel package is built with below configuration options.<br>
+<ul>
+<li>CONFIG_SECURITY=y</li>
+<li>CONFIG_SECURITYFS=y</li>
+<li>CONFIG_SECURITY_PATH=y</li>
+<li>CONFIG_SECURITY_TOMOYO=y</li>
+</ul>
+Requires kernel 2.6.30 or later.<br>
+</td></tr>
+</table>
+
+<p>Below table describes detailed functionality / syntax difference.</p>
+
+<table summary="comparison" border="1">
+<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=5><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
+<tr><td></td><td>Kernel version</td><td>2.4.30-/2.6.11-</td><td>2.6.3-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
+<tr><td>Type</td><td>Function</td><td colspan=7></td></tr>
+<tr><td colspan=9>Accuracy of pathnames</td></tr>
+<tr><td></td><td>Allow use of absolute pathnames for directory modification operations?</td><td>Y</td><td colspan=2></td><td colspan=3>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>
+<tr><td></td><td>Restrict accessing information to only self process? (proc:/self/)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Allow accessing deleted files?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Allow accessing pathnames longer than 4000 bytes?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td colspan=9>Features for assisting specifying string values</td></tr>
+<tr><td></td><td>Allow recursive directory matching? (/\{dir\}/)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Allow grouping pathnames? (path_group)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td colspan=9>Features for assisting specifying numeric values</td></tr>
+<tr><td></td><td>Allow grouping numbers? (number_group)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Allow grouping IP addresses? (address_group)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Features for reducing reboots</td></tr>
+<tr><td></td><td>Memory reclaimed by garbage collection?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td colspan=9>Features for supporting Apache's virtual hosts</td></tr>
+<tr><td></td><td>Allow domain transitions without program execution?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Features for specifying more fine grained permissions</td></tr>
+<tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict based on file's credentials (e.g. owner ID)?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Features for reducing damage by runaway</td></tr>
+<tr><td></td><td>Sleep penalty (enforcing_penalty)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>execute handler (task {auto_execute_handler,denied_execute_handler})</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Features for obtaining access logs</td></tr>
+<tr><td></td><td>Notify of policy violation using mail?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Generate access granted logs/rejected logs?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Features for assisting software updates</td></tr>
+<tr><td></td><td>Handle policy violation interactively?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td colspan=9>Access control for Files</td></tr>
+<tr><td></td><td>Restrict opening files for reading? (file read)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Do not check read permission when files are not opened for reading?</td><td>Y</td><td></td><td>Y</td><td></td><td colspan=2>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check read permission for sysctl?</td><td>Y</td><td colspan=4></td><td>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict opening files for writing? (file {write,append})</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Do not check write permission when files are not opened for writing?</td><td>Y</td><td></td><td colspan=4>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check write permission for sysctl?</td><td>Y</td><td colspan=4></td><td>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict executing programs? (file execute)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Allow execution of programs with temporary names?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check dereferenced pathname when executing programs?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check invocation name (argv[0]) when executing programs?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check arguments (argv[]) and environment variables (envp[]) when executing programs?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted environment variables names? (misc env)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict creating files? (file create)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating files?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict creating directories? (file mkdir)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating directories?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict creating FIFOs? (file mkfifo)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating FIFOs?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict creating Unix domain sockets? (file mksock)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating Unix domain sockets?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict creating symbolic links? (file symlink)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check symbolic link's target when creating symbolic links?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict creating device files? (file {mkblock,mkchar})</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check device major/minor numbers and DAC's permission when creating device files?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict use of IOCTL requests? (file ioctl)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check IOCTL's command number?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict change of owner ID? (file chown)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict owner ID when changing it?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict change of group ID? (file chgrp)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict group ID when changing it?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict change of DAC's permissions? (file chmod)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict DAC's permissions when changing it?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict deleting files? (file unlink)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict truncating files? (file truncate)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict renaming files? (file rename)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict creating hard links? (file link)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict deleting directories? (file rmdir)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict mounting filesystems? (file mount)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check filesystem's type when mounting filesystems?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check mount flags when mounting filesystems?</td><td>Y</td><td colspan=4>Y<a href="#note2">(*2)</a></td><td>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict unmounting filesystems? (file unmount)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict change of root directories? (file chroot)</td><td>Y</td><td colspan=4></td><td>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict exchange of root directories? (file pivot_root)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td colspan=9>Access control for Networks</td></tr>
+<tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing connections?<br>
+(network inet stream connect)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing packets?<br>
+(network inet {dgram,raw} send)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict remote IP addresses and port numbers for incoming connections?<br>
+(network inet stream accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
+<tr><td></td><td>Restrict remote IP addresses and port numbers for incoming packets?<br>
+(network inet {dgram,raw} recv)</td><td>Y</td><td colspan=5></td><td></td></tr>
+<tr><td></td><td>Restrict local IP addresses and port numbers?<br>
+(network inet {stream,dgram,raw} bind / network inet stream listen)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Reserve specific local port numbers for applications that need them?</td><td>Y</td><td colspan=5></td><td></td></tr>
+<tr><td></td><td>Restrict remote UNIX addresses for outgoing connections?<br>
+(network unix {stream,seqpacket} connect)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict remote UNIX addresses for outgoing packets?<br>
+(network unix dgram send)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Restrict remote UNIX addresses for incoming connections?<br>
+(network unix {stream,seqpacket} accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
+<tr><td></td><td>Restrict remote UNIX addresses for incoming packets?<br>
+(network unix dgram recv)</td><td>Y</td><td colspan=5></td><td></td></tr>
+<tr><td></td><td>Restrict local UNIX addresses?<br>
+(network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td colspan=9>Access control for Capabilities</td></tr>
+<tr><td></td><td>Restrict original capabilities? (capability)</td><td>Y</td><td colspan=5></td><td></td></tr>
+<tr><td colspan=9>Access control for IPC</td></tr>
+<tr><td></td><td>Restrict destination domains for signal transmission? (ipc signal)</td><td>Y</td><td colspan=5></td><td></td></tr>
+<tr><td colspan=9>Misc</td></tr>
+<tr><td></td><td>Allow using with SELinux / AppArmor?</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+<tr><td></td><td>Allow enabling functionalities the administrator wants to enable?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+<tr><td></td><td>Quick initialization of configuration?</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
+</table>
+
+<ul>
+<li><a name="note1">*1</a>: Only when built with CONFIG_SECURITY_PATH=y.</li>
+<li><a name="note2">*2</a>: Some mount flags like nosuid,nodev,noexec cannot be checked.</li>
+<li><a name="note3">*3</a>: Timing to check is deferred until the accept()ed socket is used for the first time.</li>
+</ul>
+
+<hr>
+
+<p><a href="index.html.en">Return to index page.</a></p>
+</body>
+</html>

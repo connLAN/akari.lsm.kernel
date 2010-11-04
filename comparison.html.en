@@ -8,7 +8,7 @@
 </head>
 <body>
 <!--<p style="text-align:right;"><a href="comparison.html.ja">Japanese Page</a></p>-->
-<p style="text-align:right;">Last modified: $Date: 2010-08-20 17:29:59 +0900 (Fri, 20 Aug 2010) $</p>
+<p style="text-align:right;">Last modified: $Date$</p>
 
 <h1>AKARI / TOMOYO functionality comparison table</h1>
 
@@ -125,26 +125,26 @@ Requires kernel 2.6.30 or later.<br>
 <tr><td></td><td>Restrict exchange of root directories? (file pivot_root)</td><td>Y</td><td colspan=5>Y</td><td>Y</td></tr>
 <tr><td colspan=9>Access control for Networks</td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing connections?<br>
-(network inet stream connect)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network inet stream connect)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing packets?<br>
-(network inet {dgram,raw} send)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network inet {dgram,raw} send)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for incoming connections?<br>
-(network inet stream accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network inet stream accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a> <a href="#note4">(*4)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for incoming packets?<br>
 (network inet {dgram,raw} recv)</td><td>Y</td><td colspan=5></td><td></td></tr>
 <tr><td></td><td>Restrict local IP addresses and port numbers?<br>
-(network inet {stream,dgram,raw} bind / network inet stream listen)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network inet {stream,dgram,raw} bind / network inet stream listen)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td></td><td>Reserve specific local port numbers for applications that need them?</td><td>Y</td><td colspan=5></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for outgoing connections?<br>
-(network unix {stream,seqpacket} connect)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network unix {stream,seqpacket} connect)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for outgoing packets?<br>
-(network unix dgram send)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network unix dgram send)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for incoming connections?<br>
-(network unix {stream,seqpacket} accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network unix {stream,seqpacket} accept)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a> <a href="#note4">(*4)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for incoming packets?<br>
 (network unix dgram recv)</td><td>Y</td><td colspan=5></td><td></td></tr>
 <tr><td></td><td>Restrict local UNIX addresses?<br>
-(network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen)</td><td>Y</td><td colspan=5>Y</td><td></td></tr>
+(network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen)</td><td>Y</td><td colspan=5>Y<a href="#note3">(*3)</a></td><td></td></tr>
 <tr><td colspan=9>Access control for Capabilities</td></tr>
 <tr><td></td><td>Restrict original capabilities? (capability)</td><td>Y</td><td colspan=5></td><td></td></tr>
 <tr><td colspan=9>Access control for IPC</td></tr>
@@ -157,8 +157,9 @@ Requires kernel 2.6.30 or later.<br>
 
 <ul>
 <li><a name="note1">*1</a>: Only when built with CONFIG_SECURITY_PATH=y.</li>
-<li><a name="note2">*2</a>: Some mount flags like nosuid,nodev,noexec cannot be checked.</li>
-<li><a name="note3">*3</a>: Timing to check is deferred until the accept()ed socket is used for the first time.</li>
+<li><a name="note2">*2</a>: Some mount flags (e.g. nosuid,nodev,noexec) cannot be checked.</li>
+<li><a name="note3">*3</a>: Only when built with CONFIG_SECURITY_NETWORK=y.</li>
+<li><a name="note4">*4</a>: Timing to check is deferred until the accept()ed socket is used for the first time.</li>
 </ul>
 
 <hr>

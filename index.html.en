@@ -30,6 +30,7 @@
 <li><a href="tools-doc.html.en">Tools Documentation</a></li>
 <li><a href="tool-editpolicy.html.en">Policy Editor</a></li>
 <li><a href="policy-reference.html.en">Policy Specifications</a></li>
+<li><a href="comparison.html.en">AKARI / TOMOYO functionality comparison table</a></li>
 </ul>
 
 <hr>

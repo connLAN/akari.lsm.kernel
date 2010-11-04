@@ -357,8 +357,19 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 			memmove(pos, "/self", 5);
 		}
 #endif
+		goto prepend_filesystem_name;
+	}
+	{
+		struct inode *inode = sb->s_root->d_inode;
+		/*
+		 * Use filesystem name if filesystems does not support rename()
+		 * operation.
+		 */
+		if (inode->i_op && !inode->i_op->rename)
+			goto prepend_filesystem_name;
+	}
 	/* Prepend device name if vfsmount is not available. */
-	} else if (!path->mnt) {
+	if (!path->mnt) {
 		char name[64] = { };
 		int name_len;
 		const dev_t dev = sb->s_dev;
@@ -372,6 +383,7 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 		return pos;
 	}
 	/* Prepend filesystem name. */
+prepend_filesystem_name:
 	{
 		const char *name = sb->s_type->name;
 		const int name_len = strlen(name);

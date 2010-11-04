@@ -1824,6 +1824,91 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 	return original_security_ops.file_ioctl(filp, cmd, arg);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
+
+static int ccs_prepend(char **buffer, int *buflen, const char *str)
+{
+	int namelen = strlen(str);
+	if (*buflen < namelen)
+		return -ENOMEM;
+	*buflen -= namelen;
+	*buffer -= namelen;
+	memcpy(*buffer, str, namelen);
+	return 0;
+}
+
+/**
+ * ccs_sysctl_permission - Check permission for sysctl().
+ *
+ * @table: Pointer to "struct ctl_table".
+ * @op:    Operation. (MAY_READ and/or MAY_WRITE)
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sysctl(struct ctl_table *table, int op)
+{
+	int error;
+	struct ccs_path_info buf;
+	struct ccs_request_info r;
+	int buflen;
+	char *buffer;
+	int idx;
+	while (!original_security_ops.sysctl);
+	error = original_security_ops.sysctl(table, op);
+	if (error)
+		return error;
+	op &= MAY_READ | MAY_WRITE;
+	if (!op)
+		return 0;
+	buffer = NULL;
+	buf.name = NULL;
+	idx = ccs_read_lock();
+	if (ccs_init_request_info(&r, CCS_MAC_FILE_OPEN)
+	    == CCS_CONFIG_DISABLED)
+		goto out;
+	error = -ENOMEM;
+	buflen = 4096;
+	buffer = kmalloc(buflen, CCS_GFP_FLAGS);
+	if (buffer) {
+		char *end = buffer + buflen;
+		*--end = '\0';
+		buflen--;
+		while (table) {
+			char num[32];
+			const char *sp = table->procname;
+			if (!sp) {
+				memset(num, 0, sizeof(num));
+				snprintf(num, sizeof(num) - 1, "=%d=",
+					 table->ctl_name);
+				sp = num;
+			}
+			if (ccs_prepend(&end, &buflen, sp) ||
+			    ccs_prepend(&end, &buflen, "/"))
+				goto out;
+			table = table->parent;
+		}
+		if (ccs_prepend(&end, &buflen, "proc:/sys"))
+			goto out;
+		buf.name = ccs_encode(end);
+	}
+	if (buf.name) {
+		ccs_fill_path_info(&buf);
+		if (op & MAY_READ)
+			error = ccs_path_permission(&r, CCS_TYPE_READ, &buf);
+		else
+			error = 0;
+		if (!error && (op & MAY_WRITE))
+			error = ccs_path_permission(&r, CCS_TYPE_WRITE, &buf);
+	}
+out:
+	ccs_read_unlock(idx);
+	kfree(buf.name);
+	kfree(buffer);
+	return error;
+}
+
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
 #include <linux/mount.h>
@@ -2257,6 +2342,9 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 #endif
 	swap_security_ops(file_fcntl);
 	swap_security_ops(file_ioctl);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
+	swap_security_ops(sysctl);
+#endif
 	swap_security_ops(sb_pivotroot);
 	swap_security_ops(sb_mount);
 	swap_security_ops(sb_umount);

@@ -272,7 +272,10 @@ const struct ccsecurity_exports ccsecurity_exports = {
 	.find_task_by_pid_ns = find_task_by_pid_ns,
 #endif
 };
+#ifdef CONFIG_CCSECURITY_LKM
+/* Only ccsecurity module need to access this struct. */
 EXPORT_SYMBOL_GPL(ccsecurity_exports);
+#endif
 
 /* Members are updated by loadable kernel module. */
 struct ccsecurity_operations ccsecurity_ops = {
@@ -281,5 +284,9 @@ struct ccsecurity_operations ccsecurity_ops = {
 	.disabled = 1,
 #endif
 };
-EXPORT_SYMBOL_GPL(ccsecurity_ops);
+/*
+ * Non-GPL modules might need to access this struct via inlined functions
+ * embedded into include/linux/security.h
+ */
+EXPORT_SYMBOL(ccsecurity_ops);
 #endif

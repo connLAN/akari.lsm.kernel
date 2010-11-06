@@ -418,6 +418,7 @@ static inline bool ccs_same_condition(const struct ccs_condition *a,
 		a->grant_log == b->grant_log && a->transit == b->transit &&
 		!memcmp(a + 1, b + 1, a->size - sizeof(*a));
 }
+
 /**
  * ccs_condition_type - Get condition type.
  *

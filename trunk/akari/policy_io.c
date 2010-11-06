@@ -1353,7 +1353,7 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 				      ccs_yesno(cond->grant_log ==
 						CCS_GRANTLOG_YES));
 		if (cond->transit) {
-			ccs_set_string(head, " auto_domain_transitition=\"");
+			ccs_set_string(head, " auto_domain_transition=\"");
 			ccs_set_string(head, cond->transit->name);
 			ccs_set_string(head, "\"");
 		}

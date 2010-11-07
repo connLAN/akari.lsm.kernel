@@ -339,7 +339,7 @@ static void __init ccs_proc_init(void)
 /**
  * ccs_init_module - Initialize this module.
  *
- * Returns 0 on success, negative valkue otherwise.
+ * Returns 0 on success, negative value otherwise.
  */
 static int __init ccs_init_module(void)
 {

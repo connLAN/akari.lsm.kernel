@@ -1626,7 +1626,7 @@ static inline bool ccs_same_number_union(const struct ccs_number_union *a,
 /**
  * ccs_read_lock - Take lock for protecting policy.
  *
- * Returns nothing.
+ * Returns index number for ccs_read_unlock().
  */
 static inline int ccs_read_lock(void)
 {
@@ -1635,6 +1635,8 @@ static inline int ccs_read_lock(void)
 
 /**
  * ccs_read_unlock - Release lock for protecting policy.
+ *
+ * @idx: Index number returned by ccs_read_lock().
  *
  * Returns nothing.
  */
@@ -1648,7 +1650,7 @@ static inline void ccs_read_unlock(const int idx)
 /**
  * ccs_read_lock - Take lock for protecting policy.
  *
- * Returns nothing.
+ * Returns index number for ccs_read_unlock().
  */
 static inline int ccs_read_lock(void)
 {
@@ -1657,6 +1659,8 @@ static inline int ccs_read_lock(void)
 
 /**
  * ccs_read_unlock - Release lock for protecting policy.
+ *
+ * @idx: Index number returned by ccs_read_lock().
  *
  * Returns nothing.
  */

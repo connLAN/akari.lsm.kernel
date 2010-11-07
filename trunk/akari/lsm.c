@@ -9,18 +9,41 @@
 #include <linux/security.h>
 #include <linux/namei.h>
 
+/*
+ * "struct cred" exists in 2.6.29 and later kernels.
+ * But this declaration is harmless for 2.6.28 and earlier kernels.
+ */
 struct cred;
+
+/* Prototype definition. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+static void ccs_task_security_gc(void);
+static int ccs_copy_cred_security(const struct cred *new,
+				  const struct cred *old, gfp_t gfp);
+static struct ccs_security *ccs_find_cred_security(const struct cred *cred);
+static void (*ccs___put_task_struct) (struct task_struct *t);
+#endif
 
 /* Dummy security context for avoiding NULL pointer dereference. */
 static struct ccs_security ccs_null_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
+/* For exporting variables and functions. */
 struct ccsecurity_exports ccsecurity_exports;
+/* Members are updated by loadable kernel module. */
 struct ccsecurity_operations ccsecurity_ops;
 
+/* Function pointers originally registered by register_security(). */
 static struct security_operations original_security_ops /* = *security_ops; */;
 
+/*
+ * AppArmor patch added "struct vfsmount *" to security_inode_\*() hooks.
+ * Detect it by checking whether D_PATH_DISCONNECT is defined or not.
+ * Also, there may be other kernels with "struct vfsmount *" added.
+ * If you got build failure, check security_inode_\*() hooks in
+ * include/linux/security.h.
+ */
 #if defined(D_PATH_DISCONNECT)
 #define CCS_INODE_HOOK_HAS_MNT
 #elif defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 25)
@@ -115,6 +138,13 @@ static void ccs_rcu_free(void *arg)
 
 #endif
 
+/**
+ * ccs_del_security - Release "struct ccs_security".
+ *
+ * @ptr: Pointer to "struct ccs_security".
+ *
+ * Returns nothing.
+ */
 static void ccs_del_security(struct ccs_security *ptr)
 {
 	unsigned long flags;
@@ -129,15 +159,6 @@ static void ccs_del_security(struct ccs_security *ptr)
 	call_rcu(&ptr->rcu, ccs_rcu_free, ptr);
 #endif
 }
-
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-static void ccs_task_security_gc(void);
-static int ccs_copy_cred_security(const struct cred *new,
-				  const struct cred *old, gfp_t gfp);
-static struct ccs_security *ccs_find_cred_security(const struct cred *cred);
-static void (*ccs___put_task_struct) (struct task_struct *t);
-#endif
 
 /**
  * ccs_clear_execve - Release memory used by do_execve().
@@ -170,7 +191,13 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
-static LIST_HEAD(ccs_cred_security_list);
+/*
+ * List of "struct ccs_security" for "struct cred".
+ *
+ * Since the number of "struct cred" is likely equals to the number of
+ * "struct task_struct", we allocate hash tables like ccs_task_security_list.
+ */
+static struct list_head ccs_cred_security_list[CCS_MAX_TASK_SECURITY_HASH];
 
 /**
  * ccs_add_cred_security - Add "struct ccs_security" to list.
@@ -182,8 +209,10 @@ static LIST_HEAD(ccs_cred_security_list);
 static void ccs_add_cred_security(struct ccs_security *ptr)
 {
 	unsigned long flags;
+	struct list_head *list = &ccs_cred_security_list
+		[hash_ptr(ptr, CCS_TASK_SECURITY_HASH_BITS)];
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
-	list_add_rcu(&ptr->list, &ccs_cred_security_list);
+	list_add_rcu(&ptr->list, list);
 	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
 }
 
@@ -269,10 +298,10 @@ static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 /**
  * ccs_cred_transfer - Transfer "struct ccs_security" between credentials.
  *
- * @cred: Pointer to "struct cred".
- * @gfp:  Memory allocation flags.
+ * @new: Pointer to "struct cred".
+ * @old: Pointer to "struct cred".
  *
- * Returns 0 on success, negative value otherwise.
+ * Returns nothing.
  */
 static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 {
@@ -292,8 +321,6 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 #endif
 
 #else
-
-static void ccs_free_task_security(const struct task_struct *task);
 
 /**
  * ccs_copy_task_security - Allocate memory for new tasks.
@@ -707,7 +734,7 @@ static int ccs_path_truncate(struct path *path, loff_t length,
  *
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
- * @iattr:  Pointer to "struct iattr".
+ * @attr:   Pointer to "struct iattr".
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -739,7 +766,7 @@ static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
  * ccs_inode_setattr - Check permission for chown()/chgrp()/chmod()/truncate().
  *
  * @dentry: Pointer to "struct dentry".
- * @iattr:  Pointer to "struct iattr".
+ * @attr:   Pointer to "struct iattr".
  *
  * Returns 0 on success, negative value otherwise.
  */
@@ -1261,7 +1288,12 @@ struct ccs_socket_tag {
 	struct rcu_head rcu;
 };
 
-/* List for managing accept()ed sockets. */
+/*
+ * List for managing accept()ed sockets.
+ * Since we don't need to keep an accept()ed socket into this list after
+ * once the permission was granted, the number of entries in this list is
+ * likely small. Therefore, we don't use hash tables.
+ */
 static LIST_HEAD(ccs_accepted_socket_list);
 /* Lock for protecting ccs_accepted_socket_list . */
 static DEFINE_SPINLOCK(ccs_accepted_socket_list_lock);
@@ -1808,7 +1840,7 @@ static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 /**
  * ccs_file_ioctl - Check permission for ioctl().
  *
- * @file: Pointer to "struct file".
+ * @filp: Pointer to "struct file".
  * @cmd:  Command number.
  * @arg:  Value for @cmd.
  *
@@ -1826,6 +1858,17 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
 
+/**
+ * ccs_prepend - Copy of prepend() in fs/dcache.c.
+ *
+ * @buffer: Pointer to "struct char *".
+ * @buflen: Pointer to int which holds size of @buffer. 
+ * @str:    String to copy.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * @buffer and @buflen are updated upon success.
+ */
 static int ccs_prepend(char **buffer, int *buflen, const char *str)
 {
 	int namelen = strlen(str);
@@ -2097,7 +2140,16 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 /* Never mark this variable as __initdata . */
 static struct security_operations *ccs_security_ops;
 
-/* Never mark this function as __init . */
+/**
+ * lsm_addr_calculator - Dummy function which does identical to security_file_alloc() in security/security.c.
+ *
+ * @file: Pointer to "struct file".
+ *
+ * Returns return value fromfrom security_file_alloc().
+ *
+ * Never mark this function as __init in order to make sure that compiler
+ * generates identical code for security_file_alloc() and this function.
+ */
 static int lsm_addr_calculator(struct file *file)
 {
 	return ccs_security_ops->file_alloc_security(file);
@@ -2105,17 +2157,18 @@ static int lsm_addr_calculator(struct file *file)
 
 #endif
 
+/**
+ * ccs_find_find_security_ops - Find address of "struct security_operations *security_ops".
+ *
+ * Returns pointer to "struct security_operations" on success, NULL otherwise.
+ */
 static struct security_operations * __init ccs_find_security_ops(void)
 {
 	struct security_operations **ptr;
 	struct security_operations *ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	void *cp;
-	/*
-	 * Guess "struct security_operations *security_ops;".
-	 * This trick assumes that compiler generates identical code for
-	 * security_file_alloc() and lsm_addr_calculator().
-	 */
+	/* Guess "struct security_operations *security_ops;". */
 	cp = ccs_find_variable(lsm_addr_calculator, (unsigned long)
 			       &ccs_security_ops, " security_file_alloc\n");
 	if (!cp) {
@@ -2143,6 +2196,11 @@ out:
 	return NULL;
 }
 
+/**
+ * ccs_find_find_task_by_pid - Find address of find_task_by_pid().
+ *
+ * Returns true on success, false otherwise.
+ */
 static bool __init ccs_find_find_task_by_pid(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
@@ -2177,6 +2235,11 @@ out:
 #endif
 }
 
+/**
+ * ccs_find___put_task_struct - Find address of __put_task_struct().
+ *
+ * Returns true on success, false otherwise.
+ */
 static bool __init ccs_find___put_task_struct(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
@@ -2201,7 +2264,17 @@ out:
 /* Never mark this variable as __initdata . */
 static spinlock_t ccs_vfsmount_lock;
 
-/* Never mark this function as __init . */
+/**
+ * lsm_floup - Dummy function which does identical to follow_up() in fs/namei.c.
+ *
+ * @mnt:    Pointer to "struct vfsmount *".
+ * @dentry: Pointer to "struct dentry *".
+ *
+ * Returns 1 if followed up, 0 otehrwise.
+ *
+ * Never mark this function as __init in order to make sure that compiler
+ * generates identical code for follow_up() and this function.
+ */
 static int lsm_flwup(struct vfsmount **mnt, struct dentry **dentry)
 {
 	struct vfsmount *parent;
@@ -2227,7 +2300,16 @@ static int lsm_flwup(struct vfsmount **mnt, struct dentry **dentry)
 /* Never mark this variable as __initdata . */
 static spinlock_t ccs_vfsmount_lock;
 
-/* Never mark this function as __init . */
+/**
+ * lsm_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
+ *
+ * @mnt: Pointer to "struct vfsmount".
+ *
+ * Returns nothing.
+ *
+ * Never mark this function as __init in order to make sure that compiler
+ * generates identical code for mnt_pin() and this function.
+ */
 static void lsm_pin(struct vfsmount *mnt)
 {
 	spin_lock(&ccs_vfsmount_lock);
@@ -2237,16 +2319,17 @@ static void lsm_pin(struct vfsmount *mnt)
 
 #endif
 
+/**
+ * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ *
+ * Returns true on success, false otherwise.
+ */
 static bool __init ccs_find_vfsmount_lock(void)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 	void *cp;
 	spinlock_t *ptr;
-	/*
-	 * Guess "spinlock_t vfsmount_lock;".
-	 * This trick assumes that compiler generates identical code for
-	 * follow_up() and lsm_flwup().
-	 */
+	/* Guess "spinlock_t vfsmount_lock;". */
 	cp = ccs_find_variable(lsm_flwup, (unsigned long) &ccs_vfsmount_lock,
 			       "follow_up");
 	if (!cp) {
@@ -2267,11 +2350,7 @@ out:
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 	void *cp;
 	spinlock_t *ptr;
-	/*
-	 * Guess "spinlock_t vfsmount_lock;".
-	 * This trick assumes that compiler generates identical code for
-	 * mnt_pin() and lsm_pin().
-	 */
+	/* Guess "spinlock_t vfsmount_lock;". */
 	cp = ccs_find_variable(lsm_pin, (unsigned long) &ccs_vfsmount_lock,
 			       "mnt_pin");
 	if (!cp) {
@@ -2310,6 +2389,13 @@ out:
 #define swap_security_ops(op)						\
 	original_security_ops.op = ops->op; smp_wmb(); ops->op = ccs_##op;
 
+/**
+ * ccs_update_security_ops - Overwrite original "struct security_operations".
+ *
+ * @ops: Pointer to "struct security_operations".
+ *
+ * Returns nothing.
+ */
 static void __init ccs_update_security_ops(struct security_operations *ops)
 {
 	/* Security context allocator. */
@@ -2392,12 +2478,20 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 
 #undef swap_security_ops
 
+/**
+ * ccs_init - Initialize this module.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int __init ccs_init(void)
 {
+	int idx;
 	struct security_operations *ops = ccs_find_security_ops();
 	if (!ops || !ccs_find_find_task_by_pid() ||
 	    !ccs_find_vfsmount_lock() || !ccs_find___put_task_struct())
 		return -EINVAL;
+	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
+		INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
 	ccs_main_init();
 	ccs_update_security_ops(ops);
 	printk(KERN_INFO "AKARI: 1.0.3   2010/11/01\n");
@@ -2421,12 +2515,16 @@ MODULE_LICENSE("GPL");
 bool ccs_used_by_cred(const struct ccs_domain_info *domain)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	int idx;
 	struct ccs_security *ptr;
-	list_for_each_entry_rcu(ptr, &ccs_cred_security_list, list) {
-		struct ccs_execve *ee = ptr->ee;
-		if (ptr->ccs_domain_info == domain ||
-		    (ee && ee->previous_domain == domain)) {
-			return true;
+	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
+		struct list_head *list = &ccs_cred_security_list[idx];
+		list_for_each_entry_rcu(ptr, list, list) {
+			struct ccs_execve *ee = ptr->ee;
+			if (ptr->ccs_domain_info == domain ||
+			    (ee && ee->previous_domain == domain)) {
+				return true;
+			}
 		}
 	}
 #endif
@@ -2491,9 +2589,11 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 */
 		if (task == current && ptr->cred &&
 		    atomic_read(&ptr->cred->usage) == 1) {
+			/*
 			printk(KERN_DEBUG
 			       "pid=%u: Reverting domain transition because "
 			       "do_execve() has failed.\n", task->pid);
+			*/
 			ccs_clear_execve(-1, ptr);
 		}
 #endif
@@ -2523,16 +2623,17 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	return ptr;
 }
 
-struct ccs_domain_info *ccs_read_task_security(const struct task_struct *task)
-{
-	struct ccs_security *ptr = ccs_find_task_security(task);
-	if (!ptr)
-		return NULL;
-	return ptr->ccs_domain_info;
-}
-
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
+/**
+ * ccs_copy_cred_security - Allocate memory for new credentials.
+ *
+ * @new: Pointer to "struct cred".
+ * @old: Pointer to "struct cred".
+ * @gfp: Memory allocation flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
 static int ccs_copy_cred_security(const struct cred *new,
 				  const struct cred *old, gfp_t gfp)
 {
@@ -2547,11 +2648,21 @@ static int ccs_copy_cred_security(const struct cred *new,
 	return 0;
 }
 
+/**
+ * ccs_find_cred_security - Find "struct ccs_security" for given credential.
+ *
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns pointer to "struct ccs_security" on success, &ccs_null_security
+ * otherwise.
+ */
 static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
 {
 	struct ccs_security *ptr;
+	struct list_head *list = &ccs_cred_security_list
+		[hash_ptr((void *) cred, CCS_TASK_SECURITY_HASH_BITS)];
 	rcu_read_lock();
-	list_for_each_entry_rcu(ptr, &ccs_cred_security_list, list) {
+	list_for_each_entry_rcu(ptr, list, list) {
 		if (ptr->cred != cred)
 			continue;
 		rcu_read_unlock();

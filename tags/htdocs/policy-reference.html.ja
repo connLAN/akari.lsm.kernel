@@ -27,10 +27,9 @@
 <h2>6. <a href="#Advanced_Features">便利な機能</a></h2>
 <p>6.1 <a href="#non_root_policy_update">root 以外のユーザによるポリシーの変更を許可</a></p>
 <p>6.2 <a href="#conditional_acl">条件付きアクセス許可の指定</a></p>
-<p>6.3 <a href="#transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a></p>
-<p>6.4 <a href="#sleep_penalty">ポリシー違反時のペナルティ指定</a></p>
-<p>6.5 <a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></p>
-<p>6.6 <a href="#denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></p>
+<p>6.3 <a href="#sleep_penalty">ポリシー違反時のペナルティ指定</a></p>
+<p>6.4 <a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></p>
+<p>6.5 <a href="#denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">キーワード一覧</a></h1>
@@ -582,8 +581,8 @@ file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
 <p>（例）<br>
 cat /proc/ccs/profile<br>
 ccs-savepolicy -p<br>
-ccs-setlevel 1-CONFIG::file::execute=learning<br>
-echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
+ccs-setlevel '1-CONFIG::file::execute={ mode=learning }'<br>
+echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
 
@@ -775,7 +774,7 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>ドメインを定義している行（ &lt;kernel&gt; で始まる行）の次行から次のドメインを定義している行の前行までが、そのドメインに対するアクセス許可です。</p>
 
-<p>それぞれのアクセス許可について、必要に応じて追加の条件を指定することができます。そのための構文は<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明します。さらに、必要に応じてアクセスを許可するのと同時にドメイン遷移を行うための方法を<a href="#transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a>で説明します。</p>
+<p>それぞれのアクセス許可について、必要に応じて追加の条件を指定することができます。そのための構文は<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明します。</p>
 
 <p>現在のドメインポリシーを読み出しまたは追加または削除するには、以下のように操作します。</p>
 <p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されます）<br>
@@ -1420,27 +1419,7 @@ chown -R demo /proc/ccs/
 <tr><td>symlink.target!="value"</td><td>作成されるシンボリックリンクの内容が value ではない</td></tr>
 </table>
 
-<h2>6.3 <a name="transit_on_match">アクセスを許可するのと同時にドメイン遷移を行う</a></h2>
-
-<p>例えば接続元クライアントのＩＰアドレスによってアクセスの可否を切り替えたいという場合に対応するため、アクセスを許可するのと同時にドメイン遷移を行うことができるようになっています。</p>
-
-<p>アクセスを許可するのと同時にドメイン遷移を行うには、以下のようにアクセス許可の指定に続けて auto_domain_transition= という句を指定します。</p>
-
-<table border="1">
-<tr><td>使用例</td><td>意味</td></tr>
-<tr><td>network inet stream accept @TRUSTED_HOSTS 1024-65535 auto_domain_transition="//trusted_hosts"</td><td>クライアントが @TRUSTED_HOSTS である場合には、現在のドメイン名に //trusted_hosts を連結したドメインに自動的に遷移します。</td></tr>
-<tr><td>network inet stream accept @UNTRUSTED_HOSTS 1024-65535 auto_domain_transition="//untrusted_hosts"</td><td>クライアントが @UNTRUSTED_HOSTS である場合には、現在のドメイン名に //untrusted_hosts を連結したドメインに自動的に遷移します。</td></tr>
-</table>
-
-<p>auto_domain_transition= を使用する際には、以下の点に注意してください。</p>
-
-<ul>
-<li>auto_domain_transition= で指定したドメインへ遷移できなかった場合、そのプロセスは強制終了されます。</li>
-<li>auto_domain_transition= で指定したドメインへの遷移はポリシーのチェックにより許可された時点で行われます。そのため、メモリ不足などポリシーのチェック以降のエラーによって、アクセス要求は処理されなかったという状況が発生しえます。</li>
-<li>上記の @TRUSTED_HOSTS と @UNTRUSTED_HOSTS の両方に含まれていた場合、先に一致したほうのアクセス許可が使われます。そのため、順番に依存するアクセス許可を定義しないように注意してください。</li>
-</ul>
-
-<h2>6.4 <a name="sleep_penalty">ポリシー違反時のペナルティ指定</a></h2>
+<h2>6.3 <a name="sleep_penalty">ポリシー違反時のペナルティ指定</a></h2>
 
 <p>強制モードでポリシー違反が発生した場合に、ポリシー違反の原因となったプロセスを一定時間スリープ状態にさせることができます。</p>
 
@@ -1452,7 +1431,7 @@ chown -R demo /proc/ccs/
 
 <p>この機能は、無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するための安全装置です。通常は 0.1 秒間スリープさせるだけで充分です。</p>
 
-<h2>6.5 <a name="auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></h2>
+<h2>6.4 <a name="auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></h2>
 
 <p>TOMOYO Linux では、原則としてポリシーに従ってプログラムの実行可否を制御します。プログラム実行時のパラメータをチェックしたい場合には、<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明したように exec.argv や exec.envp を使ってチェックを行うことができます。しかし、<a href="#conditional_acl">条件付きアクセス許可の指定</a>では、単純なパターンマッチしかサポートされておらず、また、どのようなプログラムの実行を許可するかを予め指定しておく必要があります。</p>
 
@@ -1512,7 +1491,7 @@ chown -R demo /proc/ccs/
 <p>ccs-tools のソースパッケージには、 audit-exec-param.c というサンプルプログラムが入っています。ご自由に改造してお使いください。</p>
 <p>この機能は、機構を提供しているだけです。この機構を活用できるかどうかはあなた次第です。</p>
 
-<h2>6.6 <a name="denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></h2>
+<h2>6.5 <a name="denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></h2>
 
 <p>TOMOYO Linux では、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、不要なプログラムの実行を拒否するという振る舞いだけでなく、それ以外の振る舞いを行うこともできます。</p>
 

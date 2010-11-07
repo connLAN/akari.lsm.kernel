@@ -27,10 +27,9 @@
 <h2>6. <a href="#Advanced_Features">Advanced Features</a></h2>
 <p>6.1 <a href="#non_root_policy_update">Allowing policy modification by non root user.</a></p>
 <p>6.2 <a href="#conditional_acl">Using conditional ACL.</a></p>
-<p>6.3 <a href="#transit_on_match">Domain transition upon ACL match.</a></p>
-<p>6.4 <a href="#sleep_penalty">Sleep penalty for policy violation.</a></p>
-<p>6.5 <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
-<p>6.6 <a href="#denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></p>
+<p>6.3 <a href="#sleep_penalty">Sleep penalty for policy violation.</a></p>
+<p>6.4 <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
+<p>6.5 <a href="#denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">Keywords Index</a></h1>
@@ -582,8 +581,8 @@ If you saved current policy using "ccs-savepolicy" command, the currently assign
 <p>(Example)<br>
 cat /proc/ccs/profile<br>
 ccs-savepolicy -p<br>
-ccs-setlevel 1-CONFIG::file::execute=learning<br>
-echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
+ccs-setlevel '1-CONFIG::file::execute={ mode=learning }'<br>
+echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
 
@@ -775,7 +774,7 @@ echo 1-CONFIG::file::execute=learning | ccs-loadpolicy -p</p>
 
 <p>Lines from the next line to a domain definition ( any lines starting with "&lt;kernel&gt;") to the previous line to the next domain definitions are interpreted as access permissions for that domain.</p>
 
-<p>You can specify additional conditions as needed. The syntax for specifying additional conditions are described in <a href="#conditional_acl">Using conditional ACL.</a> Also, how to perform domain transition upon ACL match as needed is described in <a href="#transit_on_match">Domain transition upon ACL match.</a></p>
+<p>You can specify additional conditions as needed. The syntax for specifying additional conditions are described in <a href="#conditional_acl">Using conditional ACL.</a></p>
 
 <p>To read or modify current domain policy, operate like below.</p>
 <p>(Example) Selecting specific domain and appending ACLs. The domain will be created if nonexistent.<br>
@@ -1420,27 +1419,7 @@ chown -R demo /proc/ccs/
 <tr><td>symlink.target!="value"</td><td>The content of a symlink to be created does not match "value".</td></tr>
 </table>
 
-<h2>6.3 <a name="transit_on_match">Domain transition upon ACL match.</a></h2>
-
-<p>There are cases you wish to change the range of accessible resources depending on the client's IP address. To support such cases, you can perform domain transition automatically when an access request matched an ACL entry.</a></p>
-
-<p>To perform domain transition upon match, append auto_domain_transition= part after an ACL.</p>
-
-<table border="1">
-<tr><td>Example</td><td>Meaning</td></tr>
-<tr><td>network inet stream accept @TRUSTED_HOSTS 1024-65535 auto_domain_transition="//trusted_hosts"</td><td>If a TCP connection is accepted from an IP address included in an address group @TRUSTED_HOSTS, transit to a domain which the domainnname is concatenation of current domain's domainname + "//trusted_hosts".</td></tr>
-<tr><td>network inet stream accept @UNTRUSTED_HOSTS 1024-65535 auto_domain_transition="//untrusted_hosts"</td><td>If a TCP connection is accepted from an IP address included in an address group @UNTRUSTED_HOSTS, transit to a domain which the domainnname is concatenation of current domain's domainname + "//untrusted_hosts".</td></tr>
-</table>
-
-<p>When using the auto_domain_transition= part, please be careful with the following points.</p>
-
-<ul>
-<li>If the domain transition to a domain specified by auto_domain_transition= part failed, the process will be forcibly terminated.</li>
-<li>The domain transition specified by auto_domain_transition= part is performed when the access request is permitted by the policy. Thus, situations that the access request was not processed although the domain transition was performed can happen because of errors after checking the policy (e.g. out of memory).</li>
-<li>If an IP address is included in both @TRUSTED_HOSTS and @UNTRUSTED_HOSTS, the permission which matched first is used. So, be careful with using order dependent policy.</li>
-</ul>
-
-<h2>6.4 <a name="sleep_penalty">Sleep penalty for policy violation.</a></h2>
+<h2>6.3 <a name="sleep_penalty">Sleep penalty for policy violation.</a></h2>
 
 <p>You can make the process which violated policy in enforcing mode sleep for specified period.</p>
 
@@ -1452,7 +1431,7 @@ chown -R demo /proc/ccs/
 
 <p>This feature is a safeguard to avoid that the CPU usage remains 100% when policy violation occurs in an infinite loop. Usually, making processes sleep for 0.1 second is enough.</p>
 
-<h2>6.5 <a name="auto_execute_handler">Judging execute request outside the kernel.</a></h2>
+<h2>6.4 <a name="auto_execute_handler">Judging execute request outside the kernel.</a></h2>
 
 <p>Basically, TOMOYO Linux controls whether to execute a program or not according to the domain policy. You can check parameters using exec.argv and exec.envp described in <a href="#conditional_acl">Using conditional ACL.</a> But this approach support only simple pattern matching and you need to specify what programs are permitted to be executed beforehand.</p>
 
@@ -1512,7 +1491,7 @@ Viewing in this light, there is no guarantee that "the program starts expected b
 <p>A source code named audit-exec-param.c is included as a sample program of how to use this mechanism in the ccs-tools source package. You can customize freely.</p>
 <p>This mechanism is just providing a hook. How to utilize this hook is up to you.</p>
 
-<h2>6.6 <a name="denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></h2>
+<h2>6.5 <a name="denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></h2>
 
 <p>TOMOYO Linux's approach is "know what programs needs to be executed from what programs beforehand and create policy that permits execution of minimal programs". Thus, you can not only reject unnecessary execution requests but also do different behavior.</p>
 

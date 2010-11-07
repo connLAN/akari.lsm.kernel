@@ -210,7 +210,7 @@ static void ccs_add_cred_security(struct ccs_security *ptr)
 {
 	unsigned long flags;
 	struct list_head *list = &ccs_cred_security_list
-		[hash_ptr(ptr, CCS_TASK_SECURITY_HASH_BITS)];
+		[hash_ptr((void *) ptr->cred, CCS_TASK_SECURITY_HASH_BITS)];
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
 	list_add_rcu(&ptr->list, list);
 	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);

@@ -48,6 +48,8 @@ static struct security_operations original_security_ops /* = *security_ops; */;
 #define CCS_INODE_HOOK_HAS_MNT
 #elif defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 25)
 #define CCS_INODE_HOOK_HAS_MNT
+#elif defined(CONFIG_SECURITY_APPARMOR) && LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
+#define CCS_INODE_HOOK_HAS_MNT
 #endif
 
 /**

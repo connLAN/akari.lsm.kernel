@@ -1080,12 +1080,13 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 				skb->sk->protinfo.af_unix.addr;
 #endif
 			unsigned int addr_len;
-			if (!u)
-				return 0;
-			addr_len = u->len;
-			if (addr_len >= sizeof(addr))
-				return 0;
-			memcpy(&addr, u->name, addr_len);
+			if (u && u->len <= sizeof(addr)) {
+				addr_len = u->len;
+				memcpy(&addr, u->name, addr_len);
+			} else {
+				addr_len = 0;
+				addr.ss_family = AF_UNIX;
+			}
 			if (ccs_check_unix_address((struct sockaddr *) &addr,
 						   addr_len, &address))
 				goto out;

@@ -2485,13 +2485,17 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
  */
 static int __init ccs_init(void)
 {
-	int idx;
 	struct security_operations *ops = ccs_find_security_ops();
 	if (!ops || !ccs_find_find_task_by_pid() ||
 	    !ccs_find_vfsmount_lock() || !ccs_find___put_task_struct())
 		return -EINVAL;
-	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
-		INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	{
+		int idx;
+		for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
+			INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
+	}
+#endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
 	printk(KERN_INFO "AKARI: 1.0.3   2010/11/01\n");

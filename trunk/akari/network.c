@@ -3,11 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/28
- *
- * This file is applicable to both 2.4.30 and 2.6.11 and later.
- * See README.ccs for ChangeLog.
- *
+ * Version: 1.8.0-rc   2010/11/09
  */
 
 #include "internal.h"
@@ -133,11 +129,13 @@ void ccs_print_ipv4(char *buffer, const int buffer_len,
 }
 
 #if !defined(NIP6)
+
 #define NIP6(addr)							\
 	ntohs((addr).s6_addr16[0]), ntohs((addr).s6_addr16[1]),		\
 		ntohs((addr).s6_addr16[2]), ntohs((addr).s6_addr16[3]), \
 		ntohs((addr).s6_addr16[4]), ntohs((addr).s6_addr16[5]), \
 		ntohs((addr).s6_addr16[6]), ntohs((addr).s6_addr16[7])
+
 #endif
 
 /**
@@ -942,6 +940,7 @@ static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+
 /**
  * skb_kill_datagram - Kill a datagram forcibly.
  *
@@ -968,7 +967,9 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
 	}
 	skb_free_datagram(sk, skb);
 }
+
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 12)
+
 /**
  * skb_kill_datagram - Kill a datagram forcibly.
  *
@@ -995,7 +996,9 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
 	}
 	skb_free_datagram(sk, skb);
 }
+
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
+
 /**
  * skb_kill_datagram - Kill a datagram forcibly.
  *
@@ -1022,6 +1025,7 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
 	}
 	skb_free_datagram(sk, skb);
 }
+
 #endif
 
 /**

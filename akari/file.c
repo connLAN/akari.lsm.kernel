@@ -849,7 +849,7 @@ static int ccs_mkdev_perm(const u8 operation, struct inode *dir,
 	if (!ccs_get_realpath(&buf, dentry, mnt))
 		goto out;
 	r.obj = &obj;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0) && 0
+#ifdef CONFIG_SECURITY_PATH
 	dev = new_decode_dev(dev);
 #endif
 	r.param_type = CCS_TYPE_MKDEV_ACL;

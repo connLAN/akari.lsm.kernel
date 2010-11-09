@@ -3,11 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/28
- *
- * This file is applicable to both 2.4.30 and 2.6.11 and later.
- * See README.ccs for ChangeLog.
- *
+ * Version: 1.8.0-rc   2010/11/09
  */
 
 #include "internal.h"
@@ -541,6 +537,7 @@ static inline size_t ccs_del_name(struct list_head *element)
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+
 /*
  * Lock for syscall users.
  *
@@ -550,6 +547,7 @@ static inline size_t ccs_del_name(struct list_head *element)
  * Garbage collector waits for both this SRCU grace period and ccs_counter.
  */
 struct srcu_struct ccs_ss;
+
 #endif
 
 /*

@@ -3,11 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0-pre   2010/10/28
- *
- * This file is applicable to both 2.4.30 and 2.6.11 and later.
- * See README.ccs for ChangeLog.
- *
+ * Version: 1.8.0-rc   2010/11/09
  */
 
 #ifndef _LINUX_CCSECURITY_H

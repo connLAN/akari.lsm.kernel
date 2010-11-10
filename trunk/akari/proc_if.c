@@ -57,7 +57,7 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 		struct ccs_request_info r;
 		name.name = data;
 		ccs_fill_path_info(&name);
-		/* Check "task manual_transit" permission. */
+		/* Check "task manual_domain_transition" permission. */
 		ccs_init_request_info(&r, CCS_MAC_FILE_EXECUTE);
 		r.param_type = CCS_TYPE_MANUAL_TASK_ACL;
 		r.param.task.domainname = &name;

@@ -41,3 +41,16 @@ Version 1.0.3   2010/11/01   Minor update release.
    Synchronize with TOMOYO revision 4104.
 
    Fix pathname handling in ccs_unix_entry().
+
+Version 1.0.4   2010/11/11   Minor update release.
+
+   Synchronize with TOMOYO 1.8.0 release.
+
+   Add sysctl() check for 2.6.21 to 2.6.32 kernels.
+   Fix network unix dgram recv permission check.
+   Fix double new_decode_dev() bug for mknod().
+   Fix keyword typo.
+   Fix build failure on some kernels.
+   Changed pathname prefix priority.
+   Use hash table for faster scan.
+   Updated function comments.

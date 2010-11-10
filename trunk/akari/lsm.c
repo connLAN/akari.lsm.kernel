@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.4-rc   2010/11/09
+ * Version: 1.0.4   2010/11/11
  */
 #include "internal.h"
 #include <linux/security.h>
@@ -196,7 +196,7 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 /*
  * List of "struct ccs_security" for "struct cred".
  *
- * Since the number of "struct cred" is likely equals to the number of
+ * Since the number of "struct cred" is nearly equals to the number of
  * "struct task_struct", we allocate hash tables like ccs_task_security_list.
  */
 static struct list_head ccs_cred_security_list[CCS_MAX_TASK_SECURITY_HASH];
@@ -2500,7 +2500,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.4-rc   2010/11/09\n");
+	printk(KERN_INFO "AKARI: 1.0.4   2010/11/11\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

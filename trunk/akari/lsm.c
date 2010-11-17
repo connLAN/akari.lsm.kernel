@@ -2382,6 +2382,34 @@ out:
 #endif
 }
 
+/**
+ * ccs_task_create - Make snapshot of security context for new task.
+ *
+ * @clone_flags: Flags passed to clone().
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_task_create(unsigned long clone_flags)
+{
+	int rc;
+	struct ccs_security *old_security;
+	struct ccs_security *new_security;
+	struct cred *cred = prepare_creds();
+	if (!cred)
+		return -ENOMEM;
+	while (!original_security_ops.task_create);
+	rc = original_security_ops.task_create(clone_flags);
+	if (rc) {
+		abort_creds(cred);
+		return rc;
+	}
+	old_security = ccs_find_task_security(current);
+	new_security = ccs_find_cred_security(cred);
+	new_security->ccs_domain_info = old_security->ccs_domain_info;
+	new_security->ccs_flags = old_security->ccs_flags;
+	return commit_creds(cred);
+}
+
 /*
  * Why not to copy all operations by "original_security_ops = *ops" ?
  * Because copying byte array is not atomic. Reader checks
@@ -2402,6 +2430,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 {
 	/* Security context allocator. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	swap_security_ops(task_create);
 	swap_security_ops(cred_prepare);
 	swap_security_ops(cred_free);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)

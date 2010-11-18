@@ -219,6 +219,34 @@ static void ccs_add_cred_security(struct ccs_security *ptr)
 }
 
 /**
+ * ccs_task_create - Make snapshot of security context for new task.
+ *
+ * @clone_flags: Flags passed to clone().
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_task_create(unsigned long clone_flags)
+{
+	int rc;
+	struct ccs_security *old_security;
+	struct ccs_security *new_security;
+	struct cred *cred = prepare_creds();
+	if (!cred)
+		return -ENOMEM;
+	while (!original_security_ops.task_create);
+	rc = original_security_ops.task_create(clone_flags);
+	if (rc) {
+		abort_creds(cred);
+		return rc;
+	}
+	old_security = ccs_find_task_security(current);
+	new_security = ccs_find_cred_security(cred);
+	new_security->ccs_domain_info = old_security->ccs_domain_info;
+	new_security->ccs_flags = old_security->ccs_flags;
+	return commit_creds(cred);
+}
+
+/**
  * ccs_cred_prepare - Allocate memory for new credentials.
  *
  * @new: Pointer to "struct cred".
@@ -2380,34 +2408,6 @@ out:
 	printk(KERN_INFO "__d_path=%p\n", ptr);
 	return true;
 #endif
-}
-
-/**
- * ccs_task_create - Make snapshot of security context for new task.
- *
- * @clone_flags: Flags passed to clone().
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_task_create(unsigned long clone_flags)
-{
-	int rc;
-	struct ccs_security *old_security;
-	struct ccs_security *new_security;
-	struct cred *cred = prepare_creds();
-	if (!cred)
-		return -ENOMEM;
-	while (!original_security_ops.task_create);
-	rc = original_security_ops.task_create(clone_flags);
-	if (rc) {
-		abort_creds(cred);
-		return rc;
-	}
-	old_security = ccs_find_task_security(current);
-	new_security = ccs_find_cred_security(cred);
-	new_security->ccs_domain_info = old_security->ccs_domain_info;
-	new_security->ccs_flags = old_security->ccs_flags;
-	return commit_creds(cred);
 }
 
 /*

@@ -94,6 +94,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 # wget -O ccs-tools-1.8.0-20101111.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101111.tar.gz'<br>
 # tar -zxf ccs-tools-1.8.0-20101111.tar.gz<br>
 # cd ccstools/<br>
+# sed -i -e 's/if (!strcmp(cp, "network")) {$/if (!strcmp(cp, "network")) { printf("network ");/' usr_sbin/ccs-patternize.c<br>
 # make -s<br>
 # make -s install<br>
 # ldconfig

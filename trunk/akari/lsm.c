@@ -2529,7 +2529,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.4   2010/11/11\n");
+	printk(KERN_INFO "AKARI: 1.0.4+   2010/11/19\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;
@@ -2635,8 +2635,31 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		return ptr;
 	}
 	rcu_read_unlock();
-	if (task != current)
+	if (task != current) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+		/*
+		 * If a thread does nothing after fork(), caller will reach
+		 * here because "struct ccs_security" for that thread is not
+		 * yet allocated. But that thread is keeping a snapshot of
+		 * "struct ccs_security" taken as of ccs_task_create()
+		 * associated with that thread's "struct cred".
+		 *
+		 * Since that snapshot will be used as initial data when that
+		 * thread allocates "struct ccs_security" for that thread,
+		 * we can return that snapshot rather than &ccs_null_security.
+		 *
+		 * Since this function is called by only ccs_select_one() and
+		 * ccs_read_pid() (via ccs_task_domain() and ccs_task_flags()),
+		 * it is guaranteed that caller has called rcu_read_lock()
+		 * (via ccs_tasklist_lock()) before finding this thread and
+		 * this thread is valid. Therefore, we can do __task_cred(task)
+		 * like get_robust_list() does.
+		 */
+		return ccs_find_cred_security(__task_cred(task));
+#else
 		return &ccs_null_security;
+#endif
+	}
 	/* Use GFP_ATOMIC because caller may have called rcu_read_lock(). */
 	ptr = kzalloc(sizeof(*ptr), GFP_ATOMIC);
 	if (!ptr) {

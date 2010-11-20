@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
 </head>
 <body>
-<!--<p style="text-align:right;"><a href="comparison.html.ja">Japanese Page</a></p>-->
+<p style="text-align:right;"><a href="comparison.html.ja">Japanese Page</a></p>
 <p style="text-align:right;">Last modified: $Date$</p>
 
 <h1>AKARI / TOMOYO functionality comparison table</h1>

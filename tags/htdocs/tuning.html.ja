@@ -256,7 +256,8 @@ path_group HOME-SMB-DIR  /home/\*/samba/\{\*\}/
 <tr><td>
 &lt;kernel&gt; /usr/sbin/vsftpd<br>
 <br>
-file read/write @HOME-FTP-FILE<br>
+file read @HOME-FTP-FILE<br>
+file write @HOME-FTP-FILE<br>
 file mkdir @HOME-FTP-DIR 0755<br>
 file rmdir @HOME-FTP-DIR<br>
 file create @HOME-FTP-FILE 0644<br>
@@ -267,7 +268,8 @@ file rename @HOME-FTP-DIR @HOME-FTP-DIR
 </td><td>
 &lt;kernel&gt; /usr/sbin/vsftpd<br>
 <br>
-file read/write @HOME-FTP-FILE task.uid=path1.uid<br>
+file read @HOME-FTP-FILE task.uid=path1.uid<br>
+file write @HOME-FTP-FILE task.uid=path1.uid<br>
 file mkdir @HOME-FTP-DIR 0755 task.uid=path1.parent.uid<br>
 file rmdir @HOME-FTP-DIR task.uid=path1.uid<br>
 file create @HOME-FTP-FILE 0644 task.uid=path1.parent.uid<br>
@@ -285,7 +287,8 @@ file rename @HOME-FTP-DIR @HOME-FTP-DIR task.uid=path1.parent.uid task.uid=path2
 <tr><td>
 &lt;kernel&gt; /usr/sbin/smbd<br>
 <br>
-file read/write @HOME-SMB-FILE<br>
+file read @HOME-SMB-FILE<br>
+file write @HOME-SMB-FILE<br>
 file mkdir @HOME-SMB-DIR 0755<br>
 file rmdir @HOME-SMB-DIR<br>
 file create @HOME-SMB-FILE 0644<br>
@@ -296,7 +299,8 @@ file rename @HOME-SMB-DIR @HOME-SMB-DIR
 </td><td>
 &lt;kernel&gt; /usr/sbin/smbd<br>
 <br>
-file read/write @HOME-SMB-FILE task.euid=path1.uid<br>
+file read @HOME-SMB-FILE task.euid=path1.uid<br>
+file write @HOME-SMB-FILE task.euid=path1.uid<br>
 file mkdir @HOME-SMB-DIR 0755 task.euid=path1.parent.uid<br>
 file rmdir @HOME-SMB-DIR task.euid=path1.uid<br>
 file create @HOME-SMB-FILE 0644 task.euid=path1.parent.uid<br>

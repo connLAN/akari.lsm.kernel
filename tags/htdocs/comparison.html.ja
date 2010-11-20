@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI / TOMOYO 機能比較表</title>
+<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="comparison.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+
+<h1>AKARI / TOMOYO 機能比較表</h1>
+
+<p>AKARI は TOMOYO Linux 1.8 をベースに作成されているため、 AKARI は TOMOYO Linux 1.8 と同様の機能と構文をサポートしています。このページでは両者の違いについて説明します。</p>
+
+<table summary="comparison" border="1">
+<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
+<tr><td>利点</td><td>全ての機能と構文をサポートします。</td><td>カーネルパッケージの置き換えが不要です。</td><td>メインラインカーネルに含まれています。<br>カーネルコンパイル時に組み込まれていれば、カーネルパッケージの置き換えが不要です。</td></tr>
+<tr><td>欠点</td><td>カーネルパッケージの置き換えが必要になります。</td><td>サポートされている機能と構文がカーネルのバージョンおよびカーネルコンパイル時の設定オプションに依存します。</td><td>サポートされている機能と構文がカーネルのバージョンに依存します。</td>
+</tr>
+<tr><td>依存関係</td><td>
+カーネルソースに対するパッチの適用とコンパイルが必要です。
+</td><td>
+カーネルパッケージが以下の設定オプションと一緒にコンパイルされていることが必要です。<br>
+<ul>
+<li>CONFIG_SECURITY=y</li>
+<li>CONFIG_KALLSYMS=y</li>
+<li>CONFIG_PROC_FS=y</li>
+<li>CONFIG_MODULES=y</li>
+</ul>
+上記に加えて、以下の設定オプションも一緒にコンパイルされていることが望ましいです。<br>
+<ul>
+<li>CONFIG_SECURITY_NETWORK=y</li>
+<li>CONFIG_SECURITY_PATH=y</li>
+</ul>
+現時点では、 x86_32 および x86_64 でのみ動作を確認しています。他のアーキテクチャでの動作テストはまだ行われていません。
+</td><td>
+カーネルパッケージが以下の設定オプションと一緒にコンパイルされていることが必要です。<br>
+<ul>
+<li>CONFIG_SECURITY=y</li>
+<li>CONFIG_SECURITYFS=y</li>
+<li>CONFIG_SECURITY_PATH=y</li>
+<li>CONFIG_SECURITY_TOMOYO=y</li>
+</ul>
+カーネル 2.6.36 以降が必要です。<br>
+</td></tr>
+</table>
+
+<p>機能および構文に関する詳細な違いについて以下に示します。</p>
+
+<table summary="comparison" border="1">
+<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
+<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-/2.6.11-</td><td>2.6.3-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
+<tr><td>種別</td><td>内容</td><td colspan=8></td></tr>
+<tr><td colspan=10>パス名の正確さ</td></tr>
+<tr><td></td><td>ディレクトリに対する書き込み操作を行う際に絶対パスを用いた指定を許可</td><td>○</td><td colspan=3></td><td colspan=3>○<a href="#note1">（*1）</a></td><td>○</td></tr>
+<tr><td></td><td>自プロセスの情報へのアクセスのみを許可（ proc:/self/ ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>削除されたファイルに対するアクセスを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>４０００文字を超える長いパス名に対するアクセスを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td colspan=10>パス名の指定を容易にする機能</td></tr>
+<tr><td></td><td>再帰的なパス名の指定（ /\{dir\}/ ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>パス名のグループ化（ path_group ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td colspan=10>数値の指定を容易にする機能</td></tr>
+<tr><td></td><td>数値のグループ化（ number_group ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ＩＰアドレスのグループ化（ address_group ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td colspan=10>再起動回数を減らす機能</td></tr>
+<tr><td></td><td>ガベージコレクションによるメモリ解放</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td colspan=10>Apacheのバーチャルホストに対応する機能</td></tr>
+<tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可</td><td>○</td><td colspan=3>○</td><td colspan=3>○<a href="#note5">（*5）</a></td><td></td></tr>
+<tr><td colspan=10>より詳細なアクセス許可を指定する機能</td></tr>
+<tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>ファイルの所有者ＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td colspan=10>暴走によるダメージを減らす機能</td></tr>
+<tr><td></td><td>スリープペナルティ機能（ enforcing_penalty ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>execute handler 機能（ task {auto_execute_handler,denied_execute_handler} ）</td><td>○</td><td colspan=3>○</td><td colspan=3>○<a href="#note6">（*6）</a></td><td></td></tr>
+<tr><td colspan=10>アクセスログを取得する機能</td></tr>
+<tr><td></td><td>ポリシー違反のメール通知</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>許可ログ／拒否ログの取得</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td colspan=10>ソフトウェアのアップデートを支援する機能</td></tr>
+<tr><td></td><td>ポリシー違反の対話的な処理</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td colspan=10>ファイルに対するアクセス制御</td></tr>
+<tr><td></td><td>読み込みモードでのオープンを制限（ file read ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;読み込み以外のためにオープンされる場合にはパーミッションをチェックしない</td><td>○</td><td colspan=2></td><td>○</td><td></td><td colspan=2>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;sysctl 要求に対して読み込みパーミッションをチェックする</td><td>○</td><td></td><td colspan=5>○</td><td>○</td></tr>
+<tr><td></td><td>書き込みモードでのオープンを制限（ file {write,append} ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;書き込み以外のためにオープンされる場合にはパーミッションをチェックしない</td><td>○</td><td colspan=2></td><td colspan=4>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;sysctl 要求に対して書き込みパーミッションをチェックする</td><td>○</td><td></td><td colspan=5>○</td><td>○</td></tr>
+<tr><td></td><td>プログラムの実行を制限（ file execute ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;一時的な名前を持つプログラムの実行を許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンクのリンク先を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;起動時の名前を制限（ argv[0] ） when executing programs?</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>ファイルの作成を制限（ file create ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ファイル作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ディレクトリの作成を制限（ file mkdir ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ディレクトリ作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ＦＩＦＯの作成を制限（ file mkfifo ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ＦＩＦＯ作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ＵＮＩＸドメインソケットの作成を制限（ file mksock ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ＵＮＩＸドメインソケット作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>シンボリックリンクの作成を制限（ file symlink ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンク作成時のリンク先を制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>デバイスファイルの作成を制限（ file {mkblock,mkchar} ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;デバイスファイル作成時のデバイス番号およびパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ＩＯＣＴＬの可否を制限（ file ioctl ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ＩＯＣＴＬのコマンド番号を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>所有者の変更可否を制限（ file chown ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;所有者ＩＤを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>グループの変更可否を制限（ file chgrp ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;グループＩＤを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>パーミッションの変更可否を制限（ file chmod ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;パーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルの削除を制限（ file unlink ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルの切り詰めを制限（ file truncate ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルのリネームを制限（ file rename ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルのハードリンクを制限（ file link ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ディレクトリの削除を制限（ file rmdir ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルシステムのマウントを制限（ file mount ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;マウント時のファイルシステム種別を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;マウント時のモードを制限</td><td>○</td><td colspan=5>○<a href="#note2">（*2）</a></td><td>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルシステムのアンマウントを制限（ file unmount ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ルートディレクトリの置換を制限（ file chroot ）</td><td>○</td><td colspan=5></td><td>○</td><td>○</td></tr>
+<tr><td></td><td>ルートディレクトリの交換を制限（ file pivot_root ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td colspan=10>ネットワークに対するアクセス制御</td></tr>
+<tr><td></td><td>接続要求を送信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
+（ network inet stream connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td></td><td>パケットを送信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
+（ network inet {dgram,raw} send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td></td><td>接続要求を受信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
+（ network inet stream accept ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a> <a href="#note4">（*4）</a></td><td></td></tr>
+<tr><td></td><td>パケットを受信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
+（ network inet {dgram,raw} recv ）</td><td>○</td><td colspan=6></td><td></td></tr>
+<tr><td></td><td>ローカルホストのＩＰアドレスおよびポート番号を制限<br>
+（ network inet {stream,dgram,raw} bind / network inet stream listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td></td><td>特定のローカルポート番号を必要とするアプリケーションのために予約しておく</td><td>○</td><td colspan=6></td><td></td></tr>
+<tr><td></td><td>接続要求を送信する際に相手のＵＮＩＸアドレスを制限<br>
+（ network unix {stream,seqpacket} connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td></td><td>パケットを送信する際に相手のＵＮＩＸアドレスを制限<br>
+（ network unix dgram send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td></td><td>接続要求を受信する際に相手のＵＮＩＸアドレスを制限<br>
+（ network unix {stream,seqpacket} accept ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a> <a href="#note4">（*4）</a></td><td></td></tr>
+<tr><td></td><td>パケットを送信する際に相手のＵＮＩＸアドレスを制限<br>
+（ network unix dgram recv ）</td><td>○</td><td colspan=6></td><td></td></tr>
+<tr><td></td><td>自分のＵＮＩＸアドレスを制限<br>
+（ network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+<tr><td colspan=10>ケイパビリティに対するアクセス制御</td></tr>
+<tr><td></td><td>独自のケイパビリティを用いた制限（ capability ）</td><td>○</td><td colspan=6></td><td></td></tr>
+<tr><td colspan=10>プロセス間通信に対するアクセス制御</td></tr>
+<tr><td></td><td>シグナルの送信先を制限（ ipc signal ）</td><td>○</td><td colspan=6></td><td></td></tr>
+<tr><td colspan=10>その他</td></tr>
+<tr><td></td><td>SELinuxやAppArmorなどとの同時使用を許可</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>使いたい機能だけを有効にすることを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>設定を初期化するときの所要時間を短縮</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+</table>
+
+<ul>
+<li><a name="note1">*1</a>: CONFIG_SECURITY_PATH=y の状態で作成されている場合に限ります。.</li>
+<li><a name="note2">*2</a>: nosuid,nodev,noexec などの幾つかのマウントオプションはチェックできません。</li>
+<li><a name="note3">*3</a>: CONFIG_SECURITY_NETWORK=y の状態で作成されている場合に限ります。</li>
+<li><a name="note4">*4</a>: パーミッションのチェックは accept() されたソケットが初めて使われるタイミングで行われます。</li>
+<li><a name="note5">*5</a>: プログラムの実行を伴わないドメイン遷移の効果は子プロセスへは継承されません。</li>
+<li><a name="note6">*6</a>: execute handler か否かの情報は子プロセスへは継承されません。</li>
+</ul>
+
+<hr>
+
+<p><a href="index.html.ja">目次へ戻る</a></p>
+</body>
+</html>

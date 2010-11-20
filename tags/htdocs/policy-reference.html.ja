@@ -30,6 +30,8 @@
 <p>6.3 <a href="#sleep_penalty">ポリシー違反時のペナルティ指定</a></p>
 <p>6.4 <a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></p>
 <p>6.5 <a href="#denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></p>
+<p>6.6 <a href="#manual_domain_transition">プログラムの実行要求を伴わないでドメイン遷移を行う</a></p>
+<p>6.7 <a href="#auto_domain_transition">条件を満たした場合に自動的にドメイン遷移を行う</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">キーワード一覧</a></h1>
@@ -37,45 +39,7 @@
 <p>/proc/ccs/profile および /etc/ccs/profile.conf で使われるもの</p>
 
 <ul>
-<li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
-<li><a href="#profile_CONFIG::file::open">CONFIG::file::open</a></li>
-<li><a href="#profile_CONFIG::file::create">CONFIG::file::create</a></li>
-<li><a href="#profile_CONFIG::file::unlink">CONFIG::file::unlink</a></li>
-<li><a href="#profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></li>
-<li><a href="#profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></li>
-<li><a href="#profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></li>
-<li><a href="#profile_CONFIG::file::mksock">CONFIG::file::mksock</a></li>
-<li><a href="#profile_CONFIG::file::truncate">CONFIG::file::truncate</a></li>
-<li><a href="#profile_CONFIG::file::symlink">CONFIG::file::symlink</a></li>
-<li><a href="#profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></li>
-<li><a href="#profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></li>
-<li><a href="#profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></li>
-<li><a href="#profile_CONFIG::file::link">CONFIG::file::link</a></li>
-<li><a href="#profile_CONFIG::file::rename">CONFIG::file::rename</a></li>
-<li><a href="#profile_CONFIG::file::chmod">CONFIG::file::chmod</a></li>
-<li><a href="#profile_CONFIG::file::chown">CONFIG::file::chown</a></li>
-<li><a href="#profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></li>
-<li><a href="#profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></li>
-<li><a href="#profile_CONFIG::file::chroot">CONFIG::file::chroot</a></li>
-<li><a href="#profile_CONFIG::file::mount">CONFIG::file::mount</a></li>
-<li><a href="#profile_CONFIG::file::unmount">CONFIG::file::unmount</a></li>
-<li><a href="#profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></li>
-<li><a href="#profile_CONFIG::misc::env">CONFIG::misc::env</a></li>
-<li><a href="#profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
-<li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
-<li><a href="#profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></li>
+<li><a href="#profile_CONFIG">CONFIG</a></li>
 <li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
@@ -91,6 +55,7 @@
 <li><a href="#exception_policy_path_group">path_group</a></li>
 <li><a href="#exception_policy_number_group">number_group</a></li>
 <li><a href="#exception_policy_address_group">address_group</a></li>
+<li><a href="#exception_policy_deny_autobind">deny_autobind</a></li>
 </ul>
 
 <p>/proc/ccs/domain_policy および /etc/ccs/domain_policy.conf で使われるもの</p>
@@ -118,11 +83,14 @@
 <li><a href="#domain_policy_file_chroot">file chroot</a></li>
 <li><a href="#domain_policy_file_pivot_root">file pivot_root</a></li>
 <li><a href="#domain_policy_misc_env">misc env</a></li>
-<li><a href="#domain_policy_network">network</a></li>
+<li><a href="#domain_policy_network_inet">network inet</a></li>
+<li><a href="#domain_policy_network_unix">network unix</a></li>
 <li><a href="#domain_policy_use_profile">use_profile</a></li>
 <li><a href="#domain_policy_use_group">use_group</a></li>
 <li><a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a></li>
 <li><a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a></li>
+<li><a href="#domain_policy_task_auto_domain_transition">task auto_domain_transition</a></li>
+<li><a href="#domain_policy_task_manual_domain_transition">task manual_domain_transition</a></li>
 <li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
@@ -493,13 +461,13 @@ Query lists: 1048576
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
 file execute /bin/cat
 </td></tr>
 </table>
 
-<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash というドメインに属しているプロセスが /bin/cat というプログラムを実行しようとし、そのときの引数の内容は "cat" "/etc/fstab" 、環境変数の内容は "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。また、プロセスＩＤやユーザＩＤなど、プロセスに関する情報も一緒に出力されます。</p>
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash というドメインに属しているプロセスが /bin/cat というプログラムを実行しようとし、そのときの引数の内容は "cat" "/etc/fstab" 、環境変数の内容は "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。また、プロセスＩＤやユーザＩＤなど、プロセスに関する情報も一緒に出力されます。</p>
 
 <p>次の例は、ファイルを読み込みモードでオープンしようとしたときのログです。</p>
 
@@ -523,18 +491,18 @@ use_profile 1
 </td></tr>
 </table>
 
-<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 TOMOYO Linux では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat というドメインが新規作成され、プロファイルとして 1 が割り当てられたことを示しています。 AKARI では、ドメインが自動的に新規作成されていきます。自動的に新規作成された場合には、ドメインを新規作成することになったプロセスの属しているドメインに割り当てられていたプロファイル番号が引き継がれます。</p>
 
 <p>次の例は、<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>するために要求されたのとは異なるプログラムが実行されたときのログです。</p>
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash<br>
 task auto_execute_handler /bin/audit-exec-param
 </td></tr>
 </table>
 
-<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash というドメインに属しているプロセスがプログラムを実行しようとしたが、 task auto_execute_handler が指定されていたので代わりに /bin/audit-exec-param というプログラムが実行されたこと、 /bin/audit-exec-param に渡された引数の内容は "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。 LD_PRELOAD などの環境変数によって  /bin/audit-exec-param の動作が左右されるのを防ぐため、環境変数を引数に移動しています。</p>
+<p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash というドメインに属しているプロセスがプログラムを実行しようとしたが、 task auto_execute_handler が指定されていたので代わりに /bin/audit-exec-param というプログラムが実行されたこと、 /bin/audit-exec-param に渡された引数の内容は "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。 LD_PRELOAD などの環境変数によって  /bin/audit-exec-param の動作が左右されるのを防ぐため、環境変数を引数に移動しています。</p>
 
 <p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/akari/diff.txt という名前で保存した後、</p>
 
@@ -570,7 +538,7 @@ file execute /bin/cat exec.realpath="/bin/cat" exec.argv[0]="cat"
 
 <p>有効にしたい機能とそのモードを「 プロファイル番号-項目=値 」という形式で定義します。プロファイル番号は 0 ～ 255 が指定可能です。プロファイルの内容を変更するには ccs-setlevel コマンドまたは ccs-loadpolicy コマンドを使用します。</p>
 
-<p>各ドメインには 1 個のプロファイルが割り当てられます。ドメインにプロファイルを割り当てるには setprofile コマンドまたは ccs-editpolicy コマンドまたは ccs-loadpolicy コマンドを使用します。</p>
+<p>各ドメインには 1 個のプロファイルが割り当てられます。ドメインにプロファイルを割り当てるには ccs-setprofile コマンドまたは ccs-editpolicy コマンドまたは ccs-loadpolicy コマンドを使用します。</p>
 
 <p>現在ドメインに割り当てられているプロファイル番号は ccs-editpolicy コマンドで確認できます。<br>
 現在動作中のプロセスに割り当てられているプロファイル番号は ccs-pstree コマンドで確認できます。<br>
@@ -586,7 +554,9 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>関連項目：<a href="#policy_file_modifiers">変更について</a></p>
 
-<p>CONFIG で始まる項目に対しては以下の値を指定できます。</p>
+<h3><a name="profile_CONFIG">CONFIG</a></h3>
+
+<p>動作モード、アクセスログの要否に関する設定を指定します。</p>
 
 <table border="1">
 <tr><td>設定</td><td>内容</td></tr>
@@ -600,161 +570,69 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 <tr><td>reject_log=no</td><td>アクセス拒否ログを取得しない。</td></tr>
 </table>
 
-<h3><a name="profile_CONFIG::file::execute">CONFIG::file::execute</a></h3>
-
-<p>プログラムの実行およびドメイン遷移に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::open">CONFIG::file::open</a></h3>
-
-<p>読み込みまたは書き込みモードでのファイルのオープンに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::create">CONFIG::file::create</a></h3>
-
-<p>ファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::unlink">CONFIG::file::unlink</a></h3>
-
-<p>ファイルの削除に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></h3>
-
-<p>ディレクトリの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></h3>
-
-<p>ディレクトリの削除に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></h3>
-
-<p>名前付きパイプの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mksock">CONFIG::file::mksock</a></h3>
-
-<p>ＵＮＩＸドメインソケットの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::truncate">CONFIG::file::truncate</a></h3>
-
-<p>ファイルの切り詰めに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::symlink">CONFIG::file::symlink</a></h3>
-
-<p>シンボリックリンクの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></h3>
-
-<p>ファイルの上書きに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></h3>
-
-<p>ブロック型デバイスファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></h3>
-
-<p>キャラクタ型デバイスファイルの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::link">CONFIG::file::link</a></h3>
-
-<p>ハードリンクの作成に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::rename">CONFIG::file::rename</a></h3>
-
-<p>名称変更に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::chmod">CONFIG::file::chmod</a></h3>
-
-<p>ファイルのモードの変更に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::chown">CONFIG::file::chown</a></h3>
-
-<p>ファイルの所有者の変更に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></h3>
-
-<p>ファイルのグループの変更に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></h3>
-
-<p>IOCTL に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::chroot">CONFIG::file::chroot</a></h3>
-
-<p>ルートディレクトリの変更に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::mount">CONFIG::file::mount</a></h3>
-
-<p>マウントに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::unmount">CONFIG::file::unmount</a></h3>
-
-<p>アンマウントに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></h3>
-
-<p>ルートディレクトリの交換に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::misc::env">CONFIG::misc::env</a></h3>
-
-<p>プログラム実行時の環境変数名に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></h3>
-
-<p>UDP ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></h3>
-
-<p>UDP ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></h3>
-
-<p>TCP ソケットの bind() 操作に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></h3>
-
-<p>TCP ソケットの listen() 操作に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></h3>
-
-<p>TCP ソケットの connect() 操作に対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></h3>
-
-<p>RAW ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></h3>
-
-<p>RAW ソケットが送信時に使用するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></h3>
-
-<p>同一ホスト内でのデータグラムソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></h3>
-
-<p>同一ホスト内でのデータグラムソケットが受信してよいリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></h3>
-
-<p>同一ホスト内でのストリームソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></h3>
-
-<p>同一ホスト内でのストリームソケットが待ち受けするローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></h3>
-
-<p>同一ホスト内でのストリームソケットが接続するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></h3>
-
-<p>同一ホスト内での SEQPACKET ソケットが使用するローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></h3>
-
-<p>同一ホスト内での SEQPACKET ソケットが待ち受けするローカルアドレスに対する強制アクセス制御のレベルを指定します。</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></h3>
-
-<p>同一ホスト内での SEQPACKET ソケットが接続するリモートアドレスに対する強制アクセス制御のレベルを指定します。</p>
+<p>全カテゴリおよび全項目に対するデフォルトの設定を行うことができます。</p>
+
+<table border="1">
+<tr><td>項目</td><td>内容</td></tr>
+<tr><td>CONFIG</td><td>カテゴリまたは個々の操作に対する動作モードを指定しなかった場合に適用される動作モードを指定します。</td></tr>
+</table>
+
+<p>カテゴリ単位でデフォルトの設定を上書きすることができます。</p>
+
+<table border="1">
+<tr><td>項目</td><td>内容</td></tr>
+<tr><td>CONFIG::file</td><td>ファイルに対する個々の操作に対するデフォルトの動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network</td><td>ネットワークに対する個々の操作に対するデフォルトの動作モードを指定します。</td></tr>
+<tr><td>CONFIG::misc</td><td>その他のパラメータに対するデフォルトの動作モードを指定します。</td></tr>
+</table>
+
+<p>項目単位でカテゴリ単位およびデフォルトの設定を上書きすることができます。</p>
+
+<table border="1">
+<tr><td>項目</td><td>内容</td></tr>
+<tr><td>CONFIG::file::execute</td><td>プログラムの実行およびドメイン遷移に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::open</td><td>読み込みまたは書き込みモードでのファイルのオープンに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::create</td><td>ファイルの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::unlink</td><td>ファイルの削除に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mkdir</td><td>ディレクトリの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::rmdir</td><td>ディレクトリの削除に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mkfifo</td><td>名前付きパイプの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mksock</td><td>ＵＮＩＸドメインソケットの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::truncate</td><td>ファイルの切り詰めに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::symlink</td><td>シンボリックリンクの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::rewrite</td><td>ファイルの上書きに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mkblock</td><td>ブロック型デバイスファイルの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mkchar</td><td>キャラクタ型デバイスファイルの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::link</td><td>ハードリンクの作成に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::rename</td><td>名称変更に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::chmod</td><td>ファイルのモードの変更に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::chown</td><td>ファイルの所有者の変更に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::chgrp</td><td>ファイルのグループの変更に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::ioctl</td><td>IOCTL に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::chroot</td><td>ルートディレクトリの変更に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::mount</td><td>マウントに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::unmount</td><td>アンマウントに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::file::pivot_root</td><td>ルートディレクトリの交換に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_dgram_bind</td><td>UDP ソケットが使用するローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_dgram_send</td><td>UDP ソケットが送信時に使用するリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_stream_bind</td><td>TCP ソケットの bind() 操作に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_stream_listen</td><td>TCP ソケットの listen() 操作に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_stream_connect</td><td>TCP ソケットの connect() 操作に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_stream_accept</td><td>TCP ソケットの accept() 操作に対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_raw_bind</td><td>RAW ソケットが使用するローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::inet_raw_send</td><td>RAW ソケットが送信時に使用するリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_dgram_bind</td><td>同一ホスト内でのデータグラムソケットが使用するローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_dgram_send</td><td>同一ホスト内でのデータグラムソケットが送信してよいリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_stream_bind</td><td>同一ホスト内でのストリームソケットが使用するローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_stream_listen</td><td>同一ホスト内でのストリームソケットが待ち受けするローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_stream_connect</td><td>同一ホスト内でのストリームソケットが接続するリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_stream_accept</td><td>同一ホスト内でのストリームソケットが受け付けるリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_bind</td><td>同一ホスト内での SEQPACKET ソケットが使用するローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_listen</td><td>同一ホスト内での SEQPACKET ソケットが待ち受けするローカルアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_connect</td><td>同一ホスト内での SEQPACKET ソケットが接続するリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_accept</td><td>同一ホスト内での SEQPACKET ソケットが受け付けるリモートアドレスに対する動作モードを指定します。</td></tr>
+<tr><td>CONFIG::misc::env</td><td>プログラム実行時の環境変数名に対する動作モードを指定します。</td></tr>
+</table>
 
 <h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
@@ -774,7 +652,13 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>ドメインを定義している行（ &lt;kernel&gt; で始まる行）の次行から次のドメインを定義している行の前行までが、そのドメインに対するアクセス許可です。</p>
 
-<p>それぞれのアクセス許可について、必要に応じて追加の条件を指定することができます。そのための構文は<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明します。</p>
+<p>アクセス許可の構文は以下のようになります。</p>
+
+<table border="1">
+<tr><td>$keyword $mandatory_arguments $conditional_arguments</td></tr>
+</table>
+
+<p>$keyword にはアクセス許可の種別を指定します。 $mandatory_arguments には $keyword で必要とするパラメータを指定します。 $conditional_arguments には <a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明されているパラメータを任意で指定することができます。</p>
 
 <p>現在のドメインポリシーを読み出しまたは追加または削除するには、以下のように操作します。</p>
 <p>（例）ドメインを選択してアクセス許可を追加（ドメインが存在しない場合は作成されます）<br>
@@ -909,7 +793,7 @@ file mount /dev/hdc /var/www/ ext2 0xF<br>
 file mount any / --remount 0x0</p>
 
 <h3><a name="domain_policy_file_unmount">file unmount</a></h3>
-<p>アンマウント許可を指定するには、 file unmount というキーワードに続けて、アンマウントを許可する正規化されたディレクトリ名を指定します。</p>
+<p>アンマウント許可を指定するには、 file unmount というキーワードに続けて、アンマウントを許可する正規化されたパス名を指定します。</p>
 
 <p>（例）<br>
 file unmount /mnt/cdrom/</p>
@@ -935,13 +819,14 @@ file chroot /</p>
 <p>プログラムを実行する関数である execve() には filename と argv[] と envp[] を渡すことができます。多くのプログラムは envp[] の内容によって振る舞いを変化させます。</p>
 <p>このキーワードの目的は、実行されるプログラムに渡される環境変数を制限することです。</p>
 
-<h3><a name="domain_policy_network">network</a></h3>
+<h3><a name="domain_policy_network_inet">network inet</a></h3>
 
-<p>ネットワークのアクセス許可を指定するには、 network というキーワードに続けて、プロトコル（ TCP UDP RAW の何れか）、 IP アドレス、ポート番号（ TCP UDP の場合）またはプロトコル番号（ RAW の場合）を指定します。 IPv4 プロトコルおよび IPv6 プロトコルで使用するローカルポート番号が対象です。</p>
+<p>ＩＰネットワークのアクセス許可を指定するには、 network inet というキーワードに続けて、プロトコル（ stream dgram raw の何れか）、 IP アドレス（ IPv4 または IPv6 ）、ポート番号（ stream dgram の場合）またはプロトコル番号（ raw の場合）を指定します。</p>
 <table border="1">
 <tr><td>キーワード</td><td>許可されるアクセス</td><td>指定例</td></tr>
 <tr><td>network inet stream bind</td><td>ローカルの TCP アドレス／ポートの割り当て</td><td>network inet stream bind 0.0.0.0 80</td></tr>
 <tr><td>network inet stream listen</td><td>ローカルの TCP アドレス／ポートでの待機</td><td>network inet stream listen 0.0.0.0 80</td></tr>
+<tr><td>network inet stream accept</td><td>リモートの TCP アドレス／ポートからの接続受付および通信</td><td>network inet stream accept 10.0.0.0-10.255.255.255 1024-65535</td></tr>
 <tr><td>network inet stream connect</td><td>リモートの TCP アドレス／ポートへの接続および通信</td><td>network inet stream connect 127.0.0.1 1024-65535</td></tr>
 <tr><td>network inet dgram bind</td><td>ローカルの UDP アドレス／ポートの割り当て</td><td>network inet dgram bind 0.0.0.0 53</td></tr>
 
@@ -955,6 +840,14 @@ file chroot /</p>
 
 <p>関連項目： <a href="#exception_policy_address_group">address_group</a></p>
 
+<h3><a name="domain_policy_network_unix">network unix</a></h3>
+
+<p>UNIX ネットワークのアクセス許可を指定するには、 network unix というキーワードに続けて、プロトコル（ stream dgram seqpacket の何れか）とアドレスを指定します。</p>
+
+<p>同じアドレスを繰り返し指定する手間を避けるために、グループ化を行うことができます。</p>
+
+<p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
+
 <h3><a name="domain_policy_use_profile">use_profile</a></h3>
 
 <p>これは、このドメインに対して割り当てられているプロファイル番号を示しています。プロファイル番号は 0 ～ 255 の値をとります。</p>
@@ -967,15 +860,27 @@ file chroot /</p>
 
 <p>これは、このドメインに対しては常にこのキーワードで指定されたプログラムだけを実行することを示しています。特定のドメインで実行されるプログラムの実行要求を全て特定のプログラムを経由して起動させたい場合に使います。</p>
 
-<p>このキーワードが指定されている場合、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> の値に関わらず常にこのキーワードで指定されたプログラムが実行されます。そのため、このキーワードに適切なプログラムへのパス名が指定されていなかった場合、このキーワードが指定されているドメインからは一切のプログラムを実行できなくなります。</p>
+<p>このキーワードが指定されている場合、 <a href="#profile_CONFIG">CONFIG::file::execute</a> の値に関わらず常にこのキーワードで指定されたプログラムが実行されます。そのため、このキーワードに適切なプログラムへのパス名が指定されていなかった場合、このキーワードが指定されているドメインからは一切のプログラムを実行できなくなります。</p>
 
-<p>関連項目： <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
+<p>関連項目： <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
 
 <h3><a name="domain_policy_task_denied_execute_handler">task denied_execute_handler</a></h3>
 
-<p>これは、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合には、常にこのキーワードで指定されたプログラムを実行することを示しています。このキーワードが指定されていない場合、 <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合にはプログラムの実行を拒否します。</p>
+<p>これは、 <a href="#profile_CONFIG">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合には、常にこのキーワードで指定されたプログラムを実行することを示しています。このキーワードが指定されていない場合、 <a href="#profile_CONFIG">CONFIG::file::execute</a> が enforcing の状態に於いて許可されていないプログラムの実行が要求された場合にはプログラムの実行を拒否します。</p>
 
 <p>ただし、ドメインに対して <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードが指定されている場合、このキーワードは無視されます。</p>
+
+<h3><a name="domain_policy_task_auto_domain_transition">task auto_domain_transition</a></h3>
+
+<p>これは、このキーワードで指定された条件を満たした場合にこのキーワードで指定されたドメインへと自動的に遷移することを示しています。例えばユーザ ID が 0 ではなくなった時点で別のドメインへと遷移させることができます。</p>
+
+<p>関連項目： <a href="#conditional_acl">条件付きアクセス許可の指定</a></p>
+
+<h3><a name="domain_policy_task_manual_domain_transition">task manual_domain_transition</a></h3>
+
+<p>これは、このキーワードで指定されたドメイン名を /proc/ccs/self_domain に対して書きこむことにより、そのドメインへと遷移することを示しています。 execve() を使わずにドメイン遷移を行わせたい場合に使います。</p>
+
+<p>関連項目： <a href="#self_domain">/proc/ccs/self_domain</a></p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
@@ -987,9 +892,9 @@ file chroot /</p>
 
 <p>これは、このドメインに属しているプロセスが、プログラムの実行時にドメイン遷移をすることができなかったことを示しています。</p>
 
-<p>このドメインに対して <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing のプロファイルが割り当てられていた場合、プログラムの実行要求は拒否されます。</p>
+<p>このドメインに対して <a href="#profile_CONFIG">CONFIG::file::execute</a>={ mode=enforcing } のプロファイルが割り当てられていた場合、プログラムの実行要求は拒否されます。</p>
 
-<p>そうではない場合、プログラムの実行要求は拒否されません。そのため、ドメイン遷移をせずにプログラムが実行されます。ドメイン遷移が失敗した理由は「遷移先ドメインのドメイン名が長すぎる」または「遷移先ドメインのためのメモリを割り当てることができなかった」のどちらかであるため、このドメインに対して <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing のプロファイルを割り当てる予定がある場合には、「ドメイン遷移を抑制する」または「メモリ割り当て量を増やす」ようにしてください。</p>
+<p>そうではない場合、プログラムの実行要求は拒否されません。そのため、ドメイン遷移をせずにプログラムが実行されます。ドメイン遷移が失敗した理由は「遷移先ドメインのドメイン名が長すぎる」または「遷移先ドメインのためのメモリを割り当てることができなかった」のどちらかであるため、このドメインに対して <a href="#profile_CONFIG">CONFIG::file::execute</a>={ mode=enforcing }のプロファイルを割り当てる予定がある場合には、「ドメイン遷移を抑制する」または「メモリ割り当て量を増やす」ようにしてください。</p>
 
 <p>関連項目： <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">メモリ使用量に関する情報</a></p>
 
@@ -1143,6 +1048,15 @@ network inet stream accept @local-address 1024-65535
 <p>このキーワードはドメイン遷移を行わせたい場合に使用します。</p>
 
 <p>関連項目：<a href="#domain_transition">ドメイン遷移</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
+
+<h3><a name="exception_policy_deny_autobind">deny_autobind</a></h3>
+
+<p>ローカルポートの自動選択で特定のポート番号が選択させるのを禁止するには、 deny_autobind というキーワードに続けて、ローカルポート番号を指定します。 
+このキーワードは、特定のポート番号が一時的な用途で割り当てられるのを防ぐのが狙いです。例えば、一部のプロキシサーバはポート 8080 を使用するので、ポート 8080 が一時的な用途のために割り当てられるべきではありません。</p>
+
+<p>（例）<br>
+deny_autobind 1-1023<br>
+deny_autobind 8080</p>
 
 <h2><a name="query">/proc/ccs/query</a></h2>
 
@@ -1431,11 +1345,13 @@ chown -R demo /proc/ccs/
 
 <p>この機能は、無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するための安全装置です。通常は 0.1 秒間スリープさせるだけで充分です。</p>
 
+<p>この機能は、許可されていないホストからの TCP 接続要求や UDP パケットを攻撃者が故意に送りつけることでポリシー違反を発生させることでサービスを長時間スリープ状態にさせることにより、許可されているホストからの TCP 接続要求や UDP パケットの処理を大幅に遅延させるという攻撃が成立してしまうのを回避するために、ネットワークの受信系の操作に対しては機能しないようになっています。</p>
+
 <h2>6.4 <a name="auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a></h2>
 
-<p>TOMOYO Linux では、原則としてポリシーに従ってプログラムの実行可否を制御します。プログラム実行時のパラメータをチェックしたい場合には、<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明したように exec.argv や exec.envp を使ってチェックを行うことができます。しかし、<a href="#conditional_acl">条件付きアクセス許可の指定</a>では、単純なパターンマッチしかサポートされておらず、また、どのようなプログラムの実行を許可するかを予め指定しておく必要があります。</p>
+<p>AKARI では、原則としてポリシーに従ってプログラムの実行可否を制御します。プログラム実行時のパラメータをチェックしたい場合には、<a href="#conditional_acl">条件付きアクセス許可の指定</a>で説明したように exec.argv や exec.envp を使ってチェックを行うことができます。しかし、<a href="#conditional_acl">条件付きアクセス許可の指定</a>では、単純なパターンマッチしかサポートされておらず、また、どのようなプログラムの実行を許可するかを予め指定しておく必要があります。</p>
 
-<p>そこで、 TOMOYO Linux では <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> という仕組みがサポートされています。この仕組みは、プログラムの実行可否をカーネルが判断するのではなく、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> により指定されたプログラムが判断し、プログラムの実行を許可すべきと判断した場合には実際にプログラムを実行するという動作をします。</p>
+<p>そこで、 AKARI では <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> という仕組みがサポートされています。この仕組みは、プログラムの実行可否をカーネルが判断するのではなく、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> により指定されたプログラムが判断し、プログラムの実行を許可すべきと判断した場合には実際にプログラムを実行するという動作をします。</p>
 
 <p>Linux に於いては、プログラムを実行するという動作は、プログラムの実行を要求したプロセスを上書きするという動作であり、プログラムの実行に成功した場合にはプログラムの実行を要求したプロセスに制御が戻ることはありません。つまり、要求されたプログラムの実行に失敗した場合にしか、プログラムの実行を要求したプロセスに対して、要求されたプログラムが実行されなかったことが通知されません。<br>
 例えば、プログラムＡとして動作しているプロセスがプログラムＢの実行を要求する場合を考えてみます。<br>
@@ -1448,7 +1364,7 @@ chown -R demo /proc/ccs/
 しかし、たとえ <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> を指定していない場合であっても、「共有ライブラリの読み込みができなかった」「 KILL シグナルを受信した」「メモリ不足になり OOM killer によって強制終了させられた」など、様々な要因によって「実行には成功したが期待された動作を始める前に終了してしまった」という状況が起こりえます。つまり、「プログラムの実行が失敗しなかった」ということと「要求されたプログラムが期待した動作を始めた」ということの間には、不確定要素が存在します。<br>
 そう考えると、「プログラムの実行に失敗したという通知が無い限りプログラムは期待された動作を始める」という保証は最初から存在しないわけなので、 <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> により指定されたプログラムＣが、プログラムＢの実行に失敗したことをプログラムＢの実行を要求したプログラムＡとして動作していたプロセスに通知できなかったという結果になったとしても、容認できる範囲であると言えると思います。</p>
 
-<p>TOMOYO Linux は、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、正常な動作をしている限り、ポリシーで許可されていないプログラムの実行要求は起こらないはずだと仮定すると、全てのプログラムの実行要求をとりあえず受理して構わないと考えることができます。もしも受理すべきではないプログラムの実行要求が発生した場合、 <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> の機能を使うことで要求を拒否する代わりにそのプロセスを強制終了させるなどの行動を起こすことができます。つまり、カーネルの内部でプログラムの実行可否の判断を行わなくても構わないということです。</p>
+<p>AKARI は、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、正常な動作をしている限り、ポリシーで許可されていないプログラムの実行要求は起こらないはずだと仮定すると、全てのプログラムの実行要求をとりあえず受理して構わないと考えることができます。もしも受理すべきではないプログラムの実行要求が発生した場合、 <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> の機能を使うことで要求を拒否する代わりにそのプロセスを強制終了させるなどの行動を起こすことができます。つまり、カーネルの内部でプログラムの実行可否の判断を行わなくても構わないということです。</p>
 
 <p>そこで、ドメインに対して <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> キーワードを指定しておくことで、そのドメインから発生する全てのプログラムの実行可否の判断をカーネル外部のプログラムに委ねることができるようになります。</p>
 <p>カーネルの内部では利用可能なライブラリが少ない上に連続したメモリ領域の割り当てが失敗する可能性が高くなりますが、
@@ -1493,7 +1409,7 @@ chown -R demo /proc/ccs/
 
 <h2>6.5 <a name="denied_execute_handler">許可されていないプログラムの実行が要求された場合の代替処理指定</a></h2>
 
-<p>TOMOYO Linux では、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、不要なプログラムの実行を拒否するという振る舞いだけでなく、それ以外の振る舞いを行うこともできます。</p>
+<p>AKARI では、どのプログラムからどのプログラムを実行する必要があるかを事前に把握して、必要最小限のプログラムの実行のみを認めるというアプローチを採用しています。そのため、不要なプログラムの実行を拒否するという振る舞いだけでなく、それ以外の振る舞いを行うこともできます。</p>
 
 <p>強制モードに於いて file execute 構文により許可されていないプログラムの実行が要求された場合、デフォルトではプログラムの実行を拒否します。しかし、あるプログラムからどのプログラムの実行を許可する必要があるかを把握済みであるという前提があれば、プロセスが正常な動作をしている限りに於いて許可されていないプログラムの実行が要求されることは無いので、許可されていないプログラムの実行が要求されたということはプロセスが正常な動作をしていない（つまり、プロセスにとっては制御を失った状態である）とみなすことができます。</p>
 
@@ -1505,7 +1421,7 @@ chown -R demo /proc/ccs/
 <p>攻撃者の手によって制御を失ったプロセスからプログラムが実行された後の制御は、どのプログラムが実行されたかによって決まります。シェルが実行された場合には、シェルはユーザが要求したとおりに処理を実行してしまうため、プログラムの実行を要求したプロセスの所有者である攻撃者の手に委ねられてしまうわけです。しかし、何もせずに終了するようなプログラム（例えば /bin/true ）が実行された場合には、プロセスの制御が攻撃者の手に委ねられてしまうことはありません。</p>
 
 <p>このように、攻撃者の手によって本来許可する必要の無いプログラムの実行が要求されるという出来事は、見方を変えると、攻撃者自身が制御を取り戻すためのチャンスを与えてくれていると考えることができます。<br>
-そこで、 TOMOYO Linux では、許可されていないプログラムの実行が要求された場合、その要求を拒否する代わりに他のプログラムを実行するための機構を提供しています。この機構を用いて何をするかはシステム管理者の自由です。</p>
+そこで、 AKARI では、許可されていないプログラムの実行が要求された場合、その要求を拒否する代わりに他のプログラムを実行するための機構を提供しています。この機構を用いて何をするかはシステム管理者の自由です。</p>
 
 <p>例えば、シェルの実行要求を /bin/true の実行要求に差し替えてしまうことで、そのプロセスを直ちに強制終了させることができます。</p>
 
@@ -1521,10 +1437,20 @@ chown -R demo /proc/ccs/
 
 <table border="1">
 <tr><td>/proc/ccs/profile の例</td><td>/proc/ccs/domain_policy の例</td><td>意味</td></tr>
-<tr><td>3-CONFIG::file::execute=enforcing</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>プロファイル 3 が割り当てられているドメインに属しているプロセスが、許可されていないプログラムの実行を要求した場合、代わりに /bin/true を実行します。</td></tr>
+<tr><td>3-CONFIG::file::execute={ mode=enforcing }</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>プロファイル 3 が割り当てられているドメインに属しているプロセスが、許可されていないプログラムの実行を要求した場合、代わりに /bin/true を実行します。</td></tr>
 </table>
 
 <p>この機能を使用する際の注意事項は<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>と同じです。</p>
+
+<h2>6.6 <a name="manual_domain_transition">プログラムの実行要求を伴わないでドメイン遷移を行う</a></h2>
+
+<p>/proc/ccs/self_domain に対して <a href="#domain_policy_task_manual_domain_transition">"task manual_domain_transition"</a> キーワードで指定されているドメイン名を書きこむことにより、そのドメインへと遷移することができます。この機能は、プログラムに対して/proc/ccs/self_domain への書き込みを行うための数行の修正と再コンパイルを必要とする代わりに、 execve() を伴わないドメイン遷移を行うことで権限の分割をするのに役立ちます。</p>
+
+<h2>6.7 <a name="auto_domain_transition">条件を満たした場合に自動的にドメイン遷移を行う</a></h2>
+
+<p><a href="#domain_policy_task_auto_domain_transition">"task auto_domain_transition"</a> キーワードで指定されているドメインへと自動的に遷移することができます。この機能は、 execve() を伴わないドメイン遷移を行うことで権限の分割をするのに役立ちます。</p>
+
+<p>"task auto_domain_transition" キーワードを指定する場合には、条件指定（例えば task.uid!=0 ）を忘れないでください。</p>
 
 <hr>
 

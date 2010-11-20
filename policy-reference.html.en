@@ -30,6 +30,8 @@
 <p>6.3 <a href="#sleep_penalty">Sleep penalty for policy violation.</a></p>
 <p>6.4 <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
 <p>6.5 <a href="#denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></p>
+<p>6.6 <a href="#manual_domain_transition">Performing domain transition without program execution request.</a></p>
+<p>6.7 <a href="#auto_domain_transition">Performing domain transition automatically when conditions are met.</a></p>
 <hr>
 
 <h1>1. <a name="Keyword_Index">Keywords Index</a></h1>
@@ -37,45 +39,7 @@
 <p>Used by /proc/ccs/profile and /etc/ccs/profile.conf</p>
 
 <ul>
-<li><a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a></li>
-<li><a href="#profile_CONFIG::file::open">CONFIG::file::open</a></li>
-<li><a href="#profile_CONFIG::file::create">CONFIG::file::create</a></li>
-<li><a href="#profile_CONFIG::file::unlink">CONFIG::file::unlink</a></li>
-<li><a href="#profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></li>
-<li><a href="#profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></li>
-<li><a href="#profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></li>
-<li><a href="#profile_CONFIG::file::mksock">CONFIG::file::mksock</a></li>
-<li><a href="#profile_CONFIG::file::truncate">CONFIG::file::truncate</a></li>
-<li><a href="#profile_CONFIG::file::symlink">CONFIG::file::symlink</a></li>
-<li><a href="#profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></li>
-<li><a href="#profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></li>
-<li><a href="#profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></li>
-<li><a href="#profile_CONFIG::file::link">CONFIG::file::link</a></li>
-<li><a href="#profile_CONFIG::file::rename">CONFIG::file::rename</a></li>
-<li><a href="#profile_CONFIG::file::chmod">CONFIG::file::chmod</a></li>
-<li><a href="#profile_CONFIG::file::chown">CONFIG::file::chown</a></li>
-<li><a href="#profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></li>
-<li><a href="#profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></li>
-<li><a href="#profile_CONFIG::file::chroot">CONFIG::file::chroot</a></li>
-<li><a href="#profile_CONFIG::file::mount">CONFIG::file::mount</a></li>
-<li><a href="#profile_CONFIG::file::unmount">CONFIG::file::unmount</a></li>
-<li><a href="#profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></li>
-<li><a href="#profile_CONFIG::misc::env">CONFIG::misc::env</a></li>
-<li><a href="#profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></li>
-<li><a href="#profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></li>
-<li><a href="#profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></li>
-<li><a href="#profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></li>
-<li><a href="#profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></li>
-<li><a href="#profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></li>
-<li><a href="#profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></li>
+<li><a href="#profile_CONFIG">CONFIG</a></li>
 <li><a href="#profile_PREFERENCE">PREFERENCE</a></li>
 </ul>
 
@@ -91,6 +55,7 @@
 <li><a href="#exception_policy_path_group">path_group</a></li>
 <li><a href="#exception_policy_number_group">number_group</a></li>
 <li><a href="#exception_policy_address_group">address_group</a></li>
+<li><a href="#exception_policy_deny_autobind">deny_autobind</a></li>
 </ul>
 
 <p>Used by /proc/ccs/domain_policy and /etc/ccs/domain_policy.conf</p>
@@ -118,11 +83,14 @@
 <li><a href="#domain_policy_file_chroot">file chroot</a></li>
 <li><a href="#domain_policy_file_pivot_root">file pivot_root</a></li>
 <li><a href="#domain_policy_misc_env">misc env</a></li>
-<li><a href="#domain_policy_network">network</a></li>
+<li><a href="#domain_policy_network_inet">network inet</a></li>
+<li><a href="#domain_policy_network_unix">network unix</a></li>
 <li><a href="#domain_policy_use_profile">use_profile</a></li>
 <li><a href="#domain_policy_use_group">use_group</a></li>
 <li><a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a></li>
 <li><a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a></li>
+<li><a href="#domain_policy_task_auto_domain_transition">task auto_domain_transition</a></li>
+<li><a href="#domain_policy_task_manual_domain_transition">task manual_domain_transition</a></li>
 <li><a href="#domain_policy_quota_exceeded">quota_exceeded</a></li>
 <li><a href="#domain_policy_transition_failed">transition_failed</a></li>
 </ul>
@@ -254,7 +222,7 @@ Query lists: 1048576
 
 <table border="1">
 <tr><td>The kernel's interface</td><td>Policy file</td><td>Contents</td></tr>
-<tr><td><a href="#profile">/proc/ccs/profile</a></td><td>/etc/ccs/profile.conf</td><td>Profiles (Collection of access control levels)</td></tr>
+<tr><td><a href="#profile">/proc/ccs/profile</a></td><td>/etc/ccs/profile.conf</td><td>Profiles (Collection of operation modes)</td></tr>
 <tr><td><a href="#manager">/proc/ccs/manager</a></td><td>/etc/ccs/manager.conf</td><td>Managers (Programs that can modify policy via /proc/ccs/ interface)</td></tr>
 <tr><td><a href="#exception_policy">/proc/ccs/exception_policy</a></td><td>/etc/ccs/exception_policy.conf</td><td>Exception policy (Collection of exceptions for domain policy)</td></tr>
 <tr><td><a href="#domain_policy">/proc/ccs/domain_policy</a></td><td>/etc/ccs/domain_policy.conf</td><td>Domain policy (Access permissions given to individual domains)</td></tr>
@@ -493,13 +461,13 @@ Query lists: 1048576
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
 file execute /bin/cat
 </td></tr>
 </table>
 
-<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain attempted to execute /bin/cat , and the arguments were "cat" and "/etc/fstab", environment variables were "HOSTNAME=tomoyo" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". Also, process information such as PID, UID are shown.</p>
+<p>This log shows that a process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain attempted to execute /bin/cat , and the arguments were "cat" and "/etc/fstab", environment variables were "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". Also, process information such as PID, UID are shown.</p>
 
 <p>The next log is generated by opening a file for reading.</p>
 
@@ -523,18 +491,18 @@ use_profile 1
 </td></tr>
 </table>
 
-<p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. TOMOYO Linux automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
+<p>This log shows that a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat" was created and profile 1 was assigned. AKARI automatically creates domains as needed. When a domain is automatically created, the profile number of the domain the process that requested program execution belongs to is inherited.</p>
 
 <p>The next log is generated when a program that is different from the program being requested was executed because of <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash<br>
 task auto_execute_handler /bin/audit-exec-param
 </td></tr>
 </table>
 
-<p>This log shows that a process that belongs to a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash" attempted to execute a program, but since the task auto_execute_handler keyword is specified to the domain, /bin/audit-exec-param was executed, and arguments passed to /bin/audit-exec-param were "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=tomoyo" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". To avoid /bin/audit-exec-param affected by environment variables such as LD_PRELOAD, environment variables are moved to arguments.</p>
+<p>This log shows that a process that belongs to a domain named "&lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash" attempted to execute a program, but since the task auto_execute_handler keyword is specified to the domain, /bin/audit-exec-param was executed, and arguments passed to /bin/audit-exec-param were "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat". To avoid /bin/audit-exec-param affected by environment variables such as LD_PRELOAD, environment variables are moved to arguments.</p>
 
 <p>In this way, an access log consists of 3 lines (or 4 lines since /usr/sbin/ccs-auditd inserts an empty line), and they are in the domain policy format and appendable to the domain policy. Pick up portions you want to permit from reject log and save (for example, /var/log/akari/diff.txt) and you can add to domain policy by doing</p>
 
@@ -586,7 +554,9 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>See also: <a href="#policy_file_modifiers">Policy File's Modification</a></p>
 
-<p>You can specify one of modes shown below for functionalities that start with "CONFIG".</p>
+<h3><a name="profile_CONFIG">CONFIG</a></h3>
+
+<p>Specifies operation modes and whether to generate audit logs or not.</p>
 
 <table border="1">
 <tr><td>Configuration</td><td>Meaning</td></tr>
@@ -600,161 +570,69 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 <tr><td>reject_log=no</td><td>Don't generate reject logs.</td></tr>
 </table>
 
-<h3><a name="profile_CONFIG::file::execute">CONFIG::file::execute</a></h3>
-
-<p>Specifies access control level regarding program execution and domain transition.</p>
-
-<h3><a name="profile_CONFIG::file::open">CONFIG::file::open</a></h3>
-
-<p>Specifies access control level regarding file open for reading and/or writing.</p>
-
-<h3><a name="profile_CONFIG::file::create">CONFIG::file::create</a></h3>
-
-<p>Specifies access control level regarding file create.</p>
-
-<h3><a name="profile_CONFIG::file::unlink">CONFIG::file::unlink</a></h3>
-
-<p>Specifies access control level regarding file delete.</p>
-
-<h3><a name="profile_CONFIG::file::mkdir">CONFIG::file::mkdir</a></h3>
-
-<p>Specifies access control level regarding directory create.</p>
-
-<h3><a name="profile_CONFIG::file::rmdir">CONFIG::file::rmdir</a></h3>
-
-<p>Specifies access control level regarding directory delete.</p>
-
-<h3><a name="profile_CONFIG::file::mkfifo">CONFIG::file::mkfifo</a></h3>
-
-<p>Specifies access control level regarding fifo create.</p>
-
-<h3><a name="profile_CONFIG::file::mksock">CONFIG::file::mksock</a></h3>
-
-<p>Specifies access control level regarding UNIX domain socket create.</p>
-
-<h3><a name="profile_CONFIG::file::truncate">CONFIG::file::truncate</a></h3>
-
-<p>Specifies access control level regarding file truncate.</p>
-
-<h3><a name="profile_CONFIG::file::symlink">CONFIG::file::symlink</a></h3>
-
-<p>Specifies access control level regarding symlink create.</p>
-
-<h3><a name="profile_CONFIG::file::rewrite">CONFIG::file::rewrite</a></h3>
-
-<p>Specifies access control level regarding file overwrite.</p>
-
-<h3><a name="profile_CONFIG::file::mkblock">CONFIG::file::mkblock</a></h3>
-
-<p>Specifies access control level regarding block device file create.</p>
-
-<h3><a name="profile_CONFIG::file::mkchar">CONFIG::file::mkchar</a></h3>
-
-<p>Specifies access control level regarding character device file create.</p>
-
-<h3><a name="profile_CONFIG::file::link">CONFIG::file::link</a></h3>
-
-<p>Specifies access control level regarding link create.</p>
-
-<h3><a name="profile_CONFIG::file::rename">CONFIG::file::rename</a></h3>
-
-<p>Specifies access control level regarding rename.</p>
-
-<h3><a name="profile_CONFIG::file::chmod">CONFIG::file::chmod</a></h3>
-
-<p>Specifies access control level regarding chmod.</p>
-
-<h3><a name="profile_CONFIG::file::chown">CONFIG::file::chown</a></h3>
-
-<p>Specifies access control level regarding chown.</p>
-
-<h3><a name="profile_CONFIG::file::chgrp">CONFIG::file::chgrp</a></h3>
-
-<p>Specifies access control level regarding chgrp.</p>
-
-<h3><a name="profile_CONFIG::file::ioctl">CONFIG::file::ioctl</a></h3>
-
-<p>Specifies access control level regarding ioctl.</p>
-
-<h3><a name="profile_CONFIG::file::chroot">CONFIG::file::chroot</a></h3>
-
-<p>Specifies access control level regarding chroot.</p>
-
-<h3><a name="profile_CONFIG::file::mount">CONFIG::file::mount</a></h3>
-
-<p>Specifies access control level regarding mount.</p>
-
-<h3><a name="profile_CONFIG::file::unmount">CONFIG::file::unmount</a></h3>
-
-<p>Specifies access control level regarding unmount.</p>
-
-<h3><a name="profile_CONFIG::file::pivot_root">CONFIG::file::pivot_root</a></h3>
-
-<p>Specifies access control level regarding pivot_root.</p>
-
-<h3><a name="profile_CONFIG::misc::env">CONFIG::misc::env</a></h3>
-
-<p>Specifies access control level regarding environment variable names (a.k.a. envp[]).</p>
-
-<h3><a name="profile_CONFIG::network::inet_dgram_bind">CONFIG::network::inet_dgram_bind</a></h3>
-
-<p>Specifies access control level regarding UDP socket's local address restriction.</p>
-
-<h3><a name="profile_CONFIG::network::inet_dgram_send">CONFIG::network::inet_dgram_send</a></h3>
-
-<p>Specifies access control level regarding UDP socket's remote address restriction for outgoing packets.</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_bind">CONFIG::network::inet_stream_bind</a></h3>
-
-<p>Specifies access control level regarding TCP socket's bind() operation.</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_listen">CONFIG::network::inet_stream_listen</a></h3>
-
-<p>Specifies access control level regarding TCP socket's listen() operation.</p>
-
-<h3><a name="profile_CONFIG::network::inet_stream_connect">CONFIG::network::inet_stream_connect</a></h3>
-
-<p>Specifies access control level regarding TCP socket's connect() operation.</p>
-
-<h3><a name="profile_CONFIG::network::inet_raw_bind">CONFIG::network::inet_raw_bind</a></h3>
-
-<p>Specifies access control level regarding RAW socket's local address restriction.</p>
-
-<h3><a name="profile_CONFIG::network::inet_raw_send">CONFIG::network::inet_raw_send</a></h3>
-
-<p>Specifies access control level regarding RAW socket's remote address restriction for outgoing packets.</p>
-
-<h3><a name="profile_CONFIG::network::unix_dgram_bind">CONFIG::network::unix_dgram_bind</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's datagram socket's local address restriction.</p>
-
-<h3><a name="profile_CONFIG::network::unix_dgram_send">CONFIG::network::unix_dgram_send</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's datagram socket's remote address restriction for outgoing packets.</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_bind">CONFIG::network::unix_stream_bind</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's stream socket's bind() operation.</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_listen">CONFIG::network::unix_stream_listen</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's stream socket's listen() operation.</p>
-
-<h3><a name="profile_CONFIG::network::unix_stream_connect">CONFIG::network::unix_stream_connect</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's stream socket's connect() operation.</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_bind">CONFIG::network::unix_seqpacket_bind</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's seqpacket socket's bind() operation.</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_listen">CONFIG::network::unix_seqpacket_listen</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's seqpacket socket's listen() operation.</p>
-
-<h3><a name="profile_CONFIG::network::unix_seqpacket_connect">CONFIG::network::unix_seqpacket_connect</a></h3>
-
-<p>Specifies access control level regarding UNIX domain's seqpacket socket's connect() operation.</p>
+<p>You can specify default configuration for all categories and all functionalities.</p>
+
+<table border="1">
+<tr><td>Name</td><td>Meaning</td></tr>
+<tr><td>CONFIG</td><td>Specifies default operation mode if neither per-category nor per-functionality configuration is specified.</td></tr>
+</table>
+
+<p>You can overwrite default configuration by specifying per-category configuration.</p>
+
+<table border="1">
+<tr><td>Name</td><td>Meaning</td></tr>
+<tr><td>CONFIG::file</td><td>Specifies default operation mode for file related operations.</td></tr>
+<tr><td>CONFIG::network</td><td>Specifies default operation mode for network related operations.</td></tr>
+<tr><td>CONFIG::misc</td><td>Specifies default operation mode for other parameters.</td></tr>
+</table>
+
+<p>You can overwrite per-category configuration and default configuration by specifying per-functionality configuration.</p>
+
+<table border="1">
+<tr><td>Name</td><td>Meaning</td></tr>
+<tr><td>CONFIG::file::execute</td><td>Specifies operation mode regarding program execution and domain transition.</td></tr>
+<tr><td>CONFIG::file::open</td><td>Specifies operation mode regarding file open for reading and/or writing.</td></tr>
+<tr><td>CONFIG::file::create</td><td>Specifies operation mode regarding file create.</td></tr>
+<tr><td>CONFIG::file::unlink</td><td>Specifies operation mode regarding file delete.</td></tr>
+<tr><td>CONFIG::file::mkdir</td><td>Specifies operation mode regarding directory create.</td></tr>
+<tr><td>CONFIG::file::rmdir</td><td>Specifies operation mode regarding directory delete.</td></tr>
+<tr><td>CONFIG::file::mkfifo</td><td>Specifies operation mode regarding fifo create.</td></tr>
+<tr><td>CONFIG::file::mksock</td><td>Specifies operation mode regarding UNIX domain socket create.</td></tr>
+<tr><td>CONFIG::file::truncate</td><td>Specifies operation mode regarding file truncate.</td></tr>
+<tr><td>CONFIG::file::symlink</td><td>Specifies operation mode regarding symlink create.</td></tr>
+<tr><td>CONFIG::file::rewrite</td><td>Specifies operation mode regarding file overwrite.</td></tr>
+<tr><td>CONFIG::file::mkblock</td><td>Specifies operation mode regarding block device file create.</td></tr>
+<tr><td>CONFIG::file::mkchar</td><td>Specifies operation mode regarding character device file create.</td></tr>
+<tr><td>CONFIG::file::link</td><td>Specifies operation mode regarding link create.</td></tr>
+<tr><td>CONFIG::file::rename</td><td>Specifies operation mode regarding rename.</td></tr>
+<tr><td>CONFIG::file::chmod</td><td>Specifies operation mode regarding chmod.</td></tr>
+<tr><td>CONFIG::file::chown</td><td>Specifies operation mode regarding chown.</td></tr>
+<tr><td>CONFIG::file::chgrp</td><td>Specifies operation mode regarding chgrp.</td></tr>
+<tr><td>CONFIG::file::ioctl</td><td>Specifies operation mode regarding ioctl.</td></tr>
+<tr><td>CONFIG::file::chroot</td><td>Specifies operation mode regarding chroot.</td></tr>
+<tr><td>CONFIG::file::mount</td><td>Specifies operation mode regarding mount.</td></tr>
+<tr><td>CONFIG::file::unmount</td><td>Specifies operation mode regarding unmount.</td></tr>
+<tr><td>CONFIG::file::pivot_root</td><td>Specifies operation mode regarding pivot_root.</td></tr>
+<tr><td>CONFIG::network::inet_dgram_bind</td><td>Specifies operation mode regarding UDP socket's local address restriction.</td></tr>
+<tr><td>CONFIG::network::inet_dgram_send</td><td>Specifies operation mode regarding UDP socket's remote address restriction for outgoing packets.</td></tr>
+<tr><td>CONFIG::network::inet_stream_bind</td><td>Specifies operation mode regarding TCP socket's bind() operation.</td></tr>
+<tr><td>CONFIG::network::inet_stream_listen</td><td>Specifies operation mode regarding TCP socket's listen() operation.</td></tr>
+<tr><td>CONFIG::network::inet_stream_connect</td><td>Specifies operation mode regarding TCP socket's connect() operation.</td></tr>
+<tr><td>CONFIG::network::inet_stream_accept</td><td>Specifies operation mode regarding TCP socket's accept() operation.</td></tr>
+<tr><td>CONFIG::network::inet_raw_bind</td><td>Specifies operation mode regarding RAW socket's local address restriction.</td></tr>
+<tr><td>CONFIG::network::inet_raw_send</td><td>Specifies operation mode regarding RAW socket's remote address restriction for outgoing packets.</td></tr>
+<tr><td>CONFIG::network::unix_dgram_bind</td><td>Specifies operation mode regarding UNIX domain's datagram socket's local address restriction.</td></tr>
+<tr><td>CONFIG::network::unix_dgram_send</td><td>Specifies operation mode regarding UNIX domain's datagram socket's remote address restriction for outgoing packets.</td></tr>
+<tr><td>CONFIG::network::unix_stream_bind</td><td>Specifies operation mode regarding UNIX domain's stream socket's bind() operation.</td></tr>
+<tr><td>CONFIG::network::unix_stream_listen</td><td>Specifies operation mode regarding UNIX domain's stream socket's listen() operation.</td></tr>
+<tr><td>CONFIG::network::unix_stream_connect</td><td>Specifies operation mode regarding UNIX domain's stream socket's connect() operation.</td></tr>
+<tr><td>CONFIG::network::unix_stream_accept</td><td>Specifies operation mode regarding UNIX domain's stream socket's accept() operation.</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_bind</td><td>Specifies operation mode regarding UNIX domain's seqpacket socket's bind() operation.</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_listen</td><td>Specifies operation mode regarding UNIX domain's seqpacket socket's listen() operation.</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_connect</td><td>Specifies operation mode regarding UNIX domain's seqpacket socket's connect() operation.</td></tr>
+<tr><td>CONFIG::network::unix_seqpacket_accept</td><td>Specifies operation mode regarding UNIX domain's seqpacket socket's accept() operation.</td></tr>
+<tr><td>CONFIG::misc::env</td><td>Specifies operation mode regarding environment variable names (a.k.a. envp[]).</td></tr>
+</table>
 
 <h3><a name="profile_PREFERENCE">PREFERENCE</a></h3>
 
@@ -774,7 +652,13 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>Lines from the next line to a domain definition ( any lines starting with "&lt;kernel&gt;") to the previous line to the next domain definitions are interpreted as access permissions for that domain.</p>
 
-<p>You can specify additional conditions as needed. The syntax for specifying additional conditions are described in <a href="#conditional_acl">Using conditional ACL.</a></p>
+<p>Syntax for permissions is</p>
+
+<table border="1">
+<tr><td>$keyword $mandatory_arguments $conditional_arguments</td></tr>
+</table>
+
+<p>where $keyword specifies type of permission and $mandatory_arguments is parameters required by $keyword. $conditional_arguments is optional parameter and is described in <a href="#conditional_acl">Using conditional ACL.</a></p>
 
 <p>To read or modify current domain policy, operate like below.</p>
 <p>(Example) Selecting specific domain and appending ACLs. The domain will be created if nonexistent.<br>
@@ -909,7 +793,7 @@ file mount /dev/hdc /var/www/ ext2 0xF<br>
 file mount any / --remount 0x0</p>
 
 <h3><a name="domain_policy_file_unmount">file unmount</a></h3>
-<p>To grant unmount request, use file unmount keyword followed by a canonicalized directory.</p>
+<p>To grant unmount request, use file unmount keyword followed by a canonicalized pathname.</p>
 
 <p>(Example)<br>
 file unmount /mnt/cdrom/</p>
@@ -935,13 +819,14 @@ Usually, you don't need this keyword.</p>
 <p>The execve() system call, which is used to execute a program, accepts filename and argv[] and envp[]. Many programs behave differently depending on envp[].</p>
 <p>The purpose of this keyword is to restrict the environment variables passed to an executed programs.</p>
 
-<h3><a name="domain_policy_network">network</a></h3>
+<h3><a name="domain_policy_network_inet">network inet</a></h3>
 
-<p>To grant permission for socket operations, use network keyword followed by protocol(TCP or UDP or RAW) and IP address and port number (for TCP or UDP) / protocol number (for RAW). This permission is applicable to IPv4 and IPv6.</p>
+<p>To grant permission for internet domain's socket operations, use "network inet" keyword followed by protocol(stream or dgram or raw) and IP (IPv4 or IPv6) address and port number (for stream or dgram) / protocol number (for raw).</p>
 <table border="1">
 <tr><td>Keyword</td><td>Permitted operation</td><td>Example</td></tr>
 <tr><td>network inet stream bind</td><td>	Bind to local TCP address/port.</td><td>network inet stream bind 0.0.0.0 80</td></tr>
 <tr><td>network inet stream listen</td><td>Listen to local TCP address/port.</td><td>network inet stream listen 0.0.0.0 80</td></tr>
+<tr><td>network inet stream accept</td><td>Accept from and communicate with remote TCP address/port.</td><td>network inet stream accept 10.0.0.0-10.255.255.255 1024-65535</td></tr>
 <tr><td>network inet stream connect</td><td>Connect to and communicate with remote TCP address/port.</td><td>network inet stream connect 127.0.0.1 1024-65535</td></tr>
 <tr><td>network inet dgram bind</td><td>Bind to local UDP address/port.</td><td>network inet dgram bind 0.0.0.0 53</td></tr>
 
@@ -955,6 +840,14 @@ Usually, you don't need this keyword.</p>
 
 <p>See also:  <a href="#exception_policy_address_group">address_group</a></p>
 
+<h3><a name="domain_policy_network_unix">network unix</a></h3>
+
+<p>To grant permission for unix domain's socket operations, use "network unix" keyword followed by protocol(stream or dgram or seqpacket) and address.</p>
+
+<p>To reduce the labor of repeating same addresses, you can define groups.</p>
+
+<p>See also:  <a href="#exception_policy_path_group">path_group</a></p>
+
 <h3><a name="domain_policy_use_profile">use_profile</a></h3>
 
 <p>This keyword indicates the profile number currently assigned to this domain. The profile number is an integer between 0 and 255.</p>
@@ -967,15 +860,27 @@ Usually, you don't need this keyword.</p>
 
 <p>This domain executes only one program specified by this keyword. You can use this keyword for domains you want to validate parameters before executing the requested program.</p>
 
-<p>If this keyword is specified, only one program specified by this keyword regardless of the mode specified by <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>. Thus, if the pathname specified by this program cannot be executed, no programs can be executed from this domain.</p>
+<p>If this keyword is specified, only one program specified by this keyword regardless of the mode specified by <a href="#profile_CONFIG">CONFIG::file::execute</a>. Thus, if the pathname specified by this program cannot be executed, no programs can be executed from this domain.</p>
 
-<p>See also:  <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
+<p>See also:  <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> <a href="#profile_CONFIG">CONFIG::file::execute</a> <a href="#domain_policy_file_execute">file execute</a></p>
 
 <h3><a name="domain_policy_task_denied_execute_handler">task denied_execute_handler</a></h3>
 
-<p>This domain executes this program only when execute request was rejected and the mode of <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> is enforcing. If this keyword is not specified and the mode of <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a> is enforcing, execute request is rejected.</p>
+<p>This domain executes this program only when execute request was rejected and the mode of <a href="#profile_CONFIG">CONFIG::file::execute</a> is enforcing. If this keyword is not specified and the mode of <a href="#profile_CONFIG">CONFIG::file::execute</a> is enforcing, execute request is rejected.</p>
 
 <p>Exception is, if the <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword is specified, task denied_execute_handler keyword is ignored.</p>
+
+<h3><a name="domain_policy_task_auto_domain_transition">task auto_domain_transition</a></h3>
+
+<p>This keyword is used for automatically triggering domain transition to specified domain when conditions are met. For example, you can make applications to jump to different domain when process's user ID became non-0 (i.e. task.uid!=0) using this keyword.</p>
+
+<p>See also:  <a href="#conditional_acl">Using conditional ACL.</a></p>
+
+<h3><a name="domain_policy_task_manual_domain_transition">task manual_domain_transition</a></h3>
+
+<p>This keyword is used for manually triggering domain transition to specified domain when the domainname is written to /proc/ccs/self_domain interface. You can make applications to jump to specified domain without using execve() system call.</p>
+
+<p>See also:  <a href="#self_domain">/proc/ccs/self_domain</a></p>
 
 <h3><a name="domain_policy_quota_exceeded">quota_exceeded</a></h3>
 
@@ -987,9 +892,9 @@ Usually, you don't need this keyword.</p>
 
 <p>This keyword indicates that some process in this domain was not able to transit to new domain when processing the execute request.</p>
 
-<p>If this domain was assigned a profile with <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing , the execute request was rejected.</p>
+<p>If this domain was assigned a profile with <a href="#profile_CONFIG">CONFIG::file::execute</a>={ mode=enforcing } , the execute request was rejected.</p>
 
-<p>Otherwise, the execute request was not rejected. In that case, the process continued execution without domain transition. Since the reason of transition failure is either "the name of the domain was too long" or "the kernel was unable to allocate memory", you need to consider "suppressing domain transitions" or "increasing memory quota" if you are planning to assign a profile with <a href="#profile_CONFIG::file::execute">CONFIG::file::execute</a>=enforcing to this domain.</p>
+<p>Otherwise, the execute request was not rejected. In that case, the process continued execution without domain transition. Since the reason of transition failure is either "the name of the domain was too long" or "the kernel was unable to allocate memory", you need to consider "suppressing domain transitions" or "increasing memory quota" if you are planning to assign a profile with <a href="#profile_CONFIG">CONFIG::file::execute</a>={ mode=enforcing } to this domain.</p>
 
 <p>See also:  <a href="#exception_policy_keep_domain">keep_domain</a> <a href="#memory_usage_infomation">Memory Usage Information</a></p>
 
@@ -1143,6 +1048,15 @@ network inet stream accept @local-address 1024-65535
 <p>Use this directive when you want to escape from a domain that is kept by "keep_domain" directive.</p>
 
 <p>See also: <a href="#domain_transition">Domain Transition</a> <a href="#exception_policy_keep_domain">keep_domain</a></p>
+
+<h3><a name="exception_policy_deny_autobind">deny_autobind</a></h3>
+
+<p>To prevent specific local port from being selected automatically, use deny_autobind keyword followed by local port number.<br>
+This keyword is intended to prevent specific local port from being bound for temporary use. For example, some proxy server uses local port 8080, so port 8080 should not be bound by other programs for temporary use.</p>
+
+<p>(Example)<br>
+deny_autobind 1-1023<br>
+deny_autobind 8080</p>
 
 <h2><a name="query">/proc/ccs/query</a></h2>
 
@@ -1431,11 +1345,13 @@ chown -R demo /proc/ccs/
 
 <p>This feature is a safeguard to avoid that the CPU usage remains 100% when policy violation occurs in an infinite loop. Usually, making processes sleep for 0.1 second is enough.</p>
 
+<p>This feature is not applied against network's receive operation so that attackers cannot make services sleep for long time (in other words, delay your system's response) by intentionally sending TCP connection requests and UDP packets from unwanted sources.</p>
+
 <h2>6.4 <a name="auto_execute_handler">Judging execute request outside the kernel.</a></h2>
 
-<p>Basically, TOMOYO Linux controls whether to execute a program or not according to the domain policy. You can check parameters using exec.argv and exec.envp described in <a href="#conditional_acl">Using conditional ACL.</a> But this approach support only simple pattern matching and you need to specify what programs are permitted to be executed beforehand.</p>
+<p>Basically, AKARI controls whether to execute a program or not according to the domain policy. You can check parameters using exec.argv and exec.envp described in <a href="#conditional_acl">Using conditional ACL.</a> But this approach support only simple pattern matching and you need to specify what programs are permitted to be executed beforehand.</p>
 
-<p>Therefore, TOMOYO Linux supports a mechanism named <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>. If this mechanism is used, the kernel no longer controls whether to execute a requested program or not, and the kernel merely executes the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> determines whether to execute the requested program or not, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> executes the requested program only if the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> considers it is appropriate.</p>
+<p>Therefore, AKARI supports a mechanism named <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>. If this mechanism is used, the kernel no longer controls whether to execute a requested program or not, and the kernel merely executes the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a>, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> determines whether to execute the requested program or not, and the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> executes the requested program only if the program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> considers it is appropriate.</p>
 
 <p>In Linux, the behavior "execute a program" means "overwrite the process which requested to execute a program with the requested program's image" and "the process which requested to execute a program cannot regain control if the execute request was succeeded". Therefore, the process which requested to execute a program can receive a notification only when the execute request was failed.<br>
 For example, let's consider a situation where a process running as program-A attempts to execute program-B.<br>
@@ -1449,7 +1365,7 @@ The process now running as program-C determines whether it is appropriate to exe
 But, even if <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> is not specified, there are various factors that cause "the execute request was accepted but the program terminated before starting the expected behavior" such as "the process was unable to read shared libraries", "the process received KILL signal", "the system became out of memory and the process was killed by OOM killer". In other words, there are uncertainties between "the execute request did not fail" and "the executed program starts the expected behavior".<br>
 Viewing in this light, there is no guarantee that "the program starts expected behavior unless the process receives a notification that the execution of the program failed" from the beginning. And, it is possible to say that it is an acceptable result that the program-C specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> failed to notify the process previously running as program-A that the execution of program-B failed.</p>
 
-<p>TOMOYO Linux's assumes that the administrator knows what programs needs to be executed from what programs beforehand and permits execution of minimal programs. Thus, assuming that unexpected execute request which are not permitted by policy won't occur as long as the system is running properly, it is OK to accept all execute requests. If an execute request that should not be accepted occurs, you can take different actions such as terminating the process instead of rejecting the request by using <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> mechanism. So, you don't have to let the kernel judge whether to execute the program or not alone.</p>
+<p>AKARI's assumes that the administrator knows what programs needs to be executed from what programs beforehand and permits execution of minimal programs. Thus, assuming that unexpected execute request which are not permitted by policy won't occur as long as the system is running properly, it is OK to accept all execute requests. If an execute request that should not be accepted occurs, you can take different actions such as terminating the process instead of rejecting the request by using <a href="#domain_policy_task_denied_execute_handler">task denied_execute_handler</a> mechanism. So, you don't have to let the kernel judge whether to execute the program or not alone.</p>
 
 <p>Thus, you can let external userland program judge whether to execute the requested program or not occurred from a domain by specifying <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword to the domain.</p>
 <p>If you try to judge inside the kernel, there are few library functions available and it is more likely to fail when allocating contiguous memory area. But if you try to judge outside the kernel, there are many library functions available and it is less likely to fail when allocating contiguous memory area, and you can do more detailed checking. So, you can let external userland program specified by <a href="#domain_policy_task_auto_execute_handler">task auto_execute_handler</a> keyword examine parameters and let the program execute the requested program only if parameters are appropriate.</p>
@@ -1493,7 +1409,7 @@ Viewing in this light, there is no guarantee that "the program starts expected b
 
 <h2>6.5 <a name="denied_execute_handler">Invoking alternative program for execute requests that are not permitted by policy.</a></h2>
 
-<p>TOMOYO Linux's approach is "know what programs needs to be executed from what programs beforehand and create policy that permits execution of minimal programs". Thus, you can not only reject unnecessary execution requests but also do different behavior.</p>
+<p>AKARI's approach is "know what programs needs to be executed from what programs beforehand and create policy that permits execution of minimal programs". Thus, you can not only reject unnecessary execution requests but also do different behavior.</p>
 
 <p>By default, if an execute request of a program which is not permitted by file execute keyword occurs in enforcing mode, the kernel rejects the execute request. But assuming that you know what programs needs to be executed from what programs beforehand, an execute request of a program which is not permitted by file execute keyword will not occur as long as the process is keeping control, and you can regard that the process is not keeping control (in other words, the process already lost control) if such request occurs.</p>
 
@@ -1505,7 +1421,7 @@ In Linux, "execute a program" means that the current process is overwritten by t
 <p>The control of a process which has once lost control by the attacker and is overwritten by a program requested by the attacker depends on the program used for overwriting. If a program like shells is executed, the control remains on the attacker's side (in other words, the owner of the process) because shells accept whatever the user requested. But if a program which terminates silently (e.g. /bin/true) is executed, the control will not remains on the attacker's side because the process owned by the attacker will terminate immediately.</p>
 
 <p>As described above, an event that "an execute request of an unnecessary program is issued by an attacker" depending on how you look at it. You can consider that "the attacker is giving the system a chance to get back control on the system's side".<br>
-Thus, TOMOYO Linux provides a mechanism that executes different program instead of merely rejecting the request when an execute request of a program which is not permitted by policy occurs. How to utilize this mechanism is up to you.</p>
+Thus, AKARI provides a mechanism that executes different program instead of merely rejecting the request when an execute request of a program which is not permitted by policy occurs. How to utilize this mechanism is up to you.</p>
 
 <p>For example, you can replace the execute request of a program which is not permitted by the policy with /bin/true so that the process which requested the execution of a program which is not permitted by the policy will terminate immediately.</p>
 
@@ -1521,10 +1437,20 @@ Thus, TOMOYO Linux provides a mechanism that executes different program instead 
 
 <table border="1">
 <tr><td>Example of /proc/ccs/profile</td><td>Example of /proc/ccs/domain_policy</td><td>Meaning</td></tr>
-<tr><td>3-CONFIG::file::execute=enforcing</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>If a process which belongs to a domain with profile 3 requested execution of a program which is not permitted by the domain policy, execute /bin/true instead of rejecting the execute request.</td></tr>
+<tr><td>3-CONFIG::file::execute={ mode=enforcing }</td><td>use_profile 3<br>task denied_execute_handler /bin/true</td><td>If a process which belongs to a domain with profile 3 requested execution of a program which is not permitted by the domain policy, execute /bin/true instead of rejecting the execute request.</td></tr>
 </table>
 
 <p>Notes on this feature is the same as <a href="#auto_execute_handler">Judging execute request outside the kernel.</a></p>
+
+<h2>6.6 <a name="manual_domain_transition">Performing domain transition without program execution request.</a></h2>
+
+<p>You can transit to domains specified by <a href="#domain_policy_task_manual_domain_transition">"task manual_domain_transition"</a> keyword by writing domainnames specified by that keyword to /proc/ccs/self_domain interface. This feature is useful for dividing permissions without calling execve() system call, at the cost of inserting a few lines (for writing domainnames to /proc/ccs/self_domain) to application and rebuild the application.</p>
+
+<h2>6.7 <a name="auto_domain_transition">Performing domain transition automatically when conditions are met.</a></h2>
+
+<p>You can automatically transit to domains specified by <a href="#domain_policy_task_auto_domain_transition">"task auto_domain_transition"</a> keyword. This feature is useful for dividing permissions without calling execve() system call.</p>
+
+<p>Be sure to specify conditions (e.g. task.uid!=0) to "task auto_domain_transition" entries.</p>
 
 <hr>
 

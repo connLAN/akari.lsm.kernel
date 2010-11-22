@@ -67,13 +67,13 @@
 <tr><td colspan=10>再起動回数を減らす機能</td></tr>
 <tr><td></td><td>ガベージコレクションによるメモリ解放</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>Apacheのバーチャルホストに対応する機能</td></tr>
-<tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可</td><td>○</td><td colspan=3>○</td><td colspan=3>○<a href="#note5">（*5）</a></td><td></td></tr>
+<tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>より詳細なアクセス許可を指定する機能</td></tr>
 <tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>ファイルの所有者ＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>暴走によるダメージを減らす機能</td></tr>
 <tr><td></td><td>スリープペナルティ機能（ enforcing_penalty ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
-<tr><td></td><td>execute handler 機能（ task {auto_execute_handler,denied_execute_handler} ）</td><td>○</td><td colspan=3>○</td><td colspan=3>○<a href="#note6">（*6）</a></td><td></td></tr>
+<tr><td></td><td>execute handler 機能（ task {auto_execute_handler,denied_execute_handler} ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>アクセスログを取得する機能</td></tr>
 <tr><td></td><td>ポリシー違反のメール通知</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>許可ログ／拒否ログの取得</td><td>○</td><td colspan=6>○</td><td></td></tr>
@@ -160,8 +160,6 @@
 <li><a name="note2">*2</a>: nosuid,nodev,noexec などの幾つかのマウントオプションはチェックできません。</li>
 <li><a name="note3">*3</a>: CONFIG_SECURITY_NETWORK=y の状態で作成されている場合に限ります。</li>
 <li><a name="note4">*4</a>: パーミッションのチェックは accept() されたソケットが初めて使われるタイミングで行われます。</li>
-<li><a name="note5">*5</a>: プログラムの実行を伴わないドメイン遷移の効果は子プロセスへは継承されません。</li>
-<li><a name="note6">*6</a>: execute handler か否かの情報は子プロセスへは継承されません。</li>
 </ul>
 
 <hr>

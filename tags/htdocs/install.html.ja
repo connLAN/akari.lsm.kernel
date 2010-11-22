@@ -47,10 +47,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.4-20101111.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.4-20101111.tar.gz'<br>
-# wget -O akari-1.0.4-20101111.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.4-20101111.tar.gz.asc'<br>
-# gpg akari-1.0.4-20101111.tar.gz.asc<br>
-# tar -zxf akari-1.0.4-20101111.tar.gz<br>
+# wget -O akari-1.0.5-20101122.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.5-20101122.tar.gz'<br>
+# wget -O akari-1.0.5-20101122.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.5-20101122.tar.gz.asc'<br>
+# gpg akari-1.0.5-20101122.tar.gz.asc<br>
+# tar -zxf akari-1.0.5-20101122.tar.gz<br>
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
@@ -91,10 +91,9 @@ This version is not supported because I cannot resolve vfsmount_lock .
 <table border="1">
 <tr><td>
 # cd /tmp/<br>
-# wget -O ccs-tools-1.8.0-20101111.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101111.tar.gz'<br>
-# tar -zxf ccs-tools-1.8.0-20101111.tar.gz<br>
+# wget -O ccs-tools-1.8.0-20101122.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101122.tar.gz'<br>
+# tar -zxf ccs-tools-1.8.0-20101122.tar.gz<br>
 # cd ccstools/<br>
-# sed -i -e 's/if (!strcmp(cp, "network")) {$/if (!strcmp(cp, "network")) { printf("network ");/' usr_sbin/ccs-patternize.c<br>
 # make -s<br>
 # make -s install<br>
 # ldconfig

@@ -53,3 +53,7 @@ Version 1.0.4   2010/11/11   Minor update release.
    Changed pathname prefix priority.
    Use hash table for faster scan.
    Updated function comments.
+
+Version 1.0.5   2010/11/22   Minor update release.
+
+   Make ccs_domain_info/ccs_flags inheritable for 2.6.29 and later kernels.

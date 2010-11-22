@@ -67,13 +67,13 @@ Requires kernel 2.6.36 or later.<br>
 <tr><td colspan=10>Features for reducing reboots</td></tr>
 <tr><td></td><td>Memory reclaimed by garbage collection?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for supporting Apache's virtual hosts</td></tr>
-<tr><td></td><td>Allow domain transitions without program execution?</td><td>Y</td><td colspan=3>Y</td><td colspan=3>Y<a href="#note5">(*5)</a></td><td></td></tr>
+<tr><td></td><td>Allow domain transitions without program execution?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td colspan=10>Features for specifying more fine grained permissions</td></tr>
 <tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>Restrict based on file's credentials (e.g. owner ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td colspan=10>Features for reducing damage by runaway</td></tr>
 <tr><td></td><td>Sleep penalty (enforcing_penalty)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
-<tr><td></td><td>execute handler (task {auto_execute_handler,denied_execute_handler})</td><td>Y</td><td colspan=3>Y</td><td colspan=3>Y<a href="#note6">(*6)</a></td><td></td></tr>
+<tr><td></td><td>execute handler (task {auto_execute_handler,denied_execute_handler})</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td colspan=10>Features for obtaining access logs</td></tr>
 <tr><td></td><td>Notify of policy violation using mail?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Generate access granted logs/rejected logs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
@@ -160,8 +160,6 @@ Requires kernel 2.6.36 or later.<br>
 <li><a name="note2">*2</a>: Some mount flags (e.g. nosuid,nodev,noexec) cannot be checked.</li>
 <li><a name="note3">*3</a>: Only when built with CONFIG_SECURITY_NETWORK=y.</li>
 <li><a name="note4">*4</a>: Timing to check is deferred until the accept()ed socket is used for the first time.</li>
-<li><a name="note5">*5</a>: The effect of domain transition without program execution cannot be inherited by child process.</li>
-<li><a name="note6">*6</a>: The execute handler flag cannot be inherited by child process.</li>
 </ul>
 
 <hr>

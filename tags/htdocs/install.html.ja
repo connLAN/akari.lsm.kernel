@@ -92,6 +92,8 @@ This version is not supported because I cannot resolve vfsmount_lock .
 <tr><td>
 # cd /tmp/<br>
 # wget -O ccs-tools-1.8.0-20101122.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101122.tar.gz'<br>
+# wget -O ccs-tools-1.8.0-20101122.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101122.tar.gz.asc'<br>
+# gpg ccs-tools-1.8.0-20101122.tar.gz.asc<br>
 # tar -zxf ccs-tools-1.8.0-20101122.tar.gz<br>
 # cd ccstools/<br>
 # make -s<br>

@@ -41,11 +41,16 @@
 
 <p><img src="editpolicy-domain-list1.png" width="720" height="400"></p>
 
-<p>この画面には、ドメインツリーが表示されています。現時点では、 &lt;kernel&gt; ドメインだけが定義されています。しかし、システムが動作するにつれて、 AKARI は新しいドメインを作成してこのツリーに追加していきます。</p>
+<p>この画面には、ドメインツリーが表示されています。現時点では、 &lt;kernel&gt; ドメインだけが定義されています。しかし、システムが動作するにつれて、 AKARI は新しいドメインを作成してこのツリーに追加していきます。以下の画面ではたくさんのドメインが定義されています。</p>
 
-<p>赤枠で囲まれた数字に注目してください。</p>
+<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
+
+<p>AKARI における強制アクセス制御はドメインを単位として適用されます。全てのプロセスは１個のドメインに属しており、原則としてプログラムが実行される度に異なるドメインへと遷移します。ドメインの名前はプロセスの実行履歴として連結された文字列です。例えば、カーネルが属するドメインの名前は &lt;kernel&gt; 、カーネルから起動された /sbin/init が属するドメインの名前は &lt;kernel&gt; /sbin/init 、 /sbin/init から起動された /etc/rc.d/rc が属するドメインの名前は &lt;kernel&gt; /sbin/init /etc/rc.d/rc となります。この遷移規則の例外については後述します。</p>
+
+<p>各行の２番目の数字に注目してください。</p>
 
 <p><img src="editpolicy-domain-profile-number.png" width="720" height="400"></p>
+
 <p>この数字はプロファイル番号と呼ばれるものです。プロファイル番号は０～２５５の整数値をとります。</p>
 
 <p>w キーを押すと、選択肢が表示されます。</p>
@@ -127,12 +132,8 @@
 </td></tr><tr><td>
 (6) ドメイン遷移の例外
 </td><td>
-<p>AKARI による解析／保護はドメインを単位として適用されます。全てのプロセスは１個のドメインに属しており、原則としてプログラムが実行される度に異なるドメインへと遷移します。ドメインの名前はプロセスの実行履歴として連結された文字列です。例えば、カーネルが属するドメインの名前は &lt;kernel&gt; 、カーネルから起動された /sbin/init が属するドメインの名前は &lt;kernel&gt; /sbin/init 、 /sbin/init から起動された /etc/rc.d/rc が属するドメインの名前は &lt;kernel&gt; /sbin/init /etc/rc.d/rc となります。ただし、必要以上にドメイン名が長くなってしまうことを避けるために、必要に応じてドメイン遷移を抑制したり初期化したりすることができます。</p>
-
-<p>initialize_domain というキーワードを使用して、ドメイン遷移履歴をリセットするプログラムを指定することができます。例えば、 initialize_domain /usr/sbin/sshd という指定が行われている場合、 /usr/sbin/sshd は &lt;kernel&gt; /usr/sbin/sshd というドメインで動作するようになります。以下の画面ではたくさんのドメインが定義されていますが、初期化スクリプトやデーモンプロセスに対して initialize_domain というキーワードを指定することによりドメイン遷移を初期化しています。</p>
-
-<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
-
+<p>AKARI では原則としてプログラムが実行されるたびにドメイン遷移が発生しますが、必要に応じてドメイン遷移を抑制したり初期化したりすることができます。</p>
+<p>initialize_domain というキーワードを使用して、ドメイン遷移履歴をリセットするプログラムを指定することができます。例えば、 initialize_domain /usr/sbin/sshd という指定が行われている場合、 /usr/sbin/sshd は &lt;kernel&gt; /usr/sbin/sshd というドメインで動作するようになります。</p>
 <p>no_initialize_domain というキーワードを使うことで、 initialize_domain キーワードの効果を打ち消すことができます。特定の条件下ではドメイン遷移を初期化させたくない場合に使用します。</p>
 <p>keep_domain というキーワードを使用して、ドメイン遷移を行わないドメインを指定することができます。例えば、 keep_domain &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh という指定が行われている場合、 &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh というドメインに属しているプロセスは、 initialize_domain または no_keep_domain というキーワードで指定されたプログラムが実行されない限り、そのドメインに留まります。</p>
 <p>no_keep_domain というキーワードを使うことで、 keep_domain キーワードの効果を打ち消すことができます。特定の条件下でドメイン遷移を行わせたい場合に使用します。</p>

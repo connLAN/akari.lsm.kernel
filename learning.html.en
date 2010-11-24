@@ -33,12 +33,6 @@
 
 <p>Let's start AKARI's policy editor. Please note that this time, you don't need to pass /etc/ccs/ to the command line, for we directly edits AKARI's policy currently used by the kernel.</p>
 
-<table border="1">
-<tr><td>
-[root@akari ~]# ccs-editpolicy
-</td></tr>
-</table>
-
 <p>In the CentOS 5.5 , Apache's program's location is /usr/sbin/httpd .<br>
 Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line /usr/sbin/httpd . In this picture, it is line 398.</p>
 

@@ -41,13 +41,9 @@
 
 <p><img src="editpolicy-domain-list1.png" width="720" height="400"></p>
 
-<p>This picture describes the domain tree. As of now, only "&lt;kernel&gt;" domain is defined. But as the system runs, AKARI will create domains and add them to the tree. The example picture shown below has many domains.</p>
+<p>This picture describes the domain tree. As of now, only "&lt;kernel&gt;" domain is defined. But as the system runs, AKARI will create domains and add them to the tree.</p>
 
-<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
-
-<p>The access analysis/restriction in AKARI is applied in the units of domains. Every process belongs to single domain, and basically the process will transit to different domain whenever it executes a program. The name of a domain is a concatenated string expression for the process execution history. For example, the name of domain which the kernel belongs to is "&lt;kernel&gt;", the name of domain which /sbin/init invoked by the kernel belongs to is "&lt;kernel&gt; /sbin/init", the name of domain which /etc/rc.d/rc invoked by the /sbin/init belongs to is "&lt;kernel&gt; /sbin/init /etc/rc.d/rc". The exceptions of this transition rule are described later.</p>
-
-<p>Look at the number which are the second column of each line.</p>
+<p>Look at the number which is surrounded by a red border.</p>
 
 <p><img src="editpolicy-domain-profile-number.png" width="720" height="400"></p>
 
@@ -132,8 +128,13 @@
 </td></tr><tr><td>
 (6) Domain transition exceptions
 </td><td>
-<p>Basically, domain transition occurs whenever a program is executed. But you can suppress or initialize domain transitions as needed.</p>
-<p>You can specify programs that initialize the domain transition history using "initialize_domain" directive. For example, if "initialize_domain /usr/sbin/sshd" is specified, /usr/sbin/sshd will run under "&lt;kernel&gt; /usr/sbin/sshd" domain.</p>
+
+<p>The access analysis/restriction in AKARI is applied in the units of domains. Every process belongs to single domain, and basically the process will transit to different domain whenever it executes a program. The name of a domain is a concatenated string expression for the process execution history. For example, the name of domain which the kernel belongs to is "&lt;kernel&gt;", the name of domain which /sbin/init invoked by the kernel belongs to is "&lt;kernel&gt; /sbin/init", the name of domain which /etc/rc.d/rc invoked by the /sbin/init belongs to is "&lt;kernel&gt; /sbin/init /etc/rc.d/rc". However, in order to prevent names of domains from becoming too long, you can suppress or initialize domain transitions as needed.</p>
+
+<p>You can specify programs that initialize the domain transition history using "initialize_domain" directive. For example, if "initialize_domain /usr/sbin/sshd" is specified, /usr/sbin/sshd will run under "&lt;kernel&gt; /usr/sbin/sshd" domain. The example picture shown below has many domains. In order to make names shorter, "initialize_domain" directive is specified against init scripts and daemon programs.</p>
+
+<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
+
 <p>You can deny the effect of "initialize_domain" directive using "no_initialize_domain" directive. You can use "no_initialize_domain" directive when you don't want to initialize domain transition history under specific conditions.</p>
 <p>You can specify domains that suppress domain transition using "keep_domain" directive. For example, if "keep_domain &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh" is specified, any process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/tcsh" domain stays at that domain unless programs specified using "initialize_domain" directive are executed.</p>
 <p>You can deny the effect of "keep_domain" directive using "no_keep_domain" directive. You can use "no_keep_domain" directive when you don't want to suppress domain transition under specific conditions.</p>

@@ -33,6 +33,12 @@
 
 <p>AKARI のポリシーエディタを実行してください。今回は現在カーネル内に存在しているポリシーを直接編集するので、 /etc/ccs/ というコマンドラインオプションを指定していないことに注意してください。</p>
 
+<table border="1">
+<tr><td>
+[root@akari ~]# ccs-editpolicy
+</td></tr>
+</table>
+
 <p>CentOS 5.5 では、 Apache プログラムパス名は /usr/sbin/httpd です。<br>
 矢印キーや Home/End/PageUp/PageDown キーを使ってカーソルをスクロールして、 /usr/sbin/httpd の行を見つけてください。この絵では 398 行目です。</p>
 

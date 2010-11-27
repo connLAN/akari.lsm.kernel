@@ -2025,7 +2025,7 @@ static int __init ccs_kernel_read(struct file *file, unsigned long offset,
  *
  * @keyline: Function to find.
  *
- * Returns address if specified function on success, NULL otherwise.
+ * Returns address of specified function on success, NULL otherwise.
  */
 static void *__init ccs_find_symbol(const char *keyline)
 {

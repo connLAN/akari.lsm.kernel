@@ -7,19 +7,33 @@
  * associated with processes by this module) from LSM hooks which take
  * "struct task_struct *" in their arguments.
  *
- * The isolation rule is simple. For each arbitrary process 'T1' and 'T2',
+ * There are two id named 'id1' and 'id2'.
+ * 'id2' cannot be obtained before obtaining 'id1'.
+ * Any process is classified as one of three states listed below.
  *
- *   (1) T1 and T2 cannot operate (e.g. ptrace()) on each other if
- *       both T1 and T2 have a session id but their session id is different.
+ *   "unrestricted" state holds neither 'id1' nor 'id2'.
+ *   "half-restricted" state holds only 'id1'.
+ *   "restricted" state holds both 'id1' and 'id2'.
  *
- *   (2) T1 and T2 can operate (e.g. ptrace()) on each other otherwise.
+ * Operations (e.g. ptrace()) on objective thread by subjective thread are
+ * granted in below rules.
  *
- * A process is permitted to obtain a session id (if not yet obtained one) by
- * opening /proc/uuid interface (e.g. doing ": < /proc/uuid" from bash).
- * If a session id was successfully obtained, the process is isolated from
- * other processes which have different session id. The session id cannot be
- * changed after once obtained and is automatically inherited to child
- * processes created afterward.
+ *           |      Subjective | unrestricted | half restricted | restricted
+ * ----------+-----------------+--------------+-----------------+-------------
+ * Objective | unrestricted    |  always      | always          | never
+ *           | half restricted |  always      | same id1        | same id1
+ *           | restricted      |  always      | same id1        | same id1/id2
+ *
+ * A process is permitted to obtain 'id1' (if not yet obtained one) by
+ * opening /proc/uuid1 interface (e.g. doing ": < /proc/uuid1" from bash).
+ * If 'id1' was successfully obtained, the process transits from "unrestricted"
+ * state to "half restricted" state. Likewise, a process is permitted to obtain
+ * 'id2' (if not yet obtained one) by opening /proc/uuid2 interface (e.g. doing
+ * ": < /proc/uuid2" from bash). If 'id2' was successfully obtained,
+ * the process transits from "half restricted" state to "restricted" state.
+ *
+ * The 'id1'/'id2' cannot be changed after once obtained and are automatically
+ * inherited to child processes created afterward.
  *
  * To compile, put this file on some directory under kernel's source directory
  * (e.g. uuid/ directory) and do "echo 'obj-m := uuid.o' > uuid/Makefile" and
@@ -124,7 +138,8 @@
 struct uuid_security {
 	struct list_head list;
 	const struct cred *cred;
-	u32 id;
+	u32 id1;
+	u32 id2;
 	struct rcu_head rcu;
 };
 
@@ -196,7 +211,8 @@ static int uuid_copy_security(const struct cred *new, const struct cred *old,
 	new_security = kzalloc(sizeof(*new_security), gfp);
 	if (!new_security)
 		return -ENOMEM;
-	new_security->id = old_security->id;
+	new_security->id1 = old_security->id1;
+	new_security->id2 = old_security->id2;
 	new_security->cred = new;
 	uuid_add_security(new_security);
 	return 0;
@@ -354,7 +370,8 @@ static void uuid_cred_transfer(struct cred *new, const struct cred *old)
 	old_security = uuid_find_security(old);
 	if (!new_security || !old_security)
 		return;
-	new_security->id = old_security->id;
+	new_security->id1 = old_security->id1;
+	new_security->id2 = old_security->id2;
 }
 
 #endif
@@ -408,8 +425,16 @@ static bool uuid_check_task(struct task_struct *task, const char *func)
 	if (!uuid_current)
 		goto ok;
 	uuid_task = uuid_find_security(__task_cred(task));
-	if (!uuid_task || uuid_task->id == uuid_current->id)
-		goto ok;
+	if (!uuid_current->id2) {
+		if (!uuid_task)
+			goto ok;
+		if (uuid_task->id1 == uuid_current->id1)
+			goto ok;
+	} else {
+		if (uuid_task && uuid_task->id1 == uuid_current->id1 &&
+		    (!uuid_task->id2 || uuid_task->id2 == uuid_current->id2))
+			goto ok;
+	}
 	{
 		static pid_t uuid_last_pid;
 		const pid_t pid = current->pid;
@@ -1067,7 +1092,7 @@ static void __init uuid_update_security_ops(struct security_operations *ops)
 #undef swap_security_ops
 
 /**
- * uuid_open - open() for /proc/uuid interface.
+ * uuid_open - open() for /proc/uuid1 and /proc/uuid2 interface.
  *
  * @inode: Pointer to "struct inode".
  * @file:  Pointer to "struct file".
@@ -1077,11 +1102,13 @@ static void __init uuid_update_security_ops(struct security_operations *ops)
 static int uuid_open(struct inode *inode, struct file *file)
 {
 	static DEFINE_MUTEX(mutex);
+	const bool is_id1 = (bool) PDE(inode)->data;
 	u32 loop;
 	int rc = -ENOMEM;
 	const struct cred *cred = current_cred();
 	struct uuid_security *ptr;
-	struct uuid_security *uuid = kzalloc(sizeof(*uuid), GFP_KERNEL);
+	struct uuid_security *uuid = is_id1 ?
+		kzalloc(sizeof(*uuid), GFP_KERNEL) : NULL;
 	if (mutex_lock_interruptible(&mutex)) {
 		kfree(uuid);
 		return -EINTR;
@@ -1096,7 +1123,7 @@ static int uuid_open(struct inode *inode, struct file *file)
 		goto out;
 #endif
 	ptr = uuid_find_security(cred);
-	{
+	if (is_id1) {
 		/*
 		 * Reject if "struct uuid_security" was already associated with
 		 * "struct cred".
@@ -1108,17 +1135,37 @@ static int uuid_open(struct inode *inode, struct file *file)
 		if (!uuid)
 			goto out;
 		uuid->cred = cred;
+	} else {
+		/*
+		 * Reject if "struct uuid_security" was not yet associated with
+		 * "struct cred".
+		 */
+		if (!ptr) {
+			rc = -EINVAL;
+			goto out;
+		}
+		/* Reject if id2 was already assigned. */
+		if (ptr->id2) {
+			rc = -EEXIST;
+			goto out;
+		}
+		uuid = ptr;
 	}
 	/* Find an unused id. */
 	for (loop = 1; loop; loop++) {
-		static u32 id;
+		static u32 id[2];
 		int idx;
-		uuid->id = id++;
+		if (is_id1)
+			uuid->id1 = id[0]++;
+		else /* id2 == 0 is reserved. */
+			while (!++id[1]);
 		rcu_read_lock();
 		for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++) {
 			struct list_head *list = &uuid_security_list[idx];
 			list_for_each_entry_rcu(ptr, list, list) {
-				if (ptr->id != uuid->id)
+				if (ptr->id1 != uuid->id1)
+					continue;
+				if (!is_id1 && ptr->id2 != id[1])
 					continue;
 				goto in_use;
 			}
@@ -1131,10 +1178,17 @@ in_use:
 				break;
 			continue;
 		}
-		/* Associate "struct uuid_security" with "struct cred". */
-		uuid_add_security(uuid);
-		printk(KERN_INFO "Allocating id=%u to '%s' (pid=%u)\n",
-		       id, current->comm, current->pid);
+		if (is_id1)
+			/*
+			 * Associate "struct uuid_security" with "struct cred"
+			 * with id2 == 0.
+			 */
+			uuid_add_security(uuid);
+		else
+			/* Assign id2 in "struct uuid_security". */
+			uuid->id2 = id[1];
+		printk(KERN_INFO "Allocating id%u=%u to '%s' (pid=%u)\n",
+		       !is_id1 + 1, id[!is_id1], current->comm, current->pid);
 		rc = 0;
 		uuid = NULL;
 		break;
@@ -1142,11 +1196,12 @@ in_use:
 	/* No unused session id was found. */
 out:
 	mutex_unlock(&mutex);
-	kfree(uuid);
+	if (is_id1)
+		kfree(uuid);
 	return rc;
 }
 
-/* Operations for /proc/uuid interface. */
+/* Operations for /proc/uuid1 and /proc/uuid2 interface. */
 static
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 17)
 const
@@ -1169,12 +1224,19 @@ static int __init uuid_init(void)
 		return -EINVAL;
 	for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&uuid_security_list[idx]);
-	entry = create_proc_entry("uuid", 0600, NULL);
+	entry = create_proc_entry("uuid1", 0600, NULL);
 	if (!entry)
 		return -EINVAL;
 	entry->proc_fops = &uuid_operations;
+	entry->data = (void *) 1;
+	entry = create_proc_entry("uuid2", 0600, NULL);
+	if (!entry) {
+		remove_proc_entry("uuid1", NULL);
+		return -EINVAL;
+	}
+	entry->proc_fops = &uuid_operations;
 	uuid_update_security_ops(ops);
-	printk(KERN_INFO "UUID: 0.0.0   2010/11/30\n");
+	printk(KERN_INFO "UUID: 0.0.0   2010/12/01\n");
 	return 0;
 }
 

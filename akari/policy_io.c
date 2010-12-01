@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0   2010/11/11
+ * Version: 1.8.0+   2010/12/01
  */
 
 #include "internal.h"
@@ -257,8 +257,7 @@ const char * const ccs_condition_keyword[CCS_MAX_CONDITION_KEYWORD] = {
 
 /* String table for PREFERENCE keyword. */
 static const char * const ccs_pref_keywords[CCS_MAX_PREF] = {
-	[CCS_PREF_MAX_GRANT_LOG]      = "max_grant_log",
-	[CCS_PREF_MAX_REJECT_LOG]     = "max_reject_log",
+	[CCS_PREF_MAX_AUDIT_LOG]      = "max_audit_log",
 	[CCS_PREF_MAX_LEARNING_ENTRY] = "max_learning_entry",
 	[CCS_PREF_ENFORCING_PENALTY]  = "enforcing_penalty",
 };
@@ -273,7 +272,7 @@ static bool ccs_manage_by_non_root;
  *
  * Returns "yes" if @value is not 0, "no" otherwise.
  */
-static const char *ccs_yesno(const unsigned int value)
+const char *ccs_yesno(const unsigned int value)
 {
 	return value ? "yes" : "no";
 }
@@ -442,10 +441,8 @@ static struct ccs_profile *ccs_assign_profile(const unsigned int profile)
 			CCS_CONFIG_WANT_GRANT_LOG | CCS_CONFIG_WANT_REJECT_LOG;
 		memset(ptr->config, CCS_CONFIG_USE_DEFAULT,
 		       sizeof(ptr->config));
-		ptr->pref[CCS_PREF_MAX_GRANT_LOG] =
-			CONFIG_CCSECURITY_MAX_GRANT_LOG;
-		ptr->pref[CCS_PREF_MAX_REJECT_LOG] =
-			CONFIG_CCSECURITY_MAX_REJECT_LOG;
+		ptr->pref[CCS_PREF_MAX_AUDIT_LOG] =
+			CONFIG_CCSECURITY_MAX_AUDIT_LOG;
 		ptr->pref[CCS_PREF_MAX_LEARNING_ENTRY] =
 			CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY;
 		mb(); /* Avoid out-of-order execution. */
@@ -488,7 +485,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0   2010/11/11\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2010/12/11\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -2144,7 +2141,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 	va_start(args, fmt);
 	len = vsnprintf((char *) &len, 1, fmt, args) + 1;
 	va_end(args);
-	/* Write /proc/ccs/grant_log or /proc/ccs/reject_log. */
+	/* Write /proc/ccs/audit. */
 	va_start(args, fmt);
 	ccs_write_log2(r, len, fmt, args);
 	va_end(args);
@@ -2557,8 +2554,7 @@ int ccs_open_control(const u8 type, struct file *file)
 		head->write = ccs_write_exception;
 		head->read = ccs_read_exception;
 		break;
-	case CCS_GRANTLOG: /* /proc/ccs/grant_log */
-	case CCS_REJECTLOG: /* /proc/ccs/reject_log */
+	case CCS_AUDIT: /* /proc/ccs/audit */
 		head->poll = ccs_poll_log;
 		head->read = ccs_read_log;
 		break;
@@ -2644,9 +2640,8 @@ int ccs_open_control(const u8 type, struct file *file)
 	 */
 	if (type == CCS_QUERY)
 		atomic_inc(&ccs_query_observers);
-	else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG &&
-		 type != CCS_VERSION && type != CCS_MEMINFO &&
-		 type != CCS_STAT)
+	else if (type != CCS_AUDIT && type != CCS_VERSION &&
+		 type != CCS_MEMINFO && type != CCS_STAT)
 		head->reader_idx = ccs_lock();
 	file->private_data = head;
 	return 0;
@@ -2662,8 +2657,7 @@ int ccs_open_control(const u8 type, struct file *file)
  *
  * Waits for read readiness.
  * /proc/ccs/query is handled by /usr/sbin/ccs-queryd and
- * /proc/ccs/grant_log and /proc/ccs/reject_log are handled by
- * /usr/sbin/ccs-auditd.
+ * /proc/ccs/audit is handled by /usr/sbin/ccs-auditd.
  */
 int ccs_poll_control(struct file *file, poll_table *wait)
 {
@@ -2801,9 +2795,8 @@ int ccs_close_control(struct file *file)
 	if (type == CCS_QUERY) {
 		if (atomic_dec_and_test(&ccs_query_observers))
 			wake_up_all(&ccs_answer_wait);
-	} else if (type != CCS_GRANTLOG && type != CCS_REJECTLOG &&
-		   type != CCS_VERSION && type != CCS_MEMINFO &&
-		   type != CCS_STAT)
+	} else if (type != CCS_AUDIT && type != CCS_VERSION &&
+		   type != CCS_MEMINFO && type != CCS_STAT)
 		ccs_unlock(head->reader_idx);
 	/* Release memory used for policy I/O. */
 	kfree(head->read_buf);

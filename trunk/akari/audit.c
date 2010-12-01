@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0   2010/11/11
+ * Version: 1.8.0+   2010/12/01
  */
 
 #include "internal.h"
@@ -183,11 +183,12 @@ static char *ccs_print_header(struct ccs_request_info *r)
 	}
 	pos = snprintf(buffer, ccs_buffer_len - 1,
 		       "#%04u/%02u/%02u %02u:%02u:%02u# profile=%u mode=%s "
-		       "(global-pid=%u) task={ pid=%u ppid=%u uid=%u gid=%u "
-		       "euid=%u egid=%u suid=%u sgid=%u fsuid=%u fsgid=%u "
-		       "type%s=execute_handler }", stamp.year, stamp.month,
-		       stamp.day, stamp.hour, stamp.min, stamp.sec, r->profile,
-		       ccs_mode[r->mode], gpid, ccs_sys_getpid(),
+		       "granted=%s (global-pid=%u) task={ pid=%u ppid=%u "
+		       "uid=%u gid=%u euid=%u egid=%u suid=%u sgid=%u "
+		       "fsuid=%u fsgid=%u type%s=execute_handler }",
+		       stamp.year, stamp.month, stamp.day, stamp.hour,
+		       stamp.min, stamp.sec, r->profile, ccs_mode[r->mode],
+		       ccs_yesno(r->granted), gpid, ccs_sys_getpid(),
 		       ccs_sys_getppid(), current_uid(), current_gid(),
 		       current_euid(), current_egid(), current_suid(),
 		       current_sgid(), current_fsuid(), current_fsgid(),
@@ -355,11 +356,8 @@ static void ccs_update_task_domain(struct ccs_request_info *r)
 	kfree(buf);
 }
 
-/* Wait queue for /proc/ccs/grant_log and /proc/ccs/reject_log. */
-static wait_queue_head_t ccs_log_wait[2] = {
-	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[0]),
-	__WAIT_QUEUE_HEAD_INITIALIZER(ccs_log_wait[1]),
-};
+/* Wait queue for /proc/ccs/audit. */
+static DECLARE_WAIT_QUEUE_HEAD(ccs_log_wait);
 
 /* Structure for audit log. */
 struct ccs_log {
@@ -369,14 +367,13 @@ struct ccs_log {
 };
 
 /* The list for "struct ccs_log". */
-static struct list_head ccs_log[2] = {
-	LIST_HEAD_INIT(ccs_log[0]), LIST_HEAD_INIT(ccs_log[1]),
-};
-/* Lock for "struct list_head ccs_log[2]". */
+static LIST_HEAD(ccs_log);
+
+/* Lock for "struct list_head ccs_log". */
 static DEFINE_SPINLOCK(ccs_log_lock);
 
-/* Length of "stuct list_head ccs_log[2]". */
-static unsigned int ccs_log_count[2];
+/* Length of "stuct list_head ccs_log". */
+static unsigned int ccs_log_count;
 
 /**
  * ccs_get_audit - Get audit mode.
@@ -392,18 +389,13 @@ static bool ccs_get_audit(const u8 profile, const u8 index,
 			  const struct ccs_acl_info *matched_acl,
 			  const bool is_granted)
 {
-	unsigned int len;
 	u8 mode;
 	const u8 category = ccs_index2category[index] + CCS_MAX_MAC_INDEX;
 	struct ccs_profile *p;
 	if (!ccs_policy_loaded)
 		return false;
 	p = ccs_profile(profile);
-	if (is_granted)
-		len = p->pref[CCS_PREF_MAX_GRANT_LOG];
-	else
-		len = p->pref[CCS_PREF_MAX_REJECT_LOG];
-	if (ccs_log_count[is_granted] >= len)
+	if (ccs_log_count >= p->pref[CCS_PREF_MAX_AUDIT_LOG])
 		return false;
 	if (is_granted && matched_acl && matched_acl->cond &&
 	    matched_acl->cond->grant_log != CCS_GRANTLOG_AUTO)
@@ -434,8 +426,7 @@ void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 	char *buf;
 	struct ccs_log *entry;
 	bool quota_exceeded = false;
-	const bool is_granted = r->granted;
-	if (!ccs_get_audit(r->profile, r->type, r->matched_acl, is_granted))
+	if (!ccs_get_audit(r->profile, r->type, r->matched_acl, r->granted))
 		goto out;
 	buf = ccs_init_log(r, len, fmt, args);
 	if (!buf)
@@ -459,8 +450,8 @@ void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		quota_exceeded = true;
 	} else {
 		ccs_memory_used[CCS_MEMORY_AUDIT] += entry->size;
-		list_add_tail(&entry->list, &ccs_log[is_granted]);
-		ccs_log_count[is_granted]++;
+		list_add_tail(&entry->list, &ccs_log);
+		ccs_log_count++;
 	}
 	spin_unlock(&ccs_log_lock);
 	if (quota_exceeded) {
@@ -468,7 +459,7 @@ void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		kfree(entry);
 		goto out;
 	}
-	wake_up(&ccs_log_wait[is_granted]);
+	wake_up(&ccs_log_wait);
 out:
 	ccs_update_task_domain(r);
 }
@@ -503,7 +494,6 @@ void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 void ccs_read_log(struct ccs_io_buffer *head)
 {
 	struct ccs_log *ptr = NULL;
-	const bool is_granted = head->type == CCS_GRANTLOG;
 	if (head->r.w_pos)
 		return;
 	if (head->read_buf) {
@@ -511,10 +501,10 @@ void ccs_read_log(struct ccs_io_buffer *head)
 		head->read_buf = NULL;
 	}
 	spin_lock(&ccs_log_lock);
-	if (!list_empty(&ccs_log[is_granted])) {
-		ptr = list_entry(ccs_log[is_granted].next, typeof(*ptr), list);
+	if (!list_empty(&ccs_log)) {
+		ptr = list_entry(ccs_log.next, typeof(*ptr), list);
 		list_del(&ptr->list);
-		ccs_log_count[is_granted]--;
+		ccs_log_count--;
 		ccs_memory_used[CCS_MEMORY_AUDIT] -= ptr->size;
 	}
 	spin_unlock(&ccs_log_lock);
@@ -535,12 +525,10 @@ void ccs_read_log(struct ccs_io_buffer *head)
  */
 int ccs_poll_log(struct file *file, poll_table *wait)
 {
-	struct ccs_io_buffer *head = file->private_data;
-	const bool is_granted = head->type == CCS_GRANTLOG;
-	if (ccs_log_count[is_granted])
+	if (ccs_log_count)
 		return POLLIN | POLLRDNORM;
-	poll_wait(file, &ccs_log_wait[is_granted], wait);
-	if (ccs_log_count[is_granted])
+	poll_wait(file, &ccs_log_wait, wait);
+	if (ccs_log_count)
 		return POLLIN | POLLRDNORM;
 	return 0;
 }

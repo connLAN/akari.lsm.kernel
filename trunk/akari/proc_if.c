@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0   2010/11/11
+ * Version: 1.8.0+   2010/12/01
  */
 
 #include "internal.h"
@@ -312,8 +312,7 @@ static void __init ccs_proc_init(void)
 	ccs_create_entry("domain_policy",    0600, ccs_dir, CCS_DOMAINPOLICY);
 	ccs_create_entry("exception_policy", 0600, ccs_dir,
 			 CCS_EXCEPTIONPOLICY);
-	ccs_create_entry("grant_log",        0400, ccs_dir, CCS_GRANTLOG);
-	ccs_create_entry("reject_log",       0400, ccs_dir, CCS_REJECTLOG);
+	ccs_create_entry("audit",            0400, ccs_dir, CCS_AUDIT);
 	ccs_create_entry(".domain_status",   0600, ccs_dir, CCS_DOMAIN_STATUS);
 	ccs_create_entry(".process_status",  0600, ccs_dir,
 			 CCS_PROCESS_STATUS);

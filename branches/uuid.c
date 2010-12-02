@@ -435,18 +435,10 @@ static bool uuid_check_task(struct task_struct *task, const char *func)
 		    (!uuid_task->id2 || uuid_task->id2 == uuid_current->id2))
 			goto ok;
 	}
-	{
-		static pid_t uuid_last_pid;
-		const pid_t pid = current->pid;
-		if (uuid_last_pid != pid) {
-			printk(KERN_INFO "Task '%s' (pid=%u) "
-			       "attempted to access '%s' (pid=%u) "
-			       "at %s\n", current->comm, current->pid,
-			       task->comm, task->pid, func);
-			uuid_last_pid = pid;
-		}
-		ret = -EPERM;
-	}
+	printk(KERN_INFO "Task '%s' (pid=%u) attempted to access '%s' "
+	       "(pid=%u) at %s\n", current->comm, current->pid, task->comm,
+	       task->pid, func);
+	ret = -EPERM;
 ok:
 	rcu_read_unlock();
 	return ret;
@@ -545,6 +537,7 @@ static int uuid_capable(struct task_struct *tsk, int cap)
 
 #endif
 
+/*
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 10)
 
 static int uuid_file_send_sigiotask(struct task_struct *tsk,
@@ -570,6 +563,7 @@ static int uuid_file_send_sigiotask(struct task_struct *tsk,
 }
 
 #endif
+*/
 
 static int uuid_task_setpgid(struct task_struct *p, pid_t pgid)
 {
@@ -1061,7 +1055,7 @@ static void __init uuid_update_security_ops(struct security_operations *ops)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
 	swap_security_ops(capset_check);
 #endif
-	swap_security_ops(file_send_sigiotask);
+	/* swap_security_ops(file_send_sigiotask); */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29) && defined(CONFIG_KEYS)
 	swap_security_ops(key_permission);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
@@ -1224,19 +1218,19 @@ static int __init uuid_init(void)
 		return -EINVAL;
 	for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&uuid_security_list[idx]);
-	entry = create_proc_entry("uuid1", 0600, NULL);
+	entry = create_proc_entry("uuid1", 0666, NULL);
 	if (!entry)
 		return -EINVAL;
 	entry->proc_fops = &uuid_operations;
 	entry->data = (void *) 1;
-	entry = create_proc_entry("uuid2", 0600, NULL);
+	entry = create_proc_entry("uuid2", 0666, NULL);
 	if (!entry) {
 		remove_proc_entry("uuid1", NULL);
 		return -EINVAL;
 	}
 	entry->proc_fops = &uuid_operations;
 	uuid_update_security_ops(ops);
-	printk(KERN_INFO "UUID: 0.0.0   2010/12/01\n");
+	printk(KERN_INFO "UUID: 0.0.0   2010/12/02\n");
 	return 0;
 }
 

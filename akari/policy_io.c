@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2010  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/01
+ * Version: 1.8.0+   2010/12/03
  */
 
 #include "internal.h"
@@ -485,7 +485,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2010/12/01\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2010/12/03\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -1125,12 +1125,14 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 	if (sscanf(data, "use_profile %u\n", &profile) == 1
 	    && profile < CCS_MAX_PROFILES) {
 		if (!ccs_policy_loaded || ccs_profile_ptr[(u8) profile])
-			domain->profile = (u8) profile;
+			if (!is_delete)
+				domain->profile = (u8) profile;
 		return 0;
 	}
 	if (sscanf(data, "use_group %u\n", &profile) == 1
 	    && profile < CCS_MAX_ACL_GROUPS) {
-		domain->group = (u8) profile;
+		if (!is_delete)
+			domain->group = (u8) profile;
 		return 0;
 	}
 	for (profile = 0; profile < CCS_MAX_DOMAIN_INFO_FLAGS; profile++) {

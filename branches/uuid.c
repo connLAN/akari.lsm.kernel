@@ -15,12 +15,22 @@
  *   "half-restricted" state holds only 'id1'.
  *   "restricted" state holds both 'id1' and 'id2'.
  *
- * Operations (e.g. ptrace()) on objective thread by subjective thread are
+ * Operations (e.g. ptrace()) on objective thread by subjective thread and
+ * reopening files via procfs's file descriptors (i.e. /proc/PID/fd/ ) are
  * granted in below rules.
  *
  *           |      Subjective | unrestricted | half restricted | restricted
  * ----------+-----------------+--------------+-----------------+-------------
  * Objective | unrestricted    |  always      | always          | never
+ *           | half restricted |  always      | same id1        | same id1
+ *           | restricted      |  always      | same id1        | same id1/id2
+ *
+ * Communication via UNIX domain sockets is granted in below rules.
+ * A socket's state is copied from the creator thread's state upon creation.
+ *
+ *           |           Local | unrestricted | half restricted | restricted
+ * ----------+-----------------+--------------+-----------------+-------------
+ *    Remote | unrestricted    |  always      | always          | always
  *           | half restricted |  always      | same id1        | same id1
  *           | restricted      |  always      | same id1        | same id1/id2
  *
@@ -137,7 +147,8 @@
 
 struct uuid_security {
 	struct list_head list;
-	const struct cred *cred;
+	/* "struct cred" or "struct task_struct" or "struct inode" */
+	const void *owner;
 	u32 id1;
 	u32 id2;
 	struct rcu_head rcu;
@@ -153,20 +164,20 @@ static struct list_head uuid_security_list[UUID_MAX_SECURITY_HASH];
 static DEFINE_SPINLOCK(uuid_security_list_lock);
 
 /**
- * uuid_find_security - Find "struct uuid_security" for given credential.
+ * uuid_find_security - Find "struct uuid_security" for given object.
  *
- * @cred: Pointer to "struct cred".
+ * @owner: Pointer to "struct cred" or "struct task_struct" or "struct inode".
  *
  * Returns pointer to "struct uuid_security" on success, NULL otherwise.
  */
-static struct uuid_security *uuid_find_security(const struct cred *cred)
+static struct uuid_security *uuid_find_security(const void *owner)
 {
 	struct uuid_security *ptr;
 	struct list_head *list = &uuid_security_list
-		[hash_ptr((void *) cred, UUID_SECURITY_HASH_BITS)];
+		[hash_ptr((void *) owner, UUID_SECURITY_HASH_BITS)];
 	rcu_read_lock();
 	list_for_each_entry_rcu(ptr, list, list) {
-		if (ptr->cred != cred)
+		if (ptr->owner != owner)
 			continue;
 		rcu_read_unlock();
 		return ptr;
@@ -186,7 +197,7 @@ static void uuid_add_security(struct uuid_security *ptr)
 {
 	unsigned long flags;
 	struct list_head *list = &uuid_security_list
-		[hash_ptr((void *) ptr->cred, UUID_SECURITY_HASH_BITS)];
+		[hash_ptr((void *) ptr->owner, UUID_SECURITY_HASH_BITS)];
 	spin_lock_irqsave(&uuid_security_list_lock, flags);
 	list_add_rcu(&ptr->list, list);
 	spin_unlock_irqrestore(&uuid_security_list_lock, flags);
@@ -195,14 +206,13 @@ static void uuid_add_security(struct uuid_security *ptr)
 /**
  * uuid_copy_security - Allocate memory for new credentials.
  *
- * @new: Pointer to "struct cred".
- * @old: Pointer to "struct cred".
+ * @new: Pointer to "struct cred" or "struct task_struct" or "struct inode".
+ * @old: Pointer to "struct cred" or "struct task_struct" or "struct inode".
  * @gfp: Memory allocation flags.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int uuid_copy_security(const struct cred *new, const struct cred *old,
-			      gfp_t gfp)
+static int uuid_copy_security(const void *new, const void *old, gfp_t gfp)
 {
 	struct uuid_security *old_security = uuid_find_security(old);
 	struct uuid_security *new_security;
@@ -213,7 +223,7 @@ static int uuid_copy_security(const struct cred *new, const struct cred *old,
 		return -ENOMEM;
 	new_security->id1 = old_security->id1;
 	new_security->id2 = old_security->id2;
-	new_security->cred = new;
+	new_security->owner = new;
 	uuid_add_security(new_security);
 	return 0;
 }
@@ -326,7 +336,7 @@ static struct uuid_security *uuid_alloc_security(const struct cred *cred,
 						     gfp);
 	if (!new_security)
 		return NULL;
-	new_security->cred = cred;
+	new_security->owner = cred;
 	uuid_add_security(new_security);
 	return new_security;
 }
@@ -435,14 +445,77 @@ static bool uuid_check_task(struct task_struct *task, const char *func)
 		    (!uuid_task->id2 || uuid_task->id2 == uuid_current->id2))
 			goto ok;
 	}
-	printk(KERN_INFO "Task '%s' (pid=%u) attempted to access '%s' "
-	       "(pid=%u) at %s\n", current->comm, current->pid, task->comm,
-	       task->pid, func);
+	printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from accessing "
+	       "task(%u,%u) ('%s',pid=%u) at %s\n", uuid_current->id1,
+	       uuid_current->id2, current->comm, current->pid,
+	       uuid_task->id1, uuid_task->id2, task->comm, task->pid, func);
 	ret = -EPERM;
 ok:
 	rcu_read_unlock();
 	return ret;
 }
+
+#ifdef CONFIG_SECURITY_NETWORK
+
+#include <net/sock.h>
+
+static int uuid_check_socket(struct socket *sock, const char *func)
+{
+	struct uuid_security *uuid_task;
+	struct uuid_security *uuid_current;
+	int ret = 0;
+	rcu_read_lock();
+	uuid_current = uuid_find_security(current_cred());
+	if (!uuid_current)
+		goto ok;
+	uuid_task = uuid_find_security(SOCK_INODE(sock));
+	if (!uuid_task)
+		goto ok;
+	if (uuid_task->id1 == uuid_current->id1 &&
+	    (!uuid_task->id2 || !uuid_current->id2 ||
+	     uuid_task->id2 == uuid_current->id2))
+		goto ok;
+	printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from accessing "
+	       "socket(%u,%u) at %s\n", uuid_current->id1, uuid_current->id2,
+	       current->comm, current->pid, uuid_task->id1, uuid_task->id2,
+	       func);
+	ret = -EPERM;
+ok:
+	rcu_read_unlock();
+	return ret;
+}
+
+#endif
+
+static int uuid_check_pipe(struct inode *inode, const char *func)
+{
+	struct uuid_security *uuid_task;
+	struct uuid_security *uuid_current;
+	int ret = 0;
+	if (!S_ISFIFO(inode->i_mode))
+		return 0;
+	rcu_read_lock();
+	uuid_current = uuid_find_security(current_cred());
+	if (!uuid_current)
+		goto ok;
+	uuid_task = uuid_find_security(inode);
+	if (!uuid_task)
+		goto ok;
+	if (uuid_task->id1 == uuid_current->id1 &&
+	    (!uuid_task->id2 || !uuid_current->id2 ||
+	     uuid_task->id2 == uuid_current->id2))
+		goto ok;
+	printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from accessing "
+	       "pipe(%u,%u) at %s\n", uuid_current->id1, uuid_current->id2,
+	       current->comm, current->pid, uuid_task->id1, uuid_task->id2,
+	       func);
+	ret = -EPERM;
+ok:
+	rcu_read_unlock();
+	return ret;
+}
+
+
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
 
@@ -772,6 +845,156 @@ static int uuid_key_alloc(struct key *key, struct task_struct *tsk,
 #endif
 #endif
 
+/*
+
+static const char *uuid_task_type(void)
+{
+	struct uuid_security *uuid;
+	rcu_read_lock();
+	uuid = uuid_find_security(current_cred());
+	rcu_read_unlock();
+	if (uuid && uuid->id2)
+		return "restricted";
+	else if (uuid)
+		return "half-restricted";
+	else
+		return "unrestricted";
+}
+
+static struct uuid_security *uuid_task_restricted(void)
+{
+	struct uuid_security *uuid;
+	rcu_read_lock();
+	uuid = uuid_find_security(current_cred());
+	rcu_read_unlock();
+	return uuid;
+}
+*/
+
+static int uuid_inode_alloc_security(struct inode *inode)
+{
+	int rc;
+	if (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode)) {
+		struct uuid_security *uuid_current;
+		rc = uuid_copy_security(inode, current_cred(), GFP_KERNEL);
+		if (rc)
+			return rc;
+		uuid_current = uuid_find_security(current_cred());
+		if (uuid_current) {
+			struct uuid_security *uuid_task =
+				uuid_find_security(inode);
+			if (uuid_task)
+				printk(KERN_INFO "Allocated %s(%u,%u) by "
+				       "task(%u,%u) ('%s',pid=%u) (%p)\n",
+				       S_ISSOCK(inode->i_mode) ? "socket" :
+				       "pipe", uuid_task->id1, uuid_task->id2,
+				       uuid_current->id1, uuid_current->id2,
+				       current->comm, current->pid, inode);
+			else
+				dump_stack();
+		}
+	}
+	while (!original_security_ops.inode_alloc_security);
+	rc = original_security_ops.inode_alloc_security(inode);
+	if (rc && (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode)))
+		uuid_del_security(uuid_find_security(inode));
+	return rc;
+}
+
+static void uuid_inode_free_security(struct inode *inode)
+{
+	while (!original_security_ops.inode_free_security);
+	original_security_ops.inode_free_security(inode);
+	if (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode))
+		uuid_del_security(uuid_find_security(inode));
+}
+
+#ifdef CONFIG_SECURITY_NETWORK
+
+static int uuid_unix_stream_connect(struct socket *sock, struct socket *other,
+				    struct sock *newsk)
+{
+	int rc = uuid_check_socket(other, __func__);
+	if (rc)
+		return rc;
+	while (!original_security_ops.unix_stream_connect);
+	return original_security_ops.unix_stream_connect(sock, other, newsk);
+}
+
+static int uuid_unix_may_send(struct socket *sock, struct socket *other)
+{
+	int rc = uuid_check_socket(other, __func__);
+	if (rc)
+		return rc;
+	while (!original_security_ops.unix_may_send);
+	return original_security_ops.unix_may_send(sock, other);
+}
+
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+
+/**
+ * uuid_dentry_open - Check permission for open().
+ *
+ * @f:    Pointer to "struct file".
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int uuid_dentry_open(struct file *f, const struct cred *cred)
+{
+	int rc = uuid_check_pipe(f->f_dentry->d_inode, __func__);
+	if (rc)
+		return rc;
+	while (!original_security_ops.dentry_open);
+	return original_security_ops.dentry_open(f, cred);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+
+/**
+ * uuid_dentry_open - Check permission for open().
+ *
+ * @f: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int uuid_dentry_open(struct file *f)
+{
+	int rc = uuid_check_pipe(f->f_dentry->d_inode, __func__);
+	if (rc)
+		return rc;
+	while (!original_security_ops.dentry_open);
+	return original_security_ops.dentry_open(f);
+}
+
+#else
+
+/**
+ * uuid_inode_permission - Check permission for open().
+ *
+ * @inode: Pointer to "struct inode".
+ * @mask:  Open mode.
+ * @nd:    Pointer to "struct nameidata".
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Note that this hook is called from permission(), and may not be called for
+ * open(). Maybe it is better to use security_file_permission().
+ */
+static int uuid_inode_permission(struct inode *inode, int mask,
+				 struct nameidata *nd)
+{
+	int rc = uuid_check_pipe(inode, __func__);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_permission);
+	return original_security_ops.inode_permission(inode, mask, nd);
+}
+
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
 #include <linux/mount.h>
@@ -1081,6 +1304,17 @@ static void __init uuid_update_security_ops(struct security_operations *ops)
 	swap_security_ops(msg_queue_msgrcv);
 	swap_security_ops(getprocattr);
 	swap_security_ops(setprocattr);
+	swap_security_ops(inode_alloc_security);
+	swap_security_ops(inode_free_security);
+#ifdef CONFIG_SECURITY_NETWORK
+	swap_security_ops(unix_may_send);
+	swap_security_ops(unix_stream_connect);
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	swap_security_ops(dentry_open);
+#else
+	swap_security_ops(inode_permission);
+#endif
 }
 
 #undef swap_security_ops
@@ -1128,7 +1362,7 @@ static int uuid_open(struct inode *inode, struct file *file)
 		}
 		if (!uuid)
 			goto out;
-		uuid->cred = cred;
+		uuid->owner = cred;
 	} else {
 		/*
 		 * Reject if "struct uuid_security" was not yet associated with
@@ -1149,10 +1383,10 @@ static int uuid_open(struct inode *inode, struct file *file)
 	for (loop = 1; loop; loop++) {
 		static u32 id[2];
 		int idx;
+		/* id == 0 is reserved. */
+		while (!++id[!is_id1]);
 		if (is_id1)
-			uuid->id1 = id[0]++;
-		else /* id2 == 0 is reserved. */
-			while (!++id[1]);
+			uuid->id1 = id[0];
 		rcu_read_lock();
 		for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++) {
 			struct list_head *list = &uuid_security_list[idx];
@@ -1181,8 +1415,8 @@ in_use:
 		else
 			/* Assign id2 in "struct uuid_security". */
 			uuid->id2 = id[1];
-		printk(KERN_INFO "Allocating id%u=%u to '%s' (pid=%u)\n",
-		       !is_id1 + 1, id[!is_id1], current->comm, current->pid);
+		printk(KERN_INFO "Allocated task(%u,%u) ('%s',pid=%u)\n",
+		       uuid->id1, uuid->id2, current->comm, current->pid);
 		rc = 0;
 		uuid = NULL;
 		break;
@@ -1230,7 +1464,7 @@ static int __init uuid_init(void)
 	}
 	entry->proc_fops = &uuid_operations;
 	uuid_update_security_ops(ops);
-	printk(KERN_INFO "UUID: 0.0.0   2010/12/02\n");
+	printk(KERN_INFO "UUID: 0.0.0   2010/12/06\n");
 	return 0;
 }
 

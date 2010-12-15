@@ -291,6 +291,21 @@ out:
 static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 				 const int buflen)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		/* rename_lock is locked/unlocked by dentry_path_raw(). */
+		pos = dentry_path_raw(dentry, buffer, buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
+			struct inode *inode = dentry->d_inode;
+			if (inode && S_ISDIR(inode->i_mode)) {
+				buffer[buflen - 2] = '/';
+				buffer[buflen - 1] = '\0';
+			}
+		}
+	}
+	return pos;
+#else
 	char *pos = buffer + buflen - 1;
 	if (buflen < 256)
 		goto out;
@@ -311,6 +326,7 @@ static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 	return pos;
 out:
 	return ERR_PTR(-ENOMEM);
+#endif
 }
 
 /**
@@ -328,9 +344,13 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 	char *pos;
 	struct dentry *dentry = path->dentry;
 	struct super_block *sb = dentry->d_sb;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
 	spin_lock(&dcache_lock);
+#endif
 	pos = ccs_get_dentry_path(dentry, buffer, buflen);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
 	spin_unlock(&dcache_lock);
+#endif
 	if (IS_ERR(pos))
 		return pos;
 	/* Convert from $PID to self if $PID is current thread. */

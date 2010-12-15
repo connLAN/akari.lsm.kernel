@@ -135,7 +135,7 @@ static inline void ccs_realpath_lock(void)
 }
 
 /**
- * ccs_realpath_unlock - Release locks for __d_path()).
+ * ccs_realpath_unlock - Release locks for __d_path().
  *
  * Returns nothing.
  */
@@ -148,7 +148,7 @@ static inline void ccs_realpath_unlock(void)
 #else
 
 /**
- * ccs_realpath_lock - Take locks for __d_path()).
+ * ccs_realpath_lock - Take locks for __d_path().
  *
  * Returns nothing.
  */
@@ -158,7 +158,7 @@ static inline void ccs_realpath_lock(void)
 }
 
 /**
- * ccs_realpath_unlock - Release locks for __d_path()).
+ * ccs_realpath_unlock - Release locks for __d_path().
  *
  * Returns nothing.
  */

@@ -25,7 +25,12 @@ static void (*ccs___put_task_struct) (struct task_struct *t);
 #endif
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-static struct ccs_security ccs_null_security = {
+static struct ccs_security ccs_oom_security = {
+	.ccs_domain_info = &ccs_kernel_domain
+};
+
+/* Dummy security context for avoiding NULL pointer dereference. */
+static struct ccs_security ccs_default_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
@@ -150,7 +155,7 @@ static void ccs_rcu_free(void *arg)
 static void ccs_del_security(struct ccs_security *ptr)
 {
 	unsigned long flags;
-	if (ptr == &ccs_null_security)
+	if (ptr == &ccs_default_security || ptr == &ccs_oom_security)
 		return;
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
 	list_del_rcu(&ptr->list);
@@ -173,7 +178,7 @@ static void ccs_del_security(struct ccs_security *ptr)
 static void ccs_clear_execve(int ret, struct ccs_security *security)
 {
 	struct ccs_execve *ee;
-	if (security == &ccs_null_security)
+	if (security == &ccs_default_security || security == &ccs_oom_security)
 		return;
 	ee = security->ee;
 	security->ee = NULL;
@@ -341,8 +346,10 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 	original_security_ops.cred_transfer(new, old);
 	new_security = ccs_find_cred_security(new);
 	old_security = ccs_find_cred_security(old);
-	if (new_security == &ccs_null_security ||
-	    old_security == &ccs_null_security)
+	if (new_security == &ccs_default_security ||
+	    new_security == &ccs_oom_security ||
+	    old_security == &ccs_default_security ||
+	    old_security == &ccs_oom_security)
 		return;
 	new_security->ccs_flags = old_security->ccs_flags;
 	new_security->ccs_domain_info = old_security->ccs_domain_info;
@@ -478,7 +485,8 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 	while (!original_security_ops.bprm_committing_creds);
 	original_security_ops.bprm_committing_creds(bprm);
 	old_security = ccs_current_security();
-	if (old_security == &ccs_null_security)
+	if (old_security == &ccs_default_security ||
+	    old_security == &ccs_oom_security)
 		return;
 	ccs_clear_execve(0, old_security);
 	/* Update current task's cred's domain for future fork(). */
@@ -500,7 +508,7 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 {
 	int rc;
 	struct ccs_security *security = ccs_current_security();
-	if (security == &ccs_null_security)
+	if (security == &ccs_default_security || security == &ccs_oom_security)
 		return -ENOMEM;
 	if (!security->cred) {
 		if (!ccs_policy_loaded)
@@ -2571,8 +2579,8 @@ bool ccs_used_by_cred(const struct ccs_domain_info *domain)
  *
  * @task: Pointer to "struct task_struct".
  *
- * Returns pointer to "struct ccs_security" on success, &ccs_null_security
- * otherwise.
+ * Returns pointer to "struct ccs_security" on success, &ccs_oom_security on
+ * out of memory, &ccs_default_security otherwise.
  *
  * If @task is current thread and "struct ccs_security" for current thread was
  * not found, I try to allocate it. But if allocation failed, current thread
@@ -2645,8 +2653,8 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 * associated with that thread's "struct cred".
 		 *
 		 * Since that snapshot will be used as initial data when that
-		 * thread allocates "struct ccs_security" for that thread,
-		 * we can return that snapshot rather than &ccs_null_security.
+		 * thread allocates "struct ccs_security" for that thread, we
+		 * can return that snapshot rather than &ccs_default_security.
 		 *
 		 * Since this function is called by only ccs_select_one() and
 		 * ccs_read_pid() (via ccs_task_domain() and ccs_task_flags()),
@@ -2657,7 +2665,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 */
 		return ccs_find_cred_security(__task_cred(task));
 #else
-		return &ccs_null_security;
+		return &ccs_default_security;
 #endif
 	}
 	/* Use GFP_ATOMIC because caller may have called rcu_read_lock(). */
@@ -2666,12 +2674,12 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		printk(KERN_WARNING "Unable to allocate memory for pid=%u\n",
 		       task->pid);
 		send_sig(SIGKILL, current, 0);
-		return &ccs_null_security;
+		return &ccs_oom_security;
 	}
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	*ptr = *ccs_find_cred_security(task->cred);
 #else
-	*ptr = ccs_null_security;
+	*ptr = ccs_default_security;
 #endif
 	get_task_struct((struct task_struct *) task);
 	ptr->task = (struct task_struct *) task;
@@ -2711,7 +2719,7 @@ static int ccs_copy_cred_security(const struct cred *new,
  *
  * @cred: Pointer to "struct cred".
  *
- * Returns pointer to "struct ccs_security" on success, &ccs_null_security
+ * Returns pointer to "struct ccs_security" on success, &ccs_default_security
  * otherwise.
  */
 static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
@@ -2727,7 +2735,7 @@ static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
 		return ptr;
 	}
 	rcu_read_unlock();
-	return &ccs_null_security;
+	return &ccs_default_security;
 }
 
 /**

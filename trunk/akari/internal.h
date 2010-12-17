@@ -1941,7 +1941,7 @@ extern struct ccsecurity_exports ccsecurity_exports;
 struct ccs_security {
 	struct list_head list;
 	const struct task_struct *task; /* Maybe NULL. */
-	const struct cred *cred;  /* Maybe NULL. */
+	const struct cred *cred; /* Maybe NULL. */
 	struct ccs_domain_info *ccs_domain_info;
 	u32 ccs_flags;
 	struct ccs_execve *ee; /* Maybe NULL. */

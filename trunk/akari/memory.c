@@ -244,7 +244,12 @@ out:
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-static struct ccs_security ccs_null_security = {
+static struct ccs_security ccs_oom_security = {
+	.ccs_domain_info = &ccs_kernel_domain
+};
+
+/* Dummy security context for avoiding NULL pointer dereference. */
+static struct ccs_security ccs_default_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
@@ -298,8 +303,8 @@ static int __ccs_alloc_task_security(const struct task_struct *task)
  *
  * @task: Pointer to "struct task_struct".
  *
- * Returns pointer to "struct ccs_security" on success, &ccs_null_security
- * otherwise.
+ * Returns pointer to "struct ccs_security" on success, &ccs_oom_security on
+ * out of memory, &ccs_default_security otherwise.
  *
  * If @task is current thread and "struct ccs_security" for current thread was
  * not found, I try to allocate it. But if allocation failed, current thread
@@ -322,16 +327,16 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	}
 	rcu_read_unlock();
 	if (task != current)
-		return &ccs_null_security;
+		return &ccs_default_security;
 	/* Use GFP_ATOMIC because caller may have called rcu_read_lock(). */
 	ptr = kzalloc(sizeof(*ptr), GFP_ATOMIC);
 	if (!ptr) {
 		printk(KERN_WARNING "Unable to allocate memory for pid=%u\n",
 		       task->pid);
 		send_sig(SIGKILL, current, 0);
-		return &ccs_null_security;
+		return &ccs_oom_security;
 	}
-	*ptr = ccs_null_security;
+	*ptr = ccs_default_security;
 	ptr->task = task;
 	ccs_add_task_security(ptr, list);
 	return ptr;
@@ -381,7 +386,7 @@ static void __ccs_free_task_security(const struct task_struct *task)
 {
 	unsigned long flags;
 	struct ccs_security *ptr = ccs_find_task_security(task);
-	if (ptr == &ccs_null_security)
+	if (ptr == &ccs_default_security || ptr == &ccs_oom_security)
 		return;
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
 	list_del_rcu(&ptr->list);

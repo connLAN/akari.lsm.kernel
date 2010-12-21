@@ -2285,10 +2285,8 @@ static void ccs_read_query(struct ccs_io_buffer *head)
 	char *buf;
 	if (head->r.w_pos)
 		return;
-	if (head->read_buf) {
-		kfree(head->read_buf);
-		head->read_buf = NULL;
-	}
+	kfree(head->read_buf);
+	head->read_buf = NULL;
 	spin_lock(&ccs_query_list_lock);
 	list_for_each(tmp, &ccs_query_list) {
 		struct ccs_query *ptr = list_entry(tmp, typeof(*ptr), list);

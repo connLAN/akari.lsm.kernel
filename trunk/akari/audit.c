@@ -496,10 +496,8 @@ void ccs_read_log(struct ccs_io_buffer *head)
 	struct ccs_log *ptr = NULL;
 	if (head->r.w_pos)
 		return;
-	if (head->read_buf) {
-		kfree(head->read_buf);
-		head->read_buf = NULL;
-	}
+	kfree(head->read_buf);
+	head->read_buf = NULL;
 	spin_lock(&ccs_log_lock);
 	if (!list_empty(&ccs_log)) {
 		ptr = list_entry(ccs_log.next, typeof(*ptr), list);

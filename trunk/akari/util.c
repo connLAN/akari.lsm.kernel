@@ -1107,7 +1107,7 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 		/* r->granted = false; */
 		ccs_write_log(r, "%s", ccs_dif[CCS_DIF_QUOTA_WARNED]);
 		printk(KERN_WARNING "WARNING: "
-		       "Domain '%s' has so many ACLs to hold. "
+		       "Domain '%s' has too many ACLs to hold. "
 		       "Stopped learning mode.\n", domain->domainname->name);
 	}
 	return false;

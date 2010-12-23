@@ -107,8 +107,8 @@ static _Bool ccs_policy_loader_exists(void)
 		return 1;
 	}
 #endif
-	printk(KERN_INFO "Not activating Mandatory Access Control now "
-	       "since %s doesn't exist.\n", ccs_loader);
+	printk(KERN_INFO "Not activating Mandatory Access Control "
+	       "as %s does not exist.\n", ccs_loader);
 	return 0;
 }
 

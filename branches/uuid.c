@@ -445,10 +445,17 @@ static bool uuid_check_task(struct task_struct *task, const char *func)
 		    (!uuid_task->id2 || uuid_task->id2 == uuid_current->id2))
 			goto ok;
 	}
-	printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from accessing "
-	       "task(%u,%u) ('%s',pid=%u) at %s\n", uuid_current->id1,
-	       uuid_current->id2, current->comm, current->pid,
-	       uuid_task->id1, uuid_task->id2, task->comm, task->pid, func);
+        if (uuid_task)
+                printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from "
+		       "accessing task(%u,%u) ('%s',pid=%u) at %s\n",
+		       uuid_current->id1, uuid_current->id2, current->comm,
+		       current->pid, uuid_task->id1, uuid_task->id2,
+		       task->comm, task->pid, func);
+	else
+                printk(KERN_INFO "Prevented task(%u,%u) ('%s',pid=%u) from "
+		       "accessing task ('%s',pid=%u) at %s\n",
+		       uuid_current->id1, uuid_current->id2, current->comm,
+		       current->pid, task->comm, task->pid, func);
 	ret = -EPERM;
 ok:
 	rcu_read_unlock();
@@ -1464,7 +1471,7 @@ static int __init uuid_init(void)
 	}
 	entry->proc_fops = &uuid_operations;
 	uuid_update_security_ops(ops);
-	printk(KERN_INFO "UUID: 0.0.0   2010/12/06\n");
+	printk(KERN_INFO "UUID: 0.0.0   2010/12/24\n");
 	return 0;
 }
 

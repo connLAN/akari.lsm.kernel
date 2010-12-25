@@ -772,12 +772,10 @@ enum ccs_value_type {
 #define CCS_OPEN_FOR_IOCTL_ONLY           2
 /* Current thread is doing do_execve() ? */
 #define CCS_TASK_IS_IN_EXECVE             4
-/* Current thread should not be carried sleep penalty? */
-#define CCS_DONT_SLEEP_ON_ENFORCE_ERROR   8
 /* Current thread is running as an execute handler program? */
-#define CCS_TASK_IS_EXECUTE_HANDLER      16
-/* Curren thread is allowed to modify policy via /proc/ccs/ interface? */
-#define CCS_TASK_IS_MANAGER              32
+#define CCS_TASK_IS_EXECUTE_HANDLER       8
+/* Current thread is allowed to modify policy via /proc/ccs/ interface? */
+#define CCS_TASK_IS_MANAGER              16
 
 /*
  * Retry this request. Returned by ccs_supervisor() if policy violation has
@@ -1056,6 +1054,8 @@ struct ccs_request_info {
 	} param;
 	u8 param_type; /* One of values in "enum ccs_acl_entry_type_index". */
 	bool granted; /* True if granted, false otherwise. */
+	/* True if current thread should not be carried sleep penalty. */
+	bool dont_sleep_on_enforce_error;
 	/*
 	 * For updating current->ccs_domain_info at ccs_update_task_domain().
 	 * Initialized to NULL at ccs_init_request_info().

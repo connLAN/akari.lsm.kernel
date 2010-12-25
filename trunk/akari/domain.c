@@ -889,7 +889,6 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	int retval;
 	const int original_argc = bprm->argc;
 	const int original_envc = bprm->envc;
-	struct ccs_security *task = ccs_current_security();
 
 	/* Close the requested program's dentry. */
 	ee->obj.path1.dentry = NULL;
@@ -1038,9 +1037,9 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	retval = prepare_binprm(bprm);
 	if (retval < 0)
 		goto out;
-	task->ccs_flags |= CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
+	ee->r.dont_sleep_on_enforce_error = true;
 	retval = ccs_find_next_domain(ee);
-	task->ccs_flags &= ~CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
+	ee->r.dont_sleep_on_enforce_error = false;
 out:
 	return retval;
 }

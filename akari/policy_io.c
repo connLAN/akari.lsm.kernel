@@ -2159,7 +2159,7 @@ int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 		error = -EPERM;
 		if (atomic_read(&ccs_query_observers))
 			break;
-		if (ccs_current_flags() & CCS_DONT_SLEEP_ON_ENFORCE_ERROR)
+		if (r->dont_sleep_on_enforce_error)
 			goto out;
 		p = ccs_profile(r->profile);
 		/* Check enforcing_penalty parameter. */

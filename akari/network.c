@@ -533,9 +533,6 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
 	int error = 0;
 	const u8 type = ccs_inet2mac[address->protocol][address->operation];
 	if (type && ccs_init_request_info(&r, type) != CCS_CONFIG_DISABLED) {
-		struct ccs_security * const task = ccs_current_security();
-		const bool no_sleep = address->operation == CCS_NETWORK_ACCEPT
-			|| address->operation == CCS_NETWORK_RECV;
 		r.param_type = CCS_TYPE_INET_ACL;
 		r.param.inet_network.protocol = address->protocol;
 		r.param.inet_network.operation = address->operation;
@@ -546,14 +543,13 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
 		 * Use host byte order to allow u32 comparison than memcmp().
 		 */
 		r.param.inet_network.ip = ntohl(*address->inet.address);
-		if (no_sleep)
-			task->ccs_flags |= CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
+		r.dont_sleep_on_enforce_error =
+			address->operation == CCS_NETWORK_ACCEPT ||
+			address->operation == CCS_NETWORK_RECV;
 		do {
 			ccs_check_acl(&r, ccs_check_inet_acl);
 			error = ccs_audit_inet_log(&r);
 		} while (error == CCS_RETRY_REQUEST);
-		if (no_sleep)
-			task->ccs_flags &= ~CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
 	}
 	ccs_read_unlock(idx);
 	return error;
@@ -624,11 +620,6 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
 		}
 		buf = ccs_encode2(buf, len);
 		if (buf) {
-			struct ccs_security * const task =
-				ccs_current_security();
-			const bool no_sleep =
-				address->operation == CCS_NETWORK_ACCEPT ||
-				address->operation == CCS_NETWORK_RECV;
 			struct ccs_path_info addr;
 			addr.name = buf;
 			ccs_fill_path_info(&addr);
@@ -636,16 +627,13 @@ static int ccs_unix_entry(const struct ccs_addr_info *address)
 			r.param.unix_network.protocol = address->protocol;
 			r.param.unix_network.operation = address->operation;
 			r.param.unix_network.address = &addr;
-			if (no_sleep)
-				task->ccs_flags |=
-					CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
+			r.dont_sleep_on_enforce_error =
+				address->operation == CCS_NETWORK_ACCEPT ||
+				address->operation == CCS_NETWORK_RECV;
 			do {
 				ccs_check_acl(&r, ccs_check_unix_acl);
 				error = ccs_audit_unix_log(&r);
 			} while (error == CCS_RETRY_REQUEST);
-			if (no_sleep)
-				task->ccs_flags &=
-					~CCS_DONT_SLEEP_ON_ENFORCE_ERROR;
 			kfree(buf);
 		} else
 			error = -ENOMEM;

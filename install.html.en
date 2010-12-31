@@ -11,13 +11,13 @@
 <p style="text-align:right;">Last modified: $Date$</p>
 <h1>Phase 1: Installing kernel module and tools.</h1>
 
-<p>This page describes how to install AKARI's kernel module and userland tools.</p>
+<p>This page describes how to install the AKARI's kernel module and userland tools.</p>
 
 <hr>
 
 <h2>Step 1: Installing kernel module</h2>
 
-<p>Install packages needed for compiling kernel modules and tools.</p>
+<p>Install packages required for compiling the kernel modules and tools.</p>
 
 <table border="1">
 <tr><td>RedHat distributions</td><td>
@@ -47,10 +47,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.5-20101122.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.5-20101122.tar.gz'<br>
-# wget -O akari-1.0.5-20101122.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.5-20101122.tar.gz.asc'<br>
-# gpg akari-1.0.5-20101122.tar.gz.asc<br>
-# tar -zxf akari-1.0.5-20101122.tar.gz<br>
+# wget -O akari-1.0.6-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz'<br>
+# wget -O akari-1.0.6-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz.asc'<br>
+# gpg akari-1.0.6-20101231.tar.gz.asc<br>
+# tar -zxf akari-1.0.6-20101231.tar.gz<br>
 # make SUBDIRS=akari modules<br>
 # make SUBDIRS=akari modules_install<br>
 # depmod ${VERSION}
@@ -91,10 +91,10 @@ This version is not supported because I cannot resolve vfsmount_lock .
 <table border="1">
 <tr><td>
 # cd /tmp/<br>
-# wget -O ccs-tools-1.8.0-20101122.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101122.tar.gz'<br>
-# wget -O ccs-tools-1.8.0-20101122.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101122.tar.gz.asc'<br>
-# gpg ccs-tools-1.8.0-20101122.tar.gz.asc<br>
-# tar -zxf ccs-tools-1.8.0-20101122.tar.gz<br>
+# wget -O ccs-tools-1.8.0-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz'<br>
+# wget -O ccs-tools-1.8.0-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz.asc'<br>
+# gpg ccs-tools-1.8.0-20101231.tar.gz.asc<br>
+# tar -zxf ccs-tools-1.8.0-20101231.tar.gz<br>
 # cd ccstools/<br>
 # make -s<br>
 # make -s install<br>

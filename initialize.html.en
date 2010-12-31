@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>AKARI Install manual</title>
-<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
 </head>
 <body>
 <p style="text-align:right;"><a href="initialize.html.ja">Japanese Page</a></p>
@@ -15,49 +15,70 @@
 
 <hr>
 
-<h2>Step 1: Initializing Policy</h2>
+<h2>Step 1: Initializing policy</h2>
 
-<p>Run below command in order to initialize policy.</p>
+<p>To analyze or restrict only file related operations (e.g. read, write, execute), run the following:</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/lib/ccs/init_policy --module_name=akari
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
 </td></tr>
 </table>
 
-<p>AKARI's policy files will be saved in /etc/ccs/ directory.</p>
+<p>To analyze or restrict all operations (e.g. files, networks, environment variables), run the following:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --module_name=akari
+</td></tr>
+</table>
+
+<p>All policy files will be saved in "/etc/ccs/" directory.</p>
 
 <hr>
 
-<h2>Step 2: Learning how to use AKARI's policy editor</h2>
+<h2>Step 2: Learning how to use the policy editor</h2>
 
-<p>Run AKARI's policy editor "ccs-editpolicy" with "/etc/ccs/" option, and you will see a picture shown below.</p>
+<p>Run the policy editor  with "/etc/ccs/" option to edit policy files within "/etc/ccs/":</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# /usr/sbin/ccs-editpolicy /etc/ccs/
+[root@tomoyo ~]# /usr/sbin/ccs-editpolicy /etc/ccs/
 </td></tr>
 </table>
 
+<p>This picture describes the domain tree that should be visible after running the above command. As of now, only "&lt;kernel&gt;" domain is defined:</p>
+
 <p><img src="editpolicy-domain-list1.png" width="720" height="400"></p>
 
-<p>This picture describes the domain tree. As of now, only "&lt;kernel&gt;" domain is defined. But as the system runs, AKARI will create domains and add them to the tree. The example picture shown below has many domains.</p>
+<p>As the system runs, AKARI will create domains and add them to the tree. After rebooting and running ccs-editpolicy again, the domain tree should become populated with all domains created since startup:</p>
 
 <p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
 
-<p>The access analysis/restriction in AKARI is applied in the units of domains. Every process belongs to single domain, and basically the process will transit to different domain whenever it executes a program. The name of a domain is a concatenated string expression for the process execution history. For example, the name of domain which the kernel belongs to is "&lt;kernel&gt;", the name of domain which /sbin/init invoked by the kernel belongs to is "&lt;kernel&gt; /sbin/init", the name of domain which /etc/rc.d/rc invoked by the /sbin/init belongs to is "&lt;kernel&gt; /sbin/init /etc/rc.d/rc". The exceptions of this transition rule are described later.</p>
+<p>The access analysis/restriction in AKARI is applied in the units of domains. Every process belongs to single domain, and the process will transit to a different domain whenever it executes a program. The name of a domain is a concatenated string expression for the process execution history.</p>
 
-<p>Look at the number which are the second column of each line.</p>
+<p>For example, the domain name that the kernel belongs to is <b>"&lt;kernel&gt;"</b>.<br>
+When the kernel invokes "/sbin/init", the domain name that this process belongs to is <b>"&lt;kernel&gt; /sbin/init"</b>.<br>
+When the kernel invokes "/sbin/init", which then invokes "/etc/rc.d/rc", the domain name that this process belongs to is <b>"&lt;kernel&gt; /sbin/init /etc/rc.d/rc"</b>.<br>
+The exceptions to this transition rule are described later.</p>
+
+<p>Look at the numbers in the second column of each line:</p>
 
 <p><img src="editpolicy-domain-profile-number.png" width="720" height="400"></p>
 
-<p>This number is called "profile number". A profile number is an integer value which takes between 0 and 255.</p>
+<p>This number is called the "profile number". A profile number is an integer value which takes between 0 and 255.</p>
 
-<p>Press "w" key, and you will see some choices.</p>
+<p>Press "w" key, and you will see some choices:</p>
 
 <p><img src="editpolicy-window-list.png" width="720" height="400"></p>
 
 <p>Press "p" key, and you will see the list of profiles.</p>
+
+<p>If "--file-only-profile" was specified when executing /usr/lib/ccs/init_policy then you will see the following entries:</p>
+
+<p><img src="editpolicy-profile-list-file-only.png" width="720" height="400"></p>
+
+<p>If "--file-only-profile" was not specified when executing /usr/lib/ccs/init_policy then you will see the following entries:</p>
 
 <p><img src="editpolicy-profile-list.png" width="720" height="400"></p>
 
@@ -65,7 +86,7 @@
 <tr><td>Name</td><td>Control</td></tr>
 <tr>
 <td>COMMENT</td>
-<td>A line of text that describes the content of the profile.</td>
+<td>Description of profile.</td>
 </tr>
 <tr>
 <td>CONFIG</td>
@@ -73,10 +94,10 @@
 </tr>
 <tr>
 <td>PREFERENCE</td>
-<td>Configuration of auditing / learning / enforcing.</td>
+<td>Configuration of various options.</td>
 </tr>
 </table>
-<p>You can give the following values for mode= parameter of CONFIG line.</p>
+<p>The "mode=" parameter of the CONFIG line can contain one of the following values:</p>
 <table border="1">
 <tr>
 <td>Value</td>
@@ -84,27 +105,27 @@
 </tr>
 <tr>
 <td>disabled</td>
-<td>Disabled. Works as if regular kernel.</td>
+<td>Works as if a regular kernel.</td>
 </tr>
 <tr>
 <td>learning</td>
-<td>Learning mode. Do not reject an access request if the request violates policy. Append the request to policy.</td>
+<td>Do not reject an access request if the request violates policy. Append the request to policy.</td>
 </tr>
 <tr>
 <td>permissive</td>
-<td>Permissive mode. Do not reject an access request if the request violates policy. Do not append the request to policy.</td>
+<td>Do not reject an access request if the request violates policy. Do not append the request to policy.</td>
 </tr>
 <tr>
 <td>enforcing</td>
-<td>Enforcing mode. Reject an access request if the request violates policy. Do not append the request to policy.</td>
+<td>Reject an access request if the request violates policy. Do not append the request to policy.</td>
 </tr>
 </table>
 
-<p>Press "w" key, then press "e" key, and you will see the picture shown below.</p>
+<p>Press "w" key, then press "e" key, and you will see the picture shown below:</p>
 
 <p><a href="editpolicy-exception-full.png">(Click to view complete screen.)<br><img src="editpolicy-exception-list1.png" width="720" height="400"></a></p>
 
-<p>You can scroll this window using arrow keys and/or Home/End/PageUp/PageDown keys.</p>
+<p>You can scroll this window using the arrow keys and/or Home/End/PageUp/PageDown keys.</p>
 
 <p>This screen contains the following types of macros and exceptions.</p>
 
@@ -113,10 +134,12 @@
 (1) Pathname group
 </td><td>
 <p>You can specify pathname groups using "path_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple pathnames using group names.</p>
+<p>By default, ANY_PATHNAME which matches arbitrary pathnames and ANY_DIRECTORY which matches arbitrary directories are defined.</p>
 </td></tr><tr><td>
 (2) Number group
 </td><td>
 <p>You can specify number groups using "number_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple numbers using group names.</p>
+<p>By default, COMMON_IOCTL_CMDS which matches 0x5401 is defined.</p>
 </td></tr><tr><td>
 (3) Address group
 </td><td>
@@ -125,33 +148,42 @@
 (4) ACL group
 </td><td>
 <p>You can specify permissions using "acl_group" directive followed by group number and permissions for that group. The ACL group is referenced by "use_group" directive in the domain policy. This is a macro to reduce the amount of domain policy by grouping commonly granted permissions.</p>
+<p>For example, "acl_group 0 file read @ANY_DIRECTORY" grants any domains with "use_group 0" to issue read requests on pathnames in ANY_DIRECTORY path_group (i.e. open arbitrary directory for reading).</p>
+<p>For example, "acl_group 0 file ioctl @ANY_PATHNAME @COMMON_IOCTL_CMDS" grants any domains with "use_group 0" to issue ioctl requests with COMMON_IOCTL_CMDS number_group on pathnames in ANY_PATHNAME path_group (i.e. ioctl requests with 0x5401 on arbitrary pathnames).</p>
 </td></tr><tr><td>
 (5) Program aggregations
 </td><td>
-<p>Basically, each program's pathname is used for domain transitions. But you can aggregate multiple program's pathnames into single program's pathname as needed using "aggregator" directive.</p>
+<p>Each program's pathname is used for domain transition, but you can aggregate multiple program's pathnames into a single program's pathname as needed using "aggregator" directive.</p>
 </td></tr><tr><td>
 (6) Domain transition exceptions
 </td><td>
-<p>Basically, domain transition occurs whenever a program is executed. But you can suppress or initialize domain transitions as needed.</p>
+<p>Domain transition occurs whenever a program is executed, but you can suppress or initialize domain transitions as needed.</p>
 <p>You can specify programs that initialize the domain transition history using "initialize_domain" directive. For example, if "initialize_domain /usr/sbin/sshd" is specified, /usr/sbin/sshd will run under "&lt;kernel&gt; /usr/sbin/sshd" domain.</p>
-<p>You can deny the effect of "initialize_domain" directive using "no_initialize_domain" directive. You can use "no_initialize_domain" directive when you don't want to initialize domain transition history under specific conditions.</p>
+<p>You can deny the effect of "initialize_domain" directive using "no_initialize_domain" directive. Use this when you don't want to initialize domain transition history under specific conditions.</p>
 <p>You can specify domains that suppress domain transition using "keep_domain" directive. For example, if "keep_domain &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh" is specified, any process that belongs to "&lt;kernel&gt; /usr/sbin/sshd /bin/tcsh" domain stays at that domain unless programs specified using "initialize_domain" directive are executed.</p>
-<p>You can deny the effect of "keep_domain" directive using "no_keep_domain" directive. You can use "no_keep_domain" directive when you don't want to suppress domain transition under specific conditions.</p>
+<p>You can deny the effect of "keep_domain" directive using "no_keep_domain" directive. Use this when you don't want to suppress domain transition under specific conditions.</p>
+</td></tr><tr><td>
+(7) Reserved local ports
+</td><td>
+<p>You can specify reserved local ports using "deny_autobind" directive. This is similar to /proc/sys/net/ipv4/ip_local_reserved_ports which is available since Linux 2.6.35 kernels.</p>
 </td></tr>
 </table>
 
 <p>Press "q" key to finish the policy editor.</p>
 
-<p>Please see the policy editor's tutorial page <a href="tool-editpolicy.html.en">How to use Policy Editor</a> as needed.</p>
+<p>For more information on usage of the policy editor, see <a href="tool-editpolicy.html.en">How to use Policy Editor</a>.</p>
+
+<p>For more information on the directives, see <a href="policy-reference.html.en">Policy Specifications of AKARI</a>.</p>
 
 <hr>
 
-<h2><a name="configure_audit_daemon">Step 3: Configure to save AKARI's audit logs (Optional)</a></h2>
+<h2><a name="configure_audit_daemon">Step 3: Save audit logs (Optional)</a></h2>
 
-<p>AKARI can record "access granted logs" (access requests that didn't violate domain policy) and "access rejected logs" (access requests that violated domain policy).<br>
-The logs are in the form of domain policy so that the logs can be directly appended to domain policy. Add the "access rejected logs" to domain policy if you consider you should allow the access.</p>
+<p>AKARI can record "access granted logs" (access requests that did not violate domain policy) and "access rejected logs" (access requests that violated domain policy).</p>
 
-<p>You can give the following values for grant_log= parameter of CONFIG line.</p>
+<p>The logs are in the form of domain policy so that the logs can be directly appended to domain policy. Add the "access rejected logs" to domain policy if you consider that access should be allowed.</p>
+
+<p>The following values can be given for the grant_log= parameter of the CONFIG line:</p>
 <table border="1">
 <tr>
 <td>Value</td>
@@ -166,7 +198,7 @@ The logs are in the form of domain policy so that the logs can be directly appen
 <td>Record "access granted logs" unless "grant_log=no" is explicitly specified in the individual ACL entry.</td>
 </tr>
 </table>
-<p>You can give the following values for reject_log= parameter of CONFIG line.</p>
+<p>The following values can be given for the reject_log= parameter of the CONFIG line:</p>
 <table border="1">
 <tr>
 <td>Value</td>
@@ -182,37 +214,76 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </tr>
 </table>
 
-<p>You can use a daemon program that reads from /proc/ccs/grant_log and /proc/ccs/reject_log and writes to files. Run in the following way from (for example) /etc/rc.local .</p>
+<p>/usr/sbin/ccs-auditd is a daemon program that can be used to read from /proc/ccs/audit and writes to files. For example, run /usr/sbin/ccs-auditd from /etc/rc.local .</p>
+
+<p>Sorting rules are specified in /etc/ccs/tools/auditd.conf file, as shown below:</p>
+
+<pre>
+# This file contains sorting rules used by ccs-auditd command.
+
+# An audit log consists with three lines. You can refer the first line
+# using 'header' keyword, the second line using 'domain' keyword, and the
+# third line using 'acl' keyword.
+#
+# Words in each line are separated by a space character. Therefore, you can
+# use 'header[index]', 'domain[index]', 'acl[index]' for referring index'th
+# word of the line. The index starts from 1, and 0 refers the whole line
+# (i.e. 'header[0]' = 'header', 'domain[0]' = 'domain', 'acl[0]' = 'acl').
+#
+# Three operators are provided for conditional sorting.
+# '.contains' is for 'fgrep keyword' match.
+# '.equals' is for 'grep ^keyword$' match.
+# '.starts' is for 'grep ^keyword' match.
+#
+# Sorting rules are defined using multi-lined chunks. A chunk is terminated
+# by a 'destination' line which specifies the pathname to write the audit
+# log. A 'destination' line is processed only when all preceding 'header',
+# 'domain' and 'acl' lines in that chunk have matched.
+# Evaluation stops at the first processed 'destination' line.
+# Therefore, no audit logs are written more than once.
+#
+# More specific matches should be placed before less specific matches.
+# For example:
+#
+# header.contains profile=3
+# domain.contains /usr/sbin/httpd
+# destination     /var/log/tomoyo/reject_003_httpd.log
+#
+# This chunk should be placed before the chunk that matches logs with
+# profile=3. If placed after, the audit logs for /usr/sbin/httpd will be
+# sent to /var/log/tomoyo/reject_003.log .
+
+# Please use AKARI's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Discard all granted logs.
+header.contains granted=yes
+destination     /dev/null
+
+# Save rejected logs with profile=0 to /var/log/tomoyo/reject_000.log
+header.contains profile=0
+destination     /var/log/tomoyo/reject_000.log
+
+# Save rejected logs with profile=1 to /var/log/tomoyo/reject_001.log
+header.contains profile=1
+destination     /var/log/tomoyo/reject_001.log
+
+# Save rejected logs with profile=2 to /var/log/tomoyo/reject_002.log
+header.contains profile=2
+destination     /var/log/tomoyo/reject_002.log
+
+# Save rejected logs with profile=3 to /var/log/tomoyo/reject_003.log
+header.contains profile=3
+destination     /var/log/tomoyo/reject_003.log
+</pre>
+
+<p>WARNING: Be careful with disk space if "access granted logs" are required as this file can grow extremely quickly.</p>
+
+<p>To manage logs with "logrotate", create /etc/logrotate.d/tomoyo with the following content (give "nocreate" option or logs after the first rotation will not be saved):</p>
 
 <table border="1">
 <tr><td>
-/usr/sbin/ccs-auditd $location_to_store_access_granted_logs $location_to_store_access_rejected_logs
-</td></tr>
-</table>
-
-<p>You may give PREFERENCE={ max_grant_log=0 } for profiles and give /dev/null for $location_to_store_access_granted_logs if you don't want "access granted logs". Since "ccs-auditd" doesn't have filtering functions, be careful with the disk's free space if you want to save "access granted logs".</p>
-
-<p>You may give PREFERENCE={ max_reject_log=0 } for profiles and give /dev/null for $location_to_store_access_rejected_logs if you don't want "access rejected logs". But I recommend you to save "access rejected logs". This manual assumes that "access rejected logs" is saved in /var/log/akari/reject_log.conf .</p>
-
-<table border="1">
-<tr><td>
-/usr/sbin/ccs-auditd /dev/null /var/log/akari/reject_log.conf
-</td></tr>
-</table>
-
-<p>Create directories manually for storing access logs.</p>
-
-<table border="1">
-<tr><td>
-[root@akari ~]# mkdir -p /var/log/akari
-</td></tr>
-</table>
-
-<p>If you want to rotate using "logrotate", create /etc/logrotate.d/akari with the following content. Be sure to give "nocreate" option, or logs after the first rotation will not be saved.</p>
-
-<table border="1">
-<tr><td>
-/var/log/akari/reject_log.conf {<br>
+/var/log/tomoyo/*.log {<br>
 &nbsp;&nbsp;weekly<br>
 &nbsp;&nbsp;rotate 9<br>
 &nbsp;&nbsp;missingok<br>
@@ -222,17 +293,17 @@ The logs are in the form of domain policy so that the logs can be directly appen
 </td></tr>
 </table>
 
-<p>If you don't want neither "access granted logs" nor "access rejected logs", you needn't to run "ccs-auditd" and you can give PREFERENCE={ max_grant_log=0 max_reject_log=0 } for profiles to save memory and improve performance.</p>
+<p>If access logs are not required, ccs-auditd need not be run. In this case, give PREFERENCE={ max_audit_log=0 } for profiles to save memory and improve performance. However, it is recommended to store "access rejected logs" because you can utilize "access rejected logs" as source for creating fine grained domain policy.</p>
 
 <hr>
 
 <h2>Step 4: Reboot the system</h2>
 
-<p>Now, reboot.</p>
+<p>Now reboot with the AKARI kernel.</p>
 
 <table border="1">
 <tr><td>
-[root@akari ~]# reboot
+[root@tomoyo ~]# reboot
 </td></tr>
 </table>
 
@@ -241,10 +312,10 @@ The logs are in the form of domain policy so that the logs can be directly appen
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.5   2010/11/22
+AKARI: 1.0.6   2010/12/31
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.0   2010/11/11
+CCSecurity: 1.8.0+   2010/12/31
 Mandatory Access Control activated.
 </pre>
 

@@ -144,7 +144,7 @@ The last "pathname of program" in the domainname is shown on the right side of t
 <p>This means that this domain doesn't exist due to deletion of domains. This domain appears when the parent domain doesn't exist but descendant domains exist to not to break indent. To create this domain, move the cursor to this domain and press "Insert" -&gt; "A"  -&gt; "UpArrow" -&gt; "Enter" keys.<br>
 <img src="editpolicy/deleted-domain.png" alt="Deleted Domain" width="720" height="400"></p>
 
-<h2>(8) To initialize domain transition</h2>
+<h2><a name="Initialize_domain_transition">(8) To initialize domain transition</a></h2>
 
 <p>AKARI in principle transits domains whenever a program is invoked, and the next domain differs if the previous domain differs even if the two domains are invoking the same program. But it would be convenient that some programs, such as daemons, run in the same domain regardless of the previous domain. In such cases, you can run such programs just under the "&lt;kernel&gt;" domain regardless of the previous domain by using "initialize_domain" and "no_initialize_domain" directives.</p>
 
@@ -280,6 +280,6 @@ The last "pathname of program" in the domainname is shown on the right side of t
 <hr>
 
 <p><a href="index.html.en">Return to index page.</a></p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
 </body>
 </html>

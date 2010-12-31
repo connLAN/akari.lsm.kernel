@@ -109,7 +109,7 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 </td></tr>
 </table>
 
-<p>The <b>"-df" option means overwrite "/proc/ccs/domain_policy".<br>
+<p>The <b>"-df"</b> option means overwrite "/proc/ccs/domain_policy".<br>
 The <b>"-ef"</b> option means overwrite "/proc/ccs/exception_policy".<br>
 The <b>"-p"</b> option means append to "/proc/ccs/profile".<br>
 The <b>"-m"</b> option means append to "/proc/ccs/manager".</p>

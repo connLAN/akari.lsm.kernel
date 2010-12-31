@@ -187,7 +187,7 @@ WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stop
 # For user's convenience, new pattern can be omitted if old pattern is reused
 # for new pattern.
 
-# Please use AKARI's escape rule (e.g. '\040' rather than '\ ' for
+# Please use TOMOYO Linux's escape rule (e.g. '\040' rather than '\ ' for
 # representing a ' ' in a word).
 
 # Files on proc filesystem.
@@ -557,6 +557,6 @@ rewrite address_pattern 10.0.0.1-10.0.0.255 @WEB-CLIENT-ADDRESS
 <hr>
 
 <p><a href="index.html.en">Return to index page.</a></p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
 </body>
 </html>

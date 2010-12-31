@@ -145,7 +145,7 @@
 <p>ドメインが削除されたなどの理由により、このドメインが存在していないことを示しています。インデントを崩さないようにするために、親ドメインが存在しないのに子孫ドメインが存在している場合にのみ表示されます。このドメインを作成するには、このドメインにカーソルを合わせて「Insert」→「A」→「↑」→「Enter」キーの順に入力してください。<br>
 <img src="editpolicy/deleted-domain.png" alt="Deleted Domain" width="720" height="400"></p>
 
-<h2>（８）ドメイン遷移を初期化する方法について</h2>
+<h2><a name="Initialize_domain_transition">（８）ドメイン遷移を初期化する方法について</a></h2>
 
 <p>AKARI では原則としてプログラムを実行する度にドメイン遷移を行うので、同じプログラムでも親ドメインが異なれば異なるドメインに属することになりますが、デーモンとして動作するプログラムの場合は親ドメインに関わらず同一のドメインで動作してくれる方が都合が良いことがあります。そのような場合は initialize_domain 構文と no_initialize_domain 構文を使うことで親ドメインに関わらず &lt;kernel&gt; 直下のドメインで動作させることができます。</p>
 
@@ -280,6 +280,6 @@
 <hr>
 
 <p><a href="index.html.ja">目次へ戻る</a></p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
 </body>
 </html>

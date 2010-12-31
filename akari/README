@@ -47,13 +47,27 @@ Version 1.0.4   2010/11/11   Minor update release.
    Synchronize with TOMOYO 1.8.0 release.
 
    Add sysctl() check for 2.6.21 to 2.6.32 kernels.
+
    Fix double new_decode_dev() bug for mknod().
+
    Fix keyword typo.
+
    Fix build failure on some kernels.
+
    Changed pathname prefix priority.
+
    Use hash table for faster scan.
+
    Updated function comments.
 
 Version 1.0.5   2010/11/22   Minor update release.
 
    Make ccs_domain_info/ccs_flags inheritable for 2.6.29 and later kernels.
+
+Version 1.0.6   2010/12/31   Minor update release.
+
+   Synchronize with TOMOYO revision 4280.
+
+   Use same interface for audit logs.
+
+   Split ccs_null_security into ccs_default_security and ccs_oom_security.

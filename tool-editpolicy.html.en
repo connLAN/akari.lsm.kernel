@@ -57,8 +57,8 @@
 <p>Screen for editing managers will appear if you press "M" key from the window list screen.<br>
 <img src="editpolicy/manager-list.png" alt="Screen for Manager List" width="720" height="400"></p>
 
-<p>Screen for browsing memory usage will appear if you press "U" key from the window list screen.<br>
-<img src="editpolicy/memusage.png" alt="Screen for Memory Usage" width="720" height="400"></p>
+<p>Screen for browsing statistics will appear if you press "S" key from the window list screen.<br>
+<img src="editpolicy/stat-list.png" alt="Screen for Statistics" width="720" height="400"></p>
 
 <h2>(6) To search strings</h2>
 

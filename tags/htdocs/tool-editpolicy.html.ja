@@ -57,8 +57,8 @@
 <p>この画面から「M」キーを押すと、マネージャの編集画面に切り替わります。<br>
 <img src="editpolicy/manager-list.png" alt="Screen for Manager List" width="720" height="400"></p>
 
-<p>この画面から「U」キーを押すと、メモリ使用量確認画面に切り替わります。<br>
-<img src="editpolicy/memusage.png" alt="Screen for Memory Usage" width="720" height="400"></p>
+<p>この画面から「S」キーを押すと、統計情報画面に切り替わります。<br>
+<img src="editpolicy/stat-list.png" alt="Screen for Statistics" width="720" height="400"></p>
 
 <h2>（６）検索するには</h2>
 

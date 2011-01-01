@@ -235,8 +235,7 @@ Query lists: 1048576
 <tr><td>カーネルとのインタフェース</td><td>内容</td></tr>
 <tr><td><a href="#query">/proc/ccs/query</a></td><td>管理者の指示待ちとなっているアクセス要求</td></tr>
 <tr><td><a href="#.domain_status">/proc/ccs/.domain_status</a></td><td>定義されているドメイン名とプロファイル番号</td></tr>
-<tr><td><a href="#grant_log">/proc/ccs/grant_log</a></td><td>ポリシーに違反しなかったアクセス要求のログ</td></tr>
-<tr><td><a href="#reject_log">/proc/ccs/reject_log</a></td><td>ポリシーに違反したアクセス要求のログ</td></tr>
+<tr><td><a href="#audit">/proc/ccs/audit</a></td><td>アクセス要求のログ</td></tr>
 <tr><td><a href="#self_domain">/proc/ccs/self_domain</a></td><td>自分が属しているドメインのドメイン名</td></tr>
 <tr><td><a href="#.process_status">/proc/ccs/.process_status</a></td><td>プロセスが属しているドメイン名とプロファイル番号</td></tr>
 <tr><td><a href="#version">/proc/ccs/version</a></td><td>AKARI のバージョン</td></tr>
@@ -455,13 +454,13 @@ Query lists: 1048576
 
 <h2>4.3 <a name="access_logs">アクセスログについて</a></h2>
 
-<p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、 /proc/ccs/grant_log から取得することができます。後者は拒否ログと呼ばれ、 /proc/ccs/reject_log から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/ccs-auditd というプログラムが付属しています。</p>
+<p>ドメインポリシーによって許可されたアクセス要求のログと拒否されたアクセス要求のログを生成します。前者は許可ログと呼ばれ、後者は拒否ログと呼ばれます。これらは /proc/ccs/audit から取得することができます。これらのログを取得してファイルとして保存するためのツールとして /usr/sbin/ccs-auditd というプログラムが付属しています。</p>
 
 <p>以下に例を示します。最初の例はプログラムを実行しようとしたときのログです。</p>
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning granted=yes (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=852049 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=20 argv[]={ "cat" "/etc/fstab" } envp[]={ "HOSTNAME=akari" "TERM=vt100" "SHELL=/bin/bash" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "MAIL=/var/spool/mail/root" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin" "PWD=/root" "LANG=C" "SHLVL=1" "HOME=/root" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash<br>
 file execute /bin/cat
 </td></tr>
@@ -473,7 +472,7 @@ file execute /bin/cat
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:00:50# profile=1 mode=learning (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
+#2010-01-13 21:00:50# profile=1 mode=learning granted=yes (global-pid=2908) task={ pid=2908 ppid=2879 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=901920 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=901121 perm=0755 }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat<br>
 file read /etc/fstab
 </td></tr>
@@ -485,7 +484,7 @@ file read /etc/fstab
 
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type=execute_handler }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning granted=no (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type=execute_handler }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash /bin/audit-exec-param /bin/cat<br>
 use_profile 1
 </td></tr>
@@ -496,7 +495,7 @@ use_profile 1
 <p>次の例は、<a href="#auto_execute_handler">プログラムの実行可否をカーネルの外部で判断</a>するために要求されたのとは異なるプログラムが実行されたときのログです。</p>
 <table border="1">
 <tr><td>
-#2010-01-13 21:05:22# profile=1 mode=learning (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
+#2010-01-13 21:05:22# profile=1 mode=learning granted=yes (global-pid=3007) task={ pid=3007 ppid=2991 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=360482 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=851969 perm=0755 } exec={ realpath="/bin/audit-exec-param" argc=29 envc=0 argv[]={ "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" } envp[]={ } }<br>
 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash<br>
 task auto_execute_handler /bin/audit-exec-param
 </td></tr>
@@ -504,11 +503,11 @@ task auto_execute_handler /bin/audit-exec-param
 
 <p>このログは、 &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/bash というドメインに属しているプロセスがプログラムを実行しようとしたが、 task auto_execute_handler が指定されていたので代わりに /bin/audit-exec-param というプログラムが実行されたこと、 /bin/audit-exec-param に渡された引数の内容は "/bin/audit-exec-param" "&lt;kernel&gt;\040/usr/sbin/sshd\040/bin/bash\040/bin/bash" "/bin/bash" "pid=3007\040uid=0\040gid=0\040euid=0\040egid=0\040suid=0\040sgid=0\040fsuid=0\040fsgid=0" "/bin/cat" "2" "20" "cat" "/etc/fstab" "HOSTNAME=akari" "SHELL=/bin/bash" "TERM=vt100" "HISTSIZE=1000" "SSH_CLIENT=192.168.1.2\0402845\04022" "SSH_TTY=/dev/pts/0" "USER=root" "LS_COLORS=no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=01;32:*.cmd=01;32:*.exe=01;32:*.com=01;32:*.btm=01;32:*.bat=01;32:*.sh=01;32:*.csh=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.bz=01;31:*.tz=01;31:*.rpm=01;31:*.cpio=01;31:*.jpg=01;35:*.gif=01;35:*.bmp=01;35:*.xbm=01;35:*.xpm=01;35:*.png=01;35:*.tif=01;35:" "PATH=/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin:/root/bin:/usr/sbin" "MAIL=/var/spool/mail/root" "PWD=/root" "LANG=C" "HOME=/root" "SHLVL=2" "LOGNAME=root" "CVS_RSH=ssh" "SSH_CONNECTION=192.168.1.2\0402845\040192.168.1.7\04022" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "G_BROKEN_FILENAMES=1" "_=/bin/cat" であったということを示しています。 LD_PRELOAD などの環境変数によって  /bin/audit-exec-param の動作が左右されるのを防ぐため、環境変数を引数に移動しています。</p>
 
-<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/akari/diff.txt という名前で保存した後、</p>
+<p>このように、アクセスログは 3 行で 1 件（ /usr/sbin/ccs-auditd によってファイルに保存されるときに空行が入るので 4 行で 1 件）となっており、これらのログはそのままドメインポリシーとして追加可能な形式になっています。アクセス拒否ログから許可したい部分を抽出して、例えば /var/log/tomoyo/diff.txt という名前で保存した後、</p>
 
 <table border="1">
 <tr><td>
-# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/akari/diff.txt
+# /usr/sbin/ccs-loadpolicy -d &lt; /var/log/tomoyo/diff.txt
 </td></tr>
 </table>
 
@@ -564,9 +563,9 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 <tr><td>mode=learning</td><td>学習モード。ポリシーに違反してもアクセス要求を拒否することはせず、再度同じアクセス要求が発生した場合にポリシー違反とならないようにするために、ポリシーへの自動追加を行います。</td></tr>
 <tr><td>mode=permissive</td><td>確認モード。ポリシーに違反してもアクセス要求を拒否することはしませんが、ポリシーへの自動追加も行いません。</td></tr>
 <tr><td>mode=enforcing</td><td>強制モード。ポリシーに違反するアクセス要求を拒否します。</td></tr>
-<tr><td>grant_log=yes</td><td>アクセス許可ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_grant_log= で指定する。</td></tr>
+<tr><td>grant_log=yes</td><td>アクセス許可ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_audit_log= で指定する。</td></tr>
 <tr><td>grant_log=no</td><td>アクセス許可ログを取得しない。</td></tr>
-<tr><td>reject_log=yes</td><td>アクセス拒否ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_reject_log= で指定する。</td></tr>
+<tr><td>reject_log=yes</td><td>アクセス拒否ログを取得する。上限は <a href="#profile_PREFERENCE">PREFERENCE</a> の max_audit_log= で指定する。</td></tr>
 <tr><td>reject_log=no</td><td>アクセス拒否ログを取得しない。</td></tr>
 </table>
 
@@ -638,9 +637,7 @@ echo '1-CONFIG::file::execute={ mode=learning } '| ccs-loadpolicy -p</p>
 
 <p>アクセスログ／学習モード／強制モードに関する設定を指定します。</p>
 
-<p>max_grant_log= にはカーネル内に保持する、ポリシーによって許可されたアクセス要求のログの件数を指定します。</p>
-
-<p>max_reject_log= にはカーネル内に保持する、ポリシーによって許可されなかったアクセス要求のログの件数を指定します。</p>
+<p>max_audit_log= にはカーネル内に保持する、アクセス要求のログの件数を指定します。</p>
 
 <p>max_learning_entry= には学習モードで自動的に追加されるアクセス許可の上限を指定します。</p>
 
@@ -829,7 +826,6 @@ file chroot /</p>
 <tr><td>network inet stream accept</td><td>リモートの TCP アドレス／ポートからの接続受付および通信</td><td>network inet stream accept 10.0.0.0-10.255.255.255 1024-65535</td></tr>
 <tr><td>network inet stream connect</td><td>リモートの TCP アドレス／ポートへの接続および通信</td><td>network inet stream connect 127.0.0.1 1024-65535</td></tr>
 <tr><td>network inet dgram bind</td><td>ローカルの UDP アドレス／ポートの割り当て</td><td>network inet dgram bind 0.0.0.0 53</td></tr>
-
 <tr><td>network inet dgram send</td><td>指定されたアドレス／ポート番号への UDP パケットの送信</td><td>network inet dgram send 127.0.0.1 53</td></tr>
 <tr><td>network inet raw bind</td><td>ローカルの IP アドレス／プロトコルの割り当て</td><td>network inet raw bind 127.0.0.1 255</td></tr>
 <tr><td>network inet raw send</td><td>指定されたアドレス／ポート番号への IP パケットの送信</td><td>network inet raw send 10.0.0.1 1</td></tr>
@@ -1080,17 +1076,11 @@ deny_autobind 8080</p>
 <p>（例）<br>
 cat /proc/ccs/meminfo<br></p>
 
-<h2><a name="grant_log">/proc/ccs/grant_log</a></h2>
+<h2><a name="audit">/proc/ccs/audit</a></h2>
 
-<p>ドメインポリシーに対するアクセス許可ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE の max_grant_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
+<p>アクセスログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE の max_audit_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
 <p>（例）<br>
-cat /proc/ccs/grant_log</p>
-
-<h2><a name="reject_log">/proc/ccs/reject_log</a></h2>
-
-<p>ドメインポリシーに対するアクセス拒否ログを取得します。取得すべきログが無い場合はすぐに戻ってくるので、ログが発生するまで待機させるには select(2) を使ってください。記憶できる件数は PREFERENCE の max_reject_log パラメータで指定されている件数までです。それ以上は記録されないので、随時読み出すようにする必要があります。</p>
-<p>（例）<br>
-cat /proc/ccs/reject_log</p>
+cat /proc/ccs/audit</p>
 
 <h2><a name="self_domain">/proc/ccs/self_domain</a></h2>
 
@@ -1455,6 +1445,6 @@ chown -R demo /proc/ccs/
 <hr>
 
 <p><a href="index.html.ja">目次へ戻る</a></p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </body>
 </html>

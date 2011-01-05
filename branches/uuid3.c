@@ -2453,7 +2453,7 @@ static ssize_t uuid_read_config(struct file *file, char __user *buf,
 	count = strlen(tmp);
 	if (copy_to_user(buf, tmp, count))
 		return -EFAULT;
-	*ppos++;
+	(*ppos)++;
 	return count;
 }
 
@@ -2501,15 +2501,12 @@ struct file_operations uuid_config_operations = {
 	.read    = uuid_read_config,
 };
 
-static DEFINE_SPINLOCK(uuid_status_buf_lock);
-static char uuid_status_buf[128];
-
-static int uuid_write_status(struct file *file, const char __user *buf,
-			     size_t count, loff_t *ppos)
+static ssize_t uuid_write_status(struct file *file, const char __user *buf,
+				 size_t count, loff_t *ppos)
 {
-	unsigned int pid;
-	char tmp[UUID_PRINT_SIZE];
+	char tmp[128];
 	char *cp;
+	unsigned int pid;
 	if (!count)
 		return 0;
 	if (count > sizeof(tmp))
@@ -2522,52 +2519,45 @@ static int uuid_write_status(struct file *file, const char __user *buf,
 	*cp = '\0';
 	if (sscanf(tmp, "%u", &pid) != 1)
 		return -EINVAL;
-	tmp[0] = '\0';
-	{
-		struct task_struct *p;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
-		read_lock(&tasklist_lock);
-#endif
-		rcu_read_lock();
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-		p = uuid_exports.find_task_by_vpid(pid);
-#else
-		p = find_task_by_pid(pid);
-#endif
-		if (p) {
-			struct uuid_security *ptr =
-				uuid_find_security(__task_cred(p));
-			if (ptr)
-				uuid_print_uuid(ptr, tmp);
-		}
-		rcu_read_unlock();
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
-		read_unlock(&tasklist_lock);
-#endif
-	}
-	spin_lock(&uuid_status_buf_lock);
-	if (tmp[0])
-		snprintf(uuid_status_buf, sizeof(uuid_status_buf) - 1,
-			 "%u %s\n", pid, tmp);
-	else
-		uuid_status_buf[0] = '\0';
-	spin_unlock(&uuid_status_buf_lock);
+	file->private_data = ERR_PTR(pid);
 	return count;
 }
 
-static int uuid_read_status(struct file *file, char __user *buf, size_t count,
-			    loff_t *ppos)
+static ssize_t uuid_read_status(struct file *file, char __user *buf,
+				size_t count, loff_t *ppos)
 {
-	char tmp[sizeof(uuid_status_buf)];
+	char tmp[128];
+	struct task_struct *p;
+	const unsigned int pid = PTR_ERR(file->private_data);
 	if (count < sizeof(tmp))
 		return -EINVAL;
-	spin_lock(&uuid_status_buf_lock);
-	memcpy(tmp, uuid_status_buf, sizeof(tmp));
-	memset(uuid_status_buf, 0, sizeof(uuid_status_buf));
-	spin_unlock(&uuid_status_buf_lock);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
+	/* 2.6.18 and later uses rcu_read_lock(). */
+	read_lock(&tasklist_lock);
+#endif
+	rcu_read_lock();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	p = uuid_exports.find_task_by_vpid(pid);
+#else
+	p = find_task_by_pid(pid);
+#endif
+	if (p) {
+		char uuid[UUID_PRINT_SIZE];
+		struct uuid_security *ptr =
+			uuid_find_security(__task_cred(p));
+		uuid_print_uuid(ptr, uuid);
+		snprintf(tmp, sizeof(tmp) - 1,
+			 "%u %s\n", pid, uuid);
+	} else {
+		printk(KERN_INFO "%s: task not found.\n", __func__);
+		tmp[0] = '\0';
+	}
+	rcu_read_unlock();
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
+	/* 2.6.18 and later uses rcu_read_unlock(). */
+	read_unlock(&tasklist_lock);
+#endif
 	count = strlen(tmp);
-	if (!count)
-		return 0;
 	if (copy_to_user(buf, tmp, count))
 		return -EFAULT;
 	return count;

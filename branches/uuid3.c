@@ -125,7 +125,7 @@ static u16 uuid_config[UUID_MAX_OPERATIONS] = {
 	[UUID_SETSCHEDULER] = 0770,
 	[UUID_GETSCHEDULER] = 0777,
 	[UUID_MOVEMEMORY] = 0777,
-	[UUID_KILL] = 0770,
+	[UUID_KILL] = 0771,
 	[UUID_WAIT] = 0777,
 	[UUID_MSGRECV] = 0777,
 	[UUID_GETPROCATTR] = 0777,
@@ -660,9 +660,10 @@ static bool uuid_check_task(struct task_struct *task,
 		perm &= 4;
 	else if (!obj->uuid_configured)
 		perm &= 2;
-	else if (sbj && sbj->uuid_configured && uuid_eq(sbj->uuid, obj->uuid))
-		perm &= 1;
 	else
+		perm &= 1;
+	if (sbj && sbj->uuid_configured && obj && obj->uuid_configured &&
+	    !uuid_eq(sbj->uuid, obj->uuid))
 		perm = 0;
 	if (perm)
 		goto ok;
@@ -969,8 +970,10 @@ static int uuid_task_movememory(struct task_struct *p)
 static int uuid_task_kill(struct task_struct *p, struct siginfo *info, int sig,
 			  u32 secid)
 {
-	if (uuid_check_task(p, UUID_KILL))
+	if (sig && uuid_check_task(p, UUID_KILL)) {
+		printk(KERN_INFO "signo = %d\n", sig);
 		return -EPERM;
+	}
 	while (!original_security_ops.task_kill);
 	return original_security_ops.task_kill(p, info, sig, secid);
 }
@@ -979,7 +982,7 @@ static int uuid_task_kill(struct task_struct *p, struct siginfo *info, int sig,
 
 static int uuid_task_kill(struct task_struct *p, struct siginfo *info, int sig)
 {
-	if (uuid_check_task(p, UUID_KILL))
+	if (sig && uuid_check_task(p, UUID_KILL))
 		return -EPERM;
 	while (!original_security_ops.task_kill);
 	return original_security_ops.task_kill(p, info, sig);
@@ -1067,18 +1070,22 @@ static int uuid_inode_alloc_security(struct inode *inode)
 {
 	int rc;
 	if (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode)) {
+		/*
 		char buf_sbj[UUID_PRINT_SIZE];
 		char buf_obj[UUID_PRINT_SIZE];
+		*/
 		rc = uuid_copy_security(inode, current_cred(), GFP_KERNEL);
 		if (rc)
 			return rc;
+		/*
 		uuid_print_uuid(uuid_find_security(current_cred()), buf_sbj);
 		uuid_print_uuid(uuid_find_security(inode), buf_obj);
-		printk(KERN_INFO "Allocated %s(%s) by "
+		printk(KERN_DEBUG "Allocated %s(%s) by "
 		       "task(%s) ('%s',pid=%u) (%p)\n",
 		       S_ISSOCK(inode->i_mode) ? "socket" : "pipe",
 		       buf_obj, buf_sbj, current->comm,
 		       current->pid, inode);
+		*/
 	}
 	while (!original_security_ops.inode_alloc_security);
 	rc = original_security_ops.inode_alloc_security(inode);

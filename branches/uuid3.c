@@ -110,30 +110,30 @@ enum uuid_operation_index {
 };
 
 static u16 uuid_config[UUID_MAX_OPERATIONS] = {
-	[UUID_PTRACE] = 0770,
+	[UUID_PTRACE] = 0777,
 	[UUID_CAPGET] = 0777,
-	[UUID_CAPABLE] = 0770,
-	[UUID_CAPSET] = 0770,
+	[UUID_CAPABLE] = 0777,
+	[UUID_CAPSET] = 0777,
 	[UUID_SIGIOTASK] = 0777,
-	[UUID_SETPGID] = 0770,
+	[UUID_SETPGID] = 0777,
 	[UUID_GETPGID] = 0777,
 	[UUID_GETSID] = 0777,
-	[UUID_SETNICE] = 0770,
-	[UUID_SETIOPRIO] = 0770,
+	[UUID_SETNICE] = 0777,
+	[UUID_SETIOPRIO] = 0777,
 	[UUID_GETIOPRIO] = 0777,
-	[UUID_SETRLIMIT] = 0770,
-	[UUID_SETSCHEDULER] = 0770,
+	[UUID_SETRLIMIT] = 0777,
+	[UUID_SETSCHEDULER] = 0777,
 	[UUID_GETSCHEDULER] = 0777,
 	[UUID_MOVEMEMORY] = 0777,
-	[UUID_KILL] = 0771,
+	[UUID_KILL] = 0777,
 	[UUID_WAIT] = 0777,
 	[UUID_MSGRECV] = 0777,
 	[UUID_GETPROCATTR] = 0777,
-	[UUID_SETPROCATTR] = 0770,
-	[UUID_KEY] = 0770,
-	[UUID_UNIX_STREAM_CONNECT] = 0776,
-	[UUID_UNIX_MAY_SEND] = 0776,
-	[UUID_OPEN_PIPE] = 0774,
+	[UUID_SETPROCATTR] = 0777,
+	[UUID_KEY] = 0777,
+	[UUID_UNIX_STREAM_CONNECT] = 0777,
+	[UUID_UNIX_MAY_SEND] = 0777,
+	[UUID_OPEN_PIPE] = 0777,
 };
 
 static const char *uuid_prompt[UUID_MAX_OPERATIONS] = {
@@ -647,8 +647,6 @@ static bool uuid_check_task(struct task_struct *task,
 	if (task == current)
 		return 0;
 	perm = uuid_config[index];
-	if ((perm & 0777) == 0777)
-		return 0;
 	rcu_read_lock();
 	sbj = uuid_find_security(current_cred());
 	obj = uuid_find_security(__task_cred(task));
@@ -688,8 +686,6 @@ static int uuid_check_inode(struct inode *inode, const char *type,
 	char buf_sbj[UUID_PRINT_SIZE];
 	char buf_obj[UUID_PRINT_SIZE];
 	u16 perm = uuid_config[index];
-	if ((perm & 0777) == 0777)
-		return 0;
 	rcu_read_lock();
 	sbj = uuid_find_security(current_cred());
 	obj = uuid_find_security(inode);
@@ -701,9 +697,10 @@ static int uuid_check_inode(struct inode *inode, const char *type,
 		perm &= 4;
 	else if (!obj->uuid_configured)
 		perm &= 2;
-	else if (sbj && sbj->uuid_configured && uuid_eq(sbj->uuid, obj->uuid))
-		perm &= 1;
 	else
+		perm &= 1;
+	if (sbj && sbj->uuid_configured && obj && obj->uuid_configured &&
+	    !uuid_eq(sbj->uuid, obj->uuid))
 		perm = 0;
 	if (perm)
 		goto ok;

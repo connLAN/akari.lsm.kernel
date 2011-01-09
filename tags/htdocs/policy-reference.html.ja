@@ -67,7 +67,7 @@
 <li><a href="#domain_policy_file_append">file append</a></li>
 <li><a href="#domain_policy_file_create">file create</a></li>
 <li><a href="#domain_policy_file_unlink">file unlink</a></li>
-<li><a href="#domain_policy_file_unlinkmkdir">file mkdir</a></li>
+<li><a href="#domain_policy_file_mkdir">file mkdir</a></li>
 <li><a href="#domain_policy_file_rmdir">file rmdir</a></li>
 <li><a href="#domain_policy_file_mkfifo">file mkfifo</a></li>
 <li><a href="#domain_policy_file_mksock">file mksock</a></li>
@@ -686,7 +686,7 @@ cat /proc/ccs/domain_policy</p>
 <p>（例） file read /proc/meminfo</p>
 <p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>
 
-<h3><a name="domain_policy_append">file append</a></h3>
+<h3><a name="domain_policy_file_append">file append</a></h3>
 <p>指定されたパス名を追記モードでオープンすることを許可します。</p>
 <p>（例） file append /dev/null</p>
 <p>関連項目： <a href="#exception_policy_path_group">path_group</a></p>

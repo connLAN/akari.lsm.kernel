@@ -1076,7 +1076,7 @@ deny_autobind 8080</p>
 <p>(Example)<br>
 cat /proc/ccs/meminfo<br></p>
 
-<h2><a name="audit_log">/proc/ccs/audit</a></h2>
+<h2><a name="audit">/proc/ccs/audit</a></h2>
 
 <p>This file holds the audit log. The reader process returns immediately if no granted logs exists. To wait until an audit log is generated, use select(2) for readability. The max number of logs that the kernel can hold is limited to max_audit_log parameter of PREFERENCE, so read out timely.</p>
 <p>(Example)<br>

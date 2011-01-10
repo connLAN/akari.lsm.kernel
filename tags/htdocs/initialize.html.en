@@ -143,7 +143,7 @@ The exceptions to this transition rule are described later.</p>
 </td></tr><tr><td>
 (3) Address group
 </td><td>
-<p>You can specify IPv4 or IPv6 address groups using "address_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple addresses using group names.<br>
+<p>You can specify IPv4 or IPv6 address groups using "address_group" directive. This is a macro to reduce the amount of domain policy by grouping multiple addresses using group names.</p>
 </td></tr><tr><td>
 (4) ACL group
 </td><td>

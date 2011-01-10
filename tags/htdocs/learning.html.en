@@ -163,7 +163,7 @@ WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stop
 # This file contains rewriting rules used by ccs-patternize command.
 
 # Domain policy consists with domain declaration lines (which start with
-# <kernel> ) and acl declaration lines (which do not start with <kernel> ).
+# &lt;kernel&gt; ) and acl declaration lines (which do not start with &lt;kernel&gt; ).
 # You can refer the former using 'domain' keyword and the latter using 'acl'
 # keyword.
 #
@@ -495,7 +495,7 @@ rewrite number_pattern 1024-65535 @WEB-CLIENT-PORTS
 
 <h2>Step 6: Patterning Network Access Permissions</h2>
 
-<p>Patterns can be made for IP addresses in domain policy, for example:</a>
+<p>Patterns can be made for IP addresses in domain policy, for example:</p>
 
 <table border="1">
 <tr><td>Before</td><td>After</td></tr>

@@ -17,7 +17,7 @@
 
 <h2>Step 1: Reviewing gathered permissions</h2>
 
-<p>Once you think you have done everything you want to allow Apache to do, run the policy editor and change the profile number to 2.<p>
+<p>Once you think you have done everything you want to allow Apache to do, run the policy editor and change the profile number to 2.</p>
 
 <p>Note that Apache may have executed some external programs (e.g. "/bin/sh", "/usr/bin/perl", "/usr/lib/sendmail") and thus has some descendent domains. Be sure to change the profile number fo all descendent domains as well.</p>
 

@@ -69,7 +69,7 @@ This version is not supported because I cannot resolve vfsmount_lock .
 
 <p>errors, you can't use AKARI for your kernel. For other errors, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
 
-<p>If you are interested in what functionality and syntax are supported for your kernel, see <a href="comparison.html.en">AKARI / TOMOYO functionality comparison table</a>.</li></p>
+<p>If you are interested in what functionality and syntax are supported for your kernel, see <a href="comparison.html.en">AKARI / TOMOYO functionality comparison table</a>.</p>
 
 <hr>
 

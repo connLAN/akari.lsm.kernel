@@ -175,7 +175,7 @@ file execute /bin/cat
 
 <h2><a name="using_interactive_mode">Step 2: Handling policy violation arising in during software updates</a></h2>
 
-<p>When packages are updated, policy may need to be updated if any of the following occur:
+<p>When packages are updated, policy may need to be updated if any of the following occur:</p>
 
 <ul>
 <li>The pathnames of files have changed.
@@ -193,7 +193,7 @@ file execute /bin/cat
 
 <p><object width="425" height="344"><param name="movie" value="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="344"></embed></object></p>
 
-<p>Use "/usr/sbin/ccs-queryd" to view (in realtime) access requests that have been rejected by policy:
+<p>Use "/usr/sbin/ccs-queryd" to view (in realtime) access requests that have been rejected by policy:</p>
 
 <table border="1">
 <tr><td>
@@ -202,7 +202,7 @@ Monitoring /proc/ccs/query . Press Ctrl-C to terminate.</p>
 </td></tr>
 </table>
 
-<p>Policy violations may occur while updating packages due to unusual behaviour (e.g. restarting daemons). When a policy violation occurs, a prompt appears in the "ccs-queryd" console:
+<p>Policy violations may occur while updating packages due to unusual behaviour (e.g. restarting daemons). When a policy violation occurs, a prompt appears in the "ccs-queryd" console:</p>
 
 <table border="1">
 <tr><td>

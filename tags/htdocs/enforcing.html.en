@@ -198,7 +198,7 @@ file execute /bin/cat
 <table border="1">
 <tr><td>
 [root@tomoyo ~]# /usr/sbin/ccs-queryd<br>
-Monitoring /proc/ccs/query . Press Ctrl-C to terminate.</p>
+Monitoring /proc/ccs/query . Press Ctrl-C to terminate.
 </td></tr>
 </table>
 

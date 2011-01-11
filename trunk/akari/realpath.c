@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/realpath.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.0+   2011/01/11
  */
 
 #include "internal.h"
@@ -332,17 +332,16 @@ out:
 /**
  * ccs_get_local_path - Get the path of a dentry.
  *
- * @path:   Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
  * @buffer: Pointer to buffer to return value in.
  * @buflen: Sizeof @buffer.
  *
  * Returns the buffer on success, an error code otherwise.
  */
-static char *ccs_get_local_path(struct path *path, char * const buffer,
+static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 				const int buflen)
 {
 	char *pos;
-	struct dentry *dentry = path->dentry;
 	struct super_block *sb = dentry->d_sb;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
 	spin_lock(&dcache_lock);
@@ -375,6 +374,9 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 #endif
 		goto prepend_filesystem_name;
 	}
+	/* Use filesystem name for unnamed devices. */
+	if (!MAJOR(sb->s_dev))
+		goto prepend_filesystem_name;
 	{
 		struct inode *inode = sb->s_root->d_inode;
 		/*
@@ -384,11 +386,12 @@ static char *ccs_get_local_path(struct path *path, char * const buffer,
 		if (inode->i_op && !inode->i_op->rename)
 			goto prepend_filesystem_name;
 	}
-	/* Prepend device name if vfsmount is not available. */
-	if (!path->mnt) {
-		char name[64] = { };
+	/* Prepend device name. */
+	{
+		char name[64];
 		int name_len;
 		const dev_t dev = sb->s_dev;
+		name[sizeof(name) - 1] = '\0';
 		snprintf(name, sizeof(name) - 1, "dev(%u,%u):", MAJOR(dev),
 			 MINOR(dev));
 		name_len = strlen(name);
@@ -489,7 +492,8 @@ char *ccs_realpath_from_path(struct path *path)
 		 * or dentry without vfsmount.
 		 */
 		if (!path->mnt || (inode->i_op && !inode->i_op->rename)) {
-			pos = ccs_get_local_path(path, buf, buf_len - 1);
+			pos = ccs_get_local_path(path->dentry, buf,
+						 buf_len - 1);
 			goto encode;
 		}
 		/* Get absolute name for the rest. */

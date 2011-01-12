@@ -528,6 +528,10 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 	} else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 		rc = ccs_open_permission(bprm->file);
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
+		/* 00 means "read". */
+		rc = ccs_open_permission(bprm->file->f_dentry,
+					 bprm->file->f_vfsmnt, 00);
 #else
 		/* 01 means "read". */
 		rc = ccs_open_permission(bprm->file->f_dentry,
@@ -558,6 +562,9 @@ static int ccs_open(struct file *f)
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 	return ccs_open_permission(f);
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
+	return ccs_open_permission(f->f_path.dentry, f->f_path.mnt,
+				   f->f_flags);
 #else
 	return ccs_open_permission(f->f_path.dentry, f->f_path.mnt,
 				   f->f_flags + 1);

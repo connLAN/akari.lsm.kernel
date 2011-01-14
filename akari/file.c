@@ -21,9 +21,9 @@
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
 
 #if defined(RHEL_MAJOR) && RHEL_MAJOR == 6
-/* However, RHEL6 passes unmodified flags since 2.6.32-71.14.1.el6 . */
+/* RHEL6 passes unmodified flags since 2.6.32-71.14.1.el6 . */
 #undef ACC_MODE
-#define ACC_MODE(x) ("\004\002\006\000"[(x)&O_ACCMODE])
+#define ACC_MODE(x) ("\004\002\006"[(x)&O_ACCMODE])
 #endif
 
 #endif

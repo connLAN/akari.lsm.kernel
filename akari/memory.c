@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/memory.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.0+   2011/01/15
  */
 
 #include "internal.h"
@@ -43,25 +43,27 @@ unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
 /**
  * ccs_memory_ok - Check memory quota.
  *
- * @ptr:  Pointer to allocated memory.
- * @size: Size in byte.
+ * @ptr:  Pointer to allocated memory. Maybe NULL.
+ * @size: Size in byte. Not used if @ptr is NULL.
  *
  * Returns true if @ptr is not NULL and quota not exceeded, false otherwise.
  */
 bool ccs_memory_ok(const void *ptr, const unsigned int size)
 {
-	size_t s = ccs_round2(size);
-	bool result;
-	spin_lock(&ccs_policy_memory_lock);
-	ccs_memory_used[CCS_MEMORY_POLICY] += s;
-	result = ptr && (!ccs_memory_quota[CCS_MEMORY_POLICY] ||
-			 ccs_memory_used[CCS_MEMORY_POLICY] <=
-			 ccs_memory_quota[CCS_MEMORY_POLICY]);
-	if (!result)
-		ccs_memory_used[CCS_MEMORY_POLICY] -= s;
-	spin_unlock(&ccs_policy_memory_lock);
-	if (result)
-		return true;
+	if (ptr) {
+		const size_t s = ccs_round2(size);
+		bool result;
+		spin_lock(&ccs_policy_memory_lock);
+		ccs_memory_used[CCS_MEMORY_POLICY] += s;
+		result = !ccs_memory_quota[CCS_MEMORY_POLICY] ||
+			ccs_memory_used[CCS_MEMORY_POLICY] <=
+			ccs_memory_quota[CCS_MEMORY_POLICY];
+		if (!result)
+			ccs_memory_used[CCS_MEMORY_POLICY] -= s;
+		spin_unlock(&ccs_policy_memory_lock);
+		if (result)
+			return true;
+	}
 	ccs_warn_oom(__func__);
 	return false;
 }

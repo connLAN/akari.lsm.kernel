@@ -40,30 +40,30 @@
 <h2>（５）画面を切り替えるには</h2>
 
 <p>ポリシーエディタには６つの画面があります。「W」キーを押すと一覧が表示されます。<br>
-<img src="editpolicy/window-list.png" alt="Window List" width="720" height="400"></p>
+<img src="editpolicy/window-list.png" alt="window-list.png" title="Window List" width="720" height="400"></p>
 
 <p>この画面から「E」キーを押すと、例外ポリシーの編集画面に切り替わります。<br>
-<img src="editpolicy/exception-policy.png" alt="Screen for Exception Policy" width="720" height="400"></p>
+<img src="editpolicy/exception-policy.png" alt="exception-policy.png" title="Screen for Exception Policy" width="720" height="400"></p>
 
 <p>この画面から「D」キーを押すと、ドメイン遷移一覧画面に切り替わります。<br>
-<img src="editpolicy/domain-list.png" alt="Screen for Domain List" width="720" height="400"></p>
+<img src="editpolicy/domain-list.png" alt="domain-list.png" title="Screen for Domain List" width="720" height="400"></p>
 
 <p>この画面から「A」キーを押すと、ドメインに対するアクセス許可の編集画面に切り替わります。<br>
-<img src="editpolicy/domain-policy.png" alt="Screen for Domain Policy" width="720" height="400"></p>
+<img src="editpolicy/domain-policy.png" alt="domain-policy.png" title="Screen for Domain Policy" width="720" height="400"></p>
 
 <p>この画面から「P」キーを押すと、プロファイルの編集画面に切り替わります。<br>
-<img src="editpolicy/profile-list.png" alt="Screen for Profile List" width="720" height="400"></p>
+<img src="editpolicy/profile-list.png" alt="profile-list.png" title="Screen for Profile List" width="720" height="400"></p>
 
 <p>この画面から「M」キーを押すと、マネージャの編集画面に切り替わります。<br>
-<img src="editpolicy/manager-list.png" alt="Screen for Manager List" width="720" height="400"></p>
+<img src="editpolicy/manager-list.png" alt="manager-list.png" title="Screen for Manager List" width="720" height="400"></p>
 
 <p>この画面から「S」キーを押すと、統計情報画面に切り替わります。<br>
-<img src="editpolicy/stat-list.png" alt="Screen for Statistics" width="720" height="400"></p>
+<img src="editpolicy/stat-list.png" alt="stat-list.png" title="Screen for Statistics" width="720" height="400"></p>
 
 <h2>（６）検索するには</h2>
 
 <p>検索を開始するには、「F」キーを押して、検索したい文字列を入力し、最後に「Enter」キーを押します。<br>
-<img src="editpolicy/find-first.png" alt="Find First" width="720" height="400"></p>
+<img src="editpolicy/find-first.png" alt="find-first.png" title="Find First" width="720" height="400"></p>
 
 <p>前回入力した文字列で順方向（下方向）に検索を続行するには、「N」キーを押します。</p>
 
@@ -74,32 +74,32 @@
 <p>エントリを追加するには、「A」キーを押して、追加したい内容を入力し、最後に「Enter」キーを押します。入力した内容はヒストリに残っており「Insert」キーでヒストリの内容を確認できます。ヒストリの内容を呼び出すには「↑」「↓」キーを使います。</p>
 
 <p>ドメイン遷移一覧画面の例<br>
-<img src="editpolicy/add-domain-list.png" alt="Adding an entry into  List" width="720" height="400"></p>
+<img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into  List" width="720" height="400"></p>
 
 <p>例外ポリシーの編集画面の例<br>
-<img src="editpolicy/add-exception-policy.png" alt="Adding Exception Policy" width="720" height="400"></p>
+<img src="editpolicy/add-exception-policy.png" alt="add-exception-policy.png" title="Adding Exception Policy" width="720" height="400"></p>
 
 <p>ドメインに対するアクセス許可の編集画面の例<br>
-<img src="editpolicy/add-domain-policy.png" alt="Adding Domain Policy" width="720" height="400"></p>
+<img src="editpolicy/add-domain-policy.png" alt="add-domain-policy.png" title="Adding Domain Policy" width="720" height="400"></p>
 
 <h2>（８）エントリを選択するには</h2>
 
 <p>エントリを選択するには、選択したいエントリにカーソルを合わせて「スペース」キーを押します。選択されると行頭に「&amp;」マークが表示されます。<br>
-<img src="editpolicy/select.png" alt="Selecting an entry" width="720" height="400"></p>
+<img src="editpolicy/select.png" alt="select.png" title="Selecting an entry" width="720" height="400"></p>
 
 <p>もう一度「スペース」キーを押すと選択解除されます。選択解除されると行頭の「&amp;」マークが消えます。</p>
 
 <h2>（９）エントリを一括選択するには</h2>
 
 <p>「C」キーを押すと、カーソルのある行の選択状態（行頭の「&amp;」マークの有無）がカーソル行以下の全エントリに複写されます。<br>
-<img src="editpolicy/copy.png" alt="Copying selection state" width="720" height="400"></p>
+<img src="editpolicy/copy.png" alt="copy.png" title="Copying selection state" width="720" height="400"></p>
 
 <p>特定の範囲のみを選択するには、選択対象となる最初のエントリにカーソルを合わせて「&amp;」マークを表示させてから「C」キーを押し、選択対象となる最後のエントリの次のエントリにカーソルを合わせて「&amp;」マークを消してから「C」キーを押します。</p>
 
 <h2>（１０）エントリを削除するには</h2>
 
 <p>削除したいエントリを１個以上選択してから「D」キーを押します。削除を確認するためのプロンプトが表示されるので、「Y」キーを押すと削除されます。<br>
-<img src="editpolicy/delete.png" alt="Deleting selected entries" width="720" height="400"></p>
+<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400"></p>
 
 <h1>ドメイン遷移一覧画面に固有の機能</h1>
 
@@ -113,37 +113,37 @@
 <h2>（１）ドメインのプロファイル番号を変更する方法について</h2>
 
 <p>プロファイルの割り当てを変更したいドメインを１個以上選択してから「S」キーを押します。すると、プロファイル番号の入力を求めるプロンプトが表示されるので、プロファイル番号を入力し、最後に「Enter」キーを押します。<br>
-<img src="editpolicy/profile.png" alt="Setting profile number" width="720" height="400"></p>
+<img src="editpolicy/profile.png" alt="profile.png" title="Setting profile number" width="720" height="400"></p>
 
 <h2>（２）「!」マークが表示されているドメインについて</h2>
 
 <p>「!」マークが表示されているドメインは、 initialize_domain 構文または keep_domain 構文により到達できないドメインであることを示しています。到達できない理由が「プログラムのパス名」の右側に表示されます。<br>
-<img src="editpolicy/unreachable.png" alt="Unreachable Domain" width="720" height="400"></p>
+<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400"></p>
 
 <h2>（３）「*」マークが表示されているドメインについて</h2>
 
 <p>「*」マークが表示されているドメインは、 initialize_domain 構文により複数のドメインからこのドメインに遷移する可能性があることを示しています。「*」マークが表示されていないドメインはそのドメインの親ドメインからのみ遷移します。<br>
-<img src="editpolicy/initialize_domain-dest.png" alt="Initialization Target" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-dest.png" alt="initialize_domain-dest.png" title="Initialization Target" width="720" height="400"></p>
 
 <h2>（４）「#」マークが表示されているドメインについて</h2>
 
 <p>「#」マークが表示されているドメインは、 keep_domain 構文により複数のプログラムがこのドメインで動作する（プログラムを実行してもドメイン遷移が発生しない）可能性があることを示しています。<br>
-<img src="editpolicy/keep_domain.png" alt="Keeping Domain" width="720" height="400"></p>
+<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400"></p>
 
 <h2>（５）プログラムのパス名の後ろに「( -&gt; 数字 )」という表示があるドメインについて</h2>
 
 <p>これは実際のドメインではありません。「プログラムのパス名」が initialize_domain 構文により指定されているために、親ドメインから実行されると「数字」が示す行番号のドメインへ遷移することを示しています。<br>
-<img src="editpolicy/initialize_domain-src.png" alt="Initialization Source" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-src.png" alt="initialize_domain-src.png" title="Initialization Source" width="720" height="400"></p>
 
 <h2>（６）プログラムのパス名の後ろに「( -&gt; Not Found )」という表示があるドメインについて</h2>
 
 <p>これは実際のドメインではありません。「プログラムのパス名」が initialize_domain 構文により指定されていますが、遷移先のドメインがまだ作成されていないことを示しています。<br>
-<img src="editpolicy/initialize_domain-nodest.png" alt="No Initialization Target" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400"></p>
 
 <h2>（７）「( プログラムのパス名 )」という表示があるドメインについて</h2>
 
 <p>ドメインが削除されたなどの理由により、このドメインが存在していないことを示しています。インデントを崩さないようにするために、親ドメインが存在しないのに子孫ドメインが存在している場合にのみ表示されます。このドメインを作成するには、このドメインにカーソルを合わせて「Insert」→「A」→「↑」→「Enter」キーの順に入力してください。<br>
-<img src="editpolicy/deleted-domain.png" alt="Deleted Domain" width="720" height="400"></p>
+<img src="editpolicy/deleted-domain.png" alt="deleted-domain.png" title="Deleted Domain" width="720" height="400"></p>
 
 <h2><a name="Initialize_domain_transition">（８）ドメイン遷移を初期化する方法について</a></h2>
 
@@ -151,30 +151,30 @@
 
 <p>例として、 /usr/sbin/sendmail を常に &lt;kernel&gt; /usr/sbin/sendmail ドメインで動作させる方法を示します。</p>
 <p>initialize_domain を指定する前は以下のように複数のドメインで同一のプログラムが実行されています。<br>
-<img src="editpolicy/before-initialize_domain-1.png" alt="Before initialize_domain" width="720" height="400"><br>
-<img src="editpolicy/before-initialize_domain-2.png" alt="Before initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/before-initialize_domain-1.png" alt="before-initialize_domain-1.png" title="Before initialize_domain" width="720" height="400"><br>
+<img src="editpolicy/before-initialize_domain-2.png" alt="before-initialize_domain-2.png" title="Before initialize_domain" width="720" height="400"></p>
 
 <p>例外ポリシー編集画面に切り替えて、「A」キーを押してから initialize_domain /usr/sbin/sendmail from any と入力し、「Enter」キーを押します。これは、 /usr/sbin/sendmail が実行された場合には &lt;kernel&gt; /usr/sbin/sendmail ドメインへ遷移するということを意味します。<br>
-<img src="editpolicy/adding-initialize_domain.png" alt="Adding initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400"></p>
 
 <p>その後、ドメイン一覧画面に戻ると、既に作成されたドメインに「!」マークが現れています。さらに、遷移先である &lt;kernel&gt; /usr/sbin/sendmail ドメインがまだ作成されていないので「（-&gt; Not Found）」という表示も現れています。<br>
-<img src="editpolicy/after-initialize_domain.png" alt="After initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/after-initialize_domain.png" alt="after-initialize_domain.png" title="After initialize_domain" width="720" height="400"></p>
 
 <p>「（-&gt; Not Found）」という表示を消すために、「A」キーを押して &lt;kernel&gt; /usr/sbin/sendmail と入力し、「Enter」キーを押します。<br>
-<img src="editpolicy/adding-initialize_domain-target.png" alt="Adding initialization target" width="720" height="400"></p>
+<img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400"></p>
 
 <p>すると、「（-&gt; Not Found）」という表示は遷移先の行番号に変化しました。<br>
-<img src="editpolicy/after-initialize_domain-target.png" alt="After initialize_domain target" width="720" height="400"><br>
-<img src="editpolicy/added-initialize_domain-target.png" alt="Added initialization target" width="720" height="400"></p>
+<img src="editpolicy/after-initialize_domain-target.png" alt="after-initialize_domain-target.png" title="After initialize_domain target" width="720" height="400"><br>
+<img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400"></p>
 
 <p>しかし、 /bin/mail から /usr/sbin/sendmail が実行される場合はデーモンとして動作させるわけではないため、 &lt;kernel&gt; /usr/sbin/sendmail ドメインへ遷移させたくないと考えるかもしれません。<br>
-<img src="editpolicy/before-no_initialize_domain.png" alt="Before no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/before-no_initialize_domain.png" alt="before-no_initialize_domain.png" title="Before no_initialize_domain" width="720" height="400"></p>
 
 <p>そのような場合、例外ポリシー編集画面に切り替えて、「A」キーを押してから no_initialize_domain /usr/sbin/sendmail from /bin/mail と入力し、「Enter」キーを押します。これは、ドメイン名が /bin/mail で終わるドメインから /usr/sbin/sendmail が実行される場合には &lt;kernel&gt; /usr/sbin/sendmail ドメインへ遷移させないということを意味します。<br>
-<img src="editpolicy/adding-no_initialize_domain.png" alt="Adding no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-no_initialize_domain.png" alt="adding-no_initialize_domain.png" title="Adding no_initialize_domain" width="720" height="400"></p>
 
 <p>ドメイン一覧画面に戻ると、 /bin/mail から実行される /usr/sbin/sendmail には「!」マークが消えていることを確認できます。<br>
-<img src="editpolicy/after-no_initialize_domain.png" alt="After no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/after-no_initialize_domain.png" alt="after-no_initialize_domain.png" title="After no_initialize_domain" width="720" height="400"></p>
 
 <h2>（９）ドメイン遷移を抑制する方法について</h2>
 
@@ -182,34 +182,34 @@
 
 <p>例として、コンソールからログインしたドメイン（&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash）ではドメイン遷移をさせないようにする方法を示します。</p>
 <p>keep_domain を指定する前は以下のようなドメイン遷移が発生しています。<br>
-<img src="editpolicy/before-keep_domain.png" alt="Before keep_domain" width="720" height="400"></p>
+<img src="editpolicy/before-keep_domain.png" alt="before-keep_domain.png" title="Before keep_domain" width="720" height="400"></p>
 
 <p>例外ポリシー編集画面に切り替えて、「A」キーを押してから keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash と入力し、「Enter」キーを押します。<br>
-<img src="editpolicy/adding-keep_domain-1.png" alt="Adding keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-keep_domain-1.png" alt="adding-keep_domain-1.png" title="Adding keep_domain" width="720" height="400"></p>
 
 <p>その後、ドメイン一覧画面に戻ると、 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash ドメインの行に「#」という表示が現れ、その子孫ドメインには「!」という表示が現れます。<br>
-<img src="editpolicy/after-keep_domain-1.png" alt="After keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400"></p>
 
 <p>ログインしてから man コマンドを実行していますが、 man コマンドは複雑な処理をするので別ドメインで動作させることにします。<br>
-<img src="editpolicy/before-no_keep_domain.png" alt="Before no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/before-no_keep_domain.png" alt="before-no_keep_domain.png" title="Before no_keep_domain" width="720" height="400"></p>
 
 <p>例外ポリシー編集画面に切り替えて、「A」キーを押してから no_keep_domain /usr/bin/man from /bin/bash （または no_keep_domain /usr/bin/man from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash）と入力し、「Enter」キーを押します。<br>
-<img src="editpolicy/adding-no_keep_domain.png" alt="Adding no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-no_keep_domain.png" alt="adding-no_keep_domain.png" title="Adding no_keep_domain" width="720" height="400"></p>
 
 <p>その後、ドメイン一覧画面に戻ると、 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man ドメインとその子孫ドメインから「!」という表示が消えました。<br>
-<img src="editpolicy/after-no_keep_domain.png" alt="After no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-no_keep_domain.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400"></p>
 
 <p>/usr/bin/man コマンドからいくつかのコマンドが実行されていますが、これらはドメイン遷移させる必要が無いので、ドメイン遷移をさせないことにします。例外ポリシー編集画面に切り替えて、「A」キーを押してから keep_domain any from /usr/bin/man（または keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man ）と入力し、「Enter」キーを押します。<br>
-<img src="editpolicy/adding-keep_domain-2.png" alt="Addint keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-keep_domain-2.png" alt="adding-keep_domain-2.png" title="Addint keep_domain" width="720" height="400"></p>
 
 <p>その後、ドメイン一覧画面に戻ると、 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man ドメインの行に「#」という表示が現れ、その子孫ドメインには「!」という表示が現れます。<br>
-<img src="editpolicy/after-keep_domain-2.png" alt="After keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-keep_domain-2.png" alt="after-keep_domain-2.png" title="After keep_domain" width="720" height="400"></p>
 
 <p>到達不能になったドメインは残しておいても無駄なので、削除することにします。「!」というマークが表示されている行を「スペース」キーを使って選択し、「D」キーを押してから「Y」キーを押すことで削除できます。<br>
-<img src="editpolicy/before-delete.png" alt="Before deleting unreachable domains" width="720" height="400"></p>
+<img src="editpolicy/before-delete.png" alt="before-delete.png" title="Before deleting unreachable domains" width="720" height="400"></p>
 
 <p>到達不能になったドメインの削除後は以下のようになります。<br>
-<img src="editpolicy/after-delete.png" alt="After deleting unreachable domains" width="720" height="400"></p>
+<img src="editpolicy/after-delete.png" alt="after-delete.png" title="After deleting unreachable domains" width="720" height="400"></p>
 
 <p>アクセス制限を行うことが目的である場合は、再度学習を行い、最後に強制モード用のプロファイルを割り当てることを忘れないでください。</p>
 
@@ -222,60 +222,60 @@
 <h2>（１）表示方法について</h2>
 
 <p>「@」キーを押すことで、対象順表示と操作順表示を切り替えることができます。<br>
-<img src="editpolicy/sort-1.png" alt="Sort by operand" width="720" height="400"><br>
-<img src="editpolicy/sort-2.png" alt="Sort by keyword" width="720" height="400"></p>
+<img src="editpolicy/sort-1.png" alt="sort-1.png" title="Sort by operand" width="720" height="400"><br>
+<img src="editpolicy/sort-2.png" alt="sort-2.png" title="Sort by keyword" width="720" height="400"></p>
 
 <h2>（２）パターン化支援機能について</h2>
 
 <p>「O」キーを押すと、カーソルのある行に含まれるアクセス許可に包含されるアクセス許可に対して「&amp;」マークが付与されるので、内容を確認してから「D」キーを押すことで削除することができます。</p>
 
 <p>(A-1) 次の絵は、パターン化されたアクセス許可を追加する前のものです。<br>
-<img src="editpolicy/optimize-1.png" alt="Before adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-1.png" alt="optimize-1.png" title="Before adding patterned entry" width="720" height="400"></p>
 
 <p>(A-2) 次の絵は、パターン化されたアクセス許可を追加した後のものです。<br>
-<img src="editpolicy/optimize-2.png" alt="After adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-2.png" alt="optimize-2.png" title="After adding patterned entry" width="720" height="400"></p>
 
 <p>(A-3) 次の絵は、追加したエントリの上で「O」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-3.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-3.png" alt="optimize-3.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(A-4) 次の絵は、「D」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-4.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-4.png" alt="optimize-4.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(A-5) 次の絵は、「Y」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-5.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-5.png" alt="optimize-5.png" title="After entering yes key" width="720" height="400"></p>
 
 <p>(B-1) ネットワークに対するアクセス許可でも同様です。次の絵は、パターン化されたアクセス許可を追加する前のものです。<br>
-<img src="editpolicy/optimize-6.png" alt="Before adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-6.png" alt="optimize-6.png" title="Before adding patterned entry" width="720" height="400"></p>
 
 <p>(B-2) 次の絵は、パターン化されたアクセス許可を追加した後のものです。<br>
-<img src="editpolicy/optimize-7.png" alt="After adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-7.png" alt="optimize-7.png" title="After adding patterned entry" width="720" height="400"></p>
 
 <p>(B-3) 次の絵は、追加したエントリの上で「O」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-8.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-8.png" alt="optimize-8.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(B-4) 次の絵は、「D」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-9.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-9.png" alt="optimize-9.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(B-5) 次の絵は、「Y」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-10.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-10.png" alt="optimize-10.png" title="After entering yes key" width="720" height="400"></p>
 
 <p>(C-1) path_group を用いた場合も同様です。次の絵は、 path_group を追加した後のものです。<br>
-<img src="editpolicy/optimize-11.png" alt="After adding path_group" width="720" height="400"></p>
+<img src="editpolicy/optimize-11.png" alt="optimize-11.png" title="After adding path_group" width="720" height="400"></p>
 
 <p>(C-2) 次の絵は、 path_group を追加する前のものです。<br>
-<img src="editpolicy/optimize-12.png" alt="Before adding path_group entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-12.png" alt="optimize-12.png" title="Before adding path_group entry" width="720" height="400"></p>
 
 <p>(C-3) 次の絵は、 path_group を追加した後のものです。<br>
-<img src="editpolicy/optimize-13.png" alt="After adding path_group entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-13.png" alt="optimize-13.png" title="After adding path_group entry" width="720" height="400"></p>
 
 <p>(C-4) 次の絵は、追加したエントリの上で「O」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-14.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-14.png" alt="optimize-14.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(C-5) 次の絵は、「D」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-15.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-15.png" alt="optimize-15.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(C-6) 次の絵は、「Y」キーを押した後のものです。<br>
-<img src="editpolicy/optimize-16.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-16.png" alt="optimize-16.png" title="After entering yes key" width="720" height="400"></p>
 
 <hr>
 

@@ -40,30 +40,30 @@
 <h2>(5) To switch screen</h2>
 
 <p>The policy editor has 6 screens. Press "W" key to show the window list.<br>
-<img src="editpolicy/window-list.png" alt="Window List" width="720" height="400"></p>
+<img src="editpolicy/window-list.png" alt="window-list.png" title="Window List" width="720" height="400"></p>
 
 <p>Screen for editing exception policy will appear if you press "E" key from the window list screen.<br>
-<img src="editpolicy/exception-policy.png" alt="Screen for Exception Policy" width="720" height="400"></p>
+<img src="editpolicy/exception-policy.png" alt="exception-policy.png" title="Screen for Exception Policy" width="720" height="400"></p>
 
 <p>Screen for editing domain transition tree will appear if you press "D" key from the window list screen.<br>
-<img src="editpolicy/domain-list.png" alt="Screen for Domain List" width="720" height="400"></p>
+<img src="editpolicy/domain-list.png" alt="domain-list.png" title="Screen for Domain List" width="720" height="400"></p>
 
 <p>Screen for editing specific domain's policy will appear if you press "A" key from the window list screen.<br>
-<img src="editpolicy/domain-policy.png" alt="Screen for Domain Policy" width="720" height="400"></p>
+<img src="editpolicy/domain-policy.png" alt="domain-policy.png" title="Screen for Domain Policy" width="720" height="400"></p>
 
 <p>Screen for editing profiles will appear if you press "P" key from the window list screen.<br>
-<img src="editpolicy/profile-list.png" alt="Screen for Profile List" width="720" height="400"></p>
+<img src="editpolicy/profile-list.png" alt="profile-list.png" title="Screen for Profile List" width="720" height="400"></p>
 
 <p>Screen for editing managers will appear if you press "M" key from the window list screen.<br>
-<img src="editpolicy/manager-list.png" alt="Screen for Manager List" width="720" height="400"></p>
+<img src="editpolicy/manager-list.png" alt="manager-list.png" title="Screen for Manager List" width="720" height="400"></p>
 
 <p>Screen for browsing statistics will appear if you press "S" key from the window list screen.<br>
-<img src="editpolicy/stat-list.png" alt="Screen for Statistics" width="720" height="400"></p>
+<img src="editpolicy/stat-list.png" alt="stat-list.png" title="Screen for Statistics" width="720" height="400"></p>
 
 <h2>(6) To search strings</h2>
 
 <p>To start searching, press "F" and enter strings to search and press "Enter" key.<br>
-<img src="editpolicy/find-first.png" alt="Find First" width="720" height="400"></p>
+<img src="editpolicy/find-first.png" alt="find-first.png" title="Find First" width="720" height="400"></p>
 
 <p>To continue searching in forward direction, press "N" key.</p>
 
@@ -74,32 +74,32 @@
 <p>To add an entry, press "A" and enter strings to add and press "Enter" key. The strings you entered are saved in the history buffer and you can see them by pressing "Insert" key. To load strings in the history buffer, press "Up-Arrow"/"Down-Arrow" keys.</p>
 
 <p>An example operation in domain transition tree<br>
-<img src="editpolicy/add-domain-list.png" alt="Adding an entry into  List" width="720" height="400"></p>
+<img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into  List" width="720" height="400"></p>
 
 <p>An example operation in exception policy<br>
-<img src="editpolicy/add-exception-policy.png" alt="Adding Exception Policy" width="720" height="400"></p>
+<img src="editpolicy/add-exception-policy.png" alt="add-exception-policy.png" title="Adding Exception Policy" width="720" height="400"></p>
 
 <p>An example operation in specific domain's policy<br>
-<img src="editpolicy/add-domain-policy.png" alt="Adding Domain Policy" width="720" height="400"></p>
+<img src="editpolicy/add-domain-policy.png" alt="add-domain-policy.png" title="Adding Domain Policy" width="720" height="400"></p>
 
 <h2>(8) To select an entry</h2>
 
 <p>Move the cursor to the entry you want to select and then press "Space" key. When an entry is selected, "&amp;" mark will appear at the top of the line.<br>
-<img src="editpolicy/select.png" alt="Selecting an entry" width="720" height="400"></p>
+<img src="editpolicy/select.png" alt="select.png" title="Selecting an entry" width="720" height="400"></p>
 
 <p>To unselect an entry, press "Space" key again. When an entry is unselected, "&amp;" mark will disappear.</p>
 
 <h2>(9) To select entries collectively</h2>
 
 <p>The selection state (the "&amp;" mark at the top of the line) of the cursor line will be copied to all entries under the cursor line by pressing "C" key.<br>
-<img src="editpolicy/copy.png" alt="Copying selection state" width="720" height="400"></p>
+<img src="editpolicy/copy.png" alt="copy.png" title="Copying selection state" width="720" height="400"></p>
 
 <p>To select specific range, mark "&amp;" at the first entry of the range and press "C" key, then unmark "&amp;" at the next of the last entry of the range and press "C" key.</p>
 
 <h2>(10) To delete an entry</h2>
 
 <p>Mark "&amp;" for entries you want to delete and press "D" key. Press "Y" key to the confirmation message, and the entries will be deleted.<br>
-<img src="editpolicy/delete.png" alt="Deleting selected entries" width="720" height="400"></p>
+<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400"></p>
 <h1>Operations specific to screen for editing domain transition tree</h1>
 
 <h2>(0) About this screen</h2>
@@ -112,37 +112,37 @@ The last "pathname of program" in the domainname is shown on the right side of t
 <h2>(1) To change "profile number" of a domain</h2>
 
 <p>Select domains you want to change "profile number" and press "S" key. Enter "profile number" in the prompt and press "Enter" key.<br>
-<img src="editpolicy/profile.png" alt="Setting profile number" width="720" height="400"></p>
+<img src="editpolicy/profile.png" alt="profile.png" title="Setting profile number" width="720" height="400"></p>
 
 <h2>(2) About domains with "!" mark</h2>
 
 <p>A domain with "!" mark means that the domain in unreachable due to either "initialize_domain" or "keep_domain" directives. The reason is shown on the right side of the last "pathname of program".<br>
-<img src="editpolicy/unreachable.png" alt="Unreachable Domain" width="720" height="400"></p>
+<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400"></p>
 
 <h2>(3) About domains with "*" mark</h2>
 
 <p>A domain with "*" mark means that multiple domains might transit to this domain due to "initialize_domain" directive. A domain without "*" mark transits only from the domain's parent domain.<br>
-<img src="editpolicy/initialize_domain-dest.png" alt="Initialization Target" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-dest.png" alt="initialize_domain-dest.png" title="Initialization Target" width="720" height="400"></p>
 
 <h2>(4) About domains with "#" mark</h2>
 
 <p>A domain with "#" mark means that multiple programs might belong to this domain (a domain transition may not occur when a program is invoked) due to "keep_domain" directive.<br>
-<img src="editpolicy/keep_domain.png" alt="Keeping Domain" width="720" height="400"></p>
+<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400"></p>
 
 <h2>(5) About domains with "( -&gt; "line number" )" after the last "pathname of program"</h2>
 
 <p>This is not a real domain. The process transits to a domain with "line number" when the program is invoked from the parent domain since the last "pathname of program" is registered with "initialize_domain" directive.<br>
-<img src="editpolicy/initialize_domain-src.png" alt="Initialization Source" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-src.png" alt="initialize_domain-src.png" title="Initialization Source" width="720" height="400"></p>
 
 <h2>(6) About domains with "( -&gt; Not Found )" after the last "pathname of program"</h2>
 
 <p>This is not a real domain. Although the last "pathname of program" is registered with "initialize_domain" directive, the destination domain is not created yet.<br>
-<img src="editpolicy/initialize_domain-nodest.png" alt="No Initialization Target" width="720" height="400"></p>
+<img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400"></p>
 
 <h2>(7) About domains with "( the last "pathname of program" )"</h2>
 
 <p>This means that this domain doesn't exist due to deletion of domains. This domain appears when the parent domain doesn't exist but descendant domains exist to not to break indent. To create this domain, move the cursor to this domain and press "Insert" -&gt; "A"  -&gt; "UpArrow" -&gt; "Enter" keys.<br>
-<img src="editpolicy/deleted-domain.png" alt="Deleted Domain" width="720" height="400"></p>
+<img src="editpolicy/deleted-domain.png" alt="deleted-domain.png" title="Deleted Domain" width="720" height="400"></p>
 
 <h2><a name="Initialize_domain_transition">(8) To initialize domain transition</a></h2>
 
@@ -150,30 +150,30 @@ The last "pathname of program" in the domainname is shown on the right side of t
 
 <p>For example, the following procedure makes /usr/sbin/sendmail always run in the "&lt;kernel&gt; /usr/sbin/sendmail" domain.</p>
 <p>Before you specify "initialize_domain" directive, the same program is invoked from multiple domains, as shown below.<br>
-<img src="editpolicy/before-initialize_domain-1.png" alt="Before initialize_domain" width="720" height="400"><br>
-<img src="editpolicy/before-initialize_domain-2.png" alt="Before initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/before-initialize_domain-1.png" alt="before-initialize_domain-1.png" title="Before initialize_domain" width="720" height="400"><br>
+<img src="editpolicy/before-initialize_domain-2.png" alt="before-initialize_domain-2.png" title="Before initialize_domain" width="720" height="400"></p>
 
 <p>Switch to the screen for editing exception policy. Press "A" key and enter "initialize_domain /usr/sbin/sendmail from any" and press "Enter" key. This entry means that "transit to "&lt;kernel&gt; /usr/sbin/sendmail" domain if /usr/sbin/sendmail is invoked".<br>
-<img src="editpolicy/adding-initialize_domain.png" alt="Adding initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400"></p>
 
 <p>Return to the screen for editing domain transition tree. The domains for /usr/sbin/sendmail now marked with "!". Also, the domains with "( -&gt; Not Found )" are appeared because the destination ("&lt;kernel&gt; /usr/sbin/sendmail") domain doesn't exist.<br>
-<img src="editpolicy/after-initialize_domain.png" alt="After initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/after-initialize_domain.png" alt="after-initialize_domain.png" title="After initialize_domain" width="720" height="400"></p>
 
 <p>To correct "( -&gt; Not Found )" part, press "A" key and enter "&lt;kernel&gt; /usr/sbin/sendmail" and press "Enter" key.<br>
-<img src="editpolicy/adding-initialize_domain-target.png" alt="Adding initialization target" width="720" height="400"></p>
+<img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400"></p>
 
 <p>And now,  "( -&gt; Not Found )" part has changed to "( -&gt; "line number" )".<br>
-<img src="editpolicy/after-initialize_domain-target.png" alt="After initialize_domain target" width="720" height="400"><br>
-<img src="editpolicy/added-initialize_domain-target.png" alt="Added initialization target" width="720" height="400"></p>
+<img src="editpolicy/after-initialize_domain-target.png" alt="after-initialize_domain-target.png" title="After initialize_domain target" width="720" height="400"><br>
+<img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400"></p>
 
 <p>But regarding /usr/sbin/sendmail invoked by /bin/mail, you may wish not to transit to "&lt;kernel&gt; /usr/sbin/sendmail" domain because it is not invoked for daemons.<br>
-<img src="editpolicy/before-no_initialize_domain.png" alt="Before no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/before-no_initialize_domain.png" alt="before-no_initialize_domain.png" title="Before no_initialize_domain" width="720" height="400"></p>
 
 <p>In such case, switch to the screen for editing exception policy. Press "A" key and enter "no_initialize_domain /usr/sbin/sendmail from /bin/mail" and press "Enter" key. This entry means that "don't transit to "&lt;kernel&gt; /usr/sbin/sendmail" domain if /usr/sbin/sendmail is invoked by a domain whose the last "pathname of program" in the domainname is "/bin/mail".<br>
-<img src="editpolicy/adding-no_initialize_domain.png" alt="Adding no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-no_initialize_domain.png" alt="adding-no_initialize_domain.png" title="Adding no_initialize_domain" width="720" height="400"></p>
 
 <p>Return to the screen for editing domain transition tree. The domains for /usr/sbin/sendmail invoked by /bin/mail now not marked with "!".<br>
-<img src="editpolicy/after-no_initialize_domain.png" alt="After no_initialize_domain" width="720" height="400"></p>
+<img src="editpolicy/after-no_initialize_domain.png" alt="after-no_initialize_domain.png" title="After no_initialize_domain" width="720" height="400"></p>
 
 <h2>(9) To suppress domain transition</h2>
 
@@ -182,34 +182,34 @@ The last "pathname of program" in the domainname is shown on the right side of t
 <p>For example, the following procedure makes console login ( "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash" ) domain suppress domain transition.</p>
 
 <p>Before you specify "keep_domain" directive, domain transitions occur, as shown below.<br>
-<img src="editpolicy/before-keep_domain.png" alt="Before keep_domain" width="720" height="400"></p>
+<img src="editpolicy/before-keep_domain.png" alt="before-keep_domain.png" title="Before keep_domain" width="720" height="400"></p>
 
 <p>Switch to the screen for editing exception policy. Press "A" key and enter "keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash" and press "Enter" key.<br>
-<img src="editpolicy/adding-keep_domain-1.png" alt="Adding keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-keep_domain-1.png" alt="adding-keep_domain-1.png" title="Adding keep_domain" width="720" height="400"></p>
 
 <p>Return to the screen for editing domain transition tree. The "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash" domain is marked with "#" and its descendant domains are marked with "!".<br>
-<img src="editpolicy/after-keep_domain-1.png" alt="After keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400"></p>
 
 <p>The "man" command is invoked after login. But the "man" command performs some complicated tasks. So, let's run "man" in a different domain.<br>
-<img src="editpolicy/before-no_keep_domain.png" alt="Before no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/before-no_keep_domain.png" alt="before-no_keep_domain.png" title="Before no_keep_domain" width="720" height="400"></p>
 
 <p>Switch to the screen for editing exception policy. Press "A" key and enter "no_keep_domain /usr/bin/man from /bin/bash" (or no_keep_domain /usr/bin/man from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash") and press "Enter" key.<br>
-<img src="editpolicy/adding-no_keep_domain.png" alt="Adding no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-no_keep_domain.png" alt="adding-no_keep_domain.png" title="Adding no_keep_domain" width="720" height="400"></p>
 
 <p>Return to the screen for editing domain transition tree. Now the "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man" domain and its descendants are not marked with "!".<br>
-<img src="editpolicy/after-no_keep_domain.png" alt="After no_keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-no_keep_domain.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400"></p>
 
 <p>Some commands are invoked by "/usr/bin/man" command, but it doesn't worth doing domain transitions. So, let's make /usr/bin/man not to transit domains. Switch to the screen for editing exception policy. Press "A" key and enter "keep_domain any from /usr/bin/man" (or "keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man") and press "Enter" key.<br>
-<img src="editpolicy/adding-keep_domain-2.png" alt="Addint keep_domain" width="720" height="400"></p>
+<img src="editpolicy/adding-keep_domain-2.png" alt="adding-keep_domain-2.png" title="Addint keep_domain" width="720" height="400"></p>
 
 <p>Return to the screen for editing domain transition tree. The "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man" domain is marked with "#" and its descendant domains are marked with "!".<br>
-<img src="editpolicy/after-keep_domain-2.png" alt="After keep_domain" width="720" height="400"></p>
+<img src="editpolicy/after-keep_domain-2.png" alt="after-keep_domain-2.png" title="After keep_domain" width="720" height="400"></p>
 
 <p>It is meaningless to keep unreachable domains, let's delete them. Select domains that are marked with "!", and press "D" key and "Y" key.<br>
-<img src="editpolicy/before-delete.png" alt="Before deleting unreachable domains" width="720" height="400"></p>
+<img src="editpolicy/before-delete.png" alt="before-delete.png" title="Before deleting unreachable domains" width="720" height="400"></p>
 
 <p>The following is the screen for editing domain transition tree after deleting unreachable domains.<br>
-<img src="editpolicy/after-delete.png" alt="After deleting unreachable domains" width="720" height="400"></p>
+<img src="editpolicy/after-delete.png" alt="after-delete.png" title="After deleting unreachable domains" width="720" height="400"></p>
 
 <p>If you are going to apply access restrictions, be sure to use "learning mode" to add necessary ACLs and assign profile for "enforcing mode" to enforce.</p>
 
@@ -222,60 +222,60 @@ The last "pathname of program" in the domainname is shown on the right side of t
 <h2>(1) To change sort order</h2>
 
 <p>You can toggle sort order (by operand or by keyword) by pressing "@" key.<br>
-<img src="editpolicy/sort-1.png" alt="Sort by operand" width="720" height="400"><br>
-<img src="editpolicy/sort-2.png" alt="Sort by keyword" width="720" height="400"></p>
+<img src="editpolicy/sort-1.png" alt="sort-1.png" title="Sort by operand" width="720" height="400"><br>
+<img src="editpolicy/sort-2.png" alt="sort-2.png" title="Sort by keyword" width="720" height="400"></p>
 
 <h2>(2) To remove redundant ACL entries</h2>
 
 <p>You can use "O" key to mark "&amp;" to the entries that are implied by the entry at the cursor line, then you can press "D" key to delete redundant ACL entries after confirmation.</p>
 
 <p>(A-1) The next picture is a screenshot which is before adding patterned entry.<br>
-<img src="editpolicy/optimize-1.png" alt="Before adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-1.png" alt="optimize-1.png" title="Before adding patterned entry" width="720" height="400"></p>
 
 <p>(A-2) The next picture is a screenshot which is after adding patterned entry.<br>
-<img src="editpolicy/optimize-2.png" alt="After adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-2.png" alt="optimize-2.png" title="After adding patterned entry" width="720" height="400"></p>
 
 <p>(A-3) The next picture is a screenshot which is after pressing "O" key on the line of patterned entry.<br>
-<img src="editpolicy/optimize-3.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-3.png" alt="optimize-3.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(A-4) The next picture is a screenshot which is after pressing "D" key.<br>
-<img src="editpolicy/optimize-4.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-4.png" alt="optimize-4.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(A-5) The next picture is a screenshot which is after pressing "Y" key.<br>
-<img src="editpolicy/optimize-5.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-5.png" alt="optimize-5.png" title="After entering yes key" width="720" height="400"></p>
 
 <p>(B-1) Same approach for network ACL entries. The next picture is a screenshot which is before adding patterned entry.<br>
-<img src="editpolicy/optimize-6.png" alt="Before adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-6.png" alt="optimize-6.png" title="Before adding patterned entry" width="720" height="400"></p>
 
 <p>(B-2) The next picture is a screenshot which is after adding patterned entry.<br>
-<img src="editpolicy/optimize-7.png" alt="After adding patterned entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-7.png" alt="optimize-7.png" title="After adding patterned entry" width="720" height="400"></p>
 
 <p>(B-3) The next picture is a screenshot which is after pressing "O" key on the line of patterned entry.<br>
-<img src="editpolicy/optimize-8.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-8.png" alt="optimize-8.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(B-4) The next picture is a screenshot which is after pressing "D" key.<br>
-<img src="editpolicy/optimize-9.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-9.png" alt="optimize-9.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(B-5) The next picture is a screenshot which is after pressing "Y" key.<br>
-<img src="editpolicy/optimize-10.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-10.png" alt="optimize-10.png" title="After entering yes key" width="720" height="400"></p>
 
 <p>(C-1) Same approach for path_group entries. The next picture is a screenshot which is after adding path_group entry.<br>
-<img src="editpolicy/optimize-11.png" alt="After adding path_group" width="720" height="400"></p>
+<img src="editpolicy/optimize-11.png" alt="optimize-11.png" title="After adding path_group" width="720" height="400"></p>
 
 <p>(C-2) The next picture is a screenshot which is before adding path_group entry.<br>
-<img src="editpolicy/optimize-12.png" alt="Before adding path_group entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-12.png" alt="optimize-12.png" title="Before adding path_group entry" width="720" height="400"></p>
 
 <p>(C-3) The next picture is a screenshot which is after adding path_group entry.<br>
-<img src="editpolicy/optimize-13.png" alt="After adding path_group entry" width="720" height="400"></p>
+<img src="editpolicy/optimize-13.png" alt="optimize-13.png" title="After adding path_group entry" width="720" height="400"></p>
 
 <p>(C-4) The next picture is a screenshot which is after pressing "O" key on the line of path_group entry.<br>
-<img src="editpolicy/optimize-14.png" alt="After entering optimize key" width="720" height="400"></p>
+<img src="editpolicy/optimize-14.png" alt="optimize-14.png" title="After entering optimize key" width="720" height="400"></p>
 
 <p>(C-5) The next picture is a screenshot which is after pressing "D" key.<br>
-<img src="editpolicy/optimize-15.png" alt="After entering delete key" width="720" height="400"></p>
+<img src="editpolicy/optimize-15.png" alt="optimize-15.png" title="After entering delete key" width="720" height="400"></p>
 
 <p>(C-6) The next picture is a screenshot which is after pressing "Y" key.<br>
-<img src="editpolicy/optimize-16.png" alt="After entering yes key" width="720" height="400"></p>
+<img src="editpolicy/optimize-16.png" alt="optimize-16.png" title="After entering yes key" width="720" height="400"></p>
 
 <hr>
 

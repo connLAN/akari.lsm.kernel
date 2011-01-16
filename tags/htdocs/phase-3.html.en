@@ -1,0 +1,156 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Install manual</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-3.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Phase 3: Analyze a domain</h1>
+
+<p style="text-align:center;">Aim: to become familiar with "Learning Mode" and use it to analyze the behaviour of a domain.</p>
+
+<hr>
+
+<h2><a name="3.1">Step 3.1: Domain creation</a></h2>
+
+<p>Each domain will behave differently and require a unique set of permissions. Their behaviour must therefore be analyzed to determine which actions you wish to permit in domain policy. AKARI can be used to restrict only a subset of the domains in a system, but the most secure system would restrict every domain in order to make sure there are no points of vulnerability.</p>
+
+<p>First, choose an application that you wish to analyze/protect. The procedure below takes the use of Apache in a CentOS 5.5 as an example.</p>
+
+<p>Start the target application:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# service httpd start
+</td></tr>
+</table>
+
+<p>Run the policy editor again <b>without</b> the "/etc/ccs/" option so that the policy loaded by the kernel can be edited directly. If you are already running the policy editor, switch to the "Domain Transition" screen.</p>
+
+<p>In CentOS 5.5, the location of Apache is "/usr/sbin/httpd".</p>
+
+<p>Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
+
+<p><img src="editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="720" height="400"></p>
+
+<p>If "/usr/sbin/httpd" is invoked by "&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash", then the domain name is <b>"&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd"</b>.</p>
+
+<p>If "/usr/sbin/httpd" has been registered with the "initialize_domain" directive, then execution of "/usr/sbin/httpd" will always have the domain <b>"&lt;kernel&gt; /usr/sbin/httpd"</b> regardless of which domain invoked it. This manual assumes that "/usr/sbin/httpd" has been registered with the "initialize_domain" directive. See <a href="tool-editpolicy.html.en#Initialize_domain_transition">Initialize domain transition</a> for more information.</p>
+
+<p>Press the "s" key, enter '1' and press the "Enter" key:</p>
+
+<p><img src="editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="720" height="400"></p>
+
+<p>Now the profile number of the "/usr/sbin/httpd" domain has changed to 1:</p>
+
+<p><img src="editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="720" height="400"></p>
+
+<p>Press the "@" key to switch to the process list. Verify that "/usr/sbin/httpd" processes are assigned profile number 1:</p>
+
+<p><img src="editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="720" height="400"></p>
+
+<p>Press the "q" key to quit the policy editor.</p>
+
+<hr>
+
+<h2><a name="3.2">Step 3.2: Gathering necessary permissions</a></h2>
+
+<p>Restart the Apache in order to learn what permissions are required for starting/finishing the Apache:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# service httpd restart
+</td></tr>
+</table>
+
+<p>Run the policy editor again and go to the "/usr/sbin/httpd" line. The line number may have changed due to the creation of new domains from executed programs.</p>
+
+<p>Press the "Enter" key to browse the permissions that have been gathered:</p>
+
+<p><a href="editpolicy-httpd-full.png">(Click to view complete screen.)<br><img src="editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
+
+<p>Quit the editor and use Apache to generate necessary permissions for normal usage. All actions should be performed that you wish to allow:</p>
+
+<p><img src="operation-learning.png" alt="operation-learning.png" width="689" height="907"></p>
+
+<p>Remember to save policy, as permissions are accumulated only in kernel memory. If the system is rebooted, the gathered permissions will be lost.</p>
+
+<p>To save policy to disk, use the following command:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-savepolicy
+</td></tr>
+</table>
+
+<p>By executing "ccs-savepolicy", four files ("exception_policy.conf", "domain_policy.conf", "profile.conf", "manager.conf") are created in the "/etc/ccs/" directory. More precisely, they are symbolic links to text files whose pathnames contain the creation time.</p>
+
+<p>To load the policy currently on the disk into the kernel, use the "ccs-loadpolicy" command:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-loadpolicy -df &lt; /etc/ccs/domain_policy.conf<br>
+[root@tomoyo ~]# /usr/sbin/ccs-loadpolicy -ef &lt; /etc/ccs/exception_policy.conf<br>
+[root@tomoyo ~]# /usr/sbin/ccs-loadpolicy -p &lt; /etc/ccs/profile.conf<br>
+[root@tomoyo ~]# /usr/sbin/ccs-loadpolicy -m &lt; /etc/ccs/manager.conf<br>
+</td></tr>
+</table>
+
+<p>The <b>"-df"</b> option means overwrite "/proc/ccs/domain_policy".<br>
+The <b>"-ef"</b> option means overwrite "/proc/ccs/exception_policy".<br>
+The <b>"-p"</b> option means append to "/proc/ccs/profile".<br>
+The <b>"-m"</b> option means append to "/proc/ccs/manager".</p>
+
+<p>For avoiding fatal mistakes, "-pf" and "-mf" are not supported.</p>
+
+<p>You might see warning messages like below printed on the console:</p>
+
+<table border="1">
+<tr><td>
+WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stopped learning mode.
+</td></tr>
+</table>
+
+<p>This is a safeguard to prevent AKARI from consuming all the memory available on the system. If "Learning Mode" did not have a limit, the system may become unusably slow due to comparison with already learned permissions.</p>
+
+<p>This limit can be increased with the "max_learning_entry=" values in each of the profiles. However, care should be taken when increasing this value as this will require more memory. It is recommended to tune policy before increasing this value. Steps for tuning policy are described in the next phase, and doing so can reduce the size of domain policy to become more manageable and thus negating the need to increase the "max_learning_entry=" value.</p>
+
+<p>If you are using AKARI for system analysis, this point is the goal of this procedure.</p>
+
+<p>If you are using AKARI for protection, proceed to the next phase to continue tuning policy.</p>
+
+<br>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+<a href="phase-2.html.en">Prev</a>
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.en">Index</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-4.html.en">Next</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+Phase 2: Understanding AKARI
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">Home</a>
+</td>
+<td width="33%" align="right" valign="top">
+Phase 4: Develop policy
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

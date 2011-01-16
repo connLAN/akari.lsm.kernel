@@ -11,17 +11,56 @@
 <p style="text-align:right;">Last modified: $Date$</p>
 <h1>AKARI : Access Keeping And Regulating Instrument</h1>
 <table border="0" summary="What is AKARI?">
-<tr><td>AKARI is a security module which focuses on behavior of a system. A process is created to achieve something. AKARI lets each process declare behaviors and resources needed to achieve its purpose (like an immigration officer) and permits only declared behaviors and resources (like an operation watchdog). This approach made it possible for users to understand how a Linux system works. You can use AKARI as a system analysis tool as well as an access restriction tool.</td></tr>
+<tr><td>AKARI is a security module which focuses on the behavior of a system. Every process is created to achieve a purpose, and AKARI lets each process declare behaviors and resources needed to achieve their purpose (like an immigration officer). When configured to restrict access, AKARI restricts each process to only these declared behaviors and resources (like an operation watchdog). This approach makes it possible for users to understand how a Linux system works. You can use AKARI as a system analysis tool as well as an access restriction tool.</td></tr>
 </table>
 
-<h2>How to use</h2>
+<h2>Introduction to this guide</h2>
 
+<p>This guide aims to provide an informative set of instructions on how to use AKARI, while also remaining as concise and easy to follow as possible. The guide has been split into a number of phases, which are outlined below. For those using this project for system analysis, phases 1 to 4 are relevant. For those using this project for system restriction, the six phases should provide a solid foundation from which a policy of least privilege can be developed for any particular system. The Mandatory Access Control (MAC) provided by this project is not designed to offer protection "out of the box", but instead requires time and an understanding of the concepts and tools involved. It is therefore extremely worthwhile to read this guide and develop a thorough understanding in order to make your system as secure as possible.</p>
+
+<h2>Contents</h2>
+
+Phase 1: <a href="phase-1.html.en">Installation and initialization</a>
 <ul>
-<li><a href="install.html.en">Phase 1: Installing kernel module and tools.</a></li>
-<li><a href="initialize.html.en">Phase 2: Initializing configuration.</a></li>
-<li><a href="learning.html.en">Phase 3: Analyzing your system's behavior.</a></li>
-<li><a href="tuning.html.en">Phase 4: Tuning policy for your system.</a></li>
-<li><a href="enforcing.html.en">Phase 5: Restricting your system's behavior.</a></li>
+<li>1.1 <a href="phase-1.html.en#1.1">Install dependencies</a></li>
+<li>1.2 <a href="phase-1.html.en#1.2">Install the kernel module</a></li>
+<li>1.3 <a href="phase-1.html.en#1.3">Install the userspace tools</a></li>
+<li>1.4 <a href="phase-1.html.en#1.4">Initialize configuration</a></li>
+<li>1.5 <a href="phase-1.html.en#1.5">Configure the bootloader and reboot</a></li>
+</ul>
+Phase 2: <a href="phase-2.html.en">Understanding AKARI</a>
+<ul>
+<li>2.1 <a href="phase-2.html.en#2.1">Understanding domains</a></li>
+<li>2.2 <a href="phase-2.html.en#2.2">Understanding profiles</a></li>
+<li>2.3 <a href="phase-2.html.en#2.3">Understanding domain policy</a></li>
+<li>2.4 <a href="phase-2.html.en#2.4">Understanding exception policy</a></li>
+<li>2.5 <a href="phase-2.html.en#2.5">Save audit logs (optional)</a></li>
+</ul>
+Phase 3: <a href="phase-3.html.en">Analyze a domain</a>
+<ul>
+<li>3.1 <a href="phase-3.html.en#3.1">Domain creation</a></li>
+<li>3.2 <a href="phase-3.html.en#3.2">Gathering necessary permissions</a></li>
+</ul>
+Phase 4: <a href="phase-4.html.en">Develop policy</a>
+<ul>
+<li>4.1 <a href="phase-4.html.en#4.1">Patterning temporary files</a></li>
+<li>4.2 <a href="phase-4.html.en#4.2">Patterning file access permissions</a></li>
+<li>4.3 <a href="phase-4.html.en#4.3">Patterning numeric permissions</a></li>
+<li>4.4 <a href="phase-4.html.en#4.4">Patterning network access permissions</a></li>
+<li>4.5 <a href="phase-4.html.en#4.5">Review gathered permissions</a></li>
+<li>4.6 <a href="phase-4.html.en#4.6">Adding conditions to ACLs (optional)</a></li>
+</ul>
+Phase 5: <a href="phase-5.html.en">Enforce policy</a>
+<ul>
+<li>5.1 <a href="phase-5.html.en#5.1">Enabling enforcing mode</a></li>
+<li>5.2 <a href="phase-5.html.en#5.2">Handling policy violations in real-time</a></li>
+<li>5.3 <a href="phase-5.html.en#5.3">Notification daemon</a></li>
+</ul>
+Phase 6: <a href="phase-6.html.en">Beyond this guide</a>
+<ul>
+<li>6.1 <a href="phase-6.html.en#6.1">Restricting every domain</a></li>
+<li>6.2 <a href="phase-6.html.en#6.2">Further reading</a></li>
+<li>6.3 <a href="phase-6.html.en#6.3">Endnotes</a></li>
 </ul>
 
 <h2>Documentation</h2>

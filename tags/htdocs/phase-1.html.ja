@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-1.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第１節：導入と初期化</h1>
+
+<p style="text-align:center;">目的： AKARI カーネルモジュールおよび管理ツールをインストールし、システムの解析および保護を行うための準備をします。</p>
+
+<hr>
+
+<h2><a name="1.1">ステップ１．１：依存するパッケージのインストール</a></h2>
+
+<p>カーネルモジュールおよびツールをコンパイルするためには以下のパッケージが必要になります。</p>
+<ul>
+<li><b>wget</b>：ファイルをダウンロードするために必要です。</li>
+<li><b>gcc</b>：コンパイルを行うために必要です。</li>
+<li><b>make</b>： Makefile を利用するために必要です。</li>
+<li><b>ncurses</b>：ツールのユーザインタフェースを利用するために必要です。</li>
+<li><b>readline</b>：ツールのユーザインタフェースが利用します。（利用不可能でも致命的な問題にはなりません。）</li>
+<li><b>help2man</b>：ツールの man ページを作成するために利用します。（利用不可能でも致命的な問題にはなりません。）</li>
+</ul>
+
+<p>これらのパッケージは以下のコマンドを実行することによりインストールできます。</p>
+
+<table border="1">
+<tr><td>RedHat 系の場合</td><td>
+[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel readline-devel help2man
+</td></tr>
+<tr><td>Debian 系の場合</td><td>
+[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev libreadline-dev help2man
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="1.2">ステップ１．２：カーネルモジュールのインストール</a></h2>
+
+<h3>カーネルモジュール開発パッケージの入手</h3>
+
+<p>カーネルの開発用パッケージをインストールして、そのディレクトリに移動してください。</p>
+
+<table border="1">
+<tr><td>RedHat 系の場合</td><td>
+# VERSION=`uname -r`<br>
+# yum -y install kernel-devel-${VERSION}<br>
+# cd /usr/src/kernels/${VERSION}*/
+</td></tr>
+<tr><td>Debian 系の場合</td><td>
+# VERSION=`uname -r`<br>
+# apt-get -y install linux-headers-${VERSION}<br>
+# cd /usr/src/linux-headers-${VERSION}/
+</td></tr>
+</table>
+
+<h3>AKARI カーネルモジュールのコンパイルとインストール</h3>
+
+<p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください。</p>
+
+<table border="1">
+<tr><td>
+# wget -O akari-1.0.6-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz'<br>
+# wget -O akari-1.0.6-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz.asc'<br>
+# gpg akari-1.0.6-20101231.tar.gz.asc<br>
+# tar -zxf akari-1.0.6-20101231.tar.gz<br>
+# make SUBDIRS=akari modules<br>
+# make SUBDIRS=akari modules_install<br>
+# depmod ${VERSION}
+</td></tr>
+</table>
+
+<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p></p>
+
+<pre>
+You must choose CONFIG_SECURITY=y for building this module.
+You must choose CONFIG_KALLSYMS=y for building this module.
+You must choose CONFIG_PROC_FS=y for building this module.
+You must choose CONFIG_MODULES=y for building this module.
+This version is not supported because I cannot resolve vfsmount_lock .
+</pre>
+
+<p>もし、ご利用のカーネルでサポートされている機能や構文について知りたい場合には <a href="comparison.html.ja">AKARI / TOMOYO 機能比較表</a> を参照してください。</p>
+
+<hr>
+
+<h2><a name="1.3">ステップ１．３：管理ツールのインストール</a></h2>
+
+<p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます。</p>
+
+<table border="1">
+<tr><td>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz.asc'<br>
+[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20101231.tar.gz.asc<br>
+[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20101231.tar.gz<br>
+[user@tomoyo ~]$ cd ccstools/<br>
+[user@tomoyo ~]$ make -s<br>
+[user@tomoyo ~]$ su<br>
+[root@tomoyo ~]# make -s install
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="1.4">ステップ１．４：設定の初期化</a></h2>
+
+<p>AKARI を利用するために、ポリシーの初期化を行う必要があります。解析および制限したい範囲に応じて、以下の２つの操作の内どちらかの操作を行ってください。</p>
+
+<p>ファイルに対するアクセス解析／制御（読み書き実行など）だけを有効にしたい場合には以下の操作を行ってください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
+</td></tr>
+</table>
+
+<p>全て（ファイル、ネットワーク、環境変数名）に対するアクセス解析／制御を有効にしたい場合には、以下の操作を行ってください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --module_name=akari
+</td></tr>
+</table>
+
+<p>ポリシーファイルが /etc/ccs/ ディレクトリの中に作成されます。</p>
+
+<hr>
+
+<h2><a name="1.5">ステップ１．５：ブートローダの設定および再起動</a></h2>
+
+<h3>ブートローダの設定</h3>
+
+<p>ブートローダ（例えば GRUB など）の設定で init=/sbin/ccs-init という指定をカーネル起動時のコマンドラインオプションに追加してください。以下に例を示します。</p>
+
+<table border="1">
+<tr><td>変更前</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+<tr><td>変更後</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+</table>
+
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを /sbin/init が無効化してしまうためです。</p>
+
+<table border="1">
+<tr><td>変更前</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+<tr><td>変更後</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+</table>
+
+<p>AKARI をアンインストールしたい場合、 init=/sbin/ccs-init というパラメータをカーネル起動時のコマンドラインから削除して再起動してください。</p>
+
+<h3>再起動</h3>
+
+<p>システムを再起動してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# reboot
+</td></tr>
+</table>
+
+<p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
+
+<pre>
+&amp;security_ops=c07cf204
+vfsmount_lock=c0702980
+AKARI: 1.0.6   2010/12/31
+Access Keeping And Regulating Instrument registered.
+Calling /sbin/ccs-init to load policy. Please wait.
+CCSecurity: 1.8.0+   2010/12/31
+Mandatory Access Control activated.
+</pre>
+
+<p>AKARI モジュールを登録する処理は環境依存であるため、問題が起こる場合があります。もし問題が発生した場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
+
+<p>カーネルコンパイル時の設定や起動時のオプションによっては、上記のメッセージが表示されないかもしれません。その場合、 /proc/ccs/ ディレクトリをチェックしてください。もし、 /proc/ccs/ ディレクトリが作成されていた場合、 AKARI モジュールは正常に登録されています。</p>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.ja">目次</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-2.html.ja">次節</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">ホームへ</a>
+</td>
+<td width="33%" align="right" valign="top">
+第２節： AKARI を理解する
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

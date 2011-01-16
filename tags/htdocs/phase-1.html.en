@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Install manual</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-1.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Phase 1: Installation and initialization</h1>
+
+<p style="text-align:center;">Aim: to install the AKARI kernel module and userland tools and prepare the system for analysis and/or restriction.</p>
+
+<hr>
+
+<h2><a name="1.1">Step 1.1: Install dependencies</a></h2>
+
+<p>These packages are required for compiling the kernel module and the userspace tools:</p>
+<ul>
+<li><b>wget</b>: to download sources</li>
+<li><b>gcc</b>: to build the kernel and tools</li>
+<li><b>make</b>: to build the kernel and tools</li>
+<li><b>ncurses</b>: for the tools user interface</li>
+<li><b>readline</b>: for the tools user interface (optional but recommended)</li>
+<li><b>help2man</b>: for the tools man pages (optional but recommended)</li>
+</ul>
+
+<p>These can be installed with the following commands:</p>
+
+<table border="1" summary="">
+<tr><td>RedHat distributions</td><td>
+[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel readline-devel help2man
+</td></tr>
+<tr><td>Debian distributions</td><td>
+[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev libreadline-dev help2man
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="1.2">Step 1.2: Install the kernel module</a></h2>
+
+<h3>Download the kernel headers</h3>
+
+<p>Install a kernel development package, and go to the installed directory:</p>
+
+<table border="1">
+<tr><td>RedHat distributions</td><td>
+# VERSION=`uname -r`<br>
+# yum -y install kernel-devel-${VERSION}<br>
+# cd /usr/src/kernels/${VERSION}*/
+</td></tr>
+<tr><td>Debian distributions</td><td>
+# VERSION=`uname -r`<br>
+# apt-get -y install linux-headers-${VERSION}<br>
+# cd /usr/src/linux-headers-${VERSION}/
+</td></tr>
+</table>
+
+<h3>Compile the kernel module</h3>
+
+<p>Run the following commands in order to install AKARI's kernel module:</p>
+
+<table border="1">
+<tr><td>
+# wget -O akari-1.0.6-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz'<br>
+# wget -O akari-1.0.6-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.6-20101231.tar.gz.asc'<br>
+# gpg akari-1.0.6-20101231.tar.gz.asc<br>
+# tar -zxf akari-1.0.6-20101231.tar.gz<br>
+# make SUBDIRS=akari modules<br>
+# make SUBDIRS=akari modules_install<br>
+# depmod ${VERSION}
+</td></tr>
+</table>
+
+<p>If you encountered one of errors listed below, you can't use AKARI for your kernel (instead, you can try <a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO Linux</a>). For other errors, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ):</p>
+
+<pre>
+You must choose CONFIG_SECURITY=y for building this module.
+You must choose CONFIG_KALLSYMS=y for building this module.
+You must choose CONFIG_PROC_FS=y for building this module.
+You must choose CONFIG_MODULES=y for building this module.
+This version is not supported because I cannot resolve vfsmount_lock .
+</pre>
+
+<p>If you are interested in what functionality and syntax are supported for your kernel, see <a href="comparison.html.en">AKARI / TOMOYO functionality comparison table</a>.</p>
+
+<hr>
+
+<h2><a name="1.3">Step 1.3: Install the userspace tools</a></h2>
+
+<p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
+
+<table border="1">
+<tr><td>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz.asc'<br>
+[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20101231.tar.gz.asc<br>
+[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20101231.tar.gz<br>
+[user@tomoyo ~]$ cd ccstools/<br>
+[user@tomoyo ~]$ make -s<br>
+[user@tomoyo ~]$ su<br>
+[root@tomoyo ~]# make -s install
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="1.4">Step 1.4: Initialize configuration</a></h2>
+
+<p>To prepare the system for usage of AKARI, the policy must be initialized. One of two commands can be used depending on what operations you wish to analyze or restrict.</p>
+
+<p>To analyze or restrict only file related operations (e.g. read, write, execute), run the following command:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
+</td></tr>
+</table>
+
+<p>To analyze or restrict all operations (e.g. files, networks, environment variables), run the following command:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/lib/ccs/init_policy --module_name=akari
+</td></tr>
+</table>
+
+<p>All policy files will be saved in "/etc/ccs/" directory.</p>
+
+<hr>
+
+<h2><a name="1.5">Step 1.5: Configure bootloader and reboot</a></h2>
+
+<h3>Updating bootloader configuration</h3>
+
+<p>Now edit your bootloader (e.g. GRUB) to add "init=/sbin/ccs-init" in the kernel boot options. An example is shown below:</p>
+
+<table border="1">
+<tr><td>Before</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+<tr><td>After</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+</table>
+
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because /sbin/init unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
+
+<table border="1">
+<tr><td>Before</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+<tr><td>After</td><td>
+title CentOS (2.6.18-194.26.1.el5)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+</td></tr>
+</table>
+
+<p>To uninstall AKARI, remove init=/sbin/ccs-init parameter from the kernel command line and reboot the system.</p>
+
+<h3>Rebooting your system</h3>
+
+<p>Now reboot your system.</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# reboot
+</td></tr>
+</table>
+
+<p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
+
+<pre>
+&amp;security_ops=c07cf204
+vfsmount_lock=c0702980
+AKARI: 1.0.6   2010/12/31
+Access Keeping And Regulating Instrument registered.
+Calling /sbin/ccs-init to load policy. Please wait.
+CCSecurity: 1.8.0+   2010/12/31
+Mandatory Access Control activated.
+</pre>
+
+<p>Since registering AKARI module depends on your environment, you might encounter problems. In that case, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
+
+<p>You may not be able to find these messages depending on kernel configuration and kernel boot parameters. In that case, you can check for /proc/ccs/ directory. If /proc/ccs/ directory exists, AKARI module was successfully registered.</p>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.en">Index</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-2.html.en">Next</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">Home</a>
+</td>
+<td width="33%" align="right" valign="top">
+Phase 2: Understanding AKARI
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

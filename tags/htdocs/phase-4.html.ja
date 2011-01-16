@@ -1,0 +1,811 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-4.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第４節：ポリシーを作成する</h1>
+
+<p style="text-align:center;">目的：テンポラリファイルへの対処やアクセス許可の集約を行い、ドメインポリシーの単純化と減量を行います。</p>
+
+<hr>
+
+<h2><a name="4.1">ステップ４．１：テンポラリファイルに対処する</a></h2>
+
+<p>特定のドメインでは、多数の資源に対して多数のアクセス許可を必要とすることがあります。「強制モード」では明示的に許可された資源へのアクセスだけが認められるため、必要な資源を全て網羅しておくことが重要です。網羅するために、アクセス許可をパターン化することができます。パターン化されたアクセス許可を使うと、多数のドメインポリシーのエントリを１個に集約することができます。</p>
+
+<p>パターン化は、使い捨てのパス名が利用されるテンポラリファイルへの対処を行うのに有効です。以下に紹介する手順で対処することもできますし、ポリシーエディタを用いて対話的に対処することもできます。対話的に対処する手順の詳細については<a href="tool-editpolicy.html.ja#acl_editor">パターン化支援機能について</a>を参照してください。</p>
+
+<p>/usr/sbin/ccs-findtemp コマンドを利用して、テンポラリファイルの可能性があるパス名を抽出します。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-findtemp &lt; /proc/ccs/domain_policy<br>
+/tmp/RsACr8YD<br>
+/tmp/RsXg3Aav<br>
+/var/run/nscd/socket<br>
+/var/spool/clientmqueue/dfoBPETPpH002933<br>
+/var/spool/clientmqueue/dfoBPETf92002944<br>
+/var/spool/clientmqueue/qfoBPETPpH002933<br>
+/var/spool/clientmqueue/qfoBPETf92002944<br>
+/var/spool/clientmqueue/xfoBPETPpH002933<br>
+/var/spool/clientmqueue/xfoBPETf92002944
+</td></tr>
+</table>
+
+<p>この例では、 /tmp/RsACr8YD /tmp/RsXg3Aav /var/spool/clientmqueue/dfoBPETPpH002933 /var/spool/clientmqueue/dfoBPETf92002944 /var/spool/clientmqueue/qfoBPETPpH002933 /var/spool/clientmqueue/qfoBPETf92002944 /var/spool/clientmqueue/xfoBPETPpH002933 /var/spool/clientmqueue/xfoBPETf92002944 がテンポラリファイルであると考えられます。そのため、これらのパス名をパターン化します。</p>
+
+<p>最初に、どのようなパターンを利用するかを決めます。この例では、ランダムな文字列が使用されていると考えられます。そのため、 / 以外の任意の１文字に一致する \? と / 以外の任意の０文字以上に一致する \* が妥当だと考えられます。詳細については<a href="policy-reference.html.ja#wildcard_expression_rules">パターンの表記規則</a>を参照してください。</p>
+
+<p>/usr/sbin/ccs-patternize コマンドを利用して、非対話的にパターン化処理を行うことができます。パターン化の規則は /etc/ccs/tools/patternize.conf に記録されています。以下に初期設定を示します。</p>
+
+<pre>
+# This file contains rewriting rules used by ccs-patternize command.
+
+# Domain policy consists with domain declaration lines (which start with
+# &lt;kernel&gt; ) and acl declaration lines (which do not start with &lt;kernel&gt; ).
+# You can refer the former using 'domain' keyword and the latter using 'acl'
+# keyword.
+#
+# Words in each line are separated by a space character. Therefore, you can
+# use 'domain[index]', 'acl[index]' for referring index'th word of the line.
+# The index starts from 1, and 0 refers the whole line (i.e.
+# 'domain[0]' = 'domain', 'acl[0]' = 'acl').
+#
+# Three operators are provided for conditional rewriting.
+# '.contains' is for 'fgrep keyword' match.
+# '.equals' is for 'grep ^keyword$' match.
+# '.starts' is for 'grep ^keyword' match.
+#
+# Rewriting rules are defined using multi-lined chunks. A chunk is terminated
+# by a 'rewrite' line which specifies old pattern and new pattern.
+# A 'rewrite' line is evaluated only when all preceding 'domain' and 'acl'
+# lines in that chunk have matched.
+# Evaluation stops at first 'rewrite' line where a word matched old pattern.
+# Therefore, no words are rewritten more than once.
+#
+# For user's convenience, new pattern can be omitted if old pattern is reused
+# for new pattern.
+
+# Please use AKARI's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Files on proc filesystem.
+rewrite path_pattern proc:/self/task/\$/fdinfo/\$
+rewrite path_pattern proc:/self/task/\$/fd/\$
+rewrite head_pattern proc:/self/task/\$/
+rewrite path_pattern proc:/self/fdinfo/\$
+rewrite path_pattern proc:/self/fd/\$
+rewrite head_pattern proc:/self/
+rewrite path_pattern proc:/\$/task/\$/fdinfo/\$
+rewrite path_pattern proc:/\$/task/\$/fd/\$
+rewrite head_pattern proc:/\$/task/\$/
+rewrite path_pattern proc:/\$/fdinfo/\$
+rewrite path_pattern proc:/\$/fd/\$
+rewrite head_pattern proc:/\$/
+
+# Files on devpts filesystem.
+rewrite path_pattern devpts:/\$
+
+# Files on pipe filesystem.
+rewrite path_pattern pipe:[\$]
+rewrite path_pattern pipefs:/[\$]
+
+# Files on / partition.
+rewrite tail_pattern /etc/mtab~\$
+rewrite tail_pattern /etc/ccs/policy/\*/domain_policy.conf
+rewrite tail_pattern /etc/ccs/policy/\*/exception_policy.conf
+rewrite tail_pattern /etc/ccs/policy/\*/manager.conf
+rewrite tail_pattern /etc/ccs/policy/\*/profile.conf
+rewrite tail_pattern /etc/ccs/policy/\*/
+
+# Files on /tmp/ partition.
+rewrite tail_pattern /vte\?\?\?\?\?\?
+rewrite tail_pattern /.ICE-unix/\$
+rewrite tail_pattern /keyring-\?\?\?\?\?\?/socket.ssh
+rewrite tail_pattern /orbit-\*/bonobo-activation-register-\X.lock
+rewrite tail_pattern /orbit-\*/bonobo-activation-server-\X-ior
+rewrite tail_pattern /orbit-\*/linc-\*
+rewrite tail_pattern /orbit-\*/
+rewrite tail_pattern /sh-thd-\$
+rewrite tail_pattern /zman\?\?\?\?\?\?
+
+# Files on home directory.
+rewrite tail_pattern /.ICEauthority-\?
+rewrite tail_pattern /.xauth\?\?\?\?\?\?
+rewrite tail_pattern /.xauth\?\?\?\?\?\?-?
+rewrite tail_pattern /.local/share/applications/preferred-mail-reader.desktop.\?\?\?\?\?\?
+rewrite tail_pattern /.local/share/applications/preferred-web-browser.desktop.\?\?\?\?\?\?
+
+# Files on /var/ partition.
+rewrite tail_pattern /cache/fontconfig/\X-le64.cache-3
+rewrite tail_pattern /lib/gdm/.pulse/\X-default-source
+rewrite tail_pattern /lib/gdm/.pulse/\X-default-sink
+rewrite tail_pattern /lib/gdm/.dbus/session-bus/\X-\X
+rewrite tail_pattern /run/gdm/auth-for-\*/database-\?
+rewrite tail_pattern /run/gdm/auth-for-\*/database
+rewrite tail_pattern /run/gdm/auth-for-\*/
+rewrite tail_pattern /spool/abrt/pyhook-\*/\{\*\}/\*
+rewrite tail_pattern /spool/abrt/pyhook-\*/\{\*\}/
+</pre>
+
+<p>path_pattern はパス名の全体一致、 head_pattern はパス名の前方一致、 tail_pattern はパス名の後方一致です。</p>
+
+<p>/tmp/Rs\?\?\?\?\?\? および /var/spool/clientmqueue/\* というパターンを /etc/ccs/tools/patternize.conf に追加してください。</p>
+
+<table border="1">
+<tr><td>
+rewrite tail_pattern /tmp/Rs\?\?\?\?\?\?<br>
+rewrite tail_pattern /var/spool/clientmqueue/\*
+</td></tr>
+</table>
+
+<p>その後、 /usr/sbin/ccs-patternize コマンドを利用してパターン化を行い、 /usr/sbin/ccs-diffpolicy コマンドを利用して結果を比較してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# ccs-savepolicy -d &gt; /tmp/old<br>
+[root@tomoyo ~]# ccs-patternize &lt; /tmp/old &gt; /tmp/new<br>
+[root@tomoyo ~]# ccs-diffpolicy /tmp/old /tmp/new<br>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file write proc:/self/task/\$/attr/fscreate<br>
+delete file write proc:/self/task/2766/attr/fscreate<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /bin/mail<br>
+<br>
+file create /tmp/Rs\?\?\?\?\?\? 0666<br>
+file read /tmp/Rs\?\?\?\?\?\?<br>
+file unlink /tmp/Rs\?\?\?\?\?\?<br>
+file write /tmp/Rs\?\?\?\?\?\?<br>
+delete file create /tmp/RsACr8YD 0666<br>
+delete file create /tmp/RsXg3Aav 0666<br>
+delete file read /tmp/RsACr8YD<br>
+delete file read /tmp/RsXg3Aav<br>
+delete file unlink /tmp/RsACr8YD<br>
+delete file unlink /tmp/RsXg3Aav<br>
+delete file write /tmp/RsACr8YD<br>
+delete file write /tmp/RsXg3Aav<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /bin/mail<br>
+<br>
+file ioctl pipefs:/[\$] 0x5413<br>
+delete file ioctl pipefs:/[11895] 0x5413<br>
+delete file ioctl pipefs:/[11965] 0x5413<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /bin/mail /usr/sbin/sendmail<br>
+<br>
+file create /var/spool/clientmqueue/\* 0660<br>
+file read /var/spool/clientmqueue/\*<br>
+file unlink /var/spool/clientmqueue/\*<br>
+file write /var/spool/clientmqueue/\*<br>
+delete file create /var/spool/clientmqueue/dfoBPETPpH002933 0660<br>
+delete file create /var/spool/clientmqueue/dfoBPETf92002944 0660<br>
+delete file create /var/spool/clientmqueue/qfoBPETPpH002933 0660<br>
+delete file create /var/spool/clientmqueue/qfoBPETf92002944 0660<br>
+delete file read /var/spool/clientmqueue/dfoBPETPpH002933<br>
+delete file read /var/spool/clientmqueue/dfoBPETf92002944<br>
+delete file unlink /var/spool/clientmqueue/dfoBPETPpH002933<br>
+delete file unlink /var/spool/clientmqueue/dfoBPETf92002944<br>
+delete file unlink /var/spool/clientmqueue/qfoBPETPpH002933<br>
+delete file unlink /var/spool/clientmqueue/qfoBPETf92002944<br>
+delete file unlink /var/spool/clientmqueue/xfoBPETPpH002933<br>
+delete file unlink /var/spool/clientmqueue/xfoBPETf92002944<br>
+delete file write /var/spool/clientmqueue/dfoBPETPpH002933<br>
+delete file write /var/spool/clientmqueue/dfoBPETf92002944<br>
+delete file write /var/spool/clientmqueue/qfoBPETPpH002933<br>
+delete file write /var/spool/clientmqueue/qfoBPETf92002944<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /bin/ls<br>
+<br>
+file ioctl pipefs:/[\$] 0x5413<br>
+delete file ioctl pipefs:/[11965] 0x5413<br>
+</td></tr>
+</table>
+
+<p>意図したとおりに変換されていない場合には、テキストエディタを利用して /tmp/new を直接編集しても構いませんし、 /etc/ccs/tools/patternize.conf を更新してから再度パターン化を行っても構いません。</p>
+
+<p>意図したとおりに変換された場合には、差分をカーネル内に読み込ませることで反映することができます。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# ccs-diffpolicy /tmp/old /tmp/new | /usr/sbin/ccs-loadpolicy -d
+</td></tr>
+</table>
+
+<p>参考までに、特定のドメインだけを対象に変換処理を行いたい場合、 /usr/sbin/ccs-selectpolicy コマンドを利用して特定のドメインのドメインポリシーだけを抽出することができます。例えば、 &lt;kernel&gt; /usr/sbin/httpd ドメインとその子孫ドメインだけを対象にパターン化処理を行いたい場合には、以下のように実行してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# ccs-selectpolicy -r '&lt;kernel&gt; /usr/sbin/httpd' &lt; /proc/ccs/domain_policy &gt; /tmp/old-httpd<br>
+[root@tomoyo ~]# ccs-patternize &lt; /tmp/old-httpd &gt; /tmp/new-httpd<br>
+[root@tomoyo ~]# ccs-diffpolicy /tmp/old-httpd /tmp/new-httpd | ccs-loadpolicy -d
+</td></tr>
+</table>
+
+<p>また、 /etc/ccs/tools/patternize.conf を編集することでも特定のドメインだけを対象に変換処理を行わせることができます。以下の行を rewite 行の前に挿入することで、 &lt;kernel&gt; /usr/sbin/httpd ドメインとその子孫ドメインだけを対象にパターン化処理を行わせることができます。</p>
+
+<pre>
+domain.starts &lt;kernel&gt; /usr/sbin/httpd
+</pre>
+
+<br>
+
+<hr>
+
+<h2><a name="4.2">ステップ４．２：ファイルのパス名をパターン化する</a></h2>
+
+<p>学習モードでは必ずしもアクセスされないファイルに対するアクセス許可を追加します。例えば、 WWW サーバがアクセスするコンテンツを扱うために、以下のようにパターン化を行うことができます。</p>
+
+<table border="1">
+<tr><td>修正前</td><td>修正後</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read /var/www/html/index.html<br>
+file read /var/www/html/alice/index.html<br>
+file read /var/www/html/alice/page1.html<br>
+file read /var/www/html/alice/page2.html<br>
+file read /var/www/html/alice/image1.jpg<br>
+file read /var/www/html/alice/image2.jpg<br>
+file read /var/www/html/alice/archive/page1.html<br>
+file read /var/www/html/alice/archive/image1.jpg<br>
+file read /var/www/html/alice/archive/page2.html<br>
+file read /var/www/html/alice/archive/image2.jpg<br>
+file read /var/www/html/bob/index.html<br>
+file read /var/www/html/bob/page1.html<br>
+file read /var/www/html/bob/page2.html<br>
+file read /var/www/html/bob/image1.jpg<br>
+file read /var/www/html/bob/image2.jpg<br>
+file read /var/www/html/bob/archive/page1.html<br>
+file read /var/www/html/bob/archive/image1.jpg<br>
+file read /var/www/html/bob/archive/page2.html<br>
+file read /var/www/html/bob/archive/image2.jpg
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read /var/www/html/\*.html<br>
+file read /var/www/html/\{\*\}/\*.html<br>
+file read /var/www/html/\{\*\}/\*.jpg<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>例外ポリシーで以下のようなグループを定義しておくことにより、</p>
+
+<table border="1">
+<tr><td>
+path_group WEB-CONTENTS /var/www/html/\*.html<br>
+path_group WEB-CONTENTS /var/www/html/\{\*\}/\*.html<br>
+path_group WEB-CONTENTS /var/www/html/\{\*\}/\*.jpg<br>
+</td></tr>
+</table>
+
+<p>ドメインポリシーでの記述を以下のように単純化することができます。</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+file read @WEB-CONTENTS
+</td></tr>
+</table>
+
+<p>上記の変換処理は /usr/sbin/ccs-editpolicy を利用して行うことができますが、 /usr/sbin/ccs-patternize を利用して行うこともできます。上記のように path_group を例外ポリシーに追加し、以下の内容を /etc/ccs/tools/patternize.conf に追加後、<a href="#4.1">ステップ４．１：テンポラリファイルに対処する</a>と同様の手順を行ってください。</p>
+
+<pre>
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts file read
+rewrite path_pattern /var/www/html/\*.html @WEB-CONTENTS
+
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts file read
+rewrite path_pattern /var/www/html/\{\*\}/\*.html @WEB-CONTENTS
+
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts file read
+rewrite path_pattern /var/www/html/\{\*\}/\*.jpg @WEB-CONTENTS
+</pre>
+
+<br>
+
+<hr>
+
+<h2><a name="4.3">ステップ４．３：数値をパターン化する</a></h2>
+
+<p>ファイルのＤＡＣモードやネットワークのポート番号などの数値で表現されるパラメータについてもパターン化を行うことができます。</p>
+
+<p>以下の /usr/sbin/httpd のドメインポリシーの例では、クライアントのポート番号が１０２４～６５５３５からの接続要求を受け付けるようにパターン化しています。</p>
+
+<table border="1">
+<tr><td>修正前</td><td>修正後</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3810<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3829<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 3829
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 1024-65535<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>例外ポリシーで以下のようなグループを定義しておくことにより、</p>
+
+<table border="1">
+<tr><td>
+number_group WEB-CLIENT-PORTS 1024-65535
+</td></tr>
+</table>
+
+<p>ドメインポリシーでの記述を以下のように単純化することができます。</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:ffff:c0a8:801 @WEB-CLIENT-PORTS<br>
+</td></tr>
+</table>
+
+<p>上記の変換処理は /usr/sbin/ccs-editpolicy を利用して行うことができますが、 /usr/sbin/ccs-patternize を利用して行うこともできます。上記のように number_group を例外ポリシーに追加し、以下の内容を /etc/ccs/tools/patternize.conf に追加後、<a href="#4.1">ステップ４．１：テンポラリファイルに対処する</a>と同様の手順を行ってください。</p>
+
+<pre>
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts network inet stream accept
+rewrite number_pattern 1024-65535 @WEB-CLIENT-PORTS
+</pre>
+
+<br>
+
+<hr>
+
+<h2><a name="4.4">ステップ４．４：ネットワークのアドレスをパターン化する</a></h2>
+
+<p>同様にＩＰアドレスについてもパターン化を行います。</p>
+
+<table border="1">
+<tr><td>修正前</td><td>修正後</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:0:0:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:a1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.10 @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.200 @WEB-CLIENT-PORTS
+</td><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept 0:0:0:0:0:0:0:1 @WEB-CLIENT-PORTS<br>
+network inet stream accept 0:0:0:0:0:ffff:a00:1-0:0:0:0:0:ffff:a00:ff @WEB-CLIENT-PORTS<br>
+network inet stream accept 10.0.0.1-10.0.0.255 @WEB-CLIENT-PORTS<br>
+<br>
+<br>
+</td></tr>
+</table>
+
+<p>例外ポリシーで以下のようなグループを定義しておくことにより、</p>
+
+<table border="1">
+<tr><td>
+address_group WEB-CLIENT-ADDRESS 0:0:0:0:0:0:0:1<br>
+address_group WEB-CLIENT-ADDRESS 0:0:0:0:0:ffff:a00:1-0:0:0:0:0:ffff:a00:ff<br>
+address_group WEB-CLIENT-ADDRESS 10.0.0.1-10.0.0.255
+</td></tr>
+</table>
+
+<p>ドメインポリシーでの記述を以下のように単純化することができます。</p>
+
+<table border="1">
+<tr><td>
+&lt;kernel&gt; /usr/sbin/httpd<br>
+<br>
+network inet stream accept @WEB-CLIENT-ADDRESS @WEB-CLIENT-PORTS
+</td></tr>
+</table>
+
+<p>上記の変換処理は /usr/sbin/ccs-editpolicy を利用して行うことができますが、 /usr/sbin/ccs-patternize を利用して行うこともできます。上記のように address_group を例外ポリシーに追加し、以下の内容を /etc/ccs/tools/patternize.conf に追加後、<a href="#4.1">ステップ４．１：テンポラリファイルに対処する</a>と同様の手順を行ってください。</p>
+
+<pre>
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts network inet stream accept
+rewrite address_pattern 0:0:0:0:0:0:0:1 @WEB-CLIENT-ADDRESS
+
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts network inet stream accept
+rewrite address_pattern 0:0:0:0:0:ffff:a00:1-0:0:0:0:0:ffff:a00:ff @WEB-CLIENT-ADDRESS
+
+domain.equals &lt;kernel&gt; /usr/sbin/httpd
+acl.starts network inet stream accept
+rewrite address_pattern 10.0.0.1-10.0.0.255 @WEB-CLIENT-ADDRESS
+</pre>
+
+<hr>
+
+<h2><a name="4.5">ステップ４．５：収集されたアクセス許可を確認する</a></h2>
+
+<p>Apache に許可したい操作を一通り行ったと判断したら、ポリシーエディタを実行してプロファイル番号を 2 に変更します。</p>
+
+<p> Apache は（例えば /bin/sh /usr/bin/perl /usr/lib/sendmail のような）外部のプログラムを実行したことにより、 Apache に子ドメインや孫ドメインが作成されているかもしれません。 /usr/sbin/httpd のドメインだけでなくその子孫ドメインのプロファイル番号も変更するのを忘れないようにしてください。</p>
+
+<p>対象となるドメインを選択して、 s キーを押し、 2 と入力してから Enter キーを押してください。</p>
+
+<p><img src="editpolicy-httpd-set-profile2.png" alt="editpolicy-httpd-set-profile2.png" width="720" height="400"></p>
+
+<p>/usr/sbin/httpd およびその子孫ドメインのプロファイル番号が 2 に変更されました。</p>
+
+<p><img src="editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" width="720" height="400"></p>
+
+<p>q キーを押してポリシーエディタを終了してください。その後、 Apache に対して許可したい操作を再度行ってください。</p>
+
+<p><img src="operation-permissive.png" alt="operation-permissive.png" width="723" height="561"></p>
+
+<p>/proc/ccs/stat からポリシー違反の発生回数と最後に発生した時刻について知ることができます。</p>
+
+<pre>
+[root@tomoyo ~]# cat /proc/ccs/stat
+Policy update:                              1571 (Last: 2010/12/25 16:10:48)
+Policy violation in learning mode:           453 (Last: 2010/12/25 15:33:21)
+Policy violation in permissive mode:          22 (Last: 2010/12/25 15:47:10)
+Policy violation in enforcing mode:            0
+Memory used by policy:                    165728
+Memory used by audit log:                      0 (Quota:   16777216)
+Memory used by query message:                  0 (Quota:    1048576)
+Total memory used:                        165728
+</pre>
+
+<p>もしアクセスログの設定を<a href="phase-2.html.ja#2.5">ステップ２．５：アクセスログを保存する（任意）</a>で行っていた場合は、必要なアクセス許可を /var/log/tomoyo/reject_002.log から抽出することができます。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# cat /var/log/tomoyo/reject_002.log<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+file execute /usr/bin/id<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+use_profile 2<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+use_group 0<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env TERM<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env PATH<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env PWD<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env LANG<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env SHLVL<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env LANGUAGE<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+misc env _<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245682 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245419 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /etc/selinux/config<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=496 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read selinuxfs:/mls<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/setrans/.setrans-unix<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read proc:/filesystems<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1547485 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1540124 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /usr/lib/locale/locale-archive<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/setrans/.setrans-unix<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/nscd/socket<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/nscd/socket<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245231 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /etc/nsswitch.conf<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245924 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /etc/passwd<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/nscd/socket<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+network unix stream connect /var/run/nscd/socket<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245902 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /etc/group<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245902 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+file read /etc/group
+</td></tr>
+</table>
+
+<br>
+<p>これらのログは、 ccs-sortpolicy コマンドを使って圧縮することができます。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# cat /var/log/tomoyo/reject_002.log | /usr/sbin/ccs-sortpolicy<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+file execute /usr/bin/id<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+use_profile 2<br>
+<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=12 major=0 minor=15 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=496 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245231 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245682 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245419 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245902 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1245924 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1245185 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1545499 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=1540116 perm=0755 } exec={ realpath="/usr/bin/id" argc=1 envc=7 argv[]={ "id" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" "_=/usr/bin/id" } }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=1547485 major=8 minor=1 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=1540124 perm=0755 }<br>
+#2010/12/25 15:47:10# profile=2 mode=permissive granted=no (global-pid=3390) task={ pid=3390 ppid=3386 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=4026531844 major=0 minor=3 perm=0444 type=file } path1.parent={ uid=0 gid=0 ino=1 perm=0555 }<br>
+file read /etc/group<br>
+file read /etc/nsswitch.conf<br>
+file read /etc/passwd<br>
+file read /etc/selinux/config<br>
+file read /usr/lib/locale/locale-archive<br>
+file read proc:/filesystems<br>
+file read selinuxfs:/mls<br>
+misc env LANG<br>
+misc env LANGUAGE<br>
+misc env PATH<br>
+misc env PWD<br>
+misc env SHLVL<br>
+misc env TERM<br>
+misc env _<br>
+network unix stream connect /var/run/nscd/socket<br>
+network unix stream connect /var/run/setrans/.setrans-unix<br>
+use_group 0
+</td></tr>
+</table>
+
+<p>圧縮されたログをテンポラリファイルとして保存し、必要に応じて加工してから、 ccs-loadpolicy コマンドを用いてドメインポリシーに追加することができます。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# cat /var/log/tomoyo/reject_002.log | /usr/sbin/ccs-sortpolicy &gt; ~/rejected.log<br>
+[root@tomoyo ~]# emacs ~/rejected.log<br>
+[root@tomoyo ~]# /usr/sbin/ccs-loadpolicy -d &lt; ~/rejected.log
+</td></tr>
+</table>
+
+<p>カーネル内のメモリに存在しているポリシーを直接編集しているため、ディスク上に保存せずにシャットダウンすると変更内容は失われてしまいます。 ccs-savepolicy コマンドを実行して exception_policy.conf domain_poilicy.conf profile.conf manager.conf をディスク上に保存してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-savepolicy
+</td></tr>
+</table>
+
+<p>AKARI を使う目的が解析であれば、ここで解析は終了です。</p>
+
+<p>AKARI を使う目的が保護であれば、次のステップへと進んでください。</p>
+
+<hr>
+
+<h2><a name="4.6">ステップ４．６：アクセス許可に条件を付与する（省略可）</a></h2>
+
+<p>個々のアクセス許可に対して必要に応じて条件を付けることができます。これにより、システムアカウントのユーザＩＤに基づくアクセス制御が可能です。</p>
+
+<p>例外ポリシーで以下のように path_group が定義されていると仮定します。</p>
+
+<table border="1">
+<tr><td>
+path_group HOME-FTP-FILE /home/\*/ftp/\*<br>
+path_group HOME-FTP-FILE /home/\*/ftp/\{\*\}/\*<br>
+path_group HOME-FTP-DIR  /home/\*/ftp/\*/<br>
+path_group HOME-FTP-DIR  /home/\*/ftp/\{\*\}/<br>
+path_group HOME-SMB-FILE /home/\*/samba/\*<br>
+path_group HOME-SMB-FILE /home/\*/samba/\{\*\}/\*<br>
+path_group HOME-SMB-DIR  /home/\*/samba/\*/<br>
+path_group HOME-SMB-DIR  /home/\*/samba/\{\*\}/
+</td></tr>
+</table>
+
+<p>匿名ではない FTP サーバを保護する場合、以下のように条件を付けることで、当該ユーザのホームディレクトリ以外へのアクセスを禁止することができるようになります。ホームディレクトリ以下全部を FTP でアクセス可能にすることは、侵入された場合に被害が大きくなるため、自分のホームディレクトリにある ftp ディレクトリ以下だけのアクセスを認めます。 /usr/sbin/vsftpd を用いる場合、例えば以下のように許可を与えます。</p>
+
+<table border="1">
+<tr><td>修正前</td><td>修正後</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/vsftpd<br>
+<br>
+file read @HOME-FTP-FILE<br>
+file write @HOME-FTP-FILE<br>
+file mkdir @HOME-FTP-DIR 0755<br>
+file rmdir @HOME-FTP-DIR<br>
+file create @HOME-FTP-FILE 0644<br>
+file truncate @HOME-FTP-FILE<br>
+file unlink @HOME-FTP-FILE<br>
+file rename @HOME-FTP-FILE @HOME-FTP-FILE<br>
+file rename @HOME-FTP-DIR @HOME-FTP-DIR
+</td><td>
+&lt;kernel&gt; /usr/sbin/vsftpd<br>
+<br>
+file read @HOME-FTP-FILE task.uid=path1.uid<br>
+file write @HOME-FTP-FILE task.uid=path1.uid<br>
+file mkdir @HOME-FTP-DIR 0755 task.uid=path1.parent.uid<br>
+file rmdir @HOME-FTP-DIR task.uid=path1.uid<br>
+file create @HOME-FTP-FILE 0644 task.uid=path1.parent.uid<br>
+file truncate @HOME-FTP-FILE task.uid=path1.uid<br>
+file unlink @HOME-FTP-FILE task.uid=path1.uid<br>
+file rename @HOME-FTP-FILE @HOME-FTP-FILE task.uid=path1.parent.uid task.uid=path2.parent.uid<br>
+file rename @HOME-FTP-DIR @HOME-FTP-DIR task.uid=path1.parent.uid task.uid=path2.parent.uid
+</td></tr>
+</table>
+
+<p>Samba サーバを保護する場合、以下のように条件を付けることで、当該ユーザのホームディレクトリ以外へのアクセスを禁止することができるようになります。ホームディレクトリ以下全部を Samba でアクセス可能にすることは、侵入された場合に被害が大きくなるため、自分のホームディレクトリにある samba ディレクトリ以下だけのアクセスを認めます。</p>
+
+<table border="1">
+<tr><td>修正前</td><td>修正後</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/smbd<br>
+<br>
+file read @HOME-SMB-FILE<br>
+file write @HOME-SMB-FILE<br>
+file mkdir @HOME-SMB-DIR 0755<br>
+file rmdir @HOME-SMB-DIR<br>
+file create @HOME-SMB-FILE 0644<br>
+file truncate @HOME-SMB-FILE<br>
+file unlink @HOME-SMB-FILE<br>
+file rename @HOME-SMB-FILE @HOME-SMB-FILE<br>
+file rename @HOME-SMB-DIR @HOME-SMB-DIR
+</td><td>
+&lt;kernel&gt; /usr/sbin/smbd<br>
+<br>
+file read @HOME-SMB-FILE task.euid=path1.uid<br>
+file write @HOME-SMB-FILE task.euid=path1.uid<br>
+file mkdir @HOME-SMB-DIR 0755 task.euid=path1.parent.uid<br>
+file rmdir @HOME-SMB-DIR task.euid=path1.uid<br>
+file create @HOME-SMB-FILE 0644 task.euid=path1.parent.uid<br>
+file truncate @HOME-SMB-FILE task.euid=path1.uid<br>
+file unlink @HOME-SMB-FILE task.euid=path1.uid<br>
+file rename @HOME-SMB-FILE @HOME-SMB-FILE task.euid=path1.parent.uid task.euid=path2.parent.uid<br>
+file rename @HOME-SMB-DIR @HOME-SMB-DIR task.euid=path1.parent.uid task.euid=path2.parent.uid<br>
+</td></tr>
+</table>
+
+<p>SSH サーバを保護する場合、以下のように条件を付けることで、 root ユーザとしてログインすることを禁止できます。</p>
+
+<table border="1">
+<tr><td>Before</td><td>After</td></tr>
+<tr><td>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+<br>
+file execute /bin/bash exec.realpath="/bin/bash" exec.argv[0]="-bash"
+</td><td>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+<br>
+file execute /bin/bash exec.realpath="/bin/bash" exec.argv[0]="-bash" task.uid!=0 task.euid!=0
+</td></tr>
+</table>
+
+<p>その他にも様々な条件を指定することができます。詳しくは<a href="policy-reference.html.ja#conditional_acl">条件付きアクセス許可の指定</a>を参照ください。</p>
+
+<p>参考までに、アクセスログを ccs-sortpolicy コマンドに通す前に convert-audit-log コマンドに通すことで、最も厳密なアクセス許可を生成することができます。しかし、このようにして生成されたアクセス許可は厳密すぎるため、そのままではドメインポリシーとして利用するには適しません。もし、 convert-audit-log コマンドで生成されたアクセス許可をドメインポリシーとして利用したい場合、適宜条件を緩めてから利用してください。以下に convert-audit-log コマンドで変換した例を紹介します。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# cat /var/log/tomoyo/reject_002.log | /usr/lib/ccs/convert-audit-log | /usr/sbin/ccs-sortpolicy<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+<br>
+file execute /usr/bin/id task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh /usr/bin/id<br>
+<br>
+file read /etc/group task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1245902 path1.major=8 path1.minor=1 path1.perm=0644 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1245185 path1.parent.perm=0755<br>
+file read /etc/nsswitch.conf task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1245231 path1.major=8 path1.minor=1 path1.perm=0644 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1245185 path1.parent.perm=0755<br>
+file read /etc/passwd task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1245924 path1.major=8 path1.minor=1 path1.perm=0644 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1245185 path1.parent.perm=0755<br>
+file read /etc/selinux/config task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1245682 path1.major=8 path1.minor=1 path1.perm=0644 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1245419 path1.parent.perm=0755<br>
+file read /usr/lib/locale/locale-archive task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1547485 path1.major=8 path1.minor=1 path1.perm=0644 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540124 path1.parent.perm=0755<br>
+file read proc:/filesystems task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=4026531844 path1.major=0 path1.minor=3 path1.perm=0444 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1 path1.parent.perm=0555<br>
+file read selinuxfs:/mls task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=12 path1.major=0 path1.minor=15 path1.perm=0444 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=496 path1.parent.perm=0755<br>
+misc env LANG task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env LANGUAGE task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env PATH task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env PWD task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env SHLVL task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env TERM task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+misc env _ task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler path1.uid=0 path1.gid=0 path1.ino=1545499 path1.major=8 path1.minor=1 path1.perm=0755 path1.type=file path1.parent.uid=0 path1.parent.gid=0 path1.parent.ino=1540116 path1.parent.perm=0755 exec.realpath="/usr/bin/id" exec.argc=1 exec.envc=7 exec.argv[0]="id" exec.envp["TERM"]="vt100" exec.envp["PATH"]="/sbin:/usr/sbin:/bin:/usr/bin" exec.envp["PWD"]="/usr/share/horde/admin" exec.envp["LANG"]="en_US.UTF-8" exec.envp["SHLVL"]="3" exec.envp["LANGUAGE"]="en_US.UTF-8" exec.envp["_"]="/usr/bin/id"<br>
+network unix stream connect /var/run/nscd/socket task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler<br>
+network unix stream connect /var/run/setrans/.setrans-unix task.pid=3390 task.ppid=3386 task.uid=48 task.gid=48 task.euid=48 task.egid=48 task.suid=48 task.sgid=48 task.fsuid=48 task.fsgid=48 task.type!=execute_handler<br>
+use_group 0
+</td></tr>
+</table>
+
+<br>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+<a href="phase-3.html.ja">前節</a>
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.ja">目次</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-5.html.ja">次節</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+第３節：ドメインを解析する
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">ホーム</a>
+</td>
+<td width="33%" align="right" valign="top">
+第５節：ポリシーを適用する
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

@@ -42,7 +42,7 @@
 <p>In CentOS 5.5, the location of Apache is "/usr/sbin/httpd".<br>
 Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
 
-<p><img src="editpolicy-httpd-profile0.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="720" height="400"></p>
 
 <p>If "/usr/sbin/httpd" is invoked by "&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash", then the domain name is <b>"&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd"</b></p>
 
@@ -50,15 +50,15 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <p>Press 's' key and enter '1' and press 'Enter' key:</p>
 
-<p><img src="editpolicy-httpd-set-profile1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="720" height="400"></p>
 
 <p>Now the profile number of the /usr/sbin/httpd has changed to 1:</p>
 
-<p><img src="editpolicy-httpd-profile1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="720" height="400"></p>
 
 <p>Press '@' key to switch to the process list. Verify that /usr/sbin/httpd processes are assigned profile number 1:</p>
 
-<p><img src="editpolicy-httpd-process1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="720" height="400"></p>
 
 <p>Press 'q' key to quit the policy editor.</p>
 
@@ -78,13 +78,13 @@ Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find 
 
 <p>Press 'Enter' key to browse the permissions that have been gathered:</p>
 
-<p><a href="editpolicy-httpd-full.png">(Click to view complete screen.)<br><img src="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
+<p><a href="editpolicy-httpd-full.png">(Click to view complete screen.)<br><img src="editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
 
 <p>Press 'q' key to quit the policy editor.</p>
 
 <p>Apache should now be used to generate necessary permissions for normal usage. All actions should be performed that you wish to allow:</p>
 
-<p><img src="operation-learning.png" width="689" height="907"></p>
+<p><img src="operation-learning.png" alt="operation-learning.png" width="689" height="907"></p>
 
 <p>Remember to save policy, as permissions are accumulated only in kernel memory. If the system is rebooted, the gathered permissions will be lost.</p>
 

@@ -49,11 +49,11 @@
 
 <p>This picture describes the domain tree that should be visible after running the above command. As of now, only "&lt;kernel&gt;" domain is defined:</p>
 
-<p><img src="editpolicy-domain-list1.png" width="720" height="400"></p>
+<p><img src="editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="720" height="400"></p>
 
 <p>As the system runs, AKARI will create domains and add them to the tree. After rebooting and running ccs-editpolicy again, the domain tree should become populated with all domains created since startup:</p>
 
-<p><img src="editpolicy-domain-list2.png" width="720" height="400"></p>
+<p><img src="editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="720" height="400"></p>
 
 <p>The access analysis/restriction in AKARI is applied in the units of domains. Every process belongs to single domain, and the process will transit to a different domain whenever it executes a program. The name of a domain is a concatenated string expression for the process execution history.</p>
 
@@ -64,23 +64,23 @@ The exceptions to this transition rule are described later.</p>
 
 <p>Look at the numbers in the second column of each line:</p>
 
-<p><img src="editpolicy-domain-profile-number.png" width="720" height="400"></p>
+<p><img src="editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" width="720" height="400"></p>
 
 <p>This number is called the "profile number". A profile number is an integer value which takes between 0 and 255.</p>
 
 <p>Press "w" key, and you will see some choices:</p>
 
-<p><img src="editpolicy-window-list.png" width="720" height="400"></p>
+<p><img src="editpolicy-window-list.png" alt="editpolicy-window-list.png" width="720" height="400"></p>
 
 <p>Press "p" key, and you will see the list of profiles.</p>
 
 <p>If "--file-only-profile" was specified when executing /usr/lib/ccs/init_policy then you will see the following entries:</p>
 
-<p><img src="editpolicy-profile-list-file-only.png" width="720" height="400"></p>
+<p><img src="editpolicy-profile-list-file-only.png" alt="editpolicy-profile-list-file-only.png" width="720" height="400"></p>
 
 <p>If "--file-only-profile" was not specified when executing /usr/lib/ccs/init_policy then you will see the following entries:</p>
 
-<p><img src="editpolicy-profile-list.png" width="720" height="400"></p>
+<p><img src="editpolicy-profile-list.png" alt="editpolicy-profile-list.png" width="720" height="400"></p>
 
 <table border="1">
 <tr><td>Name</td><td>Control</td></tr>
@@ -123,7 +123,7 @@ The exceptions to this transition rule are described later.</p>
 
 <p>Press "w" key, then press "e" key, and you will see the picture shown below:</p>
 
-<p><a href="editpolicy-exception-full.png">(Click to view complete screen.)<br><img src="editpolicy-exception-list1.png" width="720" height="400"></a></p>
+<p><a href="editpolicy-exception-full.png">(Click to view complete screen.)<br><img src="editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" width="720" height="400"></a></p>
 
 <p>You can scroll this window using the arrow keys and/or Home/End/PageUp/PageDown keys.</p>
 

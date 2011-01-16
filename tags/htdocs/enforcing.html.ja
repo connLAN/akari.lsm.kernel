@@ -21,35 +21,35 @@
 
 <p>ポリシーエディタを実行してください。対象となるドメインを選択し、 s キーを押して 3 と入力してから Enter キーを押します。</p>
 
-<p><img src="editpolicy-httpd-set-profile3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-set-profile3.png" alt="editpolicy-httpd-set-profile3.png" width="720" height="400"></p>
 
 <p>選択されたドメインのプロファイル番号が 3 に変化しました。</p>
 
-<p><img src="editpolicy-httpd-profile3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="720" height="400"></p>
 
 <p>@ キーを押してプロセス一覧表示に切り替えてください。そして、 /usr/sbin/httpd プロセスとその子孫に対してプロファイル 3 が割り当てられていることを確認してください。</p>
 
-<p><img src="editpolicy-httpd-process3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="720" height="400"></p>
 
 <p>プロファイル 3 は強制モードを行うよう指定されているため、これにより /usr/sbin/httpd プロセスおよびその子孫は強制アクセス制御により保護された状態になりました。</p>
 
-<p><img src="editpolicy-profile-list-enforcing.png" width="720" height="400"></p>
+<p><img src="editpolicy-profile-list-enforcing.png" alt="editpolicy-profile-list-enforcing.png" width="720" height="400"></p>
 
 <p>q キーを押してポリシーエディタを終了してください。</p>
 
 <p>ポリシーで許可されている操作をしてみましょう。</p>
 
-<p><img src="operation-permitted.png" width="684" height="912"></p>
+<p><img src="operation-permitted.png" alt="operation-permitted.png" width="684" height="912"></p>
 
 <p>メールの送信はポリシーで許可されているので、操作は正常に終了しました。</p>
 
 <p>ポリシーで許可されていない操作をしてみましょう。</p>
 
-<p><img src="unix-penguin.png" width="684" height="912"></p>
+<p><img src="unix-penguin.png" alt="unix-penguin.png" width="684" height="912"></p>
 
 <p>操作は拒否されました。（一見すると正常に終了したように見えますが、実際には /bin/mail が「入力が空っぽです」と警告しているとおり、 /bin/cat の実行が拒否されています。）</p>
 
-<p><img src="unix-penguin-rejected.png" width="684" height="597"></p>
+<p><img src="unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="684" height="597"></p>
 
 <p>/proc/ccs/stat からポリシー違反の発生回数と最後に発生した時刻について知ることができます。</p>
 

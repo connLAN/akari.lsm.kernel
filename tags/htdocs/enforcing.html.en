@@ -21,35 +21,35 @@
 
 <p>Run the policy editor. Select target domains with 'Space' key, press 's' key, enter '3', and press 'Enter':</p>
 
-<p><img src="editpolicy-httpd-set-profile3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-set-profile3.png" alt="editpolicy-httpd-set-profile3.png" width="720" height="400"></p>
 
 <p>The profile numbers of the selected domains have now been changed to 3:</p>
 
-<p><img src="editpolicy-httpd-profile3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="720" height="400"></p>
 
 <p>Press '@' key to switch to the process list. Verify that the "/usr/sbin/httpd" process and descendants are assigned profile number 3:</p>
 
-<p><img src="editpolicy-httpd-process3.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="720" height="400"></p>
 
 <p>Now "/usr/sbin/httpd" processes and descendants are protected, as profile 3 was configured for enforcing mode:</p>
 
-<p><img src="editpolicy-profile-list-enforcing.png" width="720" height="400"></p>
+<p><img src="editpolicy-profile-list-enforcing.png" alt="editpolicy-profile-list-enforcing.png" width="720" height="400"></p>
 
 <p>Press 'q' key to quit the policy editor.</p>
 
 <p>Let's try an operation which is permitted by policy:</p>
 
-<p><img src="operation-permitted.png" width="684" height="912"></p>
+<p><img src="operation-permitted.png" alt="operation-permitted.png" width="684" height="912"></p>
 
 <p>The operation was successfully completed, as sending mail is permitted by policy.</p>
 
 <p>Let's try an operation which is not permitted by policy:</p>
 
-<p><img src="unix-penguin.png" width="684" height="912"></p>
+<p><img src="unix-penguin.png" alt="unix-penguin.png" width="684" height="912"></p>
 
 <p>Although it appears to be have been completed successfully, the warning message by "/bin/mail" shows that the input was empty and so the execution of "/bin/cat" was rejected:</p>
 
-<p><img src="unix-penguin-rejected.png" width="684" height="597"></p>
+<p><img src="unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="684" height="597"></p>
 
 <p>You can check "/proc/ccs/stat" for how many times policy violations have occurred and the last time a policy violation occurred:</p>
 

@@ -42,21 +42,21 @@
 <p>CentOS 5.5 では、 Apache プログラムパス名は /usr/sbin/httpd です。<br>
 矢印キーや Home/End/PageUp/PageDown キーを使ってカーソルをスクロールして、 /usr/sbin/httpd の行を見つけてください。この絵では 386 行目です。</p>
 
-<p><img src="editpolicy-httpd-profile0.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="720" height="400"></p>
 
 <p>もし、 /usr/sbin/httpd が initialize_domain キーワードで指定されていた場合、 /usr/sbin/httpd を実行することにより &lt;kernel&gt; /usr/sbin/httpd という名前のドメインが作成されます。もし指定されていなかった場合、実行したドメインの子ドメイン（例えば &lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash ドメインから /usr/sbin/httpd を実行した場合は &lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd ）が作成されます。この手順書では /usr/sbin/httpd が initialize_domain に指定されている場合で説明します。詳細については<a href="tool-editpolicy.html.ja#Initialize_domain_transition">ドメイン遷移を初期化する方法について</a>を参照してください。</p>
 
 <p>s キーを押してから 1 と入力し、 Enter キーを押してください。</p>
 
-<p><img src="editpolicy-httpd-set-profile1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="720" height="400"></p>
 
 <p>/usr/sbin/httpd のプロファイル番号が 1 に変化しました。</p>
 
-<p><img src="editpolicy-httpd-profile1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="720" height="400"></p>
 
 <p>@ キーを押してプロセス一覧表示に切り替えてください。そして、 /usr/sbin/httpd プロセスに対してプロファイル 1 が割り当てられていることを確認してください。</p>
 
-<p><img src="editpolicy-httpd-process1.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="720" height="400"></p>
 
 <p>q キーを押してポリシーエディタを終了してください。</p>
 
@@ -76,11 +76,11 @@
 
 <p>Enter キーを押すと、現在までに収集されたアクセス許可が表示されます。</p>
 
-<p><a href="editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
+<p><a href="editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
 
 <p>q キーを押してポリシーエディタを終了してください。</p>
 
-<p><img src="operation-learning.png" width="689" height="907"></p>
+<p><img src="operation-learning.png" alt="operation-learning.png" width="689" height="907"></p>
 
 <p>Apache は通常の使い方をするのに必要なアクセス許可を生成できるようになっています。この状態で、 Apache に対して許可したい操作を全て行ってください。</p>
 

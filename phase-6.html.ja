@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-6.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第６節：もっと使いこなす</h1>
+
+<p style="text-align:center;">目的：システムのセキュリティを最大限に高めます。</p>
+
+<hr>
+
+<h2><a name="6.1">ステップ６．１：全てのドメインを制限する</a></h2>
+
+<p>これまでに紹介してきた概念を理解しツールを使いこなせるようになれば、システム全体をアクセス制御の対象とするようなポリシーを作成することができることでしょう。全てのドメインを「強制モード」で運用すれば、システムの侵害へとつながるような弱点を減らすのに有効です。 Apache を制限する例で示した手順は、そのまま全てのドメインを制限するために使うことができます。</p>
+
+<hr>
+
+<h2><a name="6.2">ステップ６．２：より深く知るためには</a></h2>
+
+<p>以下の資料にまだ目を通していないのであれば、一読されておくことをお勧めします。</p>
+
+<ul>
+<li><a href="tools-doc.html.ja">各種ツールのドキュメント</a></li>
+<li><a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a></li>
+<li><a href="policy-reference.html.ja">AKARI ポリシー解説書</a></li>
+</ul>
+
+<hr>
+
+<h2><a name="6.3">ステップ６．３：終わりに</a></h2>
+
+<p>おめでとうございます。このガイドを修了しました。</p>
+
+<p>セキュリティ対策が最も弱い場所を狙われるということを忘れないでください。 AKARI が提供する強制アクセス制御機能を正しく使うことは、システムが侵害されることへの対策ではありますが、その他のシステムのセキュリティを高めるための手法や実践も忘れないでください。その他のシステムのセキュリティを高めるための手法や実践はこのガイドの対象外ですが、システムのセキュリティを最大限に高めたいと思うのならば真剣に取り組むようにしてください。</p>
+
+<br>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+<a href="phase-5.html.ja">前節</a>
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.ja">目次</a>
+</td>
+<td width="33%" align="right" valign="top">
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+第５節：ポリシーを適用する
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">ホーム</a>
+</td>
+<td width="33%" align="right" valign="top">
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

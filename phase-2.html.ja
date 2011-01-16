@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI 導入手順書</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-2.html.en">English Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>第２節： AKARI を理解する</h1>
+
+<p style="text-align:center;">目的： AKARI の概念を理解し、管理ツールの使い方を習得します。</p>
+
+<hr>
+
+<h2><a name="2.1">ステップ２．１：ドメインを理解する</a></h2>
+
+<p>AKARI における管理ツールの中心はポリシーエディタです。このページではポリシーエディタについてクイックスタートガイド（使い始めるのに十分な程度の量）だけを紹介します。より詳細な説明については、<a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a>を参照してください。</p>
+
+<p>AKARI 対応カーネルで起動したら、/etc/ccs/ ディレクトリに存在するポリシーを編集するために、 /etc/ccs/ というオプションを指定してポリシーエディタを実行してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-editpolicy /etc/ccs/
+</td></tr>
+</table>
+
+<p>ポリシーエディタは役割の異なる幾つかの画面を提供しています。デフォルトで表示される画面は Domain Transition Editor です。以下の写真は上記のコマンドを実行後のドメインツリーが表示されています。現時点では &lt;kernel&gt; ドメインだけが定義されています。</p>
+
+<p><img src="editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="720" height="400"></p>
+
+<p>ポリシーを初期化した直後であるため、 /etc/ccs/ ディレクトリに存在するポリシーファイルは空っぽです。 AKARI には２つのタイプのポリシーが存在します。１つは現在カーネル内に存在しているポリシーです。もうひとつは /etc/ccs/ ディレクトリ内に存在しているポリシーです。複数の版を /etc/ccs/ ディレクトリ内に保存することができ、起動時または必要に応じてカーネル内へと読み込むことができます。カーネル内に存在しているポリシーを /etc/ccs/ ディレクトリ内に保存する方法については第３節で紹介します。 q キーを押してポリシーエディタを終了してください。</p>
+
+<p>次に、カーネル内に存在しているポリシーを閲覧するために、 /etc/ccs/ オプション無しでポリシーエディタを実行してください。</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-editpolicy
+</td></tr>
+</table>
+
+<p>システムが動作するにつれて、 AKARI は新しいドメインを作成してこのツリーに追加していきます。上記のコマンドを実行することにより、起動時から現時点までに作成された全てのドメインがドメインツリーとして表示される筈です。</p>
+
+<p><img src="editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="720" height="400"></p>
+
+<p>AKARI における解析／制限はドメインを単位として適用されます。全てのプロセスは１個のドメインに属しており、原則としてプログラムが実行される度に異なるドメインへと遷移します。ドメインの名前はプロセスの実行履歴として連結された文字列です。</p>
+
+<p>例えば、カーネルが属するドメインの名前は <b>&lt;kernel&gt;</b> です。<br>
+カーネルから起動された /sbin/init が属するドメインの名前は <b>&lt;kernel&gt; /sbin/init</b> です。<br>
+/sbin/init から起動された /etc/rc.d/rc が属するドメインの名前は <b>&lt;kernel&gt; /sbin/init /etc/rc.d/rc</b> です。</p>
+
+<p>この遷移規則の例外については後述します。</p>
+
+<hr>
+<h2><a name="2.2">ステップ２．２：プロファイルを理解する</a></h2>
+
+<p>AKARI におけるドメインの制限はプロファイルを割り当てることにより行われます。</p>
+
+<p>各行の２番目の数字に注目してください。</p>
+
+<p><img src="editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" width="720" height="400"></p>
+
+<p>この数字はプロファイル番号と呼ばれるものです。プロファイル番号は０～２５５の整数値をとります。デフォルトのプロファイル番号は０です。プロファイル０は「無効モード」と呼ばれ、ドメインに対する解析／制限は行われません。</p>
+
+<p>? キーを押すと、その画面で利用可能なコマンドが表示されます。再度 ? キーを押すと、元の画面に戻ります。</p>
+
+<p>w キーを押すと、ポリシーエディタで選択可能な画面を一覧から選択するための画面が表示されます。</p>
+
+<p><img src="editpolicy-window-list.png" alt="editpolicy-window-list.png" width="720" height="400"></p>
+
+<p>p キーを押すと、 Profile Editor 画面に切り替わり、プロファイルの一覧を見ることができます。</p>
+
+<p>もし、第１節で /usr/lib/ccs/init_policy を実行する際に --file-only-profile というオプションを指定していた場合、以下のエントリが表示されます。</p>
+
+<p><img src="editpolicy-profile-list-file-only.png" alt="editpolicy-profile-list-file-only.png" width="720" height="400"></p>
+
+<p>もし、第１節で /usr/lib/ccs/init_policy を実行する際に --file-only-profile というオプションを指定しなかった場合、以下のエントリが表示されます。</p>
+
+<p><img src="editpolicy-profile-list.png" alt="editpolicy-profile-list.png" width="720" height="400"></p>
+
+<table border="1">
+<tr><td>項目</td><td>内容</td></tr>
+<tr>
+<td>COMMENT</td>
+<td>プロファイルの内容を説明するための１行コメント。</td>
+</tr>
+<tr>
+<td>CONFIG</td>
+<td>動作モードの設定。</td>
+</tr>
+<tr>
+<td>PREFERENCE</td>
+<td>様々なオプションの設定。</td>
+</tr>
+</table>
+<p>CONFIG 行で指定されている mode については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>disabled</td>
+<td>無効。通常のカーネルと同様に動作する。</td>
+</tr>
+<tr>
+<td>learning</td>
+<td>学習モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加する。</td>
+</tr>
+<tr>
+<td>permissive</td>
+<td>確認モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加しない。</td>
+</tr>
+<tr>
+<td>enforcing</td>
+<td>強制モード。アクセス要求がポリシーに違反したら拒否する。アクセス要求をポリシーへ追加しない。</td>
+</tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="#2.3">ステップ２．３：ドメインポリシーを理解する</a></h2>
+
+<p>それぞれのドメインに対する解析／制限の内容については、 Domain Policy 画面で確認することができます。この画面は、 Domain Transition 画面でドメインを選択後、 Enter キーを押すことにより表示されます。まだポリシーを作成していない（ポリシーの作成については第３節で説明します）ため、画面は空っぽです。以下の画面は Apache に対するポリシーの例です。</p>
+
+<p><a href="editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="720" height="400"></a></p>
+
+<p>ドメインに対する解析／制限の内容が file read や file write のようなディレクティブと一緒に表示されています。ドメインに対して「強制モード」が割り当てられると、ここで表示されているアクセス許可（および次のステップで説明する例外ポリシーで定義されているアクセス許可）だけが認められるようになります。通常の利用方法だけを許可するような必要最小限の権限を持ったドメインポリシーを作成するために、「学習モード」および「確認モード」を利用することができます。利用可能なディレクティブの詳細については<a href="policy-reference.html.ja#domain_policy">ドメインポリシーの仕様</a>を参照してください。</p>
+
+<hr>
+
+<h2><a name="2.4">ステップ２．４：例外ポリシーを理解する</a></h2>
+
+<p>w キーを押してから e キーを押すと、以下の画面が表示されます。</p>
+
+<p><a href="editpolicy-exception-full.png">（クリックすると全体を表示します。）<br><img src="editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" width="720" height="400"></a></p>
+
+<p>矢印キーや Home/End/PageUp/PageDown キーを使ってスクロールすることができます。</p>
+
+<p>この画面に表示されているアクセス許可はドメインポリシーの画面に表示されているものと同様ですが、全てのドメインに対して適用されるという点が異なっています。ここで定義されているアクセス許可はドメインポリシーの画面には表示されず、ここで定義されているアクセス許可に合致するアクセス要求は自動的に許可されます。また、例外ポリシーでグループを定義することにより、ドメインポリシーの量を減らして単純化することが可能です。</p>
+
+<p>例外ポリシーで指定可能なディレクティブの一覧の詳細については<a href="policy-reference.html.ja#exception_policy">例外ポリシーの仕様</a>を参照してください。以下に要約を示します。</p>
+
+<table border="1">
+<tr><td>
+(1) パス名のグループ
+</td><td>
+<p>path_group というキーワードを使用して、パス名のグループを指定することができます。これは、複数のパス名を集約することでポリシーの記述量を減らすためのマクロです。</p>
+<p>デフォルトでは、任意のパス名に一致する ANY_PATHNAME および任意のディレクトリに一致する ANY_DIRECTORY が定義されています。</p>
+</td></tr><tr><td>
+(2) 数値のグループ
+</td><td>
+<p>number_group というキーワードを使用して、数値のグループを指定することができます。これは、複数の数値を集約することでポリシーの記述量を減らすためのマクロです。</p>
+<p>デフォルトでは、 0x5401 に一致する COMMON_IOCTL_CMDS が定義されています。</p>
+</td></tr><tr><td>
+(3) アドレスのグループ
+</td><td>
+<p>address_group というキーワードを使用して、 IPv4 または IPv6 アドレスのグループを指定することができます。これは、複数の IP アドレスを集約することでポリシーの記述量を減らすためのマクロです。</p>
+</td></tr><tr><td>
+(4) アクセス許可のグループ
+</td><td>
+<p>acl_group というキーワードに続けてグループ番号およびそのグループに与えられるアクセス許可を指定することができます。ドメインポリシーの中から use_group というキーワードで参照されます。これは、共通して与えられるパーミッションをグループ化することでポリシーの記述量を減らすためのマクロです。</p>
+<p>例えば、 acl_group 0 file read @ANY_DIRECTORY という指定は、 use_group 0 と指定されているドメインに対して、 ANY_DIRECTORY グループに属しているパス名を参照すること（つまり任意のディレクトリの参照）を許可します。</p>
+<p>例えば、 acl_group 0 file ioctl @ANY_PATHNAME @COMMON_IOCTL_CMDS という指定は、 use_group 0 と指定されているドメインに対して、 ANY_PATHNAME グループに属しているパス名（つまり任意のパス名）に対して COMMON_IOCTL_CMDS グループに属している番号（つまり 0x5401 番）の ioctl 要求を許可します。</p>
+</td></tr><tr><td>
+(5) プログラム名の集約
+</td><td>
+<p>AKARI では個々のプログラムのパス名をドメイン遷移を行う際に使用しますが、 aggregator というキーワードを使用することで必要に応じて複数のプログラムのパス名を１個のプログラムのパス名に集約して扱うことができます。</p>
+</td></tr><tr><td>
+(6) ドメイン遷移の例外
+</td><td>
+<p>AKARI では原則としてプログラムが実行されるたびにドメイン遷移が発生しますが、必要に応じてドメイン遷移を抑制したり初期化したりすることができます。</p>
+<p>initialize_domain というキーワードを使用して、ドメイン遷移履歴をリセットするプログラムを指定することができます。例えば、 initialize_domain /usr/sbin/sshd という指定が行われている場合、 /usr/sbin/sshd は &lt;kernel&gt; /usr/sbin/sshd というドメインで動作するようになります。</p>
+<p>no_initialize_domain というキーワードを使うことで、 initialize_domain キーワードの効果を打ち消すことができます。特定の条件下ではドメイン遷移を初期化させたくない場合に使用します。</p>
+<p>keep_domain というキーワードを使用して、ドメイン遷移を行わないドメインを指定することができます。例えば、 keep_domain &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh という指定が行われている場合、 &lt;kernel&gt; /usr/sbin/sshd /bin/tcsh というドメインに属しているプロセスは、 initialize_domain または no_keep_domain というキーワードで指定されたプログラムが実行されない限り、そのドメインに留まります。</p>
+<p>no_keep_domain というキーワードを使うことで、 keep_domain キーワードの効果を打ち消すことができます。特定の条件下でドメイン遷移を行わせたい場合に使用します。</p>
+</td></tr><tr><td>
+(7) 予約するローカルポート番号
+</td><td>
+<p>deny_autobind というキーワードを使用して、特定のローカルポート番号がローカルポート番号の自動選択機能によって割り当てられてしまうことを防ぐことができます。これはカーネル 2.6.35 以降で利用可能な/proc/sys/net/ipv4/ip_local_reserved_ports と同様の機能を提供しています。</p>
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="2.5">ステップ２．５：アクセスログを保存する（任意）</a></h2>
+
+<p>あるドメインに属しているプロセスが、そのドメインのドメインポリシーまたは例外ポリシーで定義されているアクセス許可に合致するアクセス要求を行った場合、そのアクセス要求は許可されます。「強制モード」が割り当てられている状態でアクセス許可に合致しないアクセス要求を行った場合、そのアクセス要求は拒否されます。</p>
+
+<p>AKARI では、「アクセス許可ログ」（ポリシーに違反しなかったアクセス要求のログ）と「アクセス拒否ログ」（ポリシーに違反したアクセス要求のログ）を記録することができます。アクセスログはドメインポリシーの形式と同じです。これは、ユーザが現時点では許可されていないアクセス要求を許可したいと思った場合に便利です。「アクセス拒否ログ」はドメインポリシーへと追加するための元データとして利用することができます。必須ではありませんが、次節以降でアクセスログを活用するために、アクセスログを保存しておくと便利です。次節で紹介する「学習モード」を利用すると、プロファイル番号１が割り当てられたドメインで発生したアクセス拒否ログの内容をドメインポリシーへと自動的に追加してくれます。</p>
+
+<p>プロファイルの CONFIG 行で指定されている grant_log については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>no</td>
+<td>アクセス許可ログを生成しない。ただし、個別のアクセス許可で grant_log=yes と指定されている場合には生成する。</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>アクセス許可ログを生成する。ただし、個別のアクセス許可で grant_log=no と指定されている場合には生成しない。</td>
+</tr>
+</table>
+<p>プロファイルの CONFIG 行で指定されている reject_log については以下の値を指定できます。</p>
+<table border="1">
+<tr>
+<td>値</td>
+<td>内容</td>
+</tr>
+<tr>
+<td>no</td>
+<td>アクセス拒否ログを生成しない。</td>
+</tr>
+<tr>
+<td>yes</td>
+<td>アクセス拒否ログを生成する。</td>
+</tr>
+</table>
+
+<p>/proc/ccs/audit からアクセスログを読み出してファイルに保存するために /usr/sbin/ccs-auditd というデーモンプログラムが提供されています。このデーモンプログラムを利用する場合、 /etc/rc.local 等から起動するようにしてください。</p>
+
+<p>このデーモンの設定ファイルは /etc/ccs/tools/auditd.conf です。 /proc/ccs/audit から読みだされたアクセスログはこの設定ファイルの内容に従って振り分けが行われ、指定されたファイルへと書き出されます。初期設定ではプロファイル番号毎に異なるファイルへと書き出すようになっていますが、上級者は好みに応じてカスタマイズすることができます。以下に初期設定を示します。</p>
+
+<pre>
+# This file contains sorting rules used by ccs-auditd command.
+
+# An audit log consists with three lines. You can refer the first line
+# using 'header' keyword, the second line using 'domain' keyword, and the
+# third line using 'acl' keyword.
+#
+# Words in each line are separated by a space character. Therefore, you can
+# use 'header[index]', 'domain[index]', 'acl[index]' for referring index'th
+# word of the line. The index starts from 1, and 0 refers the whole line
+# (i.e. 'header[0]' = 'header', 'domain[0]' = 'domain', 'acl[0]' = 'acl').
+#
+# Three operators are provided for conditional sorting.
+# '.contains' is for 'fgrep keyword' match.
+# '.equals' is for 'grep ^keyword$' match.
+# '.starts' is for 'grep ^keyword' match.
+#
+# Sorting rules are defined using multi-lined chunks. A chunk is terminated
+# by a 'destination' line which specifies the pathname to write the audit
+# log. A 'destination' line is processed only when all preceding 'header',
+# 'domain' and 'acl' lines in that chunk have matched.
+# Evaluation stops at the first processed 'destination' line.
+# Therefore, no audit logs are written more than once.
+#
+# More specific matches should be placed before less specific matches.
+# For example:
+#
+# header.contains profile=3
+# domain.contains /usr/sbin/httpd
+# destination     /var/log/tomoyo/reject_003_httpd.log
+#
+# This chunk should be placed before the chunk that matches logs with
+# profile=3. If placed after, the audit logs for /usr/sbin/httpd will be
+# sent to /var/log/tomoyo/reject_003.log .
+
+# Please use AKARI's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Discard all granted logs.
+header.contains granted=yes
+destination     /dev/null
+
+# Save rejected logs with profile=0 to /var/log/tomoyo/reject_000.log
+header.contains profile=0
+destination     /var/log/tomoyo/reject_000.log
+
+# Save rejected logs with profile=1 to /var/log/tomoyo/reject_001.log
+header.contains profile=1
+destination     /var/log/tomoyo/reject_001.log
+
+# Save rejected logs with profile=2 to /var/log/tomoyo/reject_002.log
+header.contains profile=2
+destination     /var/log/tomoyo/reject_002.log
+
+# Save rejected logs with profile=3 to /var/log/tomoyo/reject_003.log
+header.contains profile=3
+destination     /var/log/tomoyo/reject_003.log
+</pre>
+
+<p>注意：アクセス許可ログを保存する場合は、あっという間にファイルが大きくなるので、ディスクの空き領域に注意してください。</p>
+
+<p>logrotate によるローテーションを行わせたい場合は、以下のような内容のファイルを /etc/logrotate.d/tomoyo に作成してください。なお、 nocreate オプションを必ず指定してください。 nocreate オプションを忘れると、最初のローテーションが実行されて以降のログが保存されなくなってしまいます。</p>
+
+<table border="1">
+<tr><td>
+/var/log/tomoyo/*.log {<br>
+&nbsp;&nbsp;weekly<br>
+&nbsp;&nbsp;rotate 9<br>
+&nbsp;&nbsp;missingok<br>
+&nbsp;&nbsp;notifempty<br>
+&nbsp;&nbsp;nocreate<br>
+}
+</td></tr>
+</table>
+
+<p>アクセスログを保存する必要が無い場合は、 ccs-auditd を実行する必要はありません。また、プロファイルで PREFERENCE={ max_audit_log=0 } という指定をすることにより、消費メモリの節約と応答速度の向上が期待できます。ドメインに対して「強制モード」を割り当てるまでアクセスログは保存しないという選択肢もありますが、より厳密なアクセス制御を行うためのポリシーを作成できるようにするために、現時点で「アクセス拒否ログ」を保存するように設定しておくことをお勧めします。</p>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+<a href="phase-1.html.ja">前節</a>
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.ja">目次</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-3.html.ja">次節</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+第１節：導入と初期化
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">ホーム</a>
+</td>
+<td width="33%" align="right" valign="top">
+第３節：ドメインを解析する
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

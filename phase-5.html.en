@@ -1,0 +1,398 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<title>AKARI Install manual</title>
+<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+</head>
+<body>
+<p style="text-align:right;"><a href="phase-5.html.ja">Japanese Page</a></p>
+<p style="text-align:right;">Last modified: $Date$</p>
+<h1>Phase 5: Enforce policy</h1>
+
+<p style="text-align:center;">Aim: to learn how to use "Enforcing Mode" and handle policy violations that may arise.</p>
+
+<hr>
+
+<h2><a name="5.1">Step 5.1: Enabling enforcing mode</a></h2>
+
+<p>Once domain and exception policy have been sufficiently modified, the domain can be set to enforcing mode.</p>
+
+<p>Run the policy editor. Select target domains with the "Space" key, press the "s" key, enter "3", and press "Enter":</p>
+
+<p><img src="editpolicy-httpd-set-profile3.png" alt="editpolicy-httpd-set-profile3.png" width="720" height="400"></p>
+
+<p>The profile numbers of the selected domains have now been changed to 3:</p>
+
+<p><img src="editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="720" height="400"></p>
+
+<p>Press the "@" key to switch to the process list. Verify that the "/usr/sbin/httpd" process and descendants are assigned profile number 3:</p>
+
+<p><img src="editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="720" height="400"></p>
+
+<p>Now "/usr/sbin/httpd" processes and descendants are protected, as profile 3 was configured for enforcing mode:</p>
+
+<p><img src="editpolicy-profile-list-enforcing.png" alt="editpolicy-profile-list-enforcing.png" width="720" height="400"></p>
+
+<p>Quit the policy editor and try an operation which is permitted by policy:</p>
+
+<p><img src="operation-permitted.png" alt="operation-permitted.png" width="684" height="912"></p>
+
+<p>The operation was successfully completed, as sending mail is permitted by policy.</p>
+
+<p>Let's try an operation which is not permitted by policy:</p>
+
+<p><img src="unix-penguin.png" alt="unix-penguin.png" width="684" height="912"></p>
+
+<p>Although it appears to be have been completed successfully, the warning message by "/bin/mail" shows that the input was empty and so the execution of "/bin/cat" was rejected:</p>
+
+<p><img src="unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="684" height="597"></p>
+
+<p>Just like in "Permissive Mode", you can check "/proc/ccs/stat" for how many times policy violations have occurred and the last time a policy violation occurred:</p>
+
+<pre>
+[root@tomoyo ~]# cat /proc/ccs/stat
+Policy update:                              1571 (Last: 2010/12/25 16:10:48)
+Policy violation in learning mode:           453 (Last: 2010/12/25 15:33:21)
+Policy violation in permissive mode:          22 (Last: 2010/12/25 15:47:10)
+Policy violation in enforcing mode:            2 (Last: 2010/12/25 16:08:35)
+Memory used by policy:                    165728
+Memory used by audit log:                      0 (Quota:   16777216)
+Memory used by query message:                  0 (Quota:    1048576)
+Total memory used:                        165728
+</pre>
+
+<p>If audit logs have been configured at <a href="phase-2.html.en#2.5">Step 2.5: Save audit logs (optional)</a>, rejected requests can be picked up from "/var/log/tomoyo/reject_003.log":</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# cat /var/log/tomoyo/reject_003.log<br>
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+file execute /bin/cat<br>
+<br>
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+file read /bin/cat
+</td></tr>
+</table>
+
+<p>The first log reports that execution of "/bin/cat" was requested by "/bin/sh", which was invoked by "/usr/sbin/httpd". The command line argument was "cat /etc/passwd". As its first line has "mode=enforcing" and "granted=no", this request was rejected.</p>
+
+<p>The second log reports that opening "/bin/cat" for reading requested by "/bin/sh" which was invoked by "/usr/sbin/httpd". This was rejected because "/bin/sh" tried to open the requested program for reading when that program was not executed.</p>
+
+<p>If the "Enforcing Mode" profile is configured with "PREFERENCE={ enforcing_penalty=1 }", domains that violate policy will be made to sleep for 0.1 seconds. This is useful for avoiding infinite loops that can cause CPU usage to reach 100%. The video below demonstrates a hijacked Samba server process consuming CPU by repeating a request that is not permitted by policy:</p>
+
+<p><object data="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<br>
+
+<hr>
+
+<h2><a name="5.2">Step 5.2: Handling policy violations in real-time</a></h2>
+
+<p>Policy violations can be handled in real time using "/usr/sbin/ccs-queryd". This is especially useful during the installation of software updates. When packages are updated, policy may need to be altered if any of the following occur:</p>
+
+<ul>
+<li>The pathnames of files have changed.
+<li>The dependencies of files have changed.
+<li>The access permissions required have changed or increased.
+</ul>
+
+<p>The ideal way to update policy is to rebuild from scratch using learning mode as has been described. However, it is not desirable to change a domain from enforcing mode to learning mode once the system has entered into a production state as this will cause the system to become vulnerable to attack through this unrestricted domain.</p>
+
+<p>Fortunately, "ccs-queryd" can help administrators update policy in real-time while running in "Enforcing Mode". Please note that this method cannot always support every case and the resulting policy may not be fully optimized.</p>
+
+<br>
+
+<h3>Example usage of "ccs-queryd"</h3>
+
+<p>The video below demonstrates example usage of "ccs-queryd", which is summarised in the text below:</p>
+
+<p><object data="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<p>Use "/usr/sbin/ccs-queryd" to view (in realtime) access requests that have been rejected by policy:</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-queryd<br>
+Monitoring /proc/ccs/query . Press Ctrl-C to terminate.
+</td></tr>
+</table>
+
+<p>Policy violations may occur while updating packages due to unusual behaviour (e.g. restarting daemons). When a policy violation occurs, a prompt appears in the "ccs-queryd" console:</p>
+
+<table border="1">
+<tr><td>
+#2010/12/30 00:21:11# profile=3 mode=enforcing granted=no (global-pid=11788) task={ pid=11788 ppid=11779 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=753729 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=753665 perm=0755 } exec={ realpath="/bin/sleep" argc=2 envc=6 argv[]={ "sleep" "1" } envp[]={ "TERM=xterm" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/" "LANG=en_US.UTF-8" "SHLVL=1" "_=/bin/sleep" } }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/sshd<br>
+file execute /bin/sleep<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):
+</td></tr>
+</table>
+
+<p>This indicates that a process that belongs to the domain "&lt;kernel&gt; /etc/rc.d/init.d/sshd" attempted to execute "/bin/sleep" in order to process the command "sleep 1". Usually this would be instantly denied, but since "ccs-queryd" is running, the kernel waits for the administrators decision before accepting or rejecting the request.</p>
+
+<p>Press <b>"Y"</b> to grant the request.<br>
+Press <b>"N"</b> to reject the request.<br>
+Press <b>"R"</b> to retry the request (for example after editing domain policy manually).<br>
+Press <b>"S"</b> to show domain policy for the process.<br>
+Press <b>"A"</b> to append the request to domain policy and retry (a chance to edit the request is given first).</p>
+
+<p>Do not grant access requests unconditionally. Policy violations are not always due to updating packages, but may be malicious requests by attackers.</p>
+
+<p>Do not logout while "ccs-queryd" is running. Access requests that violated policy are kept pending and may otherwise sleep forever.</p>
+
+<p>Monitor "ccs-queryd" to make sure programs have the minimum permissions to run properly. If permissions are missing, they will be printed to "ccs-queryd".</p>
+
+<p>Once policy has been updated, "ccs-queryd" can be stopped with 'Ctrl-C'.</p>
+
+<p>Note that "ccs-queryd" directly edits policy currently loaded into the kernel, so run "ccs-savepolicy" to save policy to disk, otherwise policy will be lost on shutdown.</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# /usr/sbin/ccs-savepolicy
+</td></tr>
+</table>
+
+<br>
+
+<h3>Example output from "ccs-queryd":</h3>
+
+<table border="1">
+<tr><td>
+#2010/12/30 00:21:11# profile=3 mode=enforcing granted=no (global-pid=11788) task={ pid=11788 ppid=11779 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=753729 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=753665 perm=0755 } exec={ realpath="/bin/sleep" argc=2 envc=6 argv[]={ "sleep" "1" } envp[]={ "TERM=xterm" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/" "LANG=en_US.UTF-8" "SHLVL=1" "_=/bin/sleep" } }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/sshd<br>
+file execute /bin/sleep<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a<br>
+Enter new entry&gt; file execute /bin/sleep<br>
+Added 'file execute /bin/sleep'.<br>
+<br>
+----------------------------------------<br>
+#2010/12/30 00:22:12# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=0 gid=0 ino=690602 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=690114 perm=0755 }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster<br>
+file read /usr/share/zoneinfo/posix/Pacific/Pohnpei<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):s<br>
+# select global-pid=11937<br>
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster<br>
+use_profile 3<br>
+use_group 0<br>
+<br>
+network unix stream connect /var/run/nscd/socket<br>
+file read /usr/lib/locale/locale-archive<br>
+file read /var/lib/pgsql/data/postgresql.conf<br>
+file read /var/lib/pgsql/data/PG_VERSION<br>
+file read /var/lib/pgsql/data/global/pg_control<br>
+file write /var/lib/pgsql/data/global/pg_control<br>
+file create /var/lib/pgsql/data/postmaster.pid 0600<br>
+file read /var/lib/pgsql/data/postmaster.pid<br>
+file write /var/lib/pgsql/data/postmaster.pid<br>
+file unlink /var/lib/pgsql/data/postmaster.pid<br>
+file read /usr/share/zoneinfo/MST7MDT<br>
+(...snipped...)<br>
+file read /usr/share/zoneinfo/EST5EDT<br>
+network inet stream bind 127.0.0.1 5432<br>
+network inet stream listen 127.0.0.1 5432<br>
+file create /tmp/.s.PGSQL.5432.lock 0600<br>
+file read /tmp/.s.PGSQL.5432.lock<br>
+file write /tmp/.s.PGSQL.5432.lock<br>
+file unlink /tmp/.s.PGSQL.5432.lock<br>
+file unlink /tmp/.s.PGSQL.5432<br>
+network unix stream bind /tmp/.s.PGSQL.5432<br>
+network unix stream listen /tmp/.s.PGSQL.5432<br>
+file mksock /tmp/.s.PGSQL.5432 0700<br>
+file chmod /tmp/.s.PGSQL.5432 0777<br>
+file write /var/lib/pgsql/data/postmaster.opts<br>
+file truncate /var/lib/pgsql/data/postmaster.opts<br>
+file mkdir /var/lib/pgsql/data/pg_log/ 0700<br>
+file append /var/lib/pgsql/data/pg_log/postgresql-Wed.log<br>
+network inet dgram bind 127.0.0.1 0<br>
+file read /var/lib/pgsql/data/pg_hba.conf<br>
+file read /var/lib/pgsql/data/pg_ident.conf<br>
+file read /var/lib/pgsql/data/pg_xlog/000000010000000000000000<br>
+file write /var/lib/pgsql/data/pg_xlog/000000010000000000000000<br>
+file read /var/lib/pgsql/data/pg_clog/0000<br>
+file write /var/lib/pgsql/data/pg_clog/0000<br>
+file read /var/lib/pgsql/data/pg_multixact/offsets/0000<br>
+file write /var/lib/pgsql/data/pg_multixact/offsets/0000<br>
+file read /var/lib/pgsql/data/global/pg_fsm.cache<br>
+file write /var/lib/pgsql/data/global/pg_fsm.cache<br>
+file unlink /var/lib/pgsql/data/global/pg_fsm.cache<br>
+file read /var/lib/pgsql/data/global/1262<br>
+file write /var/lib/pgsql/data/global/1262<br>
+file read /var/lib/pgsql/data/global/1260<br>
+file write /var/lib/pgsql/data/global/1260<br>
+file read /var/lib/pgsql/data/global/1261<br>
+file write /var/lib/pgsql/data/global/1261<br>
+file read /var/lib/pgsql/data/global/pg_auth<br>
+file read /var/lib/pgsql/data/global/pgstat.stat<br>
+file create /var/lib/pgsql/data/global/pgstat.tmp 0666<br>
+file write /var/lib/pgsql/data/global/pgstat.tmp<br>
+file rename /var/lib/pgsql/data/global/pgstat.tmp /var/lib/pgsql/data/global/pgstat.stat<br>
+file read /var/lib/pgsql/data/pg_subtrans/0000<br>
+file write /var/lib/pgsql/data/pg_subtrans/0000<br>
+file create /var/lib/pgsql/data/global/pg_fsm.cache 0666<br>
+file create /var/lib/pgsql/data/global/pg_auth.\$ 0666<br>
+file create /var/lib/pgsql/data/global/pg_database.\$ 0666<br>
+file rename /var/lib/pgsql/data/global/pg_auth.\$ /var/lib/pgsql/data/global/pg_auth<br>
+file rename /var/lib/pgsql/data/global/pg_database.\$ /var/lib/pgsql/data/global/pg_database<br>
+file unlink /var/lib/pgsql/data/base/\$/pg_internal.init<br>
+file write /var/lib/pgsql/data/global/pg_auth.\$<br>
+file write /var/lib/pgsql/data/global/pg_database.\$<br>
+network inet dgram send 127.0.0.1 1024-65535<br>
+network inet dgram recv 127.0.0.1 1024-65535<br>
+<br>
+<br>
+#2010/12/30 00:22:26# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=0 gid=0 ino=690602 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=690114 perm=0755 }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster<br>
+file read /usr/share/zoneinfo/posix/Pacific/Pohnpei<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a<br>
+Enter new entry&gt; file read /usr/share/zoneinfo/\{\*\}/\*<br>
+Added 'file read /usr/share/zoneinfo/\{\*\}/\*'.<br>
+<br>
+----------------------------------------<br>
+#2010/12/30 00:22:23# profile=3 mode=enforcing granted=no (global-pid=11974) task={ pid=11974 ppid=11968 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=524564 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=524555 perm=0755 }<br>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+file read /etc/pki/tls/openssl.cnf<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a<br>
+Enter new entry&gt; file read /etc/pki/tls/openssl.cnf<br>
+Added 'file read /etc/pki/tls/openssl.cnf'.<br>
+<br>
+----------------------------------------<br>
+#2010/12/30 00:22:53# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1.parent={ uid=26 gid=26 ino=426399 perm=0700 }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster<br>
+file create /var/lib/pgsql/data/pg_log/postgresql-Thu.log 0666<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a<br>
+Enter new entry&gt; file create /var/lib/pgsql/data/pg_log/postgresql-\*<br>
+Added 'file create /var/lib/pgsql/data/pg_log/postgresql-\*.log 0666'.<br>
+<br>
+#2010/12/30 00:23:04# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=26 gid=26 ino=426434 major=253 minor=0 perm=0600 type=file } path1.parent={ uid=26 gid=26 ino=426399 perm=0700 }<br>
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster<br>
+file append /var/lib/pgsql/data/pg_log/postgresql-Thu.log<br>
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a<br>
+Enter new entry&gt; file append /var/lib/pgsql/data/pg_log/postgresql-\*<br>
+Added 'file append /var/lib/pgsql/data/pg_log/postgresql-\*.log'.<br>
+</td></tr>
+</table>
+
+<br>
+
+<hr>
+
+<h2><a name="5.3">Step 5.3: Notification daemon</a></h2>
+
+<p>"/usr/sbin/ccs-notifyd" is a daemon program that can be used to report the occurrence of a policy violation. For example, run "/usr/sbin/ccs-notifyd" from "/etc/rc.local".</p>
+
+<p>Configuration is specified in the "/etc/ccs/tools/notifyd.conf" file, as shown below:</p>
+
+<pre>
+# This file contains configuration used by ccs-notifyd command.
+
+# ccs-notifyd is a daemon that notifies the occurrence of policy violation
+# in enforcing mode.
+#
+# time_to_wait is grace time in second before rejecting the request that
+# caused policy violation in enforcing mode. For example, if you specify
+# 30, you will be given 30 seconds for starting ccs-queryd command and
+# responding to the policy violation event.
+# If you specify non 0 value, you need to register ccs-notifyd command to
+# /proc/ccs/manager as well as ccs-queryd command, for ccs-notifyd needs to
+# behave as if ccs-queryd command is running.
+# Also, you should avoid specifying too large value (e.g. 3600) because
+# the request will remain pending for that period if you can't respond.
+#
+# action_to_take is a command line you want to use for notification.
+# The command specified by this parameter must read the policy violation
+# notifycation from standard input. For example, mail, curl and xmessage
+# commands can read from standard input.
+# This parameter is passed to execve(). Thus, please use a wrapper program
+# if you need shell processing (e.g. wildcard expansion, environment
+# variables).
+#
+# minimal_interval is grace time in second before re-notifying the next
+# occurrence of policy violation. You can specify 60 to limit notifycation
+# to once per a minute, 3600 to limit notifycation to once per an hour.
+# You can specify 0 to unlimit, but notifying of every policy violation
+# events (e.g. sending a mail) might annoy you because policy violation
+# can occur in clusters if once occurred.
+
+# Please use AKARI's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Examples:
+#
+# time_to_wait 180
+# action_to_take mail admin@example.com
+#
+#    Wait for 180 seconds before rejecting the request.
+#    The occurrence is notified by sending mail to admin@example.com
+#    (if SMTP service is available).
+#
+# time_to_wait 0
+# action_to_take curl --data-binary @- https://your.server/path_to_cgi
+#
+#    Reject the request immediately.
+#    The occurrence is notified by executing curl command.
+#
+time_to_wait 0
+action_to_take mail -s Notification\040from\040ccs-notifyd root@localhost
+minimal_interval 60
+</pre>
+
+<p>Modify the "action_to_take" line as required and start "/usr/sbin/ccs-notifyd".</p>
+
+<p>This will send mails similar to the following (identical to audit logs, but with serial numbers in the header):</p>
+
+<table border="1">
+<tr><td>
+[root@tomoyo ~]# mail<br>
+Mail version 8.1 6/6/93.  Type ? for help.<br>
+"/var/spool/mail/root": 1 messages 1 new<br>
+&gt;N  1 root@localhost.local  Sun Dec 26 01:08  18/1211 "Notification from ccs-notifyd"<br>
+&amp;<br>
+Message 1:<br>
+From root@localhost.localdomain  Sun Dec 26 01:08:35 2010<br>
+Date: Sun, 26 Dec 2010 01:08:35 +0900<br>
+From: root &lt;root@localhost.localdomain&gt;<br>
+To: root@localhost.localdomain<br>
+Subject: Notification from ccs-notifyd<br>
+<br>
+Q0-0<br>
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }<br>
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh<br>
+file execute /bin/cat
+</td></tr>
+</table>
+
+<br>
+
+<div class=navfooter>
+<hr align="left" width="100%">
+<table summary="Footer navigation table" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="33%" align="left" valign="top">
+<a href="phase-4.html.en">Prev</a>
+</td>
+<td width="34%" align="center" valign="top">
+<a href="index.html.en">Index</a>
+</td>
+<td width="33%" align="right" valign="top">
+<a href="phase-6.html.en">Next</a>
+</td></tr>
+<tr><td width="33%" align="left" valign="top">
+Phase 4: Develop policy
+</td>
+<td width="34%" align="center" valign="top">
+<a href="http://tomoyo.sourceforge.jp/">Home</a>
+</td>
+<td width="33%" align="right" valign="top">
+Phase 6: Beyond this guide
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</body>
+</html>

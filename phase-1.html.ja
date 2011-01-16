@@ -77,7 +77,7 @@
 </td></tr>
 </table>
 
-<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p></p>
+<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
 
 <pre>
 You must choose CONFIG_SECURITY=y for building this module.

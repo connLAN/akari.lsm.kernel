@@ -21,15 +21,15 @@
 
 <p>対象となるドメインを選択して、 s キーを押し、 2 と入力してから Enter キーを押してください。</p>
 
-<p><img src="editpolicy-httpd-set-profile2.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-set-profile2.png" alt="editpolicy-httpd-set-profile2.png" width="720" height="400"></p>
 
 <p>/usr/sbin/httpd およびその子孫ドメインのプロファイル番号が 2 に変更されました。</p>
 
-<p><img src="editpolicy-httpd-profile2.png" width="720" height="400"></p>
+<p><img src="editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" width="720" height="400"></p>
 
 <p>q キーを押してポリシーエディタを終了してください。その後、 Apache に対して許可したい操作を再度行ってください。</p>
 
-<p><img src="operation-permissive.png" width="723" height="561"></p>
+<p><img src="operation-permissive.png" alt="operation-permissive.png" width="723" height="561"></p>
 
 <p>/proc/ccs/stat からポリシー違反の発生回数と最後に発生した時刻について知ることができます。</p>
 

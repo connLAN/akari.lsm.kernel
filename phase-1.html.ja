@@ -36,6 +36,9 @@
 <tr><td>Debian 系の場合</td><td>
 [root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev libreadline-dev help2man
 </td></tr>
+<tr><td>SUSE 系の場合</td><td>
+[root@tomoyo ~]# yast -i wget gcc make ncurses-devel readline-devel help2man
+</td></tr>
 </table>
 
 <br>
@@ -58,6 +61,12 @@
 # VERSION=`uname -r`<br>
 # apt-get -y install linux-headers-${VERSION}<br>
 # cd /usr/src/linux-headers-${VERSION}/
+</td></tr>
+<tr><td>SUSE 系の場合</td><td>
+# VERSION=`uname -r`<br>
+# yast -i kernel-devel<br>
+# cd /lib/modules/${VERSION}/source/<br>
+# tar -C /lib/modules/${VERSION}/build/ -cf - --exclude Makefile . | tar -xf -
 </td></tr>
 </table>
 

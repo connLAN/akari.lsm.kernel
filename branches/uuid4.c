@@ -1100,6 +1100,23 @@ static void uuid_inode_free_security(struct inode *inode)
 
 #ifdef CONFIG_SECURITY_NETWORK
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+
+static int uuid_unix_stream_connect(struct sock *sock, struct sock *other,
+				    struct sock *newsk)
+{
+	struct socket *s = other->sk_socket;
+	if (s) {
+		int rc = uuid_check_socket(s, UUID_UNIX_STREAM_CONNECT);
+		if (rc)
+			return rc;
+	}
+	while (!original_security_ops.unix_stream_connect);
+	return original_security_ops.unix_stream_connect(sock, other, newsk);
+}
+
+#else
+
 static int uuid_unix_stream_connect(struct socket *sock, struct socket *other,
 				    struct sock *newsk)
 {
@@ -1109,6 +1126,8 @@ static int uuid_unix_stream_connect(struct socket *sock, struct socket *other,
 	while (!original_security_ops.unix_stream_connect);
 	return original_security_ops.unix_stream_connect(sock, other, newsk);
 }
+
+#endif
 
 static int uuid_unix_may_send(struct socket *sock, struct socket *other)
 {
@@ -1197,10 +1216,12 @@ static int uuid_dentry_open(struct file *f)
 static int uuid_inode_permission(struct inode *inode, int mask,
 				 struct nameidata *nd)
 {
+	struct uuid_security *uuid;
 	int rc = uuid_check_pipe(inode, UUID_OPEN_PIPE);
 	if (rc)
 		return rc;
-	if (nd && nd->dentry && uuid_find_security(current)) {
+	uuid = uuid_find_security(current);
+	if (nd && nd->dentry && uuid && !uuid->uuid_recursive) {
 		struct uuid_query_param p = { };
 		p.uuid = uuid;
 		p.operation = "file open";
@@ -2048,6 +2069,21 @@ out:
 static char *uuid_get_dentry_path(struct dentry *dentry, char * const buffer,
 				 const int buflen)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		/* rename_lock is locked/unlocked by dentry_path_raw(). */
+		pos = dentry_path_raw(dentry, buffer, buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
+			struct inode *inode = dentry->d_inode;
+			if (inode && S_ISDIR(inode->i_mode)) {
+				buffer[buflen - 2] = '/';
+				buffer[buflen - 1] = '\0';
+			}
+		}
+	}
+	return pos;
+#else
 	char *pos = buffer + buflen - 1;
 	if (buflen < 256)
 		goto out;
@@ -2068,26 +2104,30 @@ static char *uuid_get_dentry_path(struct dentry *dentry, char * const buffer,
 	return pos;
 out:
 	return ERR_PTR(-ENOMEM);
+#endif
 }
 
 /**
  * uuid_get_local_path - Get the path of a dentry.
  *
- * @path:   Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
  * @buffer: Pointer to buffer to return value in.
  * @buflen: Sizeof @buffer.
  *
  * Returns the buffer on success, an error code otherwise.
  */
-static char *uuid_get_local_path(struct path *path, char * const buffer,
+static char *uuid_get_local_path(struct dentry *dentry, char * const buffer,
 				const int buflen)
 {
 	char *pos;
-	struct dentry *dentry = path->dentry;
 	struct super_block *sb = dentry->d_sb;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
 	spin_lock(&dcache_lock);
+#endif
 	pos = uuid_get_dentry_path(dentry, buffer, buflen);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
 	spin_unlock(&dcache_lock);
+#endif
 	if (IS_ERR(pos))
 		return pos;
 	/* Convert from $PID to self if $PID is current thread. */
@@ -2112,6 +2152,9 @@ static char *uuid_get_local_path(struct path *path, char * const buffer,
 #endif
 		goto prepend_filesystem_name;
 	}
+	/* Use filesystem name for unnamed devices. */
+	if (!MAJOR(sb->s_dev))
+		goto prepend_filesystem_name;
 	{
 		struct inode *inode = sb->s_root->d_inode;
 		/*
@@ -2121,11 +2164,12 @@ static char *uuid_get_local_path(struct path *path, char * const buffer,
 		if (inode->i_op && !inode->i_op->rename)
 			goto prepend_filesystem_name;
 	}
-	/* Prepend device name if vfsmount is not available. */
-	if (!path->mnt) {
-		char name[64] = { };
+	/* Prepend device name. */
+	{
+		char name[64];
 		int name_len;
 		const dev_t dev = sb->s_dev;
+		name[sizeof(name) - 1] = '\0';
 		snprintf(name, sizeof(name) - 1, "dev(%u,%u):", MAJOR(dev),
 			 MINOR(dev));
 		name_len = strlen(name);
@@ -2226,7 +2270,8 @@ static char *uuid_realpath_from_path(struct path *path)
 		 * or dentry without vfsmount.
 		 */
 		if (!path->mnt || (inode->i_op && !inode->i_op->rename)) {
-			pos = uuid_get_local_path(path, buf, buf_len - 1);
+			pos = uuid_get_local_path(path->dentry, buf,
+						  buf_len - 1);
 			goto encode;
 		}
 		/* Get absolute name for the rest. */

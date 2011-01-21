@@ -71,3 +71,9 @@ Version 1.0.6   2010/12/31   Minor update release.
    Use same interface for audit logs.
 
    Split ccs_null_security into ccs_default_security and ccs_oom_security.
+
+Version 1.0.7   2011/01/21   Minor update release.
+
+   Synchronize with TOMOYO revision 4400.
+
+   Use filesystem name for unnamed devices when vfsmount is missing.

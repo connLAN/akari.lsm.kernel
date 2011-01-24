@@ -36,8 +36,9 @@
  *
  * Permission to open a file by unrestricted subject and half-restricted
  * subject are always granted and by restricted subject is granted only when
- * explicitly listed in /etc/uuid/$UUID file. By performance reason,
- * permission to read()/write()/ioctl() etc. are not checked.
+ * explicitly listed in /etc/uuid/$UUID file or /etc/uuid/common file.
+ * By performance reason, permission to read()/write()/ioctl() etc. are not
+ * checked.
  *
  * To compile, put this file on some directory under kernel's source directory
  * (e.g. uuid/ directory) and do "echo 'obj-m := uuid.o' > uuid/Makefile" and
@@ -715,8 +716,6 @@ ok:
 }
 
 #ifdef CONFIG_SECURITY_NETWORK
-
-#include <net/sock.h>
 
 static int uuid_check_socket(struct socket *sock,
 			     const enum uuid_operation_index index)
@@ -2731,12 +2730,18 @@ recursive:
 }
 ////////////////////////////////////////////////////////
 
-static int uuid_check_perm(const struct uuid_query_param *p, struct file *file,
+static int uuid_check_perm(const struct uuid_query_param *p,
+			   struct file *file1, struct file *file2,
 			   const char *path, char *page)
 {
 	int len;
-	unsigned long offset = 0;
+	unsigned long offset;
 	const int op_len = strlen(p->operation);
+	struct file *file = file1;
+restart:
+	if (IS_ERR(file) || !file)
+		goto skip;
+	offset = 0;
 	while ((len = kernel_read(file, offset, page, PAGE_SIZE - 1)) > 0) {
 		char *line = page;
 		page[len] = '\0';
@@ -2759,6 +2764,11 @@ static int uuid_check_perm(const struct uuid_query_param *p, struct file *file,
 			return 0;
 		} 
 	}
+skip:
+	if (file == file1) {
+		file = file2;
+		goto restart;
+	}
 	printk(KERN_INFO "%s: Rejected %s %s .\n", __func__,
 	       p->operation, path);
 	return -EPERM;
@@ -2768,7 +2778,8 @@ static int uuid_supervisor(struct uuid_query_param *p)
 {
 	int error;
 	char *page;
-	struct file *file;
+	struct file *file1;
+	struct file *file2;
 	char *path;
 	page = kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!page) {
@@ -2782,24 +2793,21 @@ static int uuid_supervisor(struct uuid_query_param *p)
 		page[PAGE_SIZE - 1] = '\0';
 	}
 	p->uuid->uuid_recursive++;
-	file = filp_open(page, O_RDONLY, 0);
+	file1 = filp_open(page, O_RDONLY, 0);
+	file2 = filp_open("/etc/uuid/common", O_RDONLY, 0);
 	p->uuid->uuid_recursive--;
-	if (IS_ERR(file) || !file) {
-		printk(KERN_INFO "%s: Can't read %s .\n", __func__, page);
-		error = -ENOENT;
-		goto out;
-	}
 	path = uuid_realpath_from_path(&p->path);
 	if (!path) {
 		printk(KERN_INFO "%s: Out of memory.\n", __func__);
 		error = -ENOMEM;
-		goto out_close;
+	} else {
+		error = uuid_check_perm(p, file1, file2, path, page);
+		kfree(path);
 	}
-	error = uuid_check_perm(p, file, path, page);
-	kfree(path);
-out_close:
-	filp_close(file, NULL);
-out:
+ 	if (file2 && !IS_ERR(file2))
+		filp_close(file2, NULL);
+	if (file1 && !IS_ERR(file1))
+		filp_close(file1, NULL);
 	kfree(page);
 	return error;
 }

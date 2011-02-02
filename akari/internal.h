@@ -346,6 +346,9 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 #define CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 #endif
 #include "ccsecurity.h"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
+#error This module supports only 2.6.0 and later kernels.
+#endif
 #ifndef CONFIG_SECURITY
 #error You must choose CONFIG_SECURITY=y for building this module.
 #endif
@@ -357,9 +360,6 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 #endif
 #ifndef CONFIG_MODULES
 #error You must choose CONFIG_MODULES=y for building this module.
-#endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
-#error This version is not supported because I cannot resolve vfsmount_lock .
 #endif
 
 /* Enumeration definition for internal use. */

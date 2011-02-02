@@ -1997,7 +1997,7 @@ out:
 
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 #include <linux/mount.h>
 #include <linux/fs_struct.h>
@@ -2140,7 +2140,7 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 	int i;
 	u8 *base;
 	u8 *cp = function;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 	if (*symbol == ' ')
 		base = ccs_find_symbol(symbol);
 	else
@@ -2304,7 +2304,44 @@ out:
 #endif
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+
+/* Never mark this variable as __initdata . */
+static spinlock_t ccs_vfsmount_lock;
+
+/**
+ * lsm_umnt_tr - Dummy function which prototype is identical to umount_tree() in fs/namespace.c.
+ *
+ * @mnt: Pointer to "struct vfsmount *".
+ *
+ * Returns nothing.
+ */
+static void lsm_umnt_tr(struct vfsmount *mnt)
+{
+	/* Nothing to do because this function is not called. */
+}
+
+/**
+ * lsm__put_nmspce - Dummy function which does identical to __put_namespace() in fs/namespace.c.
+ *
+ * @mnt: Pointer to "struct vfsmount *".
+ *
+ * Returns nothing.
+ *
+ * Never mark this function as __init in order to make sure that compiler
+ * generates identical code for __put_namespace() and this function.
+ */
+static void lsm__put_nmspce(struct namespace *namespace)
+{
+	down_write(&namespace->sem);
+	spin_lock(&ccs_vfsmount_lock);
+	lsm_umnt_tr(namespace->root);
+	spin_unlock(&ccs_vfsmount_lock);
+	up_write(&namespace->sem);
+	kfree(namespace);
+}
+
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 
 /* Never mark this variable as __initdata . */
 static spinlock_t ccs_vfsmount_lock;
@@ -2371,7 +2408,36 @@ static void lsm_pin(struct vfsmount *mnt)
  */
 static bool __init ccs_find_vfsmount_lock(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+	void *cp;
+	spinlock_t *ptr;
+	/* Guess "spinlock_t vfsmount_lock;". */
+	cp = ccs_find_variable(lsm__put_nmspce,
+			       (unsigned long) &ccs_vfsmount_lock,
+			       " __put_namespace\n");
+	if (!cp) {
+		printk(KERN_ERR "Can't resolve __put_namespace().\n");
+		goto out;
+	}
+	/* This should be "spinlock_t *vfsmount_lock;". */
+	ptr = *(spinlock_t **) cp;
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
+		goto out;
+	}
+	ccsecurity_exports.vfsmount_lock = ptr;
+	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
+	return true;
+out:
+	/*
+	 * Dummy call for preventing lsm_umnt_tr() from being inlined into
+	 * lsm__put_nmspce().
+	 */
+	cp = ccs_find_variable(lsm_umnt_tr,
+			       (unsigned long) &ccs_vfsmount_lock,
+			       " __put_namespace\n");
+	return false;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */

@@ -2310,7 +2310,7 @@ out:
 static spinlock_t ccs_vfsmount_lock;
 
 /**
- * lsm_floup - Dummy function which does identical to follow_up() in fs/namei.c.
+ * lsm_flwup - Dummy function which does identical to follow_up() in fs/namei.c.
  *
  * @mnt:    Pointer to "struct vfsmount *".
  * @dentry: Pointer to "struct dentry *".

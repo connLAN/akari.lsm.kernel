@@ -62,7 +62,13 @@
 #include <linux/fs_struct.h>
 #include <asm/uaccess.h>
 #include <net/sock.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
+#include <linux/namespace.h>
+#endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
+#error This module supports only 2.6.0 and later kernels.
+#endif
 #ifndef CONFIG_SECURITY
 #error You must choose CONFIG_SECURITY=y for building this module.
 #endif
@@ -74,9 +80,6 @@
 #endif
 #ifndef CONFIG_MODULES
 #error You must choose CONFIG_MODULES=y for building this module.
-#endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
-#error This version is not supported because I cannot resolve vfsmount_lock .
 #endif
 
 enum uuid_operation_index {
@@ -1471,13 +1474,50 @@ out:
 	return NULL;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+
+/* Never mark this variable as __initdata . */
+static spinlock_t ccs_vfsmount_lock;
+
+/**
+ * lsm_umnt_tr - Dummy function which prototype is identical to umount_tree() in fs/namespace.c.
+ *
+ * @mnt: Pointer to "struct vfsmount *".
+ *
+ * Returns nothing.
+ */
+static void lsm_umnt_tr(struct vfsmount *mnt)
+{
+	/* Nothing to do because this function is not called. */
+}
+
+/**
+ * lsm__put_nmspce - Dummy function which does identical to __put_namespace() in fs/namespace.c.
+ *
+ * @mnt: Pointer to "struct vfsmount *".
+ *
+ * Returns nothing.
+ *
+ * Never mark this function as __init in order to make sure that compiler
+ * generates identical code for __put_namespace() and this function.
+ */
+static void lsm__put_nmspce(struct namespace *namespace)
+{
+	down_write(&namespace->sem);
+	spin_lock(&ccs_vfsmount_lock);
+	lsm_umnt_tr(namespace->root);
+	spin_unlock(&ccs_vfsmount_lock);
+	up_write(&namespace->sem);
+	kfree(namespace);
+}
+
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 
 /* Never mark this variable as __initdata . */
 static spinlock_t uuid_vfsmount_lock;
 
 /**
- * lsm_floup - Dummy function which does identical to follow_up() in fs/namei.c.
+ * lsm_flwup - Dummy function which does identical to follow_up() in fs/namei.c.
  *
  * @mnt:    Pointer to "struct vfsmount *".
  * @dentry: Pointer to "struct dentry *".
@@ -1538,7 +1578,36 @@ static void lsm_pin(struct vfsmount *mnt)
  */
 static bool __init uuid_find_vfsmount_lock(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+	void *cp;
+	spinlock_t *ptr;
+	/* Guess "spinlock_t vfsmount_lock;". */
+	cp = uuid_find_variable(lsm__put_nmspce,
+				(unsigned long) &ccs_vfsmount_lock,
+				" __put_namespace\n");
+	if (!cp) {
+		printk(KERN_ERR "Can't resolve __put_namespace().\n");
+		goto out;
+	}
+	/* This should be "spinlock_t *vfsmount_lock;". */
+	ptr = *(spinlock_t **) cp;
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
+		goto out;
+	}
+	uuid_exports.vfsmount_lock = ptr;
+	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
+	return true;
+out:
+	/*
+	 * Dummy call for preventing lsm_umnt_tr() from being inlined into
+	 * lsm__put_nmspce().
+	 */
+	cp = uuid_find_variable(lsm_umnt_tr,
+				(unsigned long) &ccs_vfsmount_lock,
+				" __put_namespace\n");
+	return false;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
@@ -2977,7 +3046,7 @@ static int __init uuid_init(void)
 		goto out_clean;
 	entry->proc_fops = &uuid_status_operations;
 	uuid_update_security_ops(ops);
-	printk(KERN_INFO "UUID: 0.0.0   2011/01/19\n");
+	printk(KERN_INFO "UUID: 0.0.0   2011/02/04\n");
 	return 0;
 out_clean:
 	remove_proc_entry("uuid_status", NULL);

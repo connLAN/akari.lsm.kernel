@@ -363,6 +363,10 @@ static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
 		printk(KERN_WARNING "Too many words in a line.\n");
 }
 
+/* Prototype fpr ccs_io_printf(). */
+static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
+	__attribute__ ((format(printf, 2, 3)));
+
 /**
  * ccs_io_printf - printf() to "struct ccs_io_buffer" structure.
  *
@@ -371,7 +375,7 @@ static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
  *
  * Returns nothing.
  */
-void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
+static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 {
 	va_list args;
 	int len;

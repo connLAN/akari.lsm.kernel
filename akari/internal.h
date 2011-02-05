@@ -1513,8 +1513,6 @@ void ccs_check_acl(struct ccs_request_info *r,
 void ccs_convert_time(time_t time, struct ccs_time *p);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 void ccs_get_attributes(struct ccs_obj_info *obj);
-void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
-	__attribute__ ((format(printf, 2, 3)));
 void ccs_memory_free(const void *ptr, size_t size);
 void ccs_normalize_line(unsigned char *buffer);
 void ccs_print_ipv4(char *buffer, const int buffer_len, const u32 min_ip,

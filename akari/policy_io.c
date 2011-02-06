@@ -322,10 +322,9 @@ static bool ccs_flush(struct ccs_io_buffer *head)
 			head->read_user_buf += len;
 			w += len;
 		}
-		if (*w) {
-			head->r.w[0] = w;
+		head->r.w[0] = w;
+		if (*w)
 			return false;
-		}
 		/* Add '\0' for audit logs and query. */
 		if (head->poll) {
 			if (!head->read_user_buf_avail ||

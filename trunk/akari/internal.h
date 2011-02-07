@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/internal.h
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.0+   2011/02/07
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H

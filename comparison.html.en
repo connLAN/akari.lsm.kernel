@@ -51,7 +51,7 @@ Requires kernel 2.6.36 or later.<br>
 
 <table summary="comparison" border="1">
 <tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
-<tr><td></td><td>Kernel version</td><td>2.4.30-/2.6.11-</td><td>2.6.3-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
+<tr><td></td><td>Kernel version</td><td>2.4.30-/2.6.11-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>
 <tr><td></td><td>Allow use of absolute pathnames for directory modification operations?</td><td>Y</td><td colspan=3></td><td colspan=3>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>

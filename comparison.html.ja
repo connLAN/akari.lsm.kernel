@@ -51,7 +51,7 @@
 
 <table summary="comparison" border="1">
 <tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
-<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-/2.6.11-</td><td>2.6.3-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
+<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-/2.6.11-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
 <tr><td>種別</td><td>内容</td><td colspan=8></td></tr>
 <tr><td colspan=10>パス名の正確さ</td></tr>
 <tr><td></td><td>ディレクトリに対する書き込み操作を行う際に絶対パスを用いた指定を許可</td><td>○</td><td colspan=3></td><td colspan=3>○<a href="#note1">（*1）</a></td><td>○</td></tr>

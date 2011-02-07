@@ -314,10 +314,10 @@ destination     /var/log/tomoyo/reject_003.log
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.7   2011/01/21
+AKARI: 1.0.8   2011/02/07
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.0+   2011/01/21
+CCSecurity: 1.8.0+   2011/02/07
 Mandatory Access Control activated.
 </pre>
 

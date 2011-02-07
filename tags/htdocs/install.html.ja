@@ -47,12 +47,12 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.7-20110121.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.7-20110121.tar.gz'<br>
-# wget -O akari-1.0.7-20110121.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.7-20110121.tar.gz.asc'<br>
-# gpg akari-1.0.7-20110121.tar.gz.asc<br>
-# tar -zxf akari-1.0.7-20110121.tar.gz<br>
-# make SUBDIRS=akari modules<br>
-# make SUBDIRS=akari modules_install<br>
+# wget -O akari-1.0.8-20110207.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz'<br>
+# wget -O akari-1.0.8-20110207.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz.asc'<br>
+# gpg akari-1.0.8-20110207.tar.gz.asc<br>
+# tar -zxf akari-1.0.8-20110207.tar.gz<br>
+# make SUBDIRS=$PWD/akari modules<br>
+# make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}
 </td></tr>
 </table>
@@ -60,11 +60,11 @@
 <p>もし、</p>
 
 <pre>
+This module supports only 2.6.0 and later kernels.
 You must choose CONFIG_SECURITY=y for building this module.
 You must choose CONFIG_KALLSYMS=y for building this module.
 You must choose CONFIG_PROC_FS=y for building this module.
 You must choose CONFIG_MODULES=y for building this module.
-This version is not supported because I cannot resolve vfsmount_lock .
 </pre>
 
 <p>の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
@@ -110,16 +110,16 @@ This version is not supported because I cannot resolve vfsmount_lock .
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.26.1.el5)<br>
+title CentOS (2.6.18-194.32.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.26.1.el5)<br>
+title CentOS (2.6.18-194.32.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
 </td></tr>
 </table>
 
@@ -127,16 +127,16 @@ title CentOS (2.6.18-194.26.1.el5)<br>
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.26.1.el5)<br>
+title CentOS (2.6.18-194.32.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.26.1.el5)<br>
+title CentOS (2.6.18-194.32.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.26.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.26.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
 </td></tr>
 </table>
 

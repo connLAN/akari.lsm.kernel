@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/01/21
+ * Version: 1.8.0+   2011/02/07
  */
 
 #include "internal.h"
@@ -277,7 +277,7 @@ const char *ccs_yesno(const unsigned int value)
 	return value ? "yes" : "no";
 }
 
-/* Prototype fpr ccs_addprintf(). */
+/* Prototype for ccs_addprintf(). */
 static void ccs_addprintf(char *buffer, int len, const char *fmt, ...)
 	__attribute__ ((format(printf, 3, 4)));
 
@@ -362,7 +362,7 @@ static void ccs_set_string(struct ccs_io_buffer *head, const char *string)
 		printk(KERN_WARNING "Too many words in a line.\n");
 }
 
-/* Prototype fpr ccs_io_printf(). */
+/* Prototype for ccs_io_printf(). */
 static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
 
@@ -488,7 +488,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/01/21\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/02/07\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 

@@ -65,8 +65,7 @@
 <tr><td>SUSE 系の場合</td><td>
 # VERSION=`uname -r`<br>
 # yast -i kernel-devel<br>
-# cd /lib/modules/${VERSION}/source/<br>
-# tar -C /lib/modules/${VERSION}/build/ -cf - --exclude Makefile . | tar -xf -
+# cd /lib/modules/${VERSION}/build/
 </td></tr>
 </table>
 

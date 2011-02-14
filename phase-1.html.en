@@ -23,21 +23,19 @@
 <li><b>gcc</b>: to build the kernel and tools</li>
 <li><b>make</b>: to build the kernel and tools</li>
 <li><b>ncurses</b>: for the tools user interface</li>
-<li><b>readline</b>: for the tools user interface (optional but recommended)</li>
-<li><b>help2man</b>: for the tools man pages (optional but recommended)</li>
 </ul>
 
 <p>These can be installed with the following commands:</p>
 
 <table border="1" summary="">
 <tr><td>RedHat distributions</td><td>
-[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel readline-devel help2man
+[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel
 </td></tr>
 <tr><td>Debian distributions</td><td>
-[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev libreadline-dev help2man
+[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev
 </td></tr>
 <tr><td>SUSE distributions</td><td>
-[root@tomoyo ~]# yast -i wget gcc make ncurses-devel readline-devel help2man
+[root@tomoyo ~]# yast -i wget gcc make ncurses-devel
 </td></tr>
 </table>
 
@@ -75,10 +73,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.8-20110207.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz'<br>
-# wget -O akari-1.0.8-20110207.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz.asc'<br>
-# gpg akari-1.0.8-20110207.tar.gz.asc<br>
-# tar -zxf akari-1.0.8-20110207.tar.gz<br>
+# wget -O akari-1.0.9-20110214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.9-20110214.tar.gz'<br>
+# wget -O akari-1.0.9-20110214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.9-20110214.tar.gz.asc'<br>
+# gpg akari-1.0.9-20110214.tar.gz.asc<br>
+# tar -zxf akari-1.0.9-20110214.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
 # make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}
@@ -105,10 +103,10 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <table border="1">
 <tr><td>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz'<br>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz.asc'<br>
-[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20101231.tar.gz.asc<br>
-[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20101231.tar.gz<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20110214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20110214.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20110214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20110214.tar.gz.asc'<br>
+[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20110214.tar.gz.asc<br>
+[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20110214.tar.gz<br>
 [user@tomoyo ~]$ cd ccstools/<br>
 [user@tomoyo ~]$ make -s<br>
 [user@tomoyo ~]$ su<br>
@@ -199,7 +197,7 @@ title CentOS (2.6.18-194.32.1.el5)<br>
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.8   2011/02/07
+AKARI: 1.0.9   2011/02/14
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.0+   2011/02/07

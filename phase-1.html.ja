@@ -23,21 +23,19 @@
 <li><b>gcc</b>：コンパイルを行うために必要です。</li>
 <li><b>make</b>： Makefile を利用するために必要です。</li>
 <li><b>ncurses</b>：ツールのユーザインタフェースを利用するために必要です。</li>
-<li><b>readline</b>：ツールのユーザインタフェースが利用します。（利用不可能でも致命的な問題にはなりません。）</li>
-<li><b>help2man</b>：ツールの man ページを作成するために利用します。（利用不可能でも致命的な問題にはなりません。）</li>
 </ul>
 
 <p>これらのパッケージは以下のコマンドを実行することによりインストールできます。</p>
 
 <table border="1">
 <tr><td>RedHat 系の場合</td><td>
-[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel readline-devel help2man
+[root@tomoyo ~]# yum -y install wget gcc make ncurses-devel
 </td></tr>
 <tr><td>Debian 系の場合</td><td>
-[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev libreadline-dev help2man
+[root@tomoyo ~]# apt-get -y install wget gcc make libncurses-dev
 </td></tr>
 <tr><td>SUSE 系の場合</td><td>
-[root@tomoyo ~]# yast -i wget gcc make ncurses-devel readline-devel help2man
+[root@tomoyo ~]# yast -i wget gcc make ncurses-devel
 </td></tr>
 </table>
 
@@ -75,10 +73,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.8-20110207.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz'<br>
-# wget -O akari-1.0.8-20110207.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.8-20110207.tar.gz.asc'<br>
-# gpg akari-1.0.8-20110207.tar.gz.asc<br>
-# tar -zxf akari-1.0.8-20110207.tar.gz<br>
+# wget -O akari-1.0.9-20110214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.9-20110214.tar.gz'<br>
+# wget -O akari-1.0.9-20110214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.9-20110214.tar.gz.asc'<br>
+# gpg akari-1.0.9-20110214.tar.gz.asc<br>
+# tar -zxf akari-1.0.9-20110214.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
 # make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}
@@ -105,10 +103,10 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <table border="1">
 <tr><td>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz'<br>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20101231.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20101231.tar.gz.asc'<br>
-[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20101231.tar.gz.asc<br>
-[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20101231.tar.gz<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20110214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20110214.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.0-20110214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.0-20110214.tar.gz.asc'<br>
+[user@tomoyo ~]$ gpg ccs-tools-1.8.0-20110214.tar.gz.asc<br>
+[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.0-20110214.tar.gz<br>
 [user@tomoyo ~]$ cd ccstools/<br>
 [user@tomoyo ~]$ make -s<br>
 [user@tomoyo ~]$ su<br>
@@ -199,7 +197,7 @@ title CentOS (2.6.18-194.32.1.el5)<br>
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.8   2011/02/07
+AKARI: 1.0.9   2011/02/14
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.0+   2011/02/07

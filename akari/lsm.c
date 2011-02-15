@@ -506,11 +506,11 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
  */
 static int ccs_bprm_check_security(struct linux_binprm *bprm)
 {
-	int rc;
 	struct ccs_security *security = ccs_current_security();
 	if (security == &ccs_default_security || security == &ccs_oom_security)
 		return -ENOMEM;
 	if (!security->cred) {
+		int rc;
 		if (!ccs_policy_loaded)
 			ccs_load_policy(bprm->filename);
 		rc = ccs_start_execve(bprm, &security->ee);
@@ -525,21 +525,9 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 			security->cred = bprm->cred;
 #endif
 		}
-	} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-		rc = ccs_open_permission(bprm->file);
-#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
-		/* 00 means "read". */
-		rc = ccs_open_permission(bprm->file->f_dentry,
-					 bprm->file->f_vfsmnt, 00);
-#else
-		/* 01 means "read". */
-		rc = ccs_open_permission(bprm->file->f_dentry,
-					 bprm->file->f_vfsmnt, 01);
-#endif
+		if (rc)
+			return rc;
 	}
-	if (rc)
-		return rc;
 	while (!original_security_ops.bprm_check_security);
 	return original_security_ops.bprm_check_security(bprm);
 }

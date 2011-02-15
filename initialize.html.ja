@@ -314,7 +314,7 @@ destination     /var/log/tomoyo/reject_003.log
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.9   2011/02/14
+AKARI: 1.0.10   2011/02/15
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.0+   2011/02/07

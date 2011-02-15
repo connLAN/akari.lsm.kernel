@@ -87,3 +87,9 @@ Version 1.0.8   2011/02/07   Minor update release.
 Version 1.0.9   2011/02/14   Minor update release.
 
    Fix missing permission check for interpreters in 2.6.30 and later kernels.
+
+Version 1.0.10   2011/02/15   Minor update release.
+
+   Fix missing permission check for interpreters in 2.6.23 and earlier kernels.
+
+   Fix wrong execute permission check and domain transition in 2.6.28 and earlier kernels.

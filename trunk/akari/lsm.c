@@ -603,6 +603,10 @@ static int ccs_open(struct inode *inode, int mask, struct nameidata *nd)
 	int flags;
 	if (!nd || !nd->dentry)
 		return 0;
+	/* open_exec() passes MAY_EXEC . */
+	if (mask == MAY_EXEC && inode && S_ISREG(inode->i_mode) &&
+	    (ccs_current_flags() & CCS_TASK_IS_IN_EXECVE))
+		mask = MAY_READ;
 	/*
 	 * This flags value is passed to ACC_MODE().
 	 * ccs_open_permission() for older versions uses old ACC_MODE().

@@ -81,7 +81,7 @@ Requires kernel 2.6.36 or later.<br>
 <tr><td></td><td>Handle policy violation interactively?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Access control for Files</td></tr>
 <tr><td></td><td>Restrict opening files for reading? (file read)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Do not check read permission when files are not opened for reading?</td><td>Y</td><td colspan=2></td><td>Y</td><td></td><td colspan=2>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Do not check read permission when files are not opened for reading?</td><td>Y</td><td colspan=4></td><td colspan=2>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check read permission for sysctl?</td><td>Y</td><td></td><td colspan=5>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict opening files for writing? (file {write,append})</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Do not check write permission when files are not opened for writing?</td><td>Y</td><td colspan=2></td><td colspan=4>Y</td><td>Y</td></tr>

@@ -81,7 +81,7 @@
 <tr><td></td><td>ポリシー違反の対話的な処理</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>ファイルに対するアクセス制御</td></tr>
 <tr><td></td><td>読み込みモードでのオープンを制限（ file read ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;読み込み以外のためにオープンされる場合にはパーミッションをチェックしない</td><td>○</td><td colspan=2></td><td>○</td><td></td><td colspan=2>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;読み込み以外のためにオープンされる場合にはパーミッションをチェックしない</td><td>○</td><td colspan=4></td><td colspan=2>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;sysctl 要求に対して読み込みパーミッションをチェックする</td><td>○</td><td></td><td colspan=5>○</td><td>○</td></tr>
 <tr><td></td><td>書き込みモードでのオープンを制限（ file {write,append} ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;書き込み以外のためにオープンされる場合にはパーミッションをチェックしない</td><td>○</td><td colspan=2></td><td colspan=4>○</td><td>○</td></tr>

@@ -9,12 +9,6 @@
 #include <linux/security.h>
 #include <linux/namei.h>
 
-/*
- * "struct cred" exists in 2.6.29 and later kernels.
- * But this declaration is harmless for 2.6.28 and earlier kernels.
- */
-struct cred;
-
 /* Prototype definition. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 static void ccs_task_security_gc(void);
@@ -509,7 +503,7 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 	struct ccs_security *security = ccs_current_security();
 	if (security == &ccs_default_security || security == &ccs_oom_security)
 		return -ENOMEM;
-	if (!security->cred) {
+	if (!security->ee) {
 		int rc;
 		if (!ccs_policy_loaded)
 			ccs_load_policy(bprm->filename);
@@ -2739,8 +2733,10 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 #endif
 	get_task_struct((struct task_struct *) task);
 	ptr->task = (struct task_struct *) task;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	/* ptr->cred may point to garbage. I need to explicitly clear. */
 	ptr->cred = NULL;
+#endif
 	ccs_add_task_security(ptr, list);
 	return ptr;
 }

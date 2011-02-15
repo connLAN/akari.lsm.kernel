@@ -1939,7 +1939,9 @@ extern struct ccsecurity_exports ccsecurity_exports;
 struct ccs_security {
 	struct list_head list;
 	const struct task_struct *task; /* Maybe NULL. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	const struct cred *cred; /* Maybe NULL. */
+#endif
 	struct ccs_domain_info *ccs_domain_info;
 	u32 ccs_flags;
 	struct ccs_execve *ee; /* Maybe NULL. */

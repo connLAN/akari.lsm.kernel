@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/02/07
+ * Version: 1.8.0+   2011/03/01
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -1340,27 +1340,25 @@ struct ccs_acl_param {
 	bool is_delete;
 };
 
-/* Structure for reading/writing policy via /proc interfaces. */
+/* Structure for reading/writing policy via /proc/ccs/ interfaces. */
 struct ccs_io_buffer {
 	void (*read) (struct ccs_io_buffer *);
 	int (*write) (struct ccs_io_buffer *);
 	int (*poll) (struct file *file, poll_table *wait);
 	/* Exclusive lock for this structure.   */
 	struct mutex io_sem;
-	/* Index returned by ccs_lock().        */
-	int reader_idx;
 	char __user *read_user_buf;
-	int read_user_buf_avail;
+	size_t read_user_buf_avail;
 	struct {
 		struct list_head *domain;
 		struct list_head *group;
 		struct list_head *acl;
-		int avail;
-		int step;
-		int query_index;
+		size_t avail;
+		unsigned int step;
+		unsigned int query_index;
 		u16 index;
 		u16 cond_index;
-		u8 group_index;
+		u8 acl_group_index;
 		u8 cond_step;
 		u8 bit;
 		u8 w_pos;
@@ -1372,18 +1370,22 @@ struct ccs_io_buffer {
 	} r;
 	struct {
 		struct ccs_domain_info *domain;
-		int avail;
+		size_t avail;
 	} w;
 	/* Buffer for reading.                  */
 	char *read_buf;
 	/* Size of read buffer.                 */
-	int readbuf_size;
+	size_t readbuf_size;
 	/* Buffer for writing.                  */
 	char *write_buf;
 	/* Size of write buffer.                */
-	int writebuf_size;
-	/* One of values in "enum ccs_proc_interface_index". */
-	u8 type;
+	size_t writebuf_size;
+	/* Type of interface. */
+	enum ccs_proc_interface_index type;
+	/* Users counter protected by ccs_io_buffer_list_lock. */
+	u8 users;
+	/* List for telling GC not to kfree() elements. */
+	struct list_head list;
 };
 
 /* Structure for /proc/ccs/profile interface. */
@@ -1460,15 +1462,12 @@ int ccs_delete_domain(char *data);
 int ccs_env_perm(struct ccs_request_info *r, const char *env);
 int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
-int ccs_lock(void);
 int ccs_open_control(const u8 type, struct file *file);
 int ccs_parse_ip_address(char *address, u16 *min, u16 *max);
 int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 			const struct ccs_path_info *filename);
 int ccs_poll_control(struct file *file, poll_table *wait);
 int ccs_poll_log(struct file *file, poll_table *wait);
-int ccs_read_control(struct file *file, char __user *buffer,
-		     const int buffer_len);
 int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
 int ccs_symlink_path(const char *pathname, struct ccs_path_info *name);
@@ -1485,8 +1484,6 @@ int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
 					       const struct ccs_acl_head *));
 int ccs_write_aggregator(char *data, const bool is_delete);
 int ccs_write_capability(struct ccs_acl_param *param);
-int ccs_write_control(struct file *file, const char __user *buffer,
-		      const int buffer_len);
 int ccs_write_file(struct ccs_acl_param *param);
 int ccs_write_group(char *data, const bool is_delete, const u8 type);
 int ccs_write_inet_network(struct ccs_acl_param *param);
@@ -1496,7 +1493,10 @@ int ccs_write_reserved_port(char *data, const bool is_delete);
 int ccs_write_transition_control(char *data, const bool is_delete,
 				 const u8 type);
 int ccs_write_unix_network(struct ccs_acl_param *param);
-size_t ccs_del_condition(struct list_head *element);
+ssize_t ccs_read_control(struct file *file, char __user *buffer,
+			 const size_t buffer_len);
+ssize_t ccs_write_control(struct file *file, const char __user *buffer,
+			  const size_t buffer_len);
 struct ccs_condition *ccs_get_condition(char *condition);
 struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 					  const u8 profile, const u8 group,
@@ -1511,10 +1511,12 @@ void ccs_check_acl(struct ccs_request_info *r,
 		   bool (*check_entry) (struct ccs_request_info *,
 					const struct ccs_acl_info *));
 void ccs_convert_time(time_t time, struct ccs_time *p);
+void ccs_del_condition(struct list_head *element);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 void ccs_get_attributes(struct ccs_obj_info *obj);
 void ccs_memory_free(const void *ptr, size_t size);
 void ccs_normalize_line(unsigned char *buffer);
+void ccs_notify_gc(struct ccs_io_buffer *head, const bool is_register);
 void ccs_print_ipv4(char *buffer, const int buffer_len, const u32 min_ip,
 		    const u32 max_ip);
 void ccs_print_ipv6(char *buffer, const int buffer_len,
@@ -1525,9 +1527,7 @@ void ccs_print_ulong(char *buffer, const int buffer_len,
 void ccs_put_name_union(struct ccs_name_union *ptr);
 void ccs_put_number_union(struct ccs_number_union *ptr);
 void ccs_read_log(struct ccs_io_buffer *head);
-void ccs_run_gc(void);
 void ccs_transition_failed(const char *domainname);
-void ccs_unlock(const int idx);
 void ccs_update_stat(const u8 index);
 void ccs_warn_oom(const char *function);
 void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
@@ -1638,6 +1638,9 @@ static inline void ccs_read_unlock(const int idx)
 }
 
 #else
+
+int ccs_lock(void);
+void ccs_unlock(const int idx);
 
 /**
  * ccs_read_lock - Take lock for protecting policy.

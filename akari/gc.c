@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/gc.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0   2010/11/11
+ * Version: 1.8.0+   2011/03/01
  */
 
 #include "internal.h"
@@ -51,11 +51,123 @@ static inline void list_del_rcu(struct list_head *entry)
 
 #endif
 
+/* Size of an element. */
+static const u8 ccs_element_size[CCS_MAX_POLICY] = {
+	[CCS_ID_RESERVEDPORT] = sizeof(struct ccs_reserved),
+	[CCS_ID_GROUP] = sizeof(struct ccs_group),
+	[CCS_ID_ADDRESS_GROUP] = sizeof(struct ccs_address_group),
+	[CCS_ID_PATH_GROUP] = sizeof(struct ccs_path_group),
+	[CCS_ID_NUMBER_GROUP] = sizeof(struct ccs_number_group),
+	[CCS_ID_AGGREGATOR] = sizeof(struct ccs_aggregator),
+	[CCS_ID_TRANSITION_CONTROL] = sizeof(struct ccs_transition_control),
+	[CCS_ID_MANAGER] = sizeof(struct ccs_manager),
+	[CCS_ID_IPV6_ADDRESS] = sizeof(struct ccs_ipv6addr),
+	/* [CCS_ID_CONDITION] = "struct ccs_condition"->size, */
+	/* [CCS_ID_NAME] = "struct ccs_name"->size, */
+	/* [CCS_ID_ACL] = ccs_acl_size["struct ccs_acl_info"->type], */
+	[CCS_ID_DOMAIN] = sizeof(struct ccs_domain_info),
+};
+
+/* Size of a domain ACL element. */
+static const u8 ccs_acl_size[] = {
+	[CCS_TYPE_PATH_ACL] = sizeof(struct ccs_path_acl),
+	[CCS_TYPE_PATH2_ACL] = sizeof(struct ccs_path2_acl),
+	[CCS_TYPE_PATH_NUMBER_ACL] = sizeof(struct ccs_path_number_acl),
+	[CCS_TYPE_MKDEV_ACL] = sizeof(struct ccs_mkdev_acl),
+	[CCS_TYPE_MOUNT_ACL] = sizeof(struct ccs_mount_acl),
+	[CCS_TYPE_INET_ACL] = sizeof(struct ccs_inet_acl),
+	[CCS_TYPE_UNIX_ACL] = sizeof(struct ccs_unix_acl),
+	[CCS_TYPE_ENV_ACL] = sizeof(struct ccs_env_acl),
+	[CCS_TYPE_CAPABILITY_ACL] = sizeof(struct ccs_capability_acl),
+	[CCS_TYPE_SIGNAL_ACL] = sizeof(struct ccs_signal_acl),
+	[CCS_TYPE_AUTO_EXECUTE_HANDLER] = sizeof(struct ccs_handler_acl),
+	[CCS_TYPE_DENIED_EXECUTE_HANDLER] = sizeof(struct ccs_handler_acl),
+	[CCS_TYPE_AUTO_TASK_ACL] = sizeof(struct ccs_task_acl),
+	[CCS_TYPE_MANUAL_TASK_ACL] = sizeof(struct ccs_task_acl),
+};
+
+/* The list for "struct ccs_io_buffer". */
+static LIST_HEAD(ccs_io_buffer_list);
+/* Lock for protecting ccs_io_buffer_list. */
+static DEFINE_SPINLOCK(ccs_io_buffer_list_lock);
+
+/**
+ * ccs_struct_used_by_io_buffer - Check whether the list element is used by /proc/ccs/ users or not.
+ *
+ * @element: Pointer to "struct list_head".
+ *
+ * Returns true if @element is used by /proc/ccs/ users, false otherwise.
+ */
+static bool ccs_struct_used_by_io_buffer(const struct list_head *element)
+{
+	struct ccs_io_buffer *head;
+	bool in_use = false;
+	spin_lock(&ccs_io_buffer_list_lock);
+	list_for_each_entry(head, &ccs_io_buffer_list, list) {
+		head->users++;
+		spin_unlock(&ccs_io_buffer_list_lock);
+		if (mutex_lock_interruptible(&head->io_sem)) {
+			in_use = true;
+			goto out;
+		}
+		if (head->r.domain == element || head->r.group == element ||
+		    head->r.acl == element || &head->w.domain->list == element)
+			in_use = true;
+		mutex_unlock(&head->io_sem);
+out:
+		spin_lock(&ccs_io_buffer_list_lock);
+		head->users--;
+		if (in_use)
+			break;
+	}
+	spin_unlock(&ccs_io_buffer_list_lock);
+	return in_use;
+}
+
+/**
+ * ccs_name_used_by_io_buffer - Check whether the string is used by /proc/ccs/ users or not.
+ *
+ * @string: String to check.
+ * @size:   Memory allocated for @string .
+ *
+ * Returns true if @string is used by /proc/ccs/ users, false otherwise.
+ */
+static bool ccs_name_used_by_io_buffer(const char *string, const size_t size)
+{
+	struct ccs_io_buffer *head;
+	bool in_use = false;
+	spin_lock(&ccs_io_buffer_list_lock);
+	list_for_each_entry(head, &ccs_io_buffer_list, list) {
+		int i;
+		head->users++;
+		spin_unlock(&ccs_io_buffer_list_lock);
+		if (mutex_lock_interruptible(&head->io_sem)) {
+			in_use = true;
+			goto out;
+		}
+		for (i = 0; i < CCS_MAX_IO_READ_QUEUE; i++) {
+			const char *w = head->r.w[i];
+			if (w < string || w > string + size)
+				continue;
+			in_use = true;
+			break;
+		}
+		mutex_unlock(&head->io_sem);
+out:
+		spin_lock(&ccs_io_buffer_list_lock);
+		head->users--;
+		if (in_use)
+			break;
+	}
+	spin_unlock(&ccs_io_buffer_list_lock);
+	return in_use;
+}
 
 /* Structure for garbage collection. */
 struct ccs_gc {
 	struct list_head list;
-	int type; /* One of values in "enum ccs_policy_id". */
+	enum ccs_policy_id type;
+	size_t size;
 	struct list_head *element;
 };
 /* List of entries to be deleted. */
@@ -66,7 +178,7 @@ static int ccs_gc_list_len;
 /**
  * ccs_add_to_gc - Add an entry to to be deleted list.
  *
- * @type:    Type of this entry.
+ * @type:    One of values in "enum ccs_policy_id".
  * @element: Pointer to "struct list_head".
  *
  * Returns true on success, false otherwise.
@@ -81,12 +193,28 @@ static int ccs_gc_list_len;
  * If we use singly linked list using "struct list_head"->prev (which is
  * LIST_POISON2), we can avoid kmalloc().
  */
-static bool ccs_add_to_gc(const int type, struct list_head *element)
+static bool ccs_add_to_gc(const enum ccs_policy_id type,
+			  struct list_head *element)
 {
 	struct ccs_gc *entry = kzalloc(sizeof(*entry), CCS_GFP_FLAGS);
 	if (!entry)
 		return false;
 	entry->type = type;
+	if (type == CCS_ID_ACL)
+		entry->size =
+			ccs_acl_size[container_of(element,
+						  typeof(struct ccs_acl_info),
+						  list)->type];
+	else if (type == CCS_ID_NAME)
+		entry->size =
+ 			container_of(element, typeof(struct ccs_name),
+				     head.list)->size;
+	else if (type == CCS_ID_CONDITION)
+		entry->size =
+			container_of(element, typeof(struct ccs_condition),
+				     head.list)->size;
+	else
+		entry->size = ccs_element_size[type];
 	entry->element = element;
 	list_add(&entry->list, &ccs_gc_list);
 	list_del_rcu(element);
@@ -94,19 +222,39 @@ static bool ccs_add_to_gc(const int type, struct list_head *element)
 }
 
 /**
+ * ccs_element_linked_by_gc - Validate next element of an entry.
+ *
+ * @element: Pointer to an element.
+ * @size:    Size of @element in byte.
+ *
+ * Returns true if @element is linked by other elements in the garbage
+ * collector's queue, false otherwise.
+ */
+static bool ccs_element_linked_by_gc(const u8 *element, const size_t size)
+{
+	struct ccs_gc *p;
+	list_for_each_entry(p, &ccs_gc_list, list) {
+		const u8 *ptr = (const u8 *) p->element->next;
+		if (ptr < element || element + size < ptr)
+			continue;
+		return true;
+	}
+	return false;
+}
+
+/**
  * ccs_del_transition_control - Delete members in "struct ccs_transition_control".
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_transition_control(struct list_head *element)
+static inline void ccs_del_transition_control(struct list_head *element)
 {
 	struct ccs_transition_control *ptr =
 		container_of(element, typeof(*ptr), head.list);
 	ccs_put_name(ptr->domainname);
 	ccs_put_name(ptr->program);
-	return sizeof(*ptr);
 }
 
 /**
@@ -114,15 +262,14 @@ static inline size_t ccs_del_transition_control(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_aggregator(struct list_head *element)
+static inline void ccs_del_aggregator(struct list_head *element)
 {
 	struct ccs_aggregator *ptr =
 		container_of(element, typeof(*ptr), head.list);
 	ccs_put_name(ptr->original_name);
 	ccs_put_name(ptr->aggregated_name);
-	return sizeof(*ptr);
 }
 
 /**
@@ -130,14 +277,13 @@ static inline size_t ccs_del_aggregator(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_manager(struct list_head *element)
+static inline void ccs_del_manager(struct list_head *element)
 {
 	struct ccs_manager *ptr =
 		container_of(element, typeof(*ptr), head.list);
 	ccs_put_name(ptr->manager);
-	return sizeof(*ptr);
 }
 
 /* For compatibility with older kernels. */
@@ -146,13 +292,13 @@ static inline size_t ccs_del_manager(struct list_head *element)
 #endif
 
 /**
- * ccs_used_by_task - Check whether the given pointer is referenced by a task.
+ * ccs_domain_used_by_task - Check whether the given pointer is referenced by a task.
  *
  * @domain: Pointer to "struct ccs_domain_info".
  *
  * Returns true if @domain is in use, false otherwise.
  */
-static bool ccs_used_by_task(struct ccs_domain_info *domain)
+static bool ccs_domain_used_by_task(struct ccs_domain_info *domain)
 {
 	bool in_use = false;
 	/*
@@ -218,45 +364,40 @@ out:
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static size_t ccs_del_acl(struct list_head *element)
+static void ccs_del_acl(struct list_head *element)
 {
-	size_t size;
 	struct ccs_acl_info *acl = container_of(element, typeof(*acl), list);
 	ccs_put_condition(acl->cond);
 	switch (acl->type) {
 	case CCS_TYPE_PATH_ACL:
 		{
-			struct ccs_path_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_path_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->name);
 		}
 		break;
 	case CCS_TYPE_PATH2_ACL:
 		{
-			struct ccs_path2_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_path2_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->name1);
 			ccs_put_name_union(&entry->name2);
 		}
 		break;
 	case CCS_TYPE_PATH_NUMBER_ACL:
 		{
-			struct ccs_path_number_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_path_number_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->name);
 			ccs_put_number_union(&entry->number);
 		}
 		break;
 	case CCS_TYPE_MKDEV_ACL:
 		{
-			struct ccs_mkdev_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_mkdev_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->name);
 			ccs_put_number_union(&entry->mode);
 			ccs_put_number_union(&entry->major);
@@ -265,9 +406,8 @@ static size_t ccs_del_acl(struct list_head *element)
 		break;
 	case CCS_TYPE_MOUNT_ACL:
 		{
-			struct ccs_mount_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_mount_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->dev_name);
 			ccs_put_name_union(&entry->dir_name);
 			ccs_put_name_union(&entry->fs_type);
@@ -276,9 +416,8 @@ static size_t ccs_del_acl(struct list_head *element)
 		break;
 	case CCS_TYPE_INET_ACL:
 		{
-			struct ccs_inet_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_inet_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			switch (entry->address_type) {
 			case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
 				ccs_put_group(entry->address.group);
@@ -293,58 +432,47 @@ static size_t ccs_del_acl(struct list_head *element)
 		break;
 	case CCS_TYPE_UNIX_ACL:
 		{
-			struct ccs_unix_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_unix_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name_union(&entry->name);
 		}
 		break;
 	case CCS_TYPE_ENV_ACL:
 		{
-			struct ccs_env_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_env_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name(entry->env);
 		}
 		break;
 	case CCS_TYPE_CAPABILITY_ACL:
 		{
-			struct ccs_capability_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			/* Nothing to do. */
 		}
 		break;
 	case CCS_TYPE_SIGNAL_ACL:
 		{
-			struct ccs_signal_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_signal_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name(entry->domainname);
 		}
 		break;
 	case CCS_TYPE_AUTO_EXECUTE_HANDLER:
 	case CCS_TYPE_DENIED_EXECUTE_HANDLER:
 		{
-			struct ccs_handler_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_handler_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name(entry->handler);
 		}
 		break;
 	case CCS_TYPE_AUTO_TASK_ACL:
 	case CCS_TYPE_MANUAL_TASK_ACL:
 		{
-			struct ccs_task_acl *entry;
-			size = sizeof(*entry);
-			entry = container_of(acl, typeof(*entry), head);
+			struct ccs_task_acl *entry =
+				container_of(acl, typeof(*entry), head);
 			ccs_put_name(entry->domainname);
 		}
 		break;
-	default:
-		size = 0;
-		break;
 	}
-	return size;
 }
 
 /**
@@ -352,9 +480,9 @@ static size_t ccs_del_acl(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()) on success, 0 otherwise.
+ * Returns nothing.
  */
-static inline size_t ccs_del_domain(struct list_head *element)
+static inline void ccs_del_domain(struct list_head *element)
 {
 	struct ccs_domain_info *domain =
 		container_of(element, typeof(*domain), list);
@@ -362,33 +490,18 @@ static inline size_t ccs_del_domain(struct list_head *element)
 	struct ccs_acl_info *tmp;
 	u8 i;
 	/*
-	 * We need to recheck domain at this point.
-	 *
-	 * (1) Reader starts SRCU section upon execve().
-	 * (2) Reader traverses ccs_domain_list and finds this domain.
-	 * (3) Writer marks this domain as deleted.
-	 * (4) Garbage collector removes this domain from ccs_domain_list
-	 *     because this domain is marked as deleted and used by nobody.
-	 * (5) Reader saves reference to this domain into
-	 *     "struct task_struct"->ccs_domain_info.
-	 * (6) Reader finishes execve() operation and starts using this domain.
-	 * (7) Garbage collector waits for SRCU synchronization.
-	 * (8) Garbage collector kfree() this domain.
-	 *
-	 * By rechecking whether this domain is used by somebody or not at (8),
-	 * we can solve this race problem.
+	 * Since this domain is referenced from none of "struct ccs_io_buffer"
+	 * ccs_gc_list, "struct task_struct", we can delete elements without
+	 * checking for is_deleted flag.
 	 */
-	if (ccs_used_by_task(domain))
-		return 0;
 	for (i = 0; i < 2; i++) {
 		list_for_each_entry_safe(acl, tmp, &domain->acl_info_list[i],
 					 list) {
-			size_t size = ccs_del_acl(&acl->list);
-			ccs_memory_free(acl, size);
+			ccs_del_acl(&acl->list);
+			ccs_memory_free(acl, ccs_acl_size[acl->type]);
 		}
 	}
 	ccs_put_name(domain->domainname);
-	return sizeof(*domain);
 }
 
 /**
@@ -396,14 +509,13 @@ static inline size_t ccs_del_domain(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_path_group(struct list_head *element)
+static inline void ccs_del_path_group(struct list_head *element)
 {
 	struct ccs_path_group *member =
 		container_of(element, typeof(*member), head.list);
 	ccs_put_name(member->member_name);
-	return sizeof(*member);
 }
 
 /**
@@ -411,14 +523,13 @@ static inline size_t ccs_del_path_group(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_group(struct list_head *element)
+static inline void ccs_del_group(struct list_head *element)
 {
 	struct ccs_group *group =
 		container_of(element, typeof(*group), head.list);
 	ccs_put_name(group->group_name);
-	return sizeof(*group);
 }
 
 /**
@@ -426,9 +537,9 @@ static inline size_t ccs_del_group(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_address_group(struct list_head *element)
+static inline void ccs_del_address_group(struct list_head *element)
 {
 	struct ccs_address_group *member =
 		container_of(element, typeof(*member), head.list);
@@ -436,7 +547,6 @@ static inline size_t ccs_del_address_group(struct list_head *element)
 		ccs_put_ipv6_address(member->min.ipv6);
 		ccs_put_ipv6_address(member->max.ipv6);
 	}
-	return sizeof(*member);
 }
 
 /**
@@ -444,13 +554,11 @@ static inline size_t ccs_del_address_group(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_number_group(struct list_head *element)
+static inline void ccs_del_number_group(struct list_head *element)
 {
-	struct ccs_number_group *member =
-		container_of(element, typeof(*member), head.list);
-	return sizeof(*member);
+	/* Nothing to do. */
 }
 
 /**
@@ -458,13 +566,11 @@ static inline size_t ccs_del_number_group(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_reservedport(struct list_head *element)
+static inline void ccs_del_reservedport(struct list_head *element)
 {
-	struct ccs_reserved *ptr =
-		container_of(element, typeof(*ptr), head.list);
-	return sizeof(*ptr);
+	/* Nothing to do. */
 }
 
 /**
@@ -472,13 +578,11 @@ static inline size_t ccs_del_reservedport(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_ipv6_address(struct list_head *element)
+static inline void ccs_del_ipv6_address(struct list_head *element)
 {
-	struct ccs_ipv6addr *ptr =
-		container_of(element, typeof(*ptr), head.list);
-	return sizeof(*ptr);
+	/* Nothing to do. */
 }
 
 /**
@@ -486,9 +590,9 @@ static inline size_t ccs_del_ipv6_address(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of condition (for later kfree()).
+ * Returns nothing.
  */
-size_t ccs_del_condition(struct list_head *element)
+void ccs_del_condition(struct list_head *element)
 {
 	struct ccs_condition *cond = container_of(element, typeof(*cond),
 						  head.list);
@@ -519,7 +623,6 @@ size_t ccs_del_condition(struct list_head *element)
 		ccs_put_name(envp->value);
 	}
 	ccs_put_name(cond->transit);
-	return cond->size;
 }
 
 /**
@@ -527,13 +630,11 @@ size_t ccs_del_condition(struct list_head *element)
  *
  * @element: Pointer to "struct list_head".
  *
- * Returns size of @element (for later kfree()).
+ * Returns nothing.
  */
-static inline size_t ccs_del_name(struct list_head *element)
+static inline void ccs_del_name(struct list_head *element)
 {
-	const struct ccs_name *ptr =
-		container_of(element, typeof(*ptr), head.list);
-	return ptr->size;
+	/* Nothing to do. */
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
@@ -541,24 +642,16 @@ static inline size_t ccs_del_name(struct list_head *element)
 /*
  * Lock for syscall users.
  *
- * This lock is held for only protecting single SRCU section. Accessing
- * /proc/ccs/ interface cannot be finished within single SRCU section.
- * Therefore, we use ccs_lock()/ccs_unlock() for protecting /proc/ccs/ users.
- * Garbage collector waits for both this SRCU grace period and ccs_counter.
+ * This lock is held for only protecting single SRCU section.
  */
 struct srcu_struct ccs_ss;
 
-#endif
+#else
 
 /*
- * Lock for /proc/ccs/ users.
+ * Lock for syscall users.
  *
- * Holding SRCU lock upon open() and release upon close() causes lockdep to
- * complain about returning to userspace with SRCU lock held.
- * Therefore, non-SRCU lock is used in order to suppress the lockdep warning.
- * Modifying to hold/release SRCU lock upon each read()/write() is to-do list.
- *
- * This lock is also used for protecting single SRCU section for 2.6.18 and
+ * This lock is used for protecting single SRCU section for 2.6.18 and
  * earlier kernels because they don't have SRCU support.
  */
 static struct {
@@ -569,7 +662,7 @@ static struct {
 static DEFINE_SPINLOCK(ccs_counter_lock);
 
 /**
- * ccs_lock - Hold non-SRCU lock.
+ * ccs_lock - Alternative for srcu_read_lock().
  *
  * Returns index number which has to be passed to ccs_unlock().
  */
@@ -584,7 +677,7 @@ int ccs_lock(void)
 }
 
 /**
- * ccs_unlock - Release non-SRCU lock.
+ * ccs_unlock - Alternative for srcu_read_unlock().
  *
  * @idx: Index number returned by ccs_lock().
  *
@@ -598,7 +691,7 @@ void ccs_unlock(const int idx)
 }
 
 /**
- * ccs_synchronize_counter - Wait for SRCU grace period.
+ * ccs_synchronize_counter - Alternative for synchronize_srcu().
  *
  * Returns nothing.
  */
@@ -618,10 +711,7 @@ static void ccs_synchronize_counter(void)
 	ccs_counter.counter_idx ^= 1;
 	v = ccs_counter.counter[idx];
 	spin_unlock(&ccs_counter_lock);
-	/*
-	 * Waiting for /proc/ccs/ interface users to close() may take more than
-	 * a few seconds. Therefore, we should use ssleep() here.
-	 */
+	/* Wait for previously active counter to become 0. */
 	while (v) {
 		ssleep(1);
 		spin_lock(&ccs_counter_lock);
@@ -630,15 +720,18 @@ static void ccs_synchronize_counter(void)
 	}
 }
 
+#endif
+
 /**
  * ccs_collect_member - Delete elements with "struct ccs_acl_head".
  *
- * @member_list: Pointer to "struct list_head".
  * @id:          One of values in "enum ccs_policy_id".
+ * @member_list: Pointer to "struct list_head".
  *
  * Returns true if some elements are deleted, false otherwise.
  */
-static bool ccs_collect_member(struct list_head *member_list, int id)
+static bool ccs_collect_member(const enum ccs_policy_id id,
+			       struct list_head *member_list)
 {
 	struct ccs_acl_head *member;
 	list_for_each_entry(member, member_list, list) {
@@ -680,12 +773,13 @@ static bool ccs_collect_acl(struct ccs_domain_info *domain)
 static void ccs_collect_entry(void)
 {
 	int i;
+	enum ccs_policy_id id;
 	int idx;
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		return;
 	idx = ccs_read_lock();
-	for (i = 0; i < CCS_MAX_POLICY; i++)
-		if (!ccs_collect_member(&ccs_policy_list[i], i))
+	for (id = 0; id < CCS_MAX_POLICY; id++)
+		if (!ccs_collect_member(id, &ccs_policy_list[id]))
 			goto unlock;
 	for (i = 0; i < CCS_MAX_ACL_GROUPS; i++)
 		if (!ccs_collect_acl(&ccs_acl_group[i]))
@@ -696,7 +790,7 @@ static void ccs_collect_entry(void)
 			if (!ccs_collect_acl(domain))
 				goto unlock;
 			if (!domain->is_deleted ||
-			    ccs_used_by_task(domain))
+			    ccs_domain_used_by_task(domain))
 				continue;
 			if (!ccs_add_to_gc(CCS_ID_DOMAIN, &domain->list))
 				goto unlock;
@@ -704,7 +798,6 @@ static void ccs_collect_entry(void)
 	}
 	for (i = 0; i < CCS_MAX_GROUP; i++) {
 		struct list_head *list = &ccs_group_list[i];
-		int id;
 		struct ccs_group *group;
 		switch (i) {
 		case 0:
@@ -718,7 +811,7 @@ static void ccs_collect_entry(void)
 			break;
 		}
 		list_for_each_entry(group, list, head.list) {
-			if (!ccs_collect_member(&group->member_list, id))
+			if (!ccs_collect_member(id, &group->member_list))
 				goto unlock;
 			if (!list_empty(&group->member_list) ||
 			    atomic_read(&group->head.users))
@@ -730,7 +823,6 @@ static void ccs_collect_entry(void)
 	for (i = 0; i < CCS_MAX_LIST + CCS_MAX_HASH; i++) {
 		struct list_head *list = i < CCS_MAX_LIST ?
 			&ccs_shared_list[i] : &ccs_name_list[i - CCS_MAX_LIST];
-		int id;
 		struct ccs_shared_acl_head *ptr;
 		switch (i) {
 		case 0:
@@ -766,52 +858,91 @@ static bool ccs_kfree_entry(void)
 	struct ccs_gc *tmp;
 	bool result = false;
 	list_for_each_entry_safe(p, tmp, &ccs_gc_list, list) {
-		size_t size = 0;
 		struct list_head * const element = p->element;
+		/*
+		 * list_del_rcu() in ccs_add_to_gc() guarantees that the list
+		 * element became no longer reachable from the list which the
+		 * element was originally on (e.g. ccs_domain_list). Also,
+		 * synchronize_srcu() in ccs_gc_thread() guarantees that the
+		 * list element became no longer referenced by syscall users.
+		 *
+		 * However, there are three users which may still be using the
+		 * list element. We need to defer until all of these users
+		 * forget the list element.
+		 *
+		 * Firstly, defer until "struct ccs_io_buffer"->r.{domain,
+		 * group,acl} and "struct ccs_io_buffer"->w.domain forget the
+		 * list element.
+		 */
+		if (ccs_struct_used_by_io_buffer(element))
+			continue;
+		/*
+		 * Secondly, defer until all other elements in the ccs_gc_list
+		 * list forget the list element.
+		 */
+		if (ccs_element_linked_by_gc((const u8 *) element, p->size))
+			continue;
 		switch (p->type) {
 		case CCS_ID_TRANSITION_CONTROL:
-			size = ccs_del_transition_control(element);
+			ccs_del_transition_control(element);
 			break;
 		case CCS_ID_MANAGER:
-			size = ccs_del_manager(element);
+			ccs_del_manager(element);
 			break;
 		case CCS_ID_AGGREGATOR:
-			size = ccs_del_aggregator(element);
+			ccs_del_aggregator(element);
 			break;
 		case CCS_ID_GROUP:
-			size = ccs_del_group(element);
+			ccs_del_group(element);
 			break;
 		case CCS_ID_PATH_GROUP:
-			size = ccs_del_path_group(element);
+			ccs_del_path_group(element);
 			break;
 		case CCS_ID_ADDRESS_GROUP:
-			size = ccs_del_address_group(element);
+			ccs_del_address_group(element);
 			break;
 		case CCS_ID_NUMBER_GROUP:
-			size = ccs_del_number_group(element);
+			ccs_del_number_group(element);
 			break;
 		case CCS_ID_RESERVEDPORT:
-			size = ccs_del_reservedport(element);
+			ccs_del_reservedport(element);
 			break;
 		case CCS_ID_IPV6_ADDRESS:
-			size = ccs_del_ipv6_address(element);
+			ccs_del_ipv6_address(element);
 			break;
 		case CCS_ID_CONDITION:
-			size = ccs_del_condition(element);
+			ccs_del_condition(element);
 			break;
 		case CCS_ID_NAME:
-			size = ccs_del_name(element);
+			/*
+			 * Thirdly, defer until all "struct ccs_io_buffer"
+			 * ->r.w[] forget the list element.
+			 */
+			if (ccs_name_used_by_io_buffer(
+			    container_of(element, typeof(struct ccs_name),
+					 head.list)->entry.name, p->size))
+				continue;
+			ccs_del_name(element);
 			break;
 		case CCS_ID_ACL:
-			size = ccs_del_acl(element);
+			ccs_del_acl(element);
 			break;
 		case CCS_ID_DOMAIN:
-			size = ccs_del_domain(element);
-			if (!size)
+			/*
+			 * Thirdly, defer until all "struct task_struct" forget
+			 * the list element.
+			 */
+			if (ccs_domain_used_by_task(
+			    container_of(element,
+					 typeof(struct ccs_domain_info),
+					 list)))
 				continue;
+			ccs_del_domain(element);
+			break;
+		case CCS_MAX_POLICY:
 			break;
 		}
-		ccs_memory_free(element, size);
+		ccs_memory_free(element, p->size);
 		list_del(&p->list);
 		kfree(p);
 		ccs_gc_list_len--;
@@ -864,9 +995,10 @@ static int ccs_gc_thread(void *unused)
 		ccs_collect_entry();
 		if (list_empty(&ccs_gc_list))
 			break;
-		ccs_synchronize_counter();
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 		synchronize_srcu(&ccs_ss);
+#else
+		ccs_synchronize_counter();
 #endif
 	} while (ccs_kfree_entry());
 	mutex_unlock(&ccs_gc_mutex);
@@ -876,18 +1008,38 @@ out:
 }
 
 /**
- * ccs_run_gc - Start garbage collector thread.
+ * ccs_notify_gc - Register/unregister /proc/ccs/ users.
+ *
+ * @head:        Pointer to "struct ccs_io_buffer".
+ * @is_register: True if register, false if unregister.
  *
  * Returns nothing.
  */
-void ccs_run_gc(void)
+void ccs_notify_gc(struct ccs_io_buffer *head, const bool is_register)
 {
+	bool is_write = false;
+	spin_lock(&ccs_io_buffer_list_lock);
+	if (is_register) {
+		head->users = 1;
+		list_add(&head->list, &ccs_io_buffer_list);
+	} else {
+		is_write = head->write_buf != NULL;
+		if (!--head->users) {
+			list_del(&head->list);
+			kfree(head->read_buf);
+			kfree(head->write_buf);
+			kfree(head);
+		}
+	}
+	spin_unlock(&ccs_io_buffer_list_lock);
+	if (is_write) {
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
-	struct task_struct *task = kthread_create(ccs_gc_thread, NULL,
-						  "GC for CCS");
-	if (!IS_ERR(task))
-		wake_up_process(task);
+		struct task_struct *task = kthread_create(ccs_gc_thread, NULL,
+							  "GC for CCS");
+		if (!IS_ERR(task))
+			wake_up_process(task);
 #else
-	kernel_thread(ccs_gc_thread, NULL, 0);
+		kernel_thread(ccs_gc_thread, NULL, 0);
 #endif
+	}
 }

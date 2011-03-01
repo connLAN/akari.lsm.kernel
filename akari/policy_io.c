@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/02/07
+ * Version: 1.8.0+   2011/03/01
  */
 
 #include "internal.h"
@@ -310,7 +310,7 @@ static bool ccs_flush(struct ccs_io_buffer *head)
 {
 	while (head->r.w_pos) {
 		const char *w = head->r.w[0];
-		int len = strlen(w);
+		size_t len = strlen(w);
 		if (len) {
 			if (len > head->read_user_buf_avail)
 				len = head->read_user_buf_avail;
@@ -377,8 +377,8 @@ static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 {
 	va_list args;
-	int len;
-	int pos = head->r.avail;
+	size_t len;
+	size_t pos = head->r.avail;
 	int size = head->readbuf_size - pos;
 	if (size <= 0)
 		return;
@@ -488,7 +488,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/02/07\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/01\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -1387,7 +1387,7 @@ static u8 ccs_fns(const u8 perm, u8 bit)
 static void ccs_set_group(struct ccs_io_buffer *head)
 {
 	if (head->type == CCS_EXCEPTIONPOLICY)
-		ccs_io_printf(head, "acl_group %u ", head->r.group_index);
+		ccs_io_printf(head, "acl_group %u ", head->r.acl_group_index);
 }
 
 /**
@@ -2012,10 +2012,10 @@ static void ccs_read_exception(struct ccs_io_buffer *head)
 		return;
 	while (head->r.step < CCS_MAX_POLICY + CCS_MAX_GROUP
 	       + CCS_MAX_ACL_GROUPS * 2) {
-		head->r.group_index = (head->r.step - CCS_MAX_POLICY
-				       - CCS_MAX_GROUP) / 2;
+		head->r.acl_group_index = (head->r.step - CCS_MAX_POLICY
+					   - CCS_MAX_GROUP) / 2;
 		if (!ccs_read_domain2(head,
-				      &ccs_acl_group[head->r.group_index],
+				      &ccs_acl_group[head->r.acl_group_index],
 				      head->r.step & 1))
 			return;
 		head->r.step++;
@@ -2032,10 +2032,10 @@ static DECLARE_WAIT_QUEUE_HEAD(ccs_answer_wait);
 struct ccs_query {
 	struct list_head list;
 	char *query;
-	int query_len;
+	size_t query_len;
 	unsigned int serial;
-	int timer;
-	int answer;
+	u8 timer;
+	u8 answer;
 	u8 retry;
 };
 
@@ -2283,8 +2283,8 @@ static int ccs_poll_query(struct file *file, poll_table *wait)
 static void ccs_read_query(struct ccs_io_buffer *head)
 {
 	struct list_head *tmp;
-	int pos = 0;
-	int len = 0;
+	unsigned int pos = 0;
+	size_t len = 0;
 	char *buf;
 	if (head->r.w_pos)
 		return;
@@ -2362,7 +2362,7 @@ static int ccs_write_answer(struct ccs_io_buffer *head)
 		if (ptr->serial != serial)
 			continue;
 		if (!ptr->answer)
-			ptr->answer = answer;
+			ptr->answer = (u8) answer;
 		break;
 	}
 	spin_unlock(&ccs_query_list_lock);
@@ -2643,10 +2643,8 @@ int ccs_open_control(const u8 type, struct file *file)
 	 */
 	if (type == CCS_QUERY)
 		atomic_inc(&ccs_query_observers);
-	else if (type != CCS_AUDIT && type != CCS_VERSION &&
-		 type != CCS_MEMINFO && type != CCS_STAT)
-		head->reader_idx = ccs_lock();
 	file->private_data = head;
+	ccs_notify_gc(head, true);
 	return 0;
 }
 
@@ -2679,8 +2677,8 @@ int ccs_poll_control(struct file *file, poll_table *wait)
  *
  * Returns bytes read on success, negative value otherwise.
  */
-int ccs_read_control(struct file *file, char __user *buffer,
-		     const int buffer_len)
+ssize_t ccs_read_control(struct file *file, char __user *buffer,
+			 const size_t buffer_len)
 {
 	int len;
 	struct ccs_io_buffer *head = file->private_data;
@@ -2713,12 +2711,12 @@ int ccs_read_control(struct file *file, char __user *buffer,
  *
  * Returns @buffer_len on success, negative value otherwise.
  */
-int ccs_write_control(struct file *file, const char __user *buffer,
-		      const int buffer_len)
+ssize_t ccs_write_control(struct file *file, const char __user *buffer,
+			  const size_t buffer_len)
 {
 	struct ccs_io_buffer *head = file->private_data;
 	int error = buffer_len;
-	int avail_len = buffer_len;
+	size_t avail_len = buffer_len;
 	char *cp0 = head->write_buf;
 	int idx;
 	if (!head->write)
@@ -2773,6 +2771,9 @@ int ccs_write_control(struct file *file, const char __user *buffer,
 		case CCS_PROFILE:
 		case CCS_MANAGER:
 			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
+			break;
+		default:
+			break;
 		}
 	}
 	ccs_read_unlock(idx);
@@ -2790,27 +2791,14 @@ int ccs_write_control(struct file *file, const char __user *buffer,
 int ccs_close_control(struct file *file)
 {
 	struct ccs_io_buffer *head = file->private_data;
-	const bool is_write = head->write_buf != NULL;
-	const u8 type = head->type;
+	file->private_data = NULL;
 	/*
 	 * If the file is /proc/ccs/query, decrement the observer counter.
 	 */
-	if (type == CCS_QUERY) {
-		if (atomic_dec_and_test(&ccs_query_observers))
-			wake_up_all(&ccs_answer_wait);
-	} else if (type != CCS_AUDIT && type != CCS_VERSION &&
-		   type != CCS_MEMINFO && type != CCS_STAT)
-		ccs_unlock(head->reader_idx);
-	/* Release memory used for policy I/O. */
-	kfree(head->read_buf);
-	head->read_buf = NULL;
-	kfree(head->write_buf);
-	head->write_buf = NULL;
-	kfree(head);
-	head = NULL;
-	file->private_data = NULL;
-	if (is_write)
-		ccs_run_gc();
+	if (head->type == CCS_QUERY &&
+	    atomic_dec_and_test(&ccs_query_observers))
+		wake_up_all(&ccs_answer_wait);
+	ccs_notify_gc(head, false);
 	return 0;
 }
 

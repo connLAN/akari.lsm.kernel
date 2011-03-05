@@ -432,6 +432,7 @@ void __init ccs_mm_init(void)
 	idx = ccs_read_lock();
 	if (ccs_find_domain(CCS_ROOT_NAME) != &ccs_kernel_domain)
 		panic("Can't register ccs_kernel_domain");
+#ifdef CONFIG_CCSECURITY_BUILTIN_INITIALIZERS
 	{
 		/* Load built-in policy. */
 		static char ccs_builtin_initializers[] __initdata
@@ -447,5 +448,6 @@ void __init ccs_mm_init(void)
 			cp = cp2;
 		}
 	}
+#endif
 	ccs_read_unlock(idx);
 }

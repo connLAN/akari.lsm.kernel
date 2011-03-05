@@ -33,6 +33,8 @@
 
 #include "internal.h"
 
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+
 /* Path to the policy loader. (default = CONFIG_CCSECURITY_DEFAULT_LOADER) */
 static const char *ccs_loader;
 
@@ -51,7 +53,11 @@ static int __init ccs_loader_setup(char *str)
 }
 
 __setup("CCS_loader=", ccs_loader_setup);
+#endif
 
+#endif
+
+#if 0
 /**
  * ccs_setup - Set enable/disable upon boot.
  *
@@ -70,6 +76,8 @@ static int __init ccs_setup(char *str)
 
 __setup("ccsecurity=", ccs_setup);
 #endif
+
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 
 /**
  * ccs_policy_loader_exists - Check whether /sbin/ccs-init exists.
@@ -217,6 +225,8 @@ void ccs_load_policy(const char *filename)
 		panic("Failed to load policy.");
 }
 
+#endif
+
 #if 0
 /**
  * __ccs_search_binary_handler - Load policy before calling search_binary_handler().
@@ -229,7 +239,9 @@ void ccs_load_policy(const char *filename)
 static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 				       struct pt_regs *regs)
 {
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 	ccs_load_policy(bprm->filename);
+#endif
 	/*
 	 * ccs_load_policy() executes /sbin/ccs-init if bprm->filename is
 	 * /sbin/init. /sbin/ccs-init executes /etc/ccs/ccs-load-module to
@@ -257,7 +269,9 @@ extern spinlock_t vfsmount_lock;
 
 /* For exporting variables and functions. */
 const struct ccsecurity_exports ccsecurity_exports = {
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 	.load_policy = ccs_load_policy,
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 	.__d_path = __d_path,
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)

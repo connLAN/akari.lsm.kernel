@@ -1239,8 +1239,10 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 {
 	struct ccs_execve *ee;
 	int retval;
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 	if (!ccs_policy_loaded)
 		ccsecurity_exports.load_policy(bprm->filename);
+#endif
 	retval = ccs_start_execve(bprm, &ee);
 	if (!retval)
 		retval = search_binary_handler(bprm, regs);

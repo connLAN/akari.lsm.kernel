@@ -1534,6 +1534,9 @@ void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
 void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		    va_list args);
+#ifdef CONFIG_CCSECURITY_USE_BUILTIN_POLICY
+void __init ccs_load_builtin_policy(void);
+#endif
 
 /* Variable definition for internal use. */
 

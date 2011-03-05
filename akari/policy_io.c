@@ -2811,3 +2811,61 @@ void __init ccs_policy_io_init(void)
 {
 	ccsecurity_ops.check_profile = ccs_check_profile;
 }
+
+#ifdef CONFIG_CCSECURITY_USE_BUILTIN_POLICY
+/**
+ * ccs_load_builtin_policy - Load built-in policy.
+ *
+ * Returns nothing.
+ */
+void __init ccs_load_builtin_policy(void)
+{
+	static char *ccs_builtin_policy[] __initdata = {
+		/*
+		 * This include file is manually created and contains built-in
+		 * /proc/ccs/profile /proc/ccs/exception_policy
+		 * /proc/ccs/domain_policy /proc/ccs/manager and /proc/ccs/stat
+		 * in this order.
+		 */
+#include "builtin-policy.h"
+	};
+	struct ccs_io_buffer head;
+	u8 i;
+	const int idx = ccs_read_lock();
+	for (i = 0; i < 5; i++) {
+		char *start = ccs_builtin_policy[i];
+		memset(&head, 0, sizeof(head));
+		switch (i) {
+		case 0:
+			head.write = ccs_write_profile;
+			break;
+		case 1:
+			head.write = ccs_write_exception;
+			break;
+		case 2:
+			head.write = ccs_write_domain;
+			break;
+		case 3:
+			head.write = ccs_write_manager;
+			break;
+		case 4:
+			head.write = ccs_write_stat;
+			break;
+		}
+		while (1) {
+			char *end = strchr(start, '\n');
+			if (!end)
+				break;
+			*end = '\0';
+			ccs_normalize_line(start);
+			head.write_buf = start;
+			head.write(&head);
+			start = end + 1;
+		}
+	}
+	ccs_read_unlock(idx);
+#ifdef CONFIG_CCSECURITY_ACTIVATE_FROM_THE_BEGINNING
+	ccs_check_profile();
+#endif
+}
+#endif

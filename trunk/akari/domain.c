@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/domain.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.0+   2011/03/05
  */
 
 #include "internal.h"
@@ -1007,7 +1007,7 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 			handler_len - root_len);
 		ccs_unescape(cp);
 		retval = -ENOENT;
-		if (!*cp || *cp != '/')
+		if (*cp != '/')
 			goto out;
 		retval = ccs_copy_argv(cp, bprm);
 		if (retval < 0)

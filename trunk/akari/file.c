@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/01/21
+ * Version: 1.8.0+   2011/03/05
  */
 
 #include "internal.h"
@@ -708,7 +708,7 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 	idx = ccs_read_lock();
 	if (acc_mode && ccs_init_request_info(&r, CCS_MAC_FILE_OPEN)
 	    != CCS_CONFIG_DISABLED) {
-		if (!buf.name && !ccs_get_realpath(&buf, dentry, mnt)) {
+		if (!ccs_get_realpath(&buf, dentry, mnt)) {
 			error = -ENOMEM;
 			goto out;
 		}

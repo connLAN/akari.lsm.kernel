@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/01
+ * Version: 1.8.0+   2011/03/06
  */
 
 #include "internal.h"
@@ -1001,6 +1001,21 @@ static int ccs_gc_thread(void *unused)
 		ccs_synchronize_counter();
 #endif
 	} while (ccs_kfree_entry());
+	{
+		struct ccs_io_buffer *head;
+		struct ccs_io_buffer *tmp;
+		spin_lock(&ccs_io_buffer_list_lock);
+		list_for_each_entry_safe(head, tmp, &ccs_io_buffer_list,
+					 list) {
+			if (head->users)
+				continue;
+			list_del(&head->list);
+			kfree(head->read_buf);
+			kfree(head->write_buf);
+			kfree(head);
+		}
+		spin_unlock(&ccs_io_buffer_list_lock);
+	}
 	mutex_unlock(&ccs_gc_mutex);
 out:
 	/* This acts as do_exit(0). */

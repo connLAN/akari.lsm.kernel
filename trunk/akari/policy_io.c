@@ -920,8 +920,8 @@ static bool ccs_select_one(struct ccs_io_buffer *head, const char *data)
 	unsigned int pid;
 	struct ccs_domain_info *domain = NULL;
 	bool global_pid = false;
-	if (!strcmp(data, "execute")) {
-		head->r.print_execute_only = true;
+	if (!strcmp(data, "transition_only")) {
+		head->r.print_transition_related_only = true;
 		return true;
 	}
 	if (sscanf(data, "pid=%u", &pid) == 1 ||
@@ -1402,6 +1402,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 			    const struct ccs_acl_info *acl)
 {
 	const u8 acl_type = acl->type;
+	const bool may_trigger_transition = acl->cond && acl->cond->transit;
 	u8 bit;
 	if (head->r.print_cond_part)
 		goto print_cond_part;
@@ -1418,9 +1419,8 @@ next:
 		for ( ; bit < CCS_MAX_PATH_OPERATION; bit++) {
 			if (!(perm & (1 << bit)))
 				continue;
-			if (head->r.print_execute_only &&
-			    bit != CCS_TYPE_EXECUTE
-			    /* && bit != CCS_TYPE_TRANSIT */)
+			if (head->r.print_transition_related_only &&
+			    bit != CCS_TYPE_EXECUTE && !may_trigger_transition)
 				continue;
 			break;
 		}
@@ -1450,7 +1450,8 @@ next:
 			       "auto_domain_transition " :
 			       "manual_domain_transition ");
 		ccs_set_string(head, ptr->domainname->name);
-	} else if (head->r.print_execute_only) {
+	} else if (head->r.print_transition_related_only &&
+		   !may_trigger_transition) {
 		return true;
 	} else if (acl_type == CCS_TYPE_MKDEV_ACL) {
 		struct ccs_mkdev_acl *ptr =

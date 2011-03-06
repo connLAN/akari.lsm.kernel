@@ -1364,7 +1364,7 @@ struct ccs_io_buffer {
 		u8 w_pos;
 		bool eof;
 		bool print_this_domain_only;
-		bool print_execute_only;
+		bool print_transition_related_only;
 		bool print_cond_part;
 		const char *w[CCS_MAX_IO_READ_QUEUE];
 	} r;

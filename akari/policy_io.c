@@ -1940,6 +1940,9 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
 			container_of(head->r.acl, typeof(*acl), list);
 		if (acl->is_deleted)
 			continue;
+		if (head->r.print_transition_related_only &&
+		    idx != CCS_ID_TRANSITION_CONTROL)
+			continue;
 		if (!ccs_flush(head))
 			return false;
 		switch (idx) {

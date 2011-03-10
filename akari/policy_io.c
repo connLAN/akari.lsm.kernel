@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/06
+ * Version: 1.8.0+   2011/03/10
  */
 
 #include "internal.h"
@@ -488,7 +488,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/06\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/10\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -2824,35 +2824,38 @@ void __init ccs_policy_io_init(void)
  */
 void __init ccs_load_builtin_policy(void)
 {
-	static char *ccs_builtin_policy[] __initdata = {
-		/*
-		 * This include file is manually created and contains built-in
-		 * /proc/ccs/profile /proc/ccs/exception_policy
-		 * /proc/ccs/domain_policy /proc/ccs/manager and /proc/ccs/stat
-		 * in this order.
-		 */
+	/*
+	 * This include file is manually created and contains built-in policy
+	 * named "ccs_builtin_profile", "ccs_builtin_exception_policy",
+	 * "ccs_builtin_domain_policy", "ccs_builtin_manager",
+	 * "ccs_builtin_stat" in the form of "static char [] __initdata".
+	 */
 #include "builtin-policy.h"
-	};
 	struct ccs_io_buffer head;
 	u8 i;
 	const int idx = ccs_read_lock();
 	for (i = 0; i < 5; i++) {
-		char *start = ccs_builtin_policy[i];
+		char *start = "";
 		memset(&head, 0, sizeof(head));
 		switch (i) {
 		case 0:
+			start = ccs_builtin_profile;
 			head.write = ccs_write_profile;
 			break;
 		case 1:
+			start = ccs_builtin_exception_policy;
 			head.write = ccs_write_exception;
 			break;
 		case 2:
+			start = ccs_builtin_domain_policy;
 			head.write = ccs_write_domain;
 			break;
 		case 3:
+			start = ccs_builtin_manager;
 			head.write = ccs_write_manager;
 			break;
 		case 4:
+			start = ccs_builtin_stat;
 			head.write = ccs_write_stat;
 			break;
 		}

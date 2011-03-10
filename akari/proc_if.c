@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/05
+ * Version: 1.8.0+   2011/03/10
  */
 
 #include "internal.h"
@@ -316,7 +316,6 @@ static void __init ccs_proc_init(void)
 	ccs_create_entry(".domain_status",   0600, ccs_dir, CCS_DOMAIN_STATUS);
 	ccs_create_entry(".process_status",  0600, ccs_dir,
 			 CCS_PROCESS_STATUS);
-	ccs_create_entry("meminfo",          0600, ccs_dir, CCS_MEMINFO);
 	ccs_create_entry("stat",             0644, ccs_dir, CCS_STAT);
 	ccs_create_entry("profile",          0600, ccs_dir, CCS_PROFILE);
 	ccs_create_entry("manager",          0600, ccs_dir, CCS_MANAGER);

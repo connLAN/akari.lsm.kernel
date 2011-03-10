@@ -2389,7 +2389,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 	head->r.eof = true;
 }
 
-/* String table for /proc/ccs/meminfo interface. */
+/* String table for /proc/ccs/stat interface. */
 static const char * const ccs_policy_headers[CCS_MAX_POLICY_STAT] = {
 	[CCS_STAT_POLICY_UPDATES]    = "update:",
 	[CCS_STAT_POLICY_LEARNING]   = "violation in learning mode:",
@@ -2397,7 +2397,7 @@ static const char * const ccs_policy_headers[CCS_MAX_POLICY_STAT] = {
 	[CCS_STAT_POLICY_ENFORCING]  = "violation in enforcing mode:",
 };
 
-/* String table for /proc/ccs/meminfo interface. */
+/* String table for /proc/ccs/stat interface. */
 static const char * const ccs_memory_headers[CCS_MAX_MEMORY_STAT] = {
 	[CCS_MEMORY_POLICY] = "policy:",
 	[CCS_MEMORY_AUDIT]  = "audit log:",
@@ -2486,57 +2486,6 @@ static int ccs_write_stat(struct ccs_io_buffer *head)
 	return 0;
 }
 
-/* String table for /proc/ccs/meminfo interface. */
-static const char * const ccs_old_memory_header[CCS_MAX_MEMORY_STAT] = {
-	[CCS_MEMORY_POLICY] = "Policy:",
-	[CCS_MEMORY_AUDIT]  = "Audit logs:",
-	[CCS_MEMORY_QUERY]  = "Query lists:",
-};
-
-/**
- * ccs_read_memory_counter - Read memory usage.
- *
- * @head: Pointer to "struct ccs_io_buffer".
- *
- * Returns nothing.
- */
-static void ccs_read_memory_counter(struct ccs_io_buffer *head)
-{
-	unsigned int total = 0;
-	int i;
-	if (head->r.eof)
-		return;
-	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++) {
-		unsigned int used = ccs_memory_used[i];
-		total += used;
-		ccs_io_printf(head, "%-12s %10u", ccs_old_memory_header[i],
-			      used);
-		if (ccs_memory_quota[i])
-			ccs_io_printf(head, "   (Quota: %10u)",
-				      ccs_memory_quota[i]);
-		ccs_io_printf(head, "\n");
-	}
-	ccs_io_printf(head, "%-12s %10u\n", "Total:", total);
-	head->r.eof = true;
-}
-
-/**
- * ccs_write_memory_quota - Set memory quota.
- *
- * @head: Pointer to "struct ccs_io_buffer".
- *
- * Returns 0.
- */
-static int ccs_write_memory_quota(struct ccs_io_buffer *head)
-{
-	char *data = head->write_buf;
-	u8 i;
-	for (i = 0; i < CCS_MAX_MEMORY_STAT; i++)
-		if (ccs_str_starts(&data, ccs_old_memory_header[i]))
-			sscanf(data, "%u", &ccs_memory_quota[i]);
-	return 0;
-}
-
 /**
  * ccs_open_control - open() for /proc/ccs/ interface.
  *
@@ -2588,11 +2537,6 @@ int ccs_open_control(const u8 type, struct file *file)
 		head->write = ccs_write_stat;
 		head->read = ccs_read_stat;
 		head->readbuf_size = 1024;
-		break;
-	case CCS_MEMINFO: /* /proc/ccs/meminfo */
-		head->write = ccs_write_memory_quota;
-		head->read = ccs_read_memory_counter;
-		head->readbuf_size = 512;
 		break;
 	case CCS_PROFILE: /* /proc/ccs/profile */
 		head->write = ccs_write_profile;
@@ -2771,7 +2715,7 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 		case CCS_DOMAINPOLICY:
 		case CCS_EXCEPTIONPOLICY:
 		case CCS_DOMAIN_STATUS:
-		case CCS_MEMINFO:
+		case CCS_STAT:
 		case CCS_PROFILE:
 		case CCS_MANAGER:
 			ccs_update_stat(CCS_STAT_POLICY_UPDATES);

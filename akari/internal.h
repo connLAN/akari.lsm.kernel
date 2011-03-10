@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/05
+ * Version: 1.8.0+   2011/03/10
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -563,7 +563,7 @@ enum ccs_mac_index {
 	CCS_MAX_MAC_INDEX
 };
 
-/* Index numbers for /proc/ccs/meminfo interface. */
+/* Index numbers for /proc/ccs/stat interface. */
 enum ccs_memory_stat_type {
 	CCS_MEMORY_POLICY,
 	CCS_MEMORY_AUDIT,
@@ -690,7 +690,6 @@ enum ccs_proc_interface_index {
 	CCS_EXCEPTIONPOLICY,
 	CCS_DOMAIN_STATUS,
 	CCS_PROCESS_STATUS,
-	CCS_MEMINFO,
 	CCS_STAT,
 	CCS_AUDIT,
 	CCS_VERSION,

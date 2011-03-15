@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/10
+ * Version: 1.8.0+   2011/03/15
  */
 
 #include "internal.h"
@@ -419,6 +419,18 @@ static bool ccs_set_lf(struct ccs_io_buffer *head)
 }
 
 /**
+ * ccs_set_slash - Put a shash to "struct ccs_io_buffer" structure.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
+static void ccs_set_slash(struct ccs_io_buffer *head)
+{
+	ccs_set_string(head, "/");
+}
+
+/**
  * ccs_assign_profile - Create a new profile.
  *
  * @profile: Profile number to create.
@@ -488,7 +500,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/10\n");
+	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/15\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -1362,32 +1374,18 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 }
 
 /**
- * ccs_fns - Find next set bit.
+ * ccs_set_group - Print "acl_group " header keyword and category name.
  *
- * @perm: 8 bits value.
- * @bit:  First bit to find.
- *
- * Returns next set bit on success, 8 otherwise.
- */
-static u8 ccs_fns(const u8 perm, u8 bit)
-{
-	for ( ; bit < 8; bit++)
-		if (perm & (1 << bit))
-			break;
-	return bit;
-}
-
-/**
- * ccs_set_group - Print "acl_group " header keyword.
- *
- * @head: Pointer to "struct ccs_io_buffer".
+ * @head:     Pointer to "struct ccs_io_buffer".
+ * @category: Category name.
  *
  * Returns nothing.
  */
-static void ccs_set_group(struct ccs_io_buffer *head)
+static void ccs_set_group(struct ccs_io_buffer *head, const char *category)
 {
 	if (head->type == CCS_EXCEPTIONPOLICY)
 		ccs_io_printf(head, "acl_group %u ", head->r.acl_group_index);
+	ccs_set_string(head, category);
 }
 
 /**
@@ -1403,39 +1401,40 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 {
 	const u8 acl_type = acl->type;
 	const bool may_trigger_transition = acl->cond && acl->cond->transit;
+	bool first = true;
 	u8 bit;
 	if (head->r.print_cond_part)
 		goto print_cond_part;
 	if (acl->is_deleted)
 		return true;
-next:
-	bit = head->r.bit;
 	if (!ccs_flush(head))
 		return false;
 	else if (acl_type == CCS_TYPE_PATH_ACL) {
 		struct ccs_path_acl *ptr
 			= container_of(acl, typeof(*ptr), head);
 		const u16 perm = ptr->perm;
-		for ( ; bit < CCS_MAX_PATH_OPERATION; bit++) {
+		for (bit = 0; bit < CCS_MAX_PATH_OPERATION; bit++) {
 			if (!(perm & (1 << bit)))
 				continue;
 			if (head->r.print_transition_related_only &&
 			    bit != CCS_TYPE_EXECUTE && !may_trigger_transition)
 				continue;
-			break;
+			if (first) {
+				ccs_set_group(head, "file ");
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_path_keyword[bit]);
 		}
-		if (bit >= CCS_MAX_PATH_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "file ");
-		ccs_set_string(head, ccs_path_keyword[bit]);
+		if (first)
+			return true;
 		ccs_print_name_union(head, &ptr->name);
 	} else if (acl_type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
 		   acl_type == CCS_TYPE_DENIED_EXECUTE_HANDLER) {
 		struct ccs_handler_acl *ptr
 			= container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_set_string(head, "task ");
+		ccs_set_group(head, "task ");
 		ccs_set_string(head, acl_type == CCS_TYPE_AUTO_EXECUTE_HANDLER
 			       ? "auto_execute_handler " :
 			       "denied_execute_handler ");
@@ -1444,8 +1443,7 @@ next:
 		   acl_type == CCS_TYPE_MANUAL_TASK_ACL) {
 		struct ccs_task_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_set_string(head, "task ");
+		ccs_set_group(head, "task ");
 		ccs_set_string(head, acl_type == CCS_TYPE_AUTO_TASK_ACL ?
 			       "auto_domain_transition " :
 			       "manual_domain_transition ");
@@ -1456,12 +1454,21 @@ next:
 	} else if (acl_type == CCS_TYPE_MKDEV_ACL) {
 		struct ccs_mkdev_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		bit = ccs_fns(ptr->perm, bit);
-		if (bit >= CCS_MAX_MKDEV_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "file ");
-		ccs_set_string(head, ccs_mac_keywords[ccs_pnnn2mac[bit]]);
+		const u8 perm = ptr->perm;
+		for (bit = 0; bit < CCS_MAX_MKDEV_OPERATION; bit++) {
+			if (!(perm & (1 << bit)))
+				continue;
+			if (first) {
+				ccs_set_group(head, "file ");
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_mac_keywords
+				       [ccs_pnnn2mac[bit]]);
+		}
+		if (first)
+			return true;
 		ccs_print_name_union(head, &ptr->name);
 		ccs_print_number_union(head, &ptr->mode);
 		ccs_print_number_union(head, &ptr->major);
@@ -1469,49 +1476,74 @@ next:
 	} else if (acl_type == CCS_TYPE_PATH2_ACL) {
 		struct ccs_path2_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		bit = ccs_fns(ptr->perm, bit);
-		if (bit >= CCS_MAX_PATH2_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "file ");
-		ccs_set_string(head, ccs_mac_keywords[ccs_pp2mac[bit]]);
+		const u8 perm = ptr->perm;
+		for (bit = 0; bit < CCS_MAX_PATH2_OPERATION; bit++) {
+			if (!(perm & (1 << bit)))
+				continue;
+			if (first) {
+				ccs_set_group(head, "file ");
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_mac_keywords
+				       [ccs_pp2mac[bit]]);
+		}
+		if (first)
+			return true;
 		ccs_print_name_union(head, &ptr->name1);
 		ccs_print_name_union(head, &ptr->name2);
 	} else if (acl_type == CCS_TYPE_PATH_NUMBER_ACL) {
 		struct ccs_path_number_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		bit = ccs_fns(ptr->perm, bit);
-		if (bit >= CCS_MAX_PATH_NUMBER_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "file ");
-		ccs_set_string(head, ccs_mac_keywords[ccs_pn2mac[bit]]);
+		const u8 perm = ptr->perm;
+		for (bit = 0; bit < CCS_MAX_PATH_NUMBER_OPERATION; bit++) {
+			if (!(perm & (1 << bit)))
+				continue;
+			if (first) {
+				ccs_set_group(head, "file ");
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_mac_keywords
+				       [ccs_pn2mac[bit]]);
+		}
+		if (first)
+			return true;
 		ccs_print_name_union(head, &ptr->name);
 		ccs_print_number_union(head, &ptr->number);
 	} else if (acl_type == CCS_TYPE_ENV_ACL) {
 		struct ccs_env_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_set_string(head, "misc env ");
+		ccs_set_group(head, "misc env ");
 		ccs_set_string(head, ptr->env->name);
 	} else if (acl_type == CCS_TYPE_CAPABILITY_ACL) {
 		struct ccs_capability_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_set_string(head, "capability ");
-		ccs_set_string(head,
-			       ccs_mac_keywords[ccs_c2mac[ptr->operation]]);
+		ccs_set_group(head, "capability ");
+		ccs_set_string(head, ccs_mac_keywords
+			       [ccs_c2mac[ptr->operation]]);
 	} else if (acl_type == CCS_TYPE_INET_ACL) {
 		struct ccs_inet_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		bit = ccs_fns(ptr->perm, bit);
-		if (bit >= CCS_MAX_NETWORK_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "network inet ");
-		ccs_set_string(head, ccs_proto_keyword[ptr->protocol]);
-		ccs_set_space(head);
-		ccs_set_string(head, ccs_socket_keyword[bit]);
+		const u8 perm = ptr->perm;
+		for (bit = 0; bit < CCS_MAX_NETWORK_OPERATION; bit++) {
+			if (!(perm & (1 << bit)))
+				continue;
+			if (first) {
+				ccs_set_group(head, "network inet ");
+				ccs_set_string(head, ccs_proto_keyword
+					       [ptr->protocol]);
+				ccs_set_space(head);
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_socket_keyword[bit]);
+		}
+		if (first)
+			return true;
 		ccs_set_space(head);
 		switch (ptr->address_type) {
 			char buf[128];
@@ -1535,33 +1567,39 @@ next:
 	} else if (acl_type == CCS_TYPE_UNIX_ACL) {
 		struct ccs_unix_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		bit = ccs_fns(ptr->perm, bit);
-		if (bit >= CCS_MAX_NETWORK_OPERATION)
-			goto done;
-		ccs_set_group(head);
-		ccs_set_string(head, "network unix ");
-		ccs_set_string(head, ccs_proto_keyword[ptr->protocol]);
-		ccs_set_space(head);
-		ccs_set_string(head, ccs_socket_keyword[bit]);
+		const u8 perm = ptr->perm;
+		for (bit = 0; bit < CCS_MAX_NETWORK_OPERATION; bit++) {
+			if (!(perm & (1 << bit)))
+				continue;
+			if (first) {
+				ccs_set_group(head, "network unix ");
+				ccs_set_string(head, ccs_proto_keyword
+					       [ptr->protocol]);
+				ccs_set_space(head);
+				first = false;
+			} else {
+				ccs_set_slash(head);
+			}
+			ccs_set_string(head, ccs_socket_keyword[bit]);
+		}
+		if (first)
+			return true;
 		ccs_print_name_union(head, &ptr->name);
 	} else if (acl_type == CCS_TYPE_SIGNAL_ACL) {
 		struct ccs_signal_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_set_string(head, "ipc signal ");
+		ccs_set_group(head, "ipc signal ");
 		ccs_io_printf(head, "%u ", ptr->sig);
 		ccs_set_string(head, ptr->domainname->name);
 	} else if (acl_type == CCS_TYPE_MOUNT_ACL) {
 		struct ccs_mount_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
-		ccs_set_group(head);
-		ccs_io_printf(head, "file mount");
+		ccs_set_group(head, "file mount");
 		ccs_print_name_union(head, &ptr->dev_name);
 		ccs_print_name_union(head, &ptr->dir_name);
 		ccs_print_name_union(head, &ptr->fs_type);
 		ccs_print_number_union(head, &ptr->flags);
 	}
-	head->r.bit = bit + 1;
 	if (acl->cond) {
 		head->r.print_cond_part = true;
 		head->r.cond_step = 0;
@@ -1574,17 +1612,6 @@ print_cond_part:
 	} else {
 		ccs_set_lf(head);
 	}
-	switch (acl_type) {
-	case CCS_TYPE_PATH_ACL:
-	case CCS_TYPE_MKDEV_ACL:
-	case CCS_TYPE_PATH2_ACL:
-	case CCS_TYPE_PATH_NUMBER_ACL:
-	case CCS_TYPE_INET_ACL:
-	case CCS_TYPE_UNIX_ACL:
-		goto next;
-	}
-done:
-	head->r.bit = 0;
 	return true;
 }
 

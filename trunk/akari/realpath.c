@@ -283,7 +283,6 @@ out:
  *
  * Returns the buffer on success, an error code otherwise.
  *
- * Caller holds the dcache_lock.
  * Based on dentry_path() in fs/dcache.c
  *
  * If dentry is a directory, trailing '/' is appended.
@@ -308,24 +307,26 @@ static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 #else
 	char *pos = buffer + buflen - 1;
 	if (buflen < 256)
-		goto out;
+		return ERR_PTR(-ENOMEM);
 	*pos = '\0';
 	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
 		*--pos = '/';
+	spin_lock(&dcache_lock);
 	while (!IS_ROOT(dentry)) {
 		struct dentry *parent = dentry->d_parent;
 		const char *name = dentry->d_name.name;
 		const int len = dentry->d_name.len;
 		pos -= len;
-		if (pos <= buffer)
-			goto out;
+		if (pos <= buffer) {
+			pos = ERR_PTR(-ENOMEM);
+			break;
+		}
 		memmove(pos, name, len);
 		*--pos = '/';
 		dentry = parent;
 	}
+	spin_unlock(&dcache_lock);
 	return pos;
-out:
-	return ERR_PTR(-ENOMEM);
 #endif
 }
 
@@ -341,15 +342,8 @@ out:
 static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 				const int buflen)
 {
-	char *pos;
 	struct super_block *sb = dentry->d_sb;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
-	spin_lock(&dcache_lock);
-#endif
-	pos = ccs_get_dentry_path(dentry, buffer, buflen);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
-	spin_unlock(&dcache_lock);
-#endif
+	char *pos = ccs_get_dentry_path(dentry, buffer, buflen);
 	if (IS_ERR(pos))
 		return pos;
 	/* Convert from $PID to self if $PID is current thread. */

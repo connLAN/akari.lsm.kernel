@@ -1102,7 +1102,7 @@ static void uuid_inode_free_security(struct inode *inode)
 
 #ifdef CONFIG_SECURITY_NETWORK
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
 
 static int uuid_unix_stream_connect(struct sock *sock, struct sock *other,
 				    struct sock *newsk)

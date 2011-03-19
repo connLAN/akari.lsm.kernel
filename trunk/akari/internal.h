@@ -16,7 +16,9 @@
 #include <linux/mm.h>
 #include <linux/utime.h>
 #include <linux/file.h>
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 38)
 #include <linux/smp_lock.h>
+#endif
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/slab.h>

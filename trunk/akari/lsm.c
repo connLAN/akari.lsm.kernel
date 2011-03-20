@@ -5,6 +5,7 @@
  *
  * Version: 1.0.10   2011/02/15
  */
+
 #include "internal.h"
 #include <linux/security.h>
 #include <linux/namei.h>
@@ -423,7 +424,7 @@ static void ccs_bprm_free_security(struct linux_binprm *bprm)
 	 * If do_execve() succeeded,
 	 * ccs_clear_execve(0, ccs_current_security());
 	 * is called before calling below one.
-	 * Thus, below call becomes no-op if do_execve() succeeded. 
+	 * Thus, below call becomes no-op if do_execve() succeeded.
 	 */
 	ccs_clear_execve(-1, ccs_current_security());
 }
@@ -1888,7 +1889,7 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
  * ccs_prepend - Copy of prepend() in fs/dcache.c.
  *
  * @buffer: Pointer to "struct char *".
- * @buflen: Pointer to int which holds size of @buffer. 
+ * @buflen: Pointer to int which holds size of @buffer.
  * @str:    String to copy.
  *
  * Returns 0 on success, negative value otherwise.
@@ -2293,7 +2294,7 @@ static spinlock_t ccs_vfsmount_lock;
 /**
  * lsm_umnt_tr - Dummy function which prototype is identical to umount_tree() in fs/namespace.c.
  *
- * @mnt: Pointer to "struct vfsmount *".
+ * @mnt: Pointer to "struct vfsmount".
  *
  * Returns nothing.
  */
@@ -2305,7 +2306,7 @@ static void lsm_umnt_tr(struct vfsmount *mnt)
 /**
  * lsm__put_nmspce - Dummy function which does identical to __put_namespace() in fs/namespace.c.
  *
- * @mnt: Pointer to "struct vfsmount *".
+ * @namespace: Pointer to "struct namespace".
  *
  * Returns nothing.
  *

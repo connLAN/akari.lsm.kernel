@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/load_policy.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include <linux/version.h>
@@ -97,7 +97,8 @@ static _Bool ccs_policy_loader_exists(void)
 	struct path path;
 	if (!ccs_loader)
 		ccs_loader = CONFIG_CCSECURITY_DEFAULT_LOADER;
-	if (kern_path(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE, &path) == 0) {
+	if (kern_path(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE,
+		      &path) == 0) {
 		path_put(&path);
 		return 1;
 	}

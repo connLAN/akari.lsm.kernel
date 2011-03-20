@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/15
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -294,7 +294,7 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
  * @pos:    The type * to use as a loop cursor.
  * @head:   The head for your list.
  * @member: The name of the list_struct within the struct.
- * @ss:     Pointer to "struct srcu_struct".  
+ * @ss:     Pointer to "struct srcu_struct".
  *
  * As of 2.6.36, this macro is not provided because only TOMOYO wants it.
  */
@@ -1544,7 +1544,8 @@ void __init ccs_load_builtin_policy(void);
 extern bool ccs_policy_loaded;
 extern const char * const ccs_condition_keyword[CCS_MAX_CONDITION_KEYWORD];
 extern const char * const ccs_dif[CCS_MAX_DOMAIN_INFO_FLAGS];
-extern const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX + CCS_MAX_MAC_CATEGORY_INDEX];
+extern const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
+					   + CCS_MAX_MAC_CATEGORY_INDEX];
 extern const char * const ccs_mode[CCS_CONFIG_MAX_MODE];
 extern const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION];
 extern const char * const ccs_proto_keyword[CCS_SOCK_MAX];

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/15
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include "internal.h"
@@ -500,7 +500,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.0+   2011/03/15\n");
+	printk(KERN_INFO "CCSecurity: 1.8.1-rc   2011/03/20\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -710,7 +710,7 @@ next:
 	profile = ccs_profile_ptr[index];
 	switch (head->r.step) {
 	case 0:
-		ccs_io_printf(head, "PROFILE_VERSION=%s\n", "20100903");
+		ccs_io_printf(head, "PROFILE_VERSION=%u\n", 20100903);
 		head->r.step++;
 		break;
 	case 1:
@@ -2412,7 +2412,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	ccs_set_string(head, "1.8.0");
+	ccs_set_string(head, "1.8.1-rc");
 	head->r.eof = true;
 }
 

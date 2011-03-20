@@ -1,9 +1,9 @@
 /*
  * include/linux/ccsecurity.h
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0   2010/11/11
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #ifndef _LINUX_CCSECURITY_H
@@ -132,7 +132,8 @@ struct ccsecurity_operations {
 				 uid_t user, gid_t group);
 	int (*chmod_permission) (struct dentry *dentry, struct vfsmount *mnt,
 				 mode_t mode);
-	int (*getattr_permission) (struct vfsmount *mnt, struct dentry *dentry);
+	int (*getattr_permission) (struct vfsmount *mnt,
+				   struct dentry *dentry);
 	int (*sigqueue_permission) (pid_t pid, int sig);
 	int (*tgsigqueue_permission) (pid_t tgid, pid_t pid, int sig);
 	int (*search_binary_handler) (struct linux_binprm *bprm,

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/06
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include "internal.h"
@@ -207,7 +207,7 @@ static bool ccs_add_to_gc(const enum ccs_policy_id type,
 						  list)->type];
 	else if (type == CCS_ID_NAME)
 		entry->size =
- 			container_of(element, typeof(struct ccs_name),
+			container_of(element, typeof(struct ccs_name),
 				     head.list)->size;
 	else if (type == CCS_ID_CONDITION)
 		entry->size =

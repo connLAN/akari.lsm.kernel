@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/01/21
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include "internal.h"

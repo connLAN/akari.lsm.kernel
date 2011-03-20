@@ -1,9 +1,9 @@
 /*
  * security/ccsecurity/network.c
  *
- * Copyright (C) 2005-2010  NTT DATA CORPORATION
+ * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2010/12/31
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include "internal.h"
@@ -255,7 +255,7 @@ static bool ccs_same_unix_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -278,7 +278,7 @@ static bool ccs_merge_inet_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -938,7 +938,7 @@ static inline struct ipv6hdr *ipv6_hdr(const struct sk_buff *skb)
  *
  * @sk:    Pointer to "struct sock".
  * @skb:   Pointer to "struct sk_buff".
- * @flags: Flags passed to skb_recv_datagram(). 
+ * @flags: Flags passed to skb_recv_datagram().
  *
  * Returns nothing.
  */
@@ -967,7 +967,7 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
  *
  * @sk:    Pointer to "struct sock".
  * @skb:   Pointer to "struct sk_buff".
- * @flags: Flags passed to skb_recv_datagram(). 
+ * @flags: Flags passed to skb_recv_datagram().
  *
  * Returns nothing.
  */
@@ -996,7 +996,7 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
  *
  * @sk:    Pointer to "struct sock".
  * @skb:   Pointer to "struct sk_buff".
- * @flags: Flags passed to skb_recv_datagram(). 
+ * @flags: Flags passed to skb_recv_datagram().
  *
  * Returns nothing.
  */
@@ -1025,7 +1025,7 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
  *
  * @sk:    Pointer to "struct sock".
  * @skb:   Pointer to "struct sk_buff".
- * @flags: Flags passed to skb_recv_datagram(). 
+ * @flags: Flags passed to skb_recv_datagram().
  *
  * Returns 0 on success, negative value otherwise.
  */

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.0+   2011/03/05
+ * Version: 1.8.1-rc   2011/03/20
  */
 
 #include "internal.h"
@@ -358,7 +358,7 @@ static bool ccs_same_path_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -427,7 +427,7 @@ static bool ccs_same_mkdev_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -500,7 +500,7 @@ static bool ccs_same_path2_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -970,7 +970,7 @@ static bool ccs_same_path_number_acl(const struct ccs_acl_info *a,
  *
  * @a:         Pointer to "struct ccs_acl_info".
  * @b:         Pointer to "struct ccs_acl_info".
- * @is_delete: True for @a &= ~@b, false for @a |= @b. 
+ * @is_delete: True for @a &= ~@b, false for @a |= @b.
  *
  * Returns true if @a is empty, false otherwise.
  */
@@ -1135,7 +1135,7 @@ static int __ccs_chown_permission(struct dentry *dentry,
  * @file: Pointer to "struct file".
  * @cmd:  Command number.
  * @arg:  Value for @cmd.
- * 
+ *
  * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,

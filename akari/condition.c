@@ -266,7 +266,8 @@ static bool ccs_parse_name_union_quoted(char *filename,
 			return false;
 		*cp = '\0';
 		filename++;
-	}
+	} else if (*filename != '@')
+		return false;
 	/*
 	 * If invalid character (e.g. ' ') was within the quoted word,
 	 * ccs_parse_name_union() will return false.
@@ -548,7 +549,8 @@ rerun:
 				if (entry->transit)
 					goto out;
 				entry->transit = ccs_get_dqword(word);
-				if (!entry->transit)
+				if (!entry->transit ||
+				    entry->transit->name[0] != '/')
 					goto out;
 			}
 			continue;

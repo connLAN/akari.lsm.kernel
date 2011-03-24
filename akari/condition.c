@@ -248,37 +248,6 @@ static bool ccs_scan_exec_realpath(struct file *file,
 }
 
 /**
- * ccs_parse_name_union_quoted - Parse a quoted word.
- *
- * @filename: A line containing a quoted word.
- * @ptr:      Pointer to "struct ccs_name_union".
- *
- * Returns true on success, false otherwise.
- */
-static bool ccs_parse_name_union_quoted(char *filename,
-					struct ccs_name_union *ptr)
-{
-	bool result;
-	char *cp = NULL;
-	if (*filename == '"') {
-		cp = filename + strlen(filename) - 1;
-		if (*cp != '"')
-			return false;
-		*cp = '\0';
-		filename++;
-	} else if (*filename != '@')
-		return false;
-	/*
-	 * If invalid character (e.g. ' ') was within the quoted word,
-	 * ccs_parse_name_union() will return false.
-	 */
-	result = ccs_parse_name_union(filename, ptr);
-	if (cp)
-		*cp = '"';
-	return result;
-}
-
-/**
  * ccs_get_dqword - ccs_get_name() for a quoted string.
  *
  * @start: String to save.
@@ -303,6 +272,24 @@ static const struct ccs_path_info *ccs_get_dqword(char *start)
 	if (*start && !ccs_correct_word(start))
 		return NULL;
 	return ccs_get_name(start);
+}
+
+/**
+ * ccs_parse_name_union_quoted - Parse a quoted word.
+ *
+ * @filename: A line containing a quoted word.
+ * @ptr:      Pointer to "struct ccs_name_union".
+ *
+ * Returns true on success, false otherwise.
+ */
+static bool ccs_parse_name_union_quoted(char *filename,
+					struct ccs_name_union *ptr)
+{
+	if (*filename == '@')
+		return ccs_parse_name_union(filename, ptr);
+	ptr->is_group = false;
+	ptr->filename = ccs_get_dqword(filename);
+	return ptr->filename != NULL;
 }
 
 /**

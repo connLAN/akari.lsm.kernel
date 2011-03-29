@@ -1119,7 +1119,7 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 	else if (ccs_str_starts(&data, "select "))
 		is_select = true;
 	if (is_select && ccs_select_one(head, data))
-		return 0;
+		return -EAGAIN;
 	/* Don't allow updating policies by non manager programs. */
 	if (!ccs_manager())
 		return -EPERM;
@@ -1870,6 +1870,14 @@ static int ccs_write_exception(struct ccs_io_buffer *head)
 		{ "aggregator ",    ccs_write_aggregator },
 		{ "deny_autobind ", ccs_write_reserved_port },
 	};
+	if (!is_delete && ccs_str_starts(&data, "select ") &&
+	    !strcmp(data, "transition_only")) {
+		head->r.print_transition_related_only = true;
+		return -EAGAIN;
+	}
+	/* Don't allow updating policies by non manager programs. */
+	if (!ccs_manager())
+		return -EPERM;
 	for (i = 0; i < 2; i++)
 		if (ccs_str_starts(&data, ccs_callback[i].keyword))
 			return ccs_callback[i].write(data, is_delete);
@@ -2703,7 +2711,7 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 	idx = ccs_read_lock();
 	/* Don't allow updating policies by non manager programs. */
 	if (head->write != ccs_write_pid && head->write != ccs_write_domain &&
-	    !ccs_manager()) {
+	    head->write != ccs_write_exception && !ccs_manager()) {
 		ccs_read_unlock(idx);
 		mutex_unlock(&head->io_sem);
 		return -EPERM;
@@ -2736,8 +2744,15 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 		cp0[head->w.avail - 1] = '\0';
 		head->w.avail = 0;
 		ccs_normalize_line(cp0);
-		if (head->write(head))
-			continue;
+		{
+			const int ret = head->write(head);
+			if (ret == -EPERM) {
+				error = -EPERM;
+				break;
+			}
+			if (ret)
+				continue;
+		}
 		switch (head->type) {
 		case CCS_DOMAINPOLICY:
 		case CCS_EXCEPTIONPOLICY:

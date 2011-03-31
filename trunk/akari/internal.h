@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1-rc   2011/03/20
+ * Version: 1.8.1   2011/04/01
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H

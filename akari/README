@@ -93,3 +93,19 @@ Version 1.0.10   2011/02/15   Minor update release.
    Fix missing permission check for interpreters in 2.6.23 and earlier kernels.
 
    Fix wrong execute permission check and domain transition in 2.6.28 and earlier kernels.
+
+Version 1.0.11   2010/04/01   Minor update release.
+
+   Synchronize with TOMOYO 1.8.1 release.
+
+   Run garbage collector without waiting for /proc/ccs/ users.
+
+   Support built-in policy configuration.
+
+   Remove /proc/ccs/meminfo interface.
+
+   Pack policy when printing via /proc/ccs/ interface.
+
+   Fix conditional policy parsing.
+
+   Serialize updating profile's comment line.

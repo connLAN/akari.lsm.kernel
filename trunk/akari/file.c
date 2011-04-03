@@ -1144,11 +1144,14 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 	if (!(cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND)))
 		return 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	/* 01 means "write". */
-	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt, 01);
+	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
+				     O_WRONLY | (arg & O_APPEND));
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
+	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
+				     O_WRONLY | (arg & O_APPEND));
 #else
-	/* 02 means "write". */
-	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt, 02);
+	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
+				     (O_WRONLY + 1) | (arg & O_APPEND));
 #endif
 }
 
@@ -1419,8 +1422,7 @@ static int __ccs_open_exec_permission(struct dentry *dentry,
 				      struct vfsmount *mnt)
 {
 	return (ccs_current_flags() & CCS_TASK_IS_IN_EXECVE) ?
-		/* 01 means "read". */
-		__ccs_open_permission(dentry, mnt, 01) : 0;
+		__ccs_open_permission(dentry, mnt, O_RDONLY + 1) : 0;
 }
 
 /**
@@ -1433,8 +1435,7 @@ static int __ccs_open_exec_permission(struct dentry *dentry,
  */
 static int __ccs_uselib_permission(struct dentry *dentry, struct vfsmount *mnt)
 {
-	/* 01 means "read". */
-	return __ccs_open_permission(dentry, mnt, 01);
+	return __ccs_open_permission(dentry, mnt, O_RDONLY + 1);
 }
 
 #endif

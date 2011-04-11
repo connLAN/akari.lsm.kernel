@@ -109,3 +109,9 @@ Version 1.0.11   2010/04/01   Minor update release.
    Fix conditional policy parsing.
 
    Serialize updating profile's comment line.
+
+Version 1.0.12   2011/04/11   Minor update release.
+
+   Synchronize with TOMOYO revision 4874.
+
+   Fix fcntl(F_SETFL, O_APPEND) handling.

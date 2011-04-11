@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.1+   2011/04/11
  */
 
 #include "internal.h"
@@ -500,7 +500,7 @@ static void ccs_check_profile(void)
 		panic("Profile version %u is not supported.\n",
 		      ccs_profile_version);
 	}
-	printk(KERN_INFO "CCSecurity: 1.8.1   2011/04/01\n");
+	printk(KERN_INFO "CCSecurity: 1.8.1+   2011/04/11\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 

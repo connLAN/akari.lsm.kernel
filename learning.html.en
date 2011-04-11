@@ -21,7 +21,7 @@
 
 <p>Decide what application to analyze/protect.</p>
 
-<p>The procedure below takes the use of Apache in a CentOS 5.5 as an example.</p>
+<p>The procedure below takes the use of Apache in a CentOS 5.6 as an example.</p>
 
 <p>Start the target application:</p>
 
@@ -39,7 +39,7 @@
 </td></tr>
 </table>
 
-<p>In CentOS 5.5, the location of Apache is "/usr/sbin/httpd".<br>
+<p>In CentOS 5.6, the location of Apache is "/usr/sbin/httpd".<br>
 Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
 
 <p><img src="editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="720" height="400"></p>

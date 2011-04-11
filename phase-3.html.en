@@ -19,7 +19,7 @@
 
 <p>Each domain will behave differently and require a unique set of permissions. Their behaviour must therefore be analyzed to determine which actions you wish to permit in domain policy. AKARI can be used to restrict only a subset of the domains in a system, but the most secure system would restrict every domain in order to make sure there are no points of vulnerability.</p>
 
-<p>First, choose an application that you wish to analyze/protect. The procedure below takes the use of Apache in a CentOS 5.5 as an example.</p>
+<p>First, choose an application that you wish to analyze/protect. The procedure below takes the use of Apache in a CentOS 5.6 as an example.</p>
 
 <p>Start the target application:</p>
 
@@ -31,7 +31,7 @@
 
 <p>Run the policy editor again <b>without</b> the "/etc/ccs/" option so that the policy loaded by the kernel can be edited directly. If you are already running the policy editor, switch to the "Domain Transition" screen.</p>
 
-<p>In CentOS 5.5, the location of Apache is "/usr/sbin/httpd".</p>
+<p>In CentOS 5.6, the location of Apache is "/usr/sbin/httpd".</p>
 
 <p>Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
 

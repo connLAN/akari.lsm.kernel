@@ -21,7 +21,7 @@
 
 <p>どのアプリケーションを解析／保護の対象とするかを決めてください。</p>
 
-<p>以下の手順は CentOS 5.5 環境で Apache を保護する場合で説明します。</p>
+<p>以下の手順は CentOS 5.6 環境で Apache を保護する場合で説明します。</p>
 
 <p>対象となるアプリケーションを開始させます。</p>
 
@@ -39,7 +39,7 @@
 </td></tr>
 </table>
 
-<p>CentOS 5.5 では、 Apache プログラムパス名は /usr/sbin/httpd です。<br>
+<p>CentOS 5.6 では、 Apache プログラムパス名は /usr/sbin/httpd です。<br>
 矢印キーや Home/End/PageUp/PageDown キーを使ってカーソルをスクロールして、 /usr/sbin/httpd の行を見つけてください。この絵では 386 行目です。</p>
 
 <p><img src="editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="720" height="400"></p>

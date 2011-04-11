@@ -73,10 +73,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.11-20110401.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.11-20110401.tar.gz'<br>
-# wget -O akari-1.0.11-20110401.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.11-20110401.tar.gz.asc'<br>
-# gpg akari-1.0.11-20110401.tar.gz.asc<br>
-# tar -zxf akari-1.0.11-20110401.tar.gz<br>
+# wget -O akari-1.0.12-20110411.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.12-20110411.tar.gz'<br>
+# wget -O akari-1.0.12-20110411.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.12-20110411.tar.gz.asc'<br>
+# gpg akari-1.0.12-20110411.tar.gz.asc<br>
+# tar -zxf akari-1.0.12-20110411.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
 # make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}
@@ -150,16 +150,16 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.32.1.el5)<br>
+title CentOS (2.6.18-238.5.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-238.5.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-238.5.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.32.1.el5)<br>
+title CentOS (2.6.18-238.5.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-238.5.1.el5 ro root=LABEL=/ init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-238.5.1.el5.img
 </td></tr>
 </table>
 
@@ -167,16 +167,16 @@ title CentOS (2.6.18-194.32.1.el5)<br>
 
 <table border="1">
 <tr><td>変更前</td><td>
-title CentOS (2.6.18-194.32.1.el5)<br>
+title CentOS (2.6.18-238.5.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-238.5.1.el5 ro root=LABEL=/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-238.5.1.el5.img
 </td></tr>
 <tr><td>変更後</td><td>
-title CentOS (2.6.18-194.32.1.el5)<br>
+title CentOS (2.6.18-238.5.1.el5)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;root (hd0,0)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-194.32.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-194.32.1.el5.img
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;kernel /boot/vmlinuz-2.6.18-238.5.1.el5 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;initrd /boot/initrd-2.6.18-238.5.1.el5.img
 </td></tr>
 </table>
 
@@ -197,10 +197,10 @@ title CentOS (2.6.18-194.32.1.el5)<br>
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.11   2011/04/01
+AKARI: 1.0.12   2011/04/11
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.1   2011/04/01
+CCSecurity: 1.8.1+   2011/04/11
 Mandatory Access Control activated.
 </pre>
 

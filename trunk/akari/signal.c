@@ -169,6 +169,8 @@ static bool ccs_same_signal_acl(const struct ccs_acl_info *a,
  * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static int ccs_write_signal(struct ccs_acl_param *param)
 {

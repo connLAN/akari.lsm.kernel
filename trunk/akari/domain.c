@@ -23,7 +23,7 @@ struct ccs_domain_info ccs_kernel_domain;
 /* The list for "struct ccs_domain_info". */
 LIST_HEAD(ccs_domain_list);
 
-/* List of domain policy. */
+/* List of policy. */
 struct list_head ccs_policy_list[CCS_MAX_POLICY];
 /* List of "struct ccs_group". */
 struct list_head ccs_group_list[CCS_MAX_GROUP];
@@ -105,14 +105,14 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 					       struct ccs_acl_info *,
 					       const bool))
 {
-	int error = param->is_delete ? -ENOENT : -ENOMEM;
+	struct ccs_domain_info * const domain = param->domain;
+	const bool is_delete = param->is_delete;
+	int error = is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_info *entry;
 	const u8 type = new_entry->type;
 	const u8 i = type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
 		type == CCS_TYPE_DENIED_EXECUTE_HANDLER ||
 		type == CCS_TYPE_AUTO_TASK_ACL;
-	const bool is_delete = param->is_delete;
-	struct ccs_domain_info * const domain = param->domain;
 	if (param->data[0]) {
 		new_entry->cond = ccs_get_condition(param->data);
 		if (!new_entry->cond)

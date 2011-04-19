@@ -94,6 +94,8 @@ static int ccs_update_reserved_entry(const u16 min_port, const u16 max_port,
  * @is_delete: True if it is a delete request.
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 int ccs_write_reserved_port(char *data, const bool is_delete)
 {

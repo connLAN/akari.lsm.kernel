@@ -820,7 +820,6 @@ out:
  * ccs_mkdev_perm - Check permission for "mkblock" and "mkchar".
  *
  * @operation: Type of operation. (CCS_TYPE_MKCHAR or CCS_TYPE_MKBLOCK)
- * @dir:       Pointer to "struct inode".
  * @dentry:    Pointer to "struct dentry".
  * @mnt:       Pointer to "struct vfsmount". Maybe NULL.
  * @mode:      Create mode.
@@ -828,9 +827,9 @@ out:
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_mkdev_perm(const u8 operation, struct inode *dir,
-			  struct dentry *dentry, struct vfsmount *mnt,
-			  const unsigned int mode, unsigned int dev)
+static int ccs_mkdev_perm(const u8 operation, struct dentry *dentry,
+			  struct vfsmount *mnt, const unsigned int mode,
+			  unsigned int dev)
 {
 	struct ccs_request_info r;
 	struct ccs_obj_info obj = {
@@ -878,18 +877,15 @@ out:
  * ccs_path2_perm - Check permission for "rename", "link" and "pivot_root".
  *
  * @operation: Type of operation.
- * @dir1:      Pointer to "struct inode". Maybe NULL.
  * @dentry1:   Pointer to "struct dentry".
  * @mnt1:      Pointer to "struct vfsmount". Maybe NULL.
- * @dir2:      Pointer to "struct inode". Maybe NULL.
  * @dentry2:   Pointer to "struct dentry".
  * @mnt2:      Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path2_perm(const u8 operation, struct inode *dir1,
-			  struct dentry *dentry1, struct vfsmount *mnt1,
-			  struct inode *dir2, struct dentry *dentry2,
+static int ccs_path2_perm(const u8 operation, struct dentry *dentry1,
+			  struct vfsmount *mnt1, struct dentry *dentry2,
 			  struct vfsmount *mnt2)
 {
 	struct ccs_request_info r;
@@ -1021,16 +1017,14 @@ static int ccs_update_path_number_acl(const u8 perm,
  * ccs_path_number_perm - Check permission for "create", "mkdir", "mkfifo", "mksock", "ioctl", "chmod", "chown", "chgrp".
  *
  * @type:   Type of operation.
- * @dir:    Pointer to "struct inode". Maybe NULL.
  * @dentry: Pointer to "struct dentry".
  * @vfsmnt: Pointer to "struct vfsmount". Maybe NULL.
  * @number: Number.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_number_perm(const u8 type, struct inode *dir,
-				struct dentry *dentry, struct vfsmount *vfsmnt,
-				unsigned long number)
+static int ccs_path_number_perm(const u8 type, struct dentry *dentry,
+				struct vfsmount *vfsmnt, unsigned long number)
 {
 	struct ccs_request_info r;
 	struct ccs_obj_info obj = {
@@ -1079,7 +1073,7 @@ out:
 static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 				  unsigned long arg)
 {
-	return ccs_path_number_perm(CCS_TYPE_IOCTL, NULL, filp->f_dentry,
+	return ccs_path_number_perm(CCS_TYPE_IOCTL, filp->f_dentry,
 				    filp->f_vfsmnt, cmd);
 }
 
@@ -1097,7 +1091,7 @@ static int __ccs_chmod_permission(struct dentry *dentry,
 {
 	if (mode == (mode_t) -1)
 		return 0;
-	return ccs_path_number_perm(CCS_TYPE_CHMOD, NULL, dentry, vfsmnt,
+	return ccs_path_number_perm(CCS_TYPE_CHMOD, dentry, vfsmnt,
 				    mode & S_IALLUGO);
 }
 
@@ -1119,11 +1113,11 @@ static int __ccs_chown_permission(struct dentry *dentry,
 	if (user == (uid_t) -1 && group == (gid_t) -1)
 		return 0;
 	if (user != (uid_t) -1)
-		error = ccs_path_number_perm(CCS_TYPE_CHOWN, NULL, dentry,
-					     vfsmnt, user);
+		error = ccs_path_number_perm(CCS_TYPE_CHOWN, dentry, vfsmnt,
+					     user);
 	if (!error && group != (gid_t) -1)
-		error = ccs_path_number_perm(CCS_TYPE_CHGRP, NULL, dentry,
-					     vfsmnt, group);
+		error = ccs_path_number_perm(CCS_TYPE_CHGRP, dentry, vfsmnt,
+					     group);
 	return error;
 }
 
@@ -1164,9 +1158,8 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 static int __ccs_pivot_root_permission(struct path *old_path,
 				       struct path *new_path)
 {
-	return ccs_path2_perm(CCS_TYPE_PIVOT_ROOT, NULL, new_path->dentry,
-			      new_path->mnt, NULL, old_path->dentry,
-			      old_path->mnt);
+	return ccs_path2_perm(CCS_TYPE_PIVOT_ROOT, new_path->dentry,
+			      new_path->mnt, old_path->dentry, old_path->mnt);
 }
 
 /**
@@ -1253,24 +1246,24 @@ static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
 	const unsigned int perm = mode & S_IALLUGO;
 	switch (mode & S_IFMT) {
 	case S_IFCHR:
-		error = ccs_mkdev_perm(CCS_TYPE_MKCHAR, dir, dentry, mnt, perm,
+		error = ccs_mkdev_perm(CCS_TYPE_MKCHAR, dentry, mnt, perm,
 				       dev);
 		break;
 	case S_IFBLK:
-		error = ccs_mkdev_perm(CCS_TYPE_MKBLOCK, dir, dentry, mnt,
-				       perm, dev);
+		error = ccs_mkdev_perm(CCS_TYPE_MKBLOCK, dentry, mnt, perm,
+				       dev);
 		break;
 	case S_IFIFO:
-		error = ccs_path_number_perm(CCS_TYPE_MKFIFO, dir, dentry, mnt,
+		error = ccs_path_number_perm(CCS_TYPE_MKFIFO, dentry, mnt,
 					     perm);
 		break;
 	case S_IFSOCK:
-		error = ccs_path_number_perm(CCS_TYPE_MKSOCK, dir, dentry, mnt,
+		error = ccs_path_number_perm(CCS_TYPE_MKSOCK, dentry, mnt,
 					     perm);
 		break;
 	case 0:
 	case S_IFREG:
-		error = ccs_path_number_perm(CCS_TYPE_CREATE, dir, dentry, mnt,
+		error = ccs_path_number_perm(CCS_TYPE_CREATE, dentry, mnt,
 					     perm);
 		break;
 	}
@@ -1290,7 +1283,7 @@ static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
 static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
 				  struct vfsmount *mnt, unsigned int mode)
 {
-	return ccs_path_number_perm(CCS_TYPE_MKDIR, dir, dentry, mnt, mode);
+	return ccs_path_number_perm(CCS_TYPE_MKDIR, dentry, mnt, mode);
 }
 
 /**
@@ -1384,8 +1377,8 @@ static int __ccs_rename_permission(struct inode *old_dir,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt)
 {
-	return ccs_path2_perm(CCS_TYPE_RENAME, old_dir, old_dentry, mnt,
-			      new_dir, new_dentry, mnt);
+	return ccs_path2_perm(CCS_TYPE_RENAME, old_dentry, mnt, new_dentry,
+			      mnt);
 }
 
 /**
@@ -1403,8 +1396,7 @@ static int __ccs_link_permission(struct dentry *old_dentry,
 				 struct dentry *new_dentry,
 				 struct vfsmount *mnt)
 {
-	return ccs_path2_perm(CCS_TYPE_LINK, NULL, old_dentry, mnt,
-			      new_dir, new_dentry, mnt);
+	return ccs_path2_perm(CCS_TYPE_LINK, old_dentry, mnt, new_dentry, mnt);
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)

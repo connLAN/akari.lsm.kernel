@@ -827,7 +827,7 @@ struct ccs_acl_info {
 	struct list_head list;
 	struct ccs_condition *cond; /* Maybe NULL. */
 	bool is_deleted;
-	u8 type; /* = one of values in "enum ccs_acl_entry_type_index" */
+	u8 type; /* One of values in "enum ccs_acl_entry_type_index". */
 } __attribute__((__packed__));
 
 /* Structure for holding a word. */
@@ -1122,7 +1122,7 @@ struct ccs_domain_info {
 	/* Name of this domain. Never NULL.          */
 	const struct ccs_path_info *domainname;
 	u8 profile;        /* Profile number to use. */
-	u8 group;
+	u8 group;          /* Group number to use.   */
 	bool is_deleted;   /* Delete flag.           */
 	bool flags[CCS_MAX_DOMAIN_INFO_FLAGS];
 };

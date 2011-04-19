@@ -119,6 +119,8 @@ static bool ccs_same_capability_acl(const struct ccs_acl_info *a,
  * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 int ccs_write_capability(struct ccs_acl_param *param)
 {

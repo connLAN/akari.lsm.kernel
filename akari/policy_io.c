@@ -741,7 +741,7 @@ next:
 				ccs_io_printf(head, "%s=%u ",
 					      ccs_pref_keywords[i],
 					      profile->pref[i]);
-			ccs_set_string(head, " }\n");
+			ccs_set_string(head, "}\n");
 			head->r.step++;
 		}
 		break;
@@ -1018,6 +1018,8 @@ static bool ccs_same_task_acl(const struct ccs_acl_info *a,
  * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static int ccs_write_task(struct ccs_acl_param *param)
 {
@@ -1071,6 +1073,8 @@ static int ccs_write_task(struct ccs_acl_param *param)
  * @is_delete: True if it is a delete request.
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static int ccs_write_domain2(char *data, struct ccs_domain_info *domain,
 			     const bool is_delete)
@@ -1113,6 +1117,8 @@ const char * const ccs_dif[CCS_MAX_DOMAIN_INFO_FLAGS] = {
  * @head: Pointer to "struct ccs_io_buffer".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 static int ccs_write_domain(struct ccs_io_buffer *head)
 {

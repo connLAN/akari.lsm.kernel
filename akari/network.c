@@ -302,6 +302,8 @@ static bool ccs_merge_unix_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
  * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 int ccs_write_inet_network(struct ccs_acl_param *param)
 {

@@ -761,17 +761,15 @@ static int ccs_new_open_permission(struct file *filp)
  * ccs_path_perm - Check permission for "unlink", "rmdir", "truncate", "symlink", "getattr", "chroot" and "unmount".
  *
  * @operation: Type of operation.
- * @dir:       Pointer to "struct inode". Maybe NULL.
  * @dentry:    Pointer to "struct dentry".
  * @mnt:       Pointer to "struct vfsmount". Maybe NULL.
- * @target:    Symlink's target if @operation is CCS_TYPE_SYMLINK.
+ * @target:    Symlink's target if @operation is CCS_TYPE_SYMLINK,
  *             NULL otherwise.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_perm(const u8 operation, struct inode *dir,
-			 struct dentry *dentry, struct vfsmount *mnt,
-			 const char *target)
+static int ccs_path_perm(const u8 operation, struct dentry *dentry,
+			 struct vfsmount *mnt, const char *target)
 {
 	struct ccs_request_info r;
 	struct ccs_obj_info obj = {
@@ -1180,8 +1178,7 @@ static int __ccs_pivot_root_permission(struct path *old_path,
  */
 static int __ccs_chroot_permission(struct path *path)
 {
-	return ccs_path_perm(CCS_TYPE_CHROOT, NULL, path->dentry, path->mnt,
-			     NULL);
+	return ccs_path_perm(CCS_TYPE_CHROOT, path->dentry, path->mnt, NULL);
 }
 
 /**
@@ -1194,7 +1191,7 @@ static int __ccs_chroot_permission(struct path *path)
  */
 static int __ccs_umount_permission(struct vfsmount *mnt, int flags)
 {
-	return ccs_path_perm(CCS_TYPE_UMOUNT, NULL, mnt->mnt_root, mnt, NULL);
+	return ccs_path_perm(CCS_TYPE_UMOUNT, mnt->mnt_root, mnt, NULL);
 }
 
 /**
@@ -1203,6 +1200,8 @@ static int __ccs_umount_permission(struct vfsmount *mnt, int flags)
  * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
  */
 int ccs_write_file(struct ccs_acl_param *param)
 {
@@ -1306,7 +1305,7 @@ static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
 static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
 				  struct vfsmount *mnt)
 {
-	return ccs_path_perm(CCS_TYPE_RMDIR, dir, dentry, mnt, NULL);
+	return ccs_path_perm(CCS_TYPE_RMDIR, dentry, mnt, NULL);
 }
 
 /**
@@ -1321,7 +1320,7 @@ static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
 static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
 				   struct vfsmount *mnt)
 {
-	return ccs_path_perm(CCS_TYPE_UNLINK, dir, dentry, mnt, NULL);
+	return ccs_path_perm(CCS_TYPE_UNLINK, dentry, mnt, NULL);
 }
 
 /**
@@ -1335,7 +1334,7 @@ static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
 static int __ccs_getattr_permission(struct vfsmount *mnt,
 				    struct dentry *dentry)
 {
-	return ccs_path_perm(CCS_TYPE_GETATTR, NULL, dentry, mnt, NULL);
+	return ccs_path_perm(CCS_TYPE_GETATTR, dentry, mnt, NULL);
 }
 
 /**
@@ -1351,7 +1350,7 @@ static int __ccs_getattr_permission(struct vfsmount *mnt,
 static int __ccs_symlink_permission(struct inode *dir, struct dentry *dentry,
 				    struct vfsmount *mnt, const char *from)
 {
-	return ccs_path_perm(CCS_TYPE_SYMLINK, dir, dentry, mnt, from);
+	return ccs_path_perm(CCS_TYPE_SYMLINK, dentry, mnt, from);
 }
 
 /**
@@ -1365,7 +1364,7 @@ static int __ccs_symlink_permission(struct inode *dir, struct dentry *dentry,
 static int __ccs_truncate_permission(struct dentry *dentry,
 				     struct vfsmount *mnt)
 {
-	return ccs_path_perm(CCS_TYPE_TRUNCATE, NULL, dentry, mnt, NULL);
+	return ccs_path_perm(CCS_TYPE_TRUNCATE, dentry, mnt, NULL);
 }
 
 /**

@@ -2373,7 +2373,7 @@ static void ccs_read_query(struct ccs_io_buffer *head)
 		 * can change, but I don't care.
 		 */
 		if (len == ptr->query_len)
-			snprintf(buf, len + 32, "Q%u-%hu\n%s", ptr->serial,
+			snprintf(buf, len + 31, "Q%u-%hu\n%s", ptr->serial,
 				 ptr->retry, ptr->query);
 		break;
 	}

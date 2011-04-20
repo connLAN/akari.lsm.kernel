@@ -84,26 +84,20 @@ struct ccsecurity_operations {
 	int (*parse_table) (int __user *name, int nlen, void __user *oldval,
 			    void __user *newval, struct ctl_table *table);
 	_Bool (*capable) (const u8 operation);
-	int (*mknod_permission) (struct inode *dir, struct dentry *dentry,
-				 struct vfsmount *mnt, unsigned int mode,
-				 unsigned int dev);
-	int (*mkdir_permission) (struct inode *dir, struct dentry *dentry,
-				 struct vfsmount *mnt, unsigned int mode);
-	int (*rmdir_permission) (struct inode *dir, struct dentry *dentry,
-				 struct vfsmount *mnt);
-	int (*unlink_permission) (struct inode *dir, struct dentry *dentry,
-				  struct vfsmount *mnt);
-	int (*symlink_permission) (struct inode *dir, struct dentry *dentry,
-				   struct vfsmount *mnt, const char *from);
+	int (*mknod_permission) (struct dentry *dentry, struct vfsmount *mnt,
+				 unsigned int mode, unsigned int dev);
+	int (*mkdir_permission) (struct dentry *dentry, struct vfsmount *mnt,
+				 unsigned int mode);
+	int (*rmdir_permission) (struct dentry *dentry, struct vfsmount *mnt);
+	int (*unlink_permission) (struct dentry *dentry, struct vfsmount *mnt);
+	int (*symlink_permission) (struct dentry *dentry, struct vfsmount *mnt,
+				   const char *from);
 	int (*truncate_permission) (struct dentry *dentry,
 				    struct vfsmount *mnt);
-	int (*rename_permission) (struct inode *old_dir,
-				  struct dentry *old_dentry,
-				  struct inode *new_dir,
+	int (*rename_permission) (struct dentry *old_dentry,
 				  struct dentry *new_dentry,
 				  struct vfsmount *mnt);
 	int (*link_permission) (struct dentry *old_dentry,
-				struct inode *new_dir,
 				struct dentry *new_dentry,
 				struct vfsmount *mnt);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
@@ -290,37 +284,36 @@ static inline int ccs_mknod_permission(struct inode *dir,
 				       struct vfsmount *mnt, unsigned int mode,
 				       unsigned int dev)
 {
-	int (*func) (struct inode *, struct dentry *, struct vfsmount *,
-		     unsigned int, unsigned int)
-		= ccsecurity_ops.mknod_permission;
-	return func ? func(dir, dentry, mnt, mode, dev) : 0;
+	int (*func) (struct dentry *, struct vfsmount *, unsigned int,
+		     unsigned int) = ccsecurity_ops.mknod_permission;
+	return func ? func(dentry, mnt, mode, dev) : 0;
 }
 
 static inline int ccs_mkdir_permission(struct inode *dir,
 				       struct dentry *dentry,
 				       struct vfsmount *mnt, unsigned int mode)
 {
-	int (*func) (struct inode *, struct dentry *, struct vfsmount *,
-		     unsigned int) = ccsecurity_ops.mkdir_permission;
-	return func ? func(dir, dentry, mnt, mode) : 0;
+	int (*func) (struct dentry *, struct vfsmount *, unsigned int)
+		= ccsecurity_ops.mkdir_permission;
+	return func ? func(dentry, mnt, mode) : 0;
 }
 
 static inline int ccs_rmdir_permission(struct inode *dir,
 				       struct dentry *dentry,
 				       struct vfsmount *mnt)
 {
-	int (*func) (struct inode *, struct dentry *, struct vfsmount *)
+	int (*func) (struct dentry *, struct vfsmount *)
 		= ccsecurity_ops.rmdir_permission;
-	return func ? func(dir, dentry, mnt) : 0;
+	return func ? func(dentry, mnt) : 0;
 }
 
 static inline int ccs_unlink_permission(struct inode *dir,
 					struct dentry *dentry,
 					struct vfsmount *mnt)
 {
-	int (*func) (struct inode *, struct dentry *, struct vfsmount *)
+	int (*func) (struct dentry *, struct vfsmount *)
 		= ccsecurity_ops.unlink_permission;
-	return func ? func(dir, dentry, mnt) : 0;
+	return func ? func(dentry, mnt) : 0;
 }
 
 static inline int ccs_symlink_permission(struct inode *dir,
@@ -328,9 +321,9 @@ static inline int ccs_symlink_permission(struct inode *dir,
 					 struct vfsmount *mnt,
 					 const char *from)
 {
-	int (*func) (struct inode *, struct dentry *, struct vfsmount *,
-		     const char *) = ccsecurity_ops.symlink_permission;
-	return func ? func(dir, dentry, mnt, from) : 0;
+	int (*func) (struct dentry *, struct vfsmount *, const char *)
+		= ccsecurity_ops.symlink_permission;
+	return func ? func(dentry, mnt, from) : 0;
 }
 
 static inline int ccs_truncate_permission(struct dentry *dentry,
@@ -347,10 +340,9 @@ static inline int ccs_rename_permission(struct inode *old_dir,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
 {
-	int (*func) (struct inode *, struct dentry *, struct inode *,
-		     struct dentry *, struct vfsmount *)
+	int (*func) (struct dentry *, struct dentry *, struct vfsmount *)
 		= ccsecurity_ops.rename_permission;
-	return func ? func(old_dir, old_dentry, new_dir, new_dentry, mnt) : 0;
+	return func ? func(old_dentry, new_dentry, mnt) : 0;
 }
 
 static inline int ccs_link_permission(struct dentry *old_dentry,
@@ -358,9 +350,9 @@ static inline int ccs_link_permission(struct dentry *old_dentry,
 				      struct dentry *new_dentry,
 				      struct vfsmount *mnt)
 {
-	int (*func) (struct dentry *, struct inode *, struct dentry *,
-		     struct vfsmount *) = ccsecurity_ops.link_permission;
-	return func ? func(old_dentry, new_dir, new_dentry, mnt) : 0;
+	int (*func) (struct dentry *, struct dentry *, struct vfsmount *)
+		= ccsecurity_ops.link_permission;
+	return func ? func(old_dentry, new_dentry, mnt) : 0;
 }
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)

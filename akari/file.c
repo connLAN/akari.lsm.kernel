@@ -1230,7 +1230,6 @@ int ccs_write_file(struct ccs_acl_param *param)
 /**
  * __ccs_mknod_permission - Check permission for vfs_mknod().
  *
- * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @mode:   Device type and permission.
@@ -1238,8 +1237,7 @@ int ccs_write_file(struct ccs_acl_param *param)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
-				  struct vfsmount *mnt,
+static int __ccs_mknod_permission(struct dentry *dentry, struct vfsmount *mnt,
 				  const unsigned int mode, unsigned int dev)
 {
 	int error = 0;
@@ -1273,15 +1271,14 @@ static int __ccs_mknod_permission(struct inode *dir, struct dentry *dentry,
 /**
  * __ccs_mkdir_permission - Check permission for vfs_mkdir().
  *
- * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @mode:   Create mode.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
-				  struct vfsmount *mnt, unsigned int mode)
+static int __ccs_mkdir_permission(struct dentry *dentry, struct vfsmount *mnt,
+				  unsigned int mode)
 {
 	return ccs_path_number_perm(CCS_TYPE_MKDIR, dentry, mnt, mode);
 }
@@ -1289,14 +1286,12 @@ static int __ccs_mkdir_permission(struct inode *dir, struct dentry *dentry,
 /**
  * __ccs_rmdir_permission - Check permission for vfs_rmdir().
  *
- * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
-				  struct vfsmount *mnt)
+static int __ccs_rmdir_permission(struct dentry *dentry, struct vfsmount *mnt)
 {
 	return ccs_path_perm(CCS_TYPE_RMDIR, dentry, mnt, NULL);
 }
@@ -1304,14 +1299,12 @@ static int __ccs_rmdir_permission(struct inode *dir, struct dentry *dentry,
 /**
  * __ccs_unlink_permission - Check permission for vfs_unlink().
  *
- * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_unlink_permission(struct inode *dir, struct dentry *dentry,
-				   struct vfsmount *mnt)
+static int __ccs_unlink_permission(struct dentry *dentry, struct vfsmount *mnt)
 {
 	return ccs_path_perm(CCS_TYPE_UNLINK, dentry, mnt, NULL);
 }
@@ -1333,14 +1326,13 @@ static int __ccs_getattr_permission(struct vfsmount *mnt,
 /**
  * __ccs_symlink_permission - Check permission for vfs_symlink().
  *
- * @dir:    Pointer to "struct inode".
  * @dentry: Pointer to "struct dentry".
  * @mnt:    Pointer to "struct vfsmount". Maybe NULL.
  * @from:   Content of symlink.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_symlink_permission(struct inode *dir, struct dentry *dentry,
+static int __ccs_symlink_permission(struct dentry *dentry,
 				    struct vfsmount *mnt, const char *from)
 {
 	return ccs_path_perm(CCS_TYPE_SYMLINK, dentry, mnt, from);
@@ -1363,17 +1355,13 @@ static int __ccs_truncate_permission(struct dentry *dentry,
 /**
  * __ccs_rename_permission - Check permission for vfs_rename().
  *
- * @old_dir:    Pointer to "struct inode".
  * @old_dentry: Pointer to "struct dentry".
- * @new_dir:    Pointer to "struct inode".
  * @new_dentry: Pointer to "struct dentry".
  * @mnt:        Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_rename_permission(struct inode *old_dir,
-				   struct dentry *old_dentry,
-				   struct inode *new_dir,
+static int __ccs_rename_permission(struct dentry *old_dentry,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt)
 {
@@ -1385,14 +1373,12 @@ static int __ccs_rename_permission(struct inode *old_dir,
  * __ccs_link_permission - Check permission for vfs_link().
  *
  * @old_dentry: Pointer to "struct dentry".
- * @new_dir:    Pointer to "struct inode".
  * @new_dentry: Pointer to "struct dentry".
  * @mnt:        Pointer to "struct vfsmount". Maybe NULL.
  *
  * Returns 0 on success, negative value otherwise.
  */
 static int __ccs_link_permission(struct dentry *old_dentry,
-				 struct inode *new_dir,
 				 struct dentry *new_dentry,
 				 struct vfsmount *mnt)
 {

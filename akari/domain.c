@@ -413,37 +413,7 @@ int ccs_write_aggregator(char *data, const bool is_delete)
 	return ccs_update_aggregator_entry(w[0], w[1], is_delete);
 }
 
-/* Domain create/delete handler. */
-
-/**
- * ccs_delete_domain - Delete a domain.
- *
- * @domainname: The name of domain.
- *
- * Returns 0.
- */
-int ccs_delete_domain(char *domainname)
-{
-	struct ccs_domain_info *domain;
-	struct ccs_path_info name;
-	name.name = domainname;
-	ccs_fill_path_info(&name);
-	if (mutex_lock_interruptible(&ccs_policy_lock))
-		return 0;
-	/* Is there an active domain? */
-	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
-		/* Never delete ccs_kernel_domain. */
-		if (domain == &ccs_kernel_domain)
-			continue;
-		if (domain->is_deleted ||
-		    ccs_pathcmp(domain->domainname, &name))
-			continue;
-		domain->is_deleted = true;
-		break;
-	}
-	mutex_unlock(&ccs_policy_lock);
-	return 0;
-}
+/* Domain create handler. */
 
 /**
  * ccs_assign_domain - Create a domain.

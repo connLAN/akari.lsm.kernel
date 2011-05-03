@@ -1459,7 +1459,6 @@ const struct ccs_path_info *ccs_path_matches_group
 (const struct ccs_path_info *pathname, const struct ccs_group *group);
 const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr);
 int ccs_close_control(struct file *file);
-int ccs_delete_domain(char *data);
 int ccs_env_perm(struct ccs_request_info *r, const char *env);
 int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);

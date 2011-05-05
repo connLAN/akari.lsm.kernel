@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.1+   2011/05/05
  */
 
 #include "internal.h"
@@ -643,8 +643,8 @@ static int ccs_environ(struct ccs_execve *ee)
 	/* printk(KERN_DEBUG "start %d %d\n", argv_count, envp_count); */
 	int error = -ENOMEM;
 	ee->r.type = CCS_MAC_ENVIRON;
-	ee->r.mode = ccs_get_mode(ccs_current_domain()->profile,
-				  CCS_MAC_ENVIRON);
+	ee->r.profile = ccs_current_domain()->profile;
+	ee->r.mode = ccs_get_mode(ee->r.profile, CCS_MAC_ENVIRON);
 	if (!r->mode || !envp_count)
 		return 0;
 	arg_ptr = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);

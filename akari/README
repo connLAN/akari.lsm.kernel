@@ -115,3 +115,9 @@ Version 1.0.12   2011/04/11   Minor update release.
    Synchronize with TOMOYO revision 4874.
 
    Fix fcntl(F_SETFL, O_APPEND) handling.
+
+Version 1.0.13   2011/05/05   Minor update release.
+
+   Synchronize with TOMOYO revision 4963.
+
+   Fix wrong profile number in audit logs for "misc env" permission.

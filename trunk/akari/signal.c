@@ -158,9 +158,7 @@ static bool ccs_same_signal_acl(const struct ccs_acl_info *a,
 {
 	const struct ccs_signal_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_signal_acl *p2 = container_of(b, typeof(*p2), head);
-	return p1->head.type == p2->head.type && p1->head.cond == p2->head.cond
-		&& p1->head.type == CCS_TYPE_SIGNAL_ACL && p1->sig == p2->sig
-		&& p1->domainname == p2->domainname;
+	return p1->sig == p2->sig && p1->domainname == p2->domainname;
 }
 
 /**

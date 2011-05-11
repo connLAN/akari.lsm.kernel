@@ -121,3 +121,9 @@ Version 1.0.13   2011/05/05   Minor update release.
    Synchronize with TOMOYO revision 4963.
 
    Fix wrong profile number in audit logs for "misc env" permission.
+
+Version 1.0.14   2011/05/11   Minor update release.
+
+   Synchronize with TOMOYO revision 4978.
+
+   Fix wrong domainname validation.

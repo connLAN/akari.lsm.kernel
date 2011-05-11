@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.1+   2011/05/11
  */
 
 #include "internal.h"
@@ -575,7 +575,7 @@ bool ccs_correct_domain(const unsigned char *domainname)
 		if (!cp)
 			break;
 		if (*domainname != '/' ||
-		    !ccs_correct_word2(domainname, cp - domainname - 1))
+		    !ccs_correct_word2(domainname, cp - domainname))
 			goto out;
 		domainname = cp + 1;
 	}

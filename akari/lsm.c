@@ -2812,7 +2812,7 @@ static void ccs_task_security_gc(void)
 	unsigned int idx;
 	if (!mutex_trylock(&lock))
 		return;
-	/* Checking everytime is too wasteful. */
+	/* Checking every time is too wasteful. */
 	if (counter++ < 1024)
 		goto skip;
 	counter = 0;

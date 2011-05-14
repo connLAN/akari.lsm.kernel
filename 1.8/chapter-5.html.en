@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 5</title>
+<title>AKARI : The Official Guide : Chapter 5</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -40,7 +38,7 @@
 
 <h3><a name="5.1">5.1. Domain creation</a></h3>
 
-<p>Each domain will behave differently and require a unique set of permissions. Their behaviour must therefore be analyzed to determine which actions you wish to permit in domain policy. TOMOYO Linux can be used to restrict only a subset of the domains in a system, but the most secure system would restrict every domain in order to make sure there are no points of vulnerability.</p>
+<p>Each domain will behave differently and require a unique set of permissions. Their behaviour must therefore be analyzed to determine which actions you wish to permit in domain policy. AKARI can be used to restrict only a subset of the domains in a system, but the most secure system would restrict every domain in order to make sure there are no points of vulnerability.</p>
 
 <p>First, choose an application that you wish to analyze or protect. To demonstrate the procedure, this guide will use Apache in CentOS 5.6.</p>
 
@@ -64,7 +62,7 @@
 
 <h3><a name="5.2">5.2. Management of domain transitions</a></h3>
 
-<p>Advanced control of domain transition is possible with TOMOYO Linux, and involves changes to exception policy. The instructions in this section require use of the policy editor tool. To edit exception policy, run the policy editor and <a href="chapter-4.html.en#4.5">switch to the exception policy editor screen</a>. To add an entry, press the "a" key, type out the new entry you wish to add and press "Enter". To see what other commands are available, press the "?" key.</p>
+<p>Advanced control of domain transition is possible with AKARI, and involves changes to exception policy. The instructions in this section require use of the policy editor tool. To edit exception policy, run the policy editor and <a href="chapter-4.html.en#4.5">switch to the exception policy editor screen</a>. To add an entry, press the "a" key, type out the new entry you wish to add and press "Enter". To see what other commands are available, press the "?" key.</p>
 
 <h4><a name="5.2.1">5.2.1. initialize_domain</a></h4>
 
@@ -237,7 +235,7 @@ The <strong>"-m"</strong> option means append to "/proc/ccs/manager".</p>
 WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stopped learning mode.
 </pre>
 
-<p>This is a safeguard to prevent TOMOYO Linux from consuming all the memory available on the system. If "Learning Mode" did not have a limit, the system may become unusably slow due to comparison with already learned permissions. This limit can be increased with the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> values in each of the profiles. However, care should be taken when increasing this value as this will require more memory. It is recommended to tune policy before increasing this value. Steps for tuning policy are described in the next chapter, and doing so can reduce the size of domain policy to become more manageable. You would then no longer need to increase the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> value.</p>
+<p>This is a safeguard to prevent AKARI from consuming all the memory available on the system. If "Learning Mode" did not have a limit, the system may become unusably slow due to comparison with already learned permissions. This limit can be increased with the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> values in each of the profiles. However, care should be taken when increasing this value as this will require more memory. It is recommended to tune policy before increasing this value. Steps for tuning policy are described in the next chapter, and doing so can reduce the size of domain policy to become more manageable. You would then no longer need to increase the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> value.</p>
 
 <p>The configuration file "/etc/ccs/stat.conf" can be used to specify quotas for memory usage:</p>
 
@@ -276,7 +274,7 @@ ccs-loadpolicy -s &lt; /etc/ccs/stat.conf
 </tr>
 <tr>
 <td class="docs-previous-description">
-<p>Chapter 4: How does TOMOYO Linux work?</p>
+<p>Chapter 4: How does AKARI work?</p>
 </td>
 <td class="docs-home">
 </td>

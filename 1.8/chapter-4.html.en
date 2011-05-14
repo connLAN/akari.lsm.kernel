@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 4</title>
+<title>AKARI : The Official Guide : Chapter 4</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -36,15 +34,15 @@
 <p><a href="chapter-3.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-5.html.en">&lt;Next&gt;</a></p>
 </div>
 
-<h2>Chapter 4: How does TOMOYO Linux work?</h2>
+<h2>Chapter 4: How does AKARI work?</h2>
 
 <h3><a name="4.1">4.1. Understanding domains</a></h3>
 
-<p>In TOMOYO Linux, the technique used to enforce MAC makes use of something called <strong>"domains"</strong>. This is an important concept. Every process in a system belongs to a domain, which is determined by its execution history. Broadly speaking, every time a process is executed, a new domain is created. Any particular domain is represented by a concatenation of all previously executed pathanames. This creation of a new domain can also be called a <strong>"domain transition"</strong>. Have a look at this diagram:</p>
+<p>In AKARI, the technique used to enforce MAC makes use of something called <strong>"domains"</strong>. This is an important concept. Every process in a system belongs to a domain, which is determined by its execution history. Broadly speaking, every time a process is executed, a new domain is created. Any particular domain is represented by a concatenation of all previously executed pathanames. This creation of a new domain can also be called a <strong>"domain transition"</strong>. Have a look at this diagram:</p>
 
 <img src="media/fig-3-1.png" alt="fig-3-1.png" width="600" height="450">
 
-<p>The kernel is always the first domain and is represented in TOMOYO Linux by <strong>&lt;kernel&gt;</strong>. In this example, the kernel then executes <code>/sbin/init</code>. Because a process has been executed, a new domain is created which in this case is the domain <strong>&lt;kernel&gt; /sbin/init</strong>. The bootup scripts are then executed, which result in further domains being created.</p>
+<p>The kernel is always the first domain and is represented in AKARI by <strong>&lt;kernel&gt;</strong>. In this example, the kernel then executes <code>/sbin/init</code>. Because a process has been executed, a new domain is created which in this case is the domain <strong>&lt;kernel&gt; /sbin/init</strong>. The bootup scripts are then executed, which result in further domains being created.</p>
 
 <p>The process execution history is important. Consider the following domains:</p>
 
@@ -55,9 +53,9 @@
 
 <h3><a name="4.2">4.2. View domains with the policy editor</a></h3>
 
-<p>Let's have a look at the policy editor to get a better understanding of domains. This is the main tool used with TOMOYO Linux and it is important to become comfortable using it. The instructions on this page can be supplemented with this page describing <a href="tool-editpolicy.html.en">How to use the Policy Editor</a>.</p>
+<p>Let's have a look at the policy editor to get a better understanding of domains. This is the main tool used with AKARI and it is important to become comfortable using it. The instructions on this page can be supplemented with this page describing <a href="tool-editpolicy.html.en">How to use the Policy Editor</a>.</p>
 
-<p>Once the system has been rebooted into the TOMOYO Linux kernel, run the policy editor with the "/etc/ccs/" option to edit policy files within the "/etc/ccs/" directory:</p>
+<p>Once the system has been rebooted into the AKARI enabled kernel, run the policy editor with the "/etc/ccs/" option to edit policy files within the "/etc/ccs/" directory:</p>
 
 <pre class="command">
 # /usr/sbin/ccs-editpolicy /etc/ccs/
@@ -67,7 +65,7 @@
 
 <img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="675" height="375">
 
-<p>Since this is a newly initialized policy, the policy files in "/etc/ccs/" are empty. <strong>There are two sets of policy involved in TOMOYO Linux: policy loaded in the kernel, and policy saved to "/etc/ccs/"</strong>. Many sets of policies can be saved to "/etc/ccs/" and can be loaded into the kernel at boot or on demand. Saving policy to disk will be discussed in later. Press the "q" key to quit the policy editor.</p>
+<p>Since this is a newly initialized policy, the policy files in "/etc/ccs/" are empty. <strong>There are two sets of policy involved in AKARI: policy loaded in the kernel, and policy saved to "/etc/ccs/"</strong>. Many sets of policies can be saved to "/etc/ccs/" and can be loaded into the kernel at boot or on demand. Saving policy to disk will be discussed in later. Press the "q" key to quit the policy editor.</p>
 
 <p>Now run the policy editor again <strong>without</strong> the "/etc/ccs/" option in order to view the policy that is loaded in the kernel:</p>
 
@@ -75,7 +73,7 @@
 # /usr/sbin/ccs-editpolicy
 </pre>
 
-<p>As the system runs, TOMOYO Linux will record the creation of new domains and add them to the tree. After running the above command, the domain tree should appear populated with all domains created since startup:</p>
+<p>As the system runs, AKARI will record the creation of new domains and add them to the tree. After running the above command, the domain tree should appear populated with all domains created since startup:</p>
 
 <img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="675" height="375">
 
@@ -95,7 +93,7 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <h3><a name="4.3">4.3. Understanding profiles</a></h3>
 
-<p>Each domain can be restricted using TOMOYO Linux by assigning a <strong>"profile"</strong>. These profiles can be assigned to any domain independently of others, which allows you to slowly build up the security in your system one domain at a time. This also allows you to create custom profiles for specific domains, but this is a more advanced topic for later on.</p>
+<p>Each domain can be restricted using AKARI by assigning a <strong>"profile"</strong>. These profiles can be assigned to any domain independently of others, which allows you to slowly build up the security in your system one domain at a time. This also allows you to create custom profiles for specific domains, but this is a more advanced topic for later on.</p>
 
 <p>In the policy editor, look at the numbers in the second column of each line:</p>
 
@@ -192,7 +190,7 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <img src="media/fig-2-6.png" alt="fig-2-6.png" width="600" height="450">
 
-<p>The "Learning Mode" profile is the feature of TOMOYO Linux that makes developing policy very easy. This mode will automatically generate policy for any domain that has this profile selected. This can then be developed and refined into a solid policy. The other profiles, "Permissive Mode" and "Enforcing Mode", are for later on when a domain is ready to be restricted.</p>
+<p>The "Learning Mode" profile is the feature of AKARI that makes developing policy very easy. This mode will automatically generate policy for any domain that has this profile selected. This can then be developed and refined into a solid policy. The other profiles, "Permissive Mode" and "Enforcing Mode", are for later on when a domain is ready to be restricted.</p>
 
 <p>For further information on management of profiles, read <a href="chapter-9.html.en">Chapter 9: Advanced profile management</a>.</p>
 
@@ -222,7 +220,7 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>When developing policy, it may be useful to save a log entry every time a domain makes a request that is undefined in domain/exception policy. While this is crucial for system administration once policy has been fully developed and enforced, it can also be used alongside "Learning Mode" to help develop policy.</p>
 
-<p>TOMOYO Linux can record <strong>"access granted logs"</strong> (access requests that were granted by either domain policy or exception policy) and <strong>"access rejected logs"</strong> (access requests that were not granted by neither domain policy nor exception policy). These logs are in the form of domain policy. This is useful in the case that the user wishes to permit a domain to perform actions that are not currently permitted in policy. The "access rejected log" could then be used to append permissions to domain policy. The "Learning Mode" described in <a href="chapter-5.html.en">the next chapter</a> mostly automates the process of appending "access rejected logs" into domain policy for domains set to that mode.</p>
+<p>AKARI can record <strong>"access granted logs"</strong> (access requests that were granted by either domain policy or exception policy) and <strong>"access rejected logs"</strong> (access requests that were not granted by neither domain policy nor exception policy). These logs are in the form of domain policy. This is useful in the case that the user wishes to permit a domain to perform actions that are not currently permitted in policy. The "access rejected log" could then be used to append permissions to domain policy. The "Learning Mode" described in <a href="chapter-5.html.en">the next chapter</a> mostly automates the process of appending "access rejected logs" into domain policy for domains set to that mode.</p>
 
 <p>The following values can be given for the "grant_log" parameter of the CONFIG line:</p>
 
@@ -385,7 +383,7 @@ destination     /var/log/tomoyo/reject_003.log
 </tr>
 <tr>
 <td class="docs-previous-description">
-<p>Chapter 3: How do I install TOMOYO Linux?</p>
+<p>Chapter 3: How do I install AKARI?</p>
 </td>
 <td class="docs-home">
 </td>

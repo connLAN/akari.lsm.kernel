@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 2</title>
+<title>AKARI : The Official Guide : Chapter 2</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -36,17 +34,13 @@
 <p><a href="chapter-1.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-3.html.en">&lt;Next&gt;</a></p>
 </div>
 
-<h2>Chapter 2: Why do I need TOMOYO Linux?</h2>
+<h2>Chapter 2: Why do I need AKARI?</h2>
 
-<h3><a name="2.1">2.1. What is TOMOYO Linux?</a></h3>
+<h3><a name="2.1">2.1. What is AKARI?</a></h3>
 
-<p>TOMOYO Linux is a <strong>Mandatory Access Control (MAC)</strong> implementation for Linux that can be used for system analysis or to increase the security of a system. The project was launched in March 2003 and is sponsored by NTT DATA Corporation, Japan. For further technical information, see the <a href="http://tomoyo.sourceforge.jp/">SourceForge project page</a>.</p>
+<p>AKARI is a <strong>Mandatory Access Control (MAC)</strong> implementation for Linux that can be used to increase the security of a system, while also being useful purely as a system analysis tool. It is a Linux kernel module based on <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a>, which was launched in 2003.</p>
 
-<p><strong>TOMOYO Linux 1.x</strong> is the original branch of development, which was first released on 11th November 2005 under the GPL. It was implemented as a patch that can be applied to the Linux kernel and is still in active development.</p>
-
-<p><strong>TOMOYO Linux 2.x</strong> is the Linux mainline kernel branch of development. In June 2009, a subset of TOMOYO functionality was merged into the Linux kernel 2.6.30 and makes use of standard Linux Security Module (LSM) hooks. However, the LSM hooks must be extended further in order to port the full MAC functionality of TOMOYO Linux 1.x into the Linux kernel. Thus, it does not yet provide equal functionality with the 1.x branch of development. <a href="http://tomoyo.sourceforge.jp/comparison.html.en">This chart compares the differences</a> between each branch.</p>
-
-<p>This guide is specifically intended for the TOMOYO Linux 1.8.x branch.</p>
+<p>AKARI focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, AKARI allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, AKARI acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
 
 <h3><a name="2.2">2.2. What is Mandatory Access Control?</a></h3>
 
@@ -59,9 +53,9 @@
 
 <p>MAC therefore provides a way to create a <strong>"policy of least privilege"</strong>. This is where each process has a definition of what they are allowed to do, which is called the "policy". <strong>This policy allows as little as possible for the process to function normally.</strong> If a process or application tries to perform a task that is not allowed by this policy, it is denied the ability to perform this task. This prevents any unwanted activity from occurring.</p>
 
-<h3><a name="2.3">2.3. How can TOMOYO Linux help me?</a></h3>
+<h3><a name="2.3">2.3. How can AKARI help me?</a></h3>
 
-<p>An important part of MAC is the creation and management of this policy for every process in a system, which requires knowledge of precisely what each process should be allowed to do. This may sound like a fiendishly difficult task and it requires a high degree of understanding and skill. However, TOMOYO Linux provides a "Learning Mode" for automatically generating policy easily and can provide a base from which policy can be developed and refined. <strong>This "Learning Mode" can thus be used alongside a firm understanding of the concepts involved in TOMOYO Linux to secure a system in a short amount of time</strong>. Any experienced Linux administrator should be able to set up and use TOMOYO Linux within a day!</p>
+<p>An important part of MAC is the creation and management of this policy for every process in a system, which requires knowledge of precisely what each process should be allowed to do. This may sound like a fiendishly difficult task and it requires a high degree of understanding and skill. However, AKARI provides a "Learning Mode" for automatically generating policy easily and can provide a base from which policy can be developed and refined. <strong>This "Learning Mode" can thus be used alongside a firm understanding of the concepts involved in AKARI to secure a system in a short amount of time</strong>. Any experienced Linux administrator should be able to set up and use AKARI within a day!</p>
 
 <p>A restricted system helps to reduce the damage done when an application is compromised. For example, damage can be reduced from security exploits such as buffer overflows. Such protection is therefore especially important for internet-facing services such as Apache or SSH. If a policy of least privilege is in place, a remote attacker that gains control of such an application can be prevented from further compromising a system.</p>
 
@@ -90,7 +84,7 @@
 <td class="docs-home">
 </td>
 <td class="docs-next-description">
-<p>Chapter 3: How do I install TOMOYO Linux?</p>
+<p>Chapter 3: How do I install AKARI?</p>
 </td>
 </tr>
 </table>

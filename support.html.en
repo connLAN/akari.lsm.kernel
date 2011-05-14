@@ -1,0 +1,66 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux Support</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.en"><img src="media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-support">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="support.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h3>Documentation</h3>
+
+<p>There is extensive documentation available for TOMOYO Linux. Please go to the <a href="documentation.html.en">Documentation</a> page.</p>
+
+<h3>Mailing Lists</h3>
+
+<p>Subscribe to one of the following to receive release announcements or mail a support question:</p>
+<ul>
+<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users">TOMOYO Users (Japanese)</a></li>
+<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users-en">TOMOYO Users (English)</a></li>
+</ul>
+
+<h3>Contact</h3>
+
+<p>If you do not wish to use the public mailing list, send an email to:</p>
+<ul>
+<li><a href="mailto:haradats@gmail.com">Project Manager</a></li>
+</ul>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="support.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-01 21:55:56 +0000 (Tue, 01 Feb 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

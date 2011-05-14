@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Protecting SFTP service</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="sftp-protection-using-environment-variable.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>Protecting SFTP service</h2>
+
+<h3>About this page</h3>
+
+<p>This page explains you how to provide both download-only SFTP service and uploadable SFTP service using single user account. The type of SFTP service (i.e. download-only or uploadable) is determined by environment variables provided by SFTP client, and normal SSH shell access is forbidden if appropriate environment variables are not provided.</p>
+
+<h3>Step 1: Creating user account for SFTP service</h3>
+
+<p>In this page, we assume the name of user for SFTP service as "sftp".</p>
+
+<p>We assume the shell program for SFTP service as /bin/sftp-shell .</p>
+
+<p>We assume the directory for SFTP service as /var/sftp/ .</p>
+
+<p>We assume the location of SFTP server program as /usr/libexec/openssh/sftp-server .</p>
+
+<pre class="command">
+# useradd -s /bin/sftp-shell -d /var/sftp sftp
+# passwd sftp
+</pre>
+
+<h3>Step 2: Creating programs needed for SFTP service</h3>
+
+<p>Save the program listed below as /bin/sftp-shell and set executable bit.</p>
+
+<pre>
+#! /bin/sh
+[ "$sftp_type" == "ro-sftp" ] &amp;&amp; exec /bin/ro-sftp
+[ "$sftp_type" == "rw-sftp" ] &amp;&amp; exec /bin/rw-sftp
+exit 1
+</pre>
+
+<p>Save the program listed below as /bin/rw-sftp and /bin/ro-sftp and set executable bit. (/bin/rw-sftp and /bin/ro-sftp are identical.)</p>
+
+<pre>
+#! /bin/sh
+umask 0022
+exec /usr/libexec/openssh/sftp-server
+</pre>
+
+<h3>Step 3: Making SSH to pass and receive environment variables</h3>
+
+<p>Append the name of environment variable which SSH server accepts to /etc/ssh/sshd_config .</p>
+
+<pre>
+AcceptEnv sftp_type
+</pre>
+
+<p>Append the name of environment variable which SSH client sends to /etc/ssh/ssh_config .</p>
+
+<pre>
+SendEnv sftp_type
+</pre>
+
+<h3>Step 4: Install and initialize TOMOYO Linux</h3>
+
+<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy
+</pre>
+
+<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+
+<p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /bin/sftp-shell is executed.</p>
+
+<pre>
+initialize_domain /bin/sftp-shell from any
+</pre>
+
+<p>Append below lines to /etc/ccs/exception_policy.conf so that we can specify directory for SFTP service recursively.</p>
+
+<pre>
+path_group SFTP_DIRS /var/sftp/\{\*\}/
+path_group SFTP_FILES /var/sftp/\{\*\}/\*
+path_group SFTP_FILES /var/sftp/\*
+</pre>
+
+<p>Append below lines to /etc/ccs/domain_policy.conf so that we can allow downloading / uploading SFTP contents.</p>
+
+<pre>
+&lt;kernel&gt; /bin/sftp-shell
+
+&lt;kernel&gt; /bin/sftp-shell /bin/ro-sftp /usr/libexec/openssh/sftp-server
+file read @SFTP_FILES
+
+&lt;kernel&gt; /bin/sftp-shell /bin/rw-sftp /usr/libexec/openssh/sftp-server
+file read @SFTP_FILES
+file write @SFTP_FILES
+file create @SFTP_FILES 0644
+file unlink @SFTP_FILES
+file mkdir @SFTP_DIRS 0755
+file rmdir @SFTP_DIRS
+file rename @SFTP_FILES @SFTP_FILES
+file rename @SFTP_DIRS @SFTP_DIRS
+file truncate @SFTP_FILES
+</pre>
+
+<h3>Step 5: Learning and operation</h3>
+
+<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+
+<p>Change access control mode to learning mode by assigning profile 1.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 1 '&lt;kernel&gt; /bin/sftp-shell'
+</pre>
+
+<p>Set environment variable "sftp_type" with value "ro-sftp" and access the SFTP server. In this page, we assume the name of SFTP server as "server".</p>
+
+<pre class="command">
+$ export sftp_type="ro-sftp"
+$ sftp sftp@server
+</pre>
+
+<p>Now, the process belongs to "&lt;kernel&gt; /bin/sftp-shell /bin/ro-sftp /usr/libexec/openssh/sftp-server" domain. Do download operations from this domain. But don't do upload operations from this domain.</p>
+
+<p>Set environment variable "sftp_type" with value "rw-sftp" and access the SFTP server.</p>
+
+<pre class="command">
+$ export sftp_type="rw-sftp"
+$ sftp sftp@server
+</pre>
+
+<p>Now, the process belongs to "&lt;kernel&gt; /bin/sftp-shell /bin/rw-sftp /usr/libexec/openssh/sftp-server" domain. Do download operations and upload operations from this domain.</p>
+
+<p>Change access control mode to enforcing mode by assigning profile 3.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 3 '&lt;kernel&gt; /bin/sftp-shell'
+</pre>
+
+<p>Save policy files by executing ccs-savepolicy command.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-savepolicy
+</pre>
+
+<h3>Explanation</h3>
+
+<p>We create two domains for sftp-server programs with different parent domain, and we give write permissions to only one domain. Since this program is just an example, we used straightforward environment variables. When you use at real systems, please use unguessable environment variables because these environment variables act as passwords.</p>
+
+<h3>Application idea</h3>
+
+<p>You can use environment variable SSH_CLIENT to grant upload access when clients are from specific IP addresses and port numbers, download-only access otherwise.</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="sftp-protection-using-environment-variable.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-12 08:45:11 +0000 (Sat, 12 Feb 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

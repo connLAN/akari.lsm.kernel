@@ -1,0 +1,599 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 9</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-9.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-8.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-10.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 9: より詳細なプロファイルの管理</h2>
+
+<h3><a name="9.1">9.1. プロファイルの初期化</a></h3>
+
+<p><code>/usr/lib/ccs/init_policy</code> により実行される初期設定は、アクセスを制限したい内容だけを有効にすることでポリシーの作成を容易にするために、コマンドラインオプションを指定することでカスタマイズすることができます。例えば、ファイルに関するアクセス制御だけを有効にしたい場合には --file-only-profile オプションを指定できます。コマンドラインオプションで指定した内容はポリシーディレクトリに作成されるファイルの内容を変化させるだけであり、ポリシーの作成方法を制約するものではありません。これらのファイルはポリシーエディタを用いて後からあなたの要望に沿うように修正することができます。以下に、指定可能なコマンドラインオプションの一覧を示します：</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr>
+<th><p>オプション</p></th>
+<th><p>デフォルト</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>--full-profile</p></td>
+<td><p>指定済</p></td>
+<td><p>全ての機能を有効にするプロファイルを作成します。 --file-only-profile オプションが指定されない限り、このオプションが指定されたものとして扱われます。</p></td>
+</tr>
+<tr>
+<td><p>--file-only-profile</p></td>
+<td><p>未指定</p></td>
+<td><p>ファイルに関するアクセス制御機能のみを有効にするプロファイルを作成します。</p></td>
+</tr>
+<tr>
+<td><p>--use_profile="$number"</p></td>
+<td><p>0</p></td>
+<td><p>/etc/ccs/domain_policy.conf の作成時に &lt;kernel&gt; ドメインに割り当てられるプロファイルの番号を指定します。この数値は 0 ～ 255 の間の整数値です。</p></td>
+</tr>
+<tr>
+<td><p>--use_group="$number"</p></td>
+<td><p>0</p></td>
+<td><p>/etc/ccs/domain_policy.conf の作成時に &lt;kernel&gt; ドメインに割り当てられるアクセス許可グループの番号を指定します。この数値は 0 ～ 255 の間の整数値です。</p></td>
+</tr>
+<tr>
+<td><p>--root="$rootdir"</p></td>
+<td><p>/</p></td>
+<td><p>ポリシーファイル用ディレクトリを生成するときのルートディレクトリを指定します。</p></td>
+</tr>
+<tr>
+<td><p>--policy_dir="$configdir"</p></td>
+<td><p>/etc/ccs/</p></td>
+<td><p>ポリシーファイル用ディレクトリを指定します。もし、このオプションを指定した場合、 $configdir へのシンボリックリンクを /etc/ccs という名前で作成する必要があります。</p></td>
+</tr>
+<tr>
+<td><p>--module_name="$name"</p></td>
+<td><p>ccsecurity</p></td>
+<td><p>TOMOYO Linux がローダブルカーネルモジュールとしてコンパイルされた場合（ CONFIG_CCSECURITY_LKM=y ）に /sbin/ccs-init から実行される /etc/ccs/ccs-load-module を作成時に指定するモジュールの名前を指定します。</p></td>
+</tr>
+<tr>
+<td><p>--grant_log="$bool"</p></td>
+<td><p>no</p></td>
+<td><p>アクセス許可ログを生成するかどうかを指定します。 yes または no を指定できます。</p></td>
+</tr>
+<tr>
+<td><p>--reject_log="$bool"</p></td>
+<td><p>yes</p></td>
+<td><p>アクセス拒否ログを生成するかどうかを指定します。 yes または no を指定できます。</p></td>
+</tr>
+<tr>
+<td><p>--max_audit_log="$number"</p></td>
+<td><p>1024</p></td>
+<td><p><a href="policy-specification/proc-interface.html.ja#audit">/proc/ccs/audit</a> インタフェースに保持しておくアクセスログ（許可ログ＋拒否ログ）の件数の上限を指定します。 0 以上の整数値を指定できます。アクセスログが不要な場合には 0 を指定することができます。また、バイト数での上限を <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースから指定することもできます。</p></td>
+</tr>
+<tr>
+<td><p>--max_learning_entry="$number"</p></td>
+<td><p>2048</p></td>
+<td><p>学習モードで動作中にカーネルが自動的に追加することができるアクセス許可の件数の上限を指定します。 0 以上の整数値を指定できます。 0 を指定すると学習モードは確認モードと同様に振舞うようになります。バイト数での上限を <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースから指定することもできます。</p></td>
+</tr>
+<tr>
+<td><p>--enforcing_penalty="$number"</p></td>
+<td><p>0</p></td>
+<td><p>強制モードでポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。 0 以上の整数値を指定できます。ＣＰＵ時間を浪費してしまうのを避けるのに有効です。</p></td>
+</tr>
+</table>
+</div>
+
+<p>もし --file-only-profile オプションを指定せずに <code>/usr/lib/ccs/init_policy</code> を実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
+
+<pre>
+0-COMMENT=-----Disabled Mode-----
+0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+1-COMMENT=-----Learning Mode-----
+1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+2-COMMENT=-----Permissive Mode-----
+2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+3-COMMENT=-----Enforcing Mode-----
+3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>もし <code>/usr/lib/ccs/init_policy --file-only-profile</code> のように実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
+
+<pre>
+0-COMMENT=-----Disabled Mode-----
+0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+0-CONFIG::file={ mode=disabled grant_log=no reject_log=yes }
+1-COMMENT=-----Learning Mode-----
+1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+1-CONFIG::file={ mode=learning grant_log=no reject_log=yes }
+2-COMMENT=-----Permissive Mode-----
+2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+2-CONFIG::file={ mode=permissive grant_log=no reject_log=yes }
+3-COMMENT=-----Enforcing Mode-----
+3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+3-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<h3><a name="9.2">9.2. プロファイルの構文</a></h3>
+
+<h4><a name="9.2.1">9.2.1. 書式</a></h4>
+
+<p>各プロファイルには３種類の行が存在します：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>COMMENT</p></td>
+<td><p>プロファイルの内容を説明するための１行コメント。</p></td>
+</tr>
+<tr>
+<td><p>CONFIG</p></td>
+<td><p>アクセス制御モードの設定。</p></td>
+</tr>
+<tr>
+<td><p>PREFERENCE</p></td>
+<td><p>様々なオプションの設定。</p></td>
+</tr>
+</table>
+</div>
+
+<h4><a name="9.2.2">9.2.2. CONFIG 行</a></h4>
+
+<p>CONFIG 行では以下のオプションを指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>オプション</p></th>
+<th><p>デフォルト</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>grant_log="$bool"</p></td>
+<td><p>no</p></td>
+<td><p>アクセス許可ログを生成するかどうかを指定します。 yes または no を指定できます。</p></td>
+</tr>
+<tr>
+<td><p>reject_log="$bool"</p></td>
+<td><p>yes</p></td>
+<td><p>アクセス拒否ログを生成するかどうかを指定します。 yes または no を指定できます。</p></td>
+</tr>
+<tr>
+<td><p>mode</p></td>
+<td><p>disabled</p></td>
+<td><p>アクセス制御モードを指定します。以下の表を参照してください。</p></td>
+</tr>
+</table>
+</div>
+
+<p>CONFIG 行の mode パラメータは以下の値を指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>値</p></th>
+<th><p>意味</p></th>
+</tr>
+<tr>
+<td><p>disabled</p></td>
+<td><p>無効。通常のカーネルと同様に動作する。</p></td>
+</tr>
+<tr>
+<td><p>learning</p></td>
+<td><p>学習モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加する。</p></td>
+</tr>
+<tr>
+<td><p>permissive</p></td>
+<td><p>確認モード。アクセス要求がポリシーに違反しても拒否しない。アクセス要求をポリシーへ追加しない。</p></td>
+</tr>
+<tr>
+<td><p>enforcing</p></td>
+<td><p>強制モード。アクセス要求がポリシーに違反したら拒否する。アクセス要求をポリシーへ追加しない。</p></td>
+</tr>
+</table>
+</div>
+
+<p>デフォルトでは CONFIG 行に全てのカテゴリの全ての機能についてのアクセス制御モードの設定が行われます。 CONFIG 行が指定されていない場合、 mode=disabled が指定されたものとして解釈されます。ただし、カテゴリを指定した CONFIG 行を指定することにより、デフォルトの設定を上書きすることができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>アクセス制御モードが設定される範囲</p></th>
+</tr>
+<tr>
+<td><p>CONFIG</p></td>
+<td><p>全ての機能</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability</p></td>
+<td><p>非 POSIX ケイパビリティのみ</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file</p></td>
+<td><p>ファイルに関する操作のみ</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::ipc</p></td>
+<td><p>プロセス間通信に関する操作のみ</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::misc</p></td>
+<td><p>その他の操作のみ</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network</p></td>
+<td><p>ネットワークに関する操作のみ</p></td>
+</tr>
+</table>
+</div>
+
+<p>例えば、ファイルとネットワークに関する操作のみを制限するプロファイルをプロファイル番号 4 として作成する場合、以下のように指定します：</p>
+
+<pre>
+4-COMMENT=-----Enforcing file and network-----
+4-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+4-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+4-CONFIG::network={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>また、１つのプロファイルの中で複数のアクセス制御モードを組み合わせることも可能です。例えば、ネットワークに関する操作には強制モードを適用しつつ、ファイルに関する操作には学習モードを適用するということができます：</p>
+
+<pre>
+5-COMMENT=-----Learning file and Enforcing network-----
+5-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+5-CONFIG::file={ mode=learning grant_log=no reject_log=yes }
+5-CONFIG::network={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>カテゴリ単位の設定は、機能単位の設定により上書きすることができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>アクセス制御モードが設定される範囲</p></th>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_kernel_module</p></td>
+<td><p>create_module(2) init_module(2) delete_module(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_packet</p></td>
+<td><p>PACKET ソケットの使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_route</p></td>
+<td><p>ROUTE ソケットの使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_KEXEC_LOAD</p></td>
+<td><p>kexec_load(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_NICE</p></td>
+<td><p>nice(2) setpriority(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_PTRACE</p></td>
+<td><p>ptrace(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_REBOOT</p></td>
+<td><p>reboot(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_SETHOSTNAME</p></td>
+<td><p>sethostname(2) setdomainname(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_TIME</p></td>
+<td><p>stime(2) settimeofday(2) adjtimex(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_VHANGUP</p></td>
+<td><p>vhangup(2) の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::execute</p></td>
+<td><p>プログラムの実行およびドメイン遷移</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::open</p></td>
+<td><p>読み込みまたは書き込みモードでのファイルのオープン</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::create</p></td>
+<td><p>ファイルの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::unlink</p></td>
+<td><p>ファイルの削除</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkdir</p></td>
+<td><p>ディレクトリの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::rmdir</p></td>
+<td><p>ディレクトリの削除</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkfifo</p></td>
+<td><p>名前付きパイプの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mksock</p></td>
+<td><p>ＵＮＩＸドメインソケットの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::truncate</p></td>
+<td><p>ファイルの切り詰め</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::symlink</p></td>
+<td><p>シンボリックリンクの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkblock</p></td>
+<td><p>ブロック型デバイスファイルの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkchar</p></td>
+<td><p>キャラクタ型デバイスファイルの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::link</p></td>
+<td><p>ハードリンクの作成</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::rename</p></td>
+<td><p>ファイルやディレクトリの名前の変更</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chmod</p></td>
+<td><p>ファイルやディレクトリのモードの変更</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chown</p></td>
+<td><p>ファイルやディレクトリの所有者の変更</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chgrp</p></td>
+<td><p>ファイルやディレクトリのグループの変更</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::ioctl</p></td>
+<td><p>IOCTL の使用</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chroot</p></td>
+<td><p>ルートディレクトリの変更</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mount</p></td>
+<td><p>マウント</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::unmount</p></td>
+<td><p>アンマウント</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::pivot_root</p></td>
+<td><p>ルートディレクトリの交換</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_bind</p></td>
+<td><p>UDP ソケットが使用するローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_send</p></td>
+<td><p>UDP ソケットが送信時に使用するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_recv</p></td>
+<td><p>UDP ソケットが受信時に使用するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_bind</p></td>
+<td><p>TCP ソケットの bind() 操作</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_listen</p></td>
+<td><p>TCP ソケットの listen() 操作</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_connect</p></td>
+<td><p>TCP ソケットの connect() 操作</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_accept</p></td>
+<td><p>TCP ソケットの accept() 操作</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_bind</p></td>
+<td><p>RAW ソケットが使用するローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_send</p></td>
+<td><p>RAW ソケットが送信時に使用するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_recv</p></td>
+<td><p>RAW ソケットが受信時に使用するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_bind</p></td>
+<td><p>同一ホスト内でのデータグラムソケットが使用するローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_send</p></td>
+<td><p>同一ホスト内でのデータグラムソケットが送信してよいリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_recv</p></td>
+<td><p>同一ホスト内でのデータグラムソケットが受信してよいリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_bind</p></td>
+<td><p>同一ホスト内でのストリームソケットが使用するローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_listen</p></td>
+<td><p>同一ホスト内でのストリームソケットが待ち受けするローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_connect</p></td>
+<td><p>同一ホスト内でのストリームソケットが接続するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_accept</p></td>
+<td><p>同一ホスト内でのストリームソケットが受け付けるリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_bind</p></td>
+<td><p>同一ホスト内での SEQPACKET ソケットが使用するローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_listen</p></td>
+<td><p>同一ホスト内での SEQPACKET ソケットが待ち受けするローカルアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_connect</p></td>
+<td><p>同一ホスト内での SEQPACKET ソケットが接続するリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_accept</p></td>
+<td><p>同一ホスト内での SEQPACKET ソケットが受け付けるリモートアドレス</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::misc::env</p></td>
+<td><p>プログラム実行時の環境変数名</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::ipc::signal</p></td>
+<td><p>シグナルの送信</p></td>
+</tr>
+</table>
+</div>
+
+<p>例えば、プログラムの実行のみを制限するプロファイルは以下のように指定できます：</p>
+
+<pre>
+6-COMMENT=-----Enforcing file::execute only-----
+6-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+6-CONFIG::file::execute={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>パフォーマンス上の理由から、ファイルやディレクトリの属性を取得する操作だけを無効モードにしながら、その他のファイルに関する操作は強制モードにするというプロファイルを作成することもできます：</p>
+
+<pre>
+7-COMMENT=-----Enforcing file operations without getattr-----
+7-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+7-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+7-CONFIG::file::getattr={ mode=disabled grant_log=no reject_log=yes }
+</pre>
+
+<p>CONFIG::file::getattr 行は CONFIG::file 行の設定を上書きすることに注目してください。また、 CONFIG::file 行は CONFIG 行の設定（指定されていないので mode=disabled として解釈されます）を上書きすることに注目してください。このように指定することで、アクセスを制限したい操作だけを制限する詳細なプロファイルを定義することができます。</p>
+
+<h4><a name="9.2.3">9.2.3. PREFERENCE 行</a></h4>
+
+<p>PREFERENCE 行では以下のオプションを指定できます：</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>max_audit_log</p></td>
+<td><p><a href="policy-specification/proc-interface.html.ja#audit">/proc/ccs/audit</a> インタフェースに保持しておくアクセスログ（許可ログ＋拒否ログ）の件数の上限を指定します。 0 以上の整数値を指定できます。アクセスログが不要な場合には 0 を指定することができます。また、バイト数での上限を <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースから指定することもできます。</p></td>
+</tr>
+<tr>
+<td><p>max_learning_entry</p></td>
+<td><p>学習モードで動作中にカーネルが自動的に追加することができるアクセス許可の件数の上限を指定します。 0 以上の整数値を指定できます。 0 を指定すると学習モードは確認モードと同様に振舞うようになります。バイト数での上限を <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースから指定することもできます。</p></td>
+</tr>
+<tr>
+<td><p>enforcing_penalty</p></td>
+<td><p>強制モードでポリシー違反が発生した場合にスリープさせる時間を 0.1 秒単位で指定します。 0 以上の整数値を指定できます。ＣＰＵ時間を浪費してしまうのを避けるのに有効です。</p></td>
+</tr>
+</table>
+</div>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-8.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-10.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 8: ポリシーを変更する権限</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 10: 条件付きアクセス許可の使用</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-9.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-24 07:35:42 +0000 (Thu, 24 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

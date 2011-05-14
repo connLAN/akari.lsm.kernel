@@ -1,0 +1,599 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 9</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-9.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-8.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-10.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 9: Advanced profile management</h2>
+
+<h3><a name="9.1">9.1. Profile initialization</a></h3>
+
+<p>The initialization procedure performed using <code>/usr/lib/ccs/init_policy</code> can be modified using command-line options to make development of policy easier depending on what functionality you wish to restrict. For example, for those wishing to restrict only file-related operations can pass the "--file-only-profile" option. The options you pass upon initialization do not constrain how policy can be developed, as the options merely change the default values for files created within the policy directory. These files can be modified using the policy editor at any later date to fit your needs. The following table summarizes the command-line options available:</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr>
+<th><p>Option</p></th>
+<th><p>Default</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>--full-profile</p></td>
+<td><p>Selected</p></td>
+<td><p>Create profiles with all functionality enabled. This is the default unless "--file-only-profile" is specified.</p></td>
+</tr>
+<tr>
+<td><p>--file-only-profile</p></td>
+<td><p>Not selected</p></td>
+<td><p>Create profiles with only file-related functionality enabled.</p></td>
+</tr>
+<tr>
+<td><p>--use_profile="$number"</p></td>
+<td><p>0</p></td>
+<td><p>Set the profile number for the "&lt;kernel&gt;" domain when creating "/etc/ccs/domain_policy.conf". This value must be an integer between 0 and 255.</p></td>
+</tr>
+<tr>
+<td><p>--use_group="$number"</p></td>
+<td><p>0</p></td>
+<td><p>Set the ACL group for the "&lt;kernel&gt;" domain when creating "/etc/ccs/domain_policy.conf". This value must be an integer between 0 and 255.</p></td>
+</tr>
+<tr>
+<td><p>--root="$rootdir"</p></td>
+<td><p>/</p></td>
+<td><p>Change the root directory in which to create configuration files.</p></td>
+</tr>
+<tr>
+<td><p>--policy_dir="$configdir"</p></td>
+<td><p>/etc/ccs/</p></td>
+<td><p>Change the directory in which to create configuration files. If you specify this option then a symbolic link must be created named "/etc/ccs" that points to "$condigdir".</p></td>
+</tr>
+<tr>
+<td><p>--module_name="$name"</p></td>
+<td><p>ccsecurity</p></td>
+<td><p>Set the name of loadable kernel module when creating "/etc/ccs/ccs-load-module", which is called by "/sbin/ccs-init" if TOMOYO Linux was built as a loadable kernel module (CONFIG_CCSECURITY_LKM=y).</p></td>
+</tr>
+<tr>
+<td><p>--grant_log="$bool"</p></td>
+<td><p>no</p></td>
+<td><p>Set whether grant logs should be audited. This value can be either "yes" or "no".</p></td>
+</tr>
+<tr>
+<td><p>--reject_log="$bool"</p></td>
+<td><p>yes</p></td>
+<td><p>Set whether reject logs should be audited. This value can be either "yes" or "no".</p></td>
+</tr>
+<tr>
+<td><p>--max_audit_log="$number"</p></td>
+<td><p>1024</p></td>
+<td><p>Set maximum audit log (grant/reject logs) entries that the kernel will spool in the <a href="policy-specification/proc-interface.html.en#audit">/proc/ccs/audit</a> interface. This value must be an integer, and can be set to "0" if audit logs are not required. Maximum memory used can also be controlled using the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface.</p></td>
+</tr>
+<tr>
+<td><p>--max_learning_entry="$number"</p></td>
+<td><p>2048</p></td>
+<td><p>Set the maximum number of ACL entries automatically added to each domain by the kernel when using learning mode. This value must be an integer, and setting to "0" makes the "Learning Mode" as if "Permissive Mode". Maximum memory used can also be controlled using the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface.</p></td>
+</tr>
+<tr>
+<td><p>--enforcing_penalty="$number"</p></td>
+<td><p>0</p></td>
+<td><p>Set the sleep penalty in deciseconds (1 decisecond = 0.1 seconds) that occurs when a process violates policy in "Enforcing Mode". This value must be an integer. This is useful to prevent CPU consumption issues.</p></td>
+</tr>
+</table>
+</div>
+
+<p>If you executed <code>/usr/lib/ccs/init_policy</code> without the "--file-only-profile" option, the CONFIG lines in "/etc/ccs/profile.conf" will look like this:</p>
+
+<pre>
+0-COMMENT=-----Disabled Mode-----
+0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+1-COMMENT=-----Learning Mode-----
+1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+2-COMMENT=-----Permissive Mode-----
+2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+3-COMMENT=-----Enforcing Mode-----
+3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>If you executed <code>/usr/lib/ccs/init_policy --file-only-profile</code>, the CONFIG lines in "/etc/ccs/profile.conf" will look like this:</p>
+
+<pre>
+0-COMMENT=-----Disabled Mode-----
+0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+0-CONFIG::file={ mode=disabled grant_log=no reject_log=yes }
+1-COMMENT=-----Learning Mode-----
+1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+1-CONFIG::file={ mode=learning grant_log=no reject_log=yes }
+2-COMMENT=-----Permissive Mode-----
+2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+2-CONFIG::file={ mode=permissive grant_log=no reject_log=yes }
+3-COMMENT=-----Enforcing Mode-----
+3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+3-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<h3><a name="9.2">9.2. Profile syntax</a></h3>
+
+<h4><a name="9.2.1">9.2.1. Fields</a></h4>
+
+<p>Each profile contains 3 fields:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Name</p></th>
+<th><p>Control</p></th>
+</tr>
+<tr>
+<td><p>COMMENT</p></td>
+<td><p>Description of the profile.</p></td>
+</tr>
+<tr>
+<td><p>CONFIG</p></td>
+<td><p>Configuration of operation mode.</p></td>
+</tr>
+<tr>
+<td><p>PREFERENCE</p></td>
+<td><p>Configuration of various options.</p></td>
+</tr>
+</table>
+</div>
+
+<h4><a name="9.2.2">9.2.2. The CONFIG field</a></h4>
+
+<p>The following options are available in the CONFIG field:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Option</p></th>
+<th><p>Default</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>grant_log="$bool"</p></td>
+<td><p>no</p></td>
+<td><p>Set whether grant logs should be audited. This value can be either "yes" or "no".</p></td>
+</tr>
+<tr>
+<td><p>reject_log="$bool"</p></td>
+<td><p>yes</p></td>
+<td><p>Set whether reject logs should be audited. This value can be either "yes" or "no".</p></td>
+</tr>
+<tr>
+<td><p>mode</p></td>
+<td><p>disabled</p></td>
+<td><p>Set what mode to use. See the table below.</p></td>
+</tr>
+</table>
+</div>
+
+<p>The "mode" parameter of the CONFIG line can contain one of the following values:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Value</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>disabled</p></td>
+<td><p>Works as if a regular kernel.</p></td>
+</tr>
+<tr>
+<td><p>learning</p></td>
+<td><p>Do not reject an access request if the request violates policy. Append the request to policy.</p></td>
+</tr>
+<tr>
+<td><p>permissive</p></td>
+<td><p>Do not reject an access request if the request violates policy. Do not append the request to policy.</p></td>
+</tr>
+<tr>
+<td><p>enforcing</p></td>
+<td><p>Reject an access request if the request violates policy. Do not append the request to policy.</p></td>
+</tr>
+</table>
+</div>
+
+<p>By default, the CONFIG line specifies the default operation mode for all categories and functionalities. The absence of the CONFIG line is equivalent to "mode=disabled". The default configuration can be overwritten by using one or more CONFIG lines per profile and using category-specific configuration:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Name</p></th>
+<th><p>Category to specify operation mode for</p></th>
+</tr>
+<tr>
+<td><p>CONFIG</p></td>
+<td><p>All operations</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability</p></td>
+<td><p>Non-POSIX Capabilities only</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file</p></td>
+<td><p>File related operations only</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::ipc</p></td>
+<td><p>Inter-process communications only</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::misc</p></td>
+<td><p>Other miscellaneous parameters only</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network</p></td>
+<td><p>Network related operations only</p></td>
+</tr>
+</table>
+</div>
+
+<p>For example, only file and network operations could be restricted by adding a fourth profile:</p>
+
+<pre>
+4-COMMENT=-----Enforcing file and network-----
+4-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+4-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+4-CONFIG::network={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>It is also possible to mix different restriction modes within a single profile, such as enforcing network operations but staying in "Learning Mode" for file-related operations:</p>
+
+<pre>
+5-COMMENT=-----Learning file and Enforcing network-----
+5-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+5-CONFIG::file={ mode=learning grant_log=no reject_log=yes }
+5-CONFIG::network={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>Category-specific configuration can be further overwritten by functionality-specific configuration:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Name</p></th>
+<th><p>Functionality to specify operation mode for</p></th>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_kernel_module</p></td>
+<td><p>Use of the create_module(2), init_module(2) and delete_module(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_packet</p></td>
+<td><p>Use of PACKET sockets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::use_route</p></td>
+<td><p>Use of ROUTE sockets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_KEXEC_LOAD</p></td>
+<td><p>Use of kexec_load(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_NICE</p></td>
+<td><p>Use of nice(2) and setpriority(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_PTRACE</p></td>
+<td><p>Use of ptrace(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_REBOOT</p></td>
+<td><p>Use of reboot(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_SETHOSTNAME</p></td>
+<td><p>Use of sethostname(2) and setdomainname(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_TIME</p></td>
+<td><p>Use of stime(2), settimeofday(2) and adjtimex(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::capability::SYS_VHANGUP</p></td>
+<td><p>Use of vhangup(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::execute</p></td>
+<td><p>Program execution and domain transition</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::open</p></td>
+<td><p>Opening files for reading or writing</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::create</p></td>
+<td><p>File creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::unlink</p></td>
+<td><p>File deletion</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkdir</p></td>
+<td><p>Directory creation.</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::rmdir</p></td>
+<td><p>Directory deletion.</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkfifo</p></td>
+<td><p>FIFO creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mksock</p></td>
+<td><p>UNIX domain socket creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::truncate</p></td>
+<td><p>File truncation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::symlink</p></td>
+<td><p>Symlink creation.</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkblock</p></td>
+<td><p>Block device file creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mkchar</p></td>
+<td><p>Character device file creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::link</p></td>
+<td><p>Link creation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::rename</p></td>
+<td><p>File or directory renaming</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chmod</p></td>
+<td><p>File or directory chmod</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chown</p></td>
+<td><p>File or directory chown</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chgrp</p></td>
+<td><p>File or directory chgrp</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::ioctl</p></td>
+<td><p>Use of the ioctl system calls</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::chroot</p></td>
+<td><p>Use of chroot</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::mount</p></td>
+<td><p>Use of mount</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::unmount</p></td>
+<td><p>Use of umount</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::file::pivot_root</p></td>
+<td><p>Use of pivot_root</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_bind</p></td>
+<td><p>UDP socket local address restriction</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_send</p></td>
+<td><p>UDP socket remote address restriction for outgoing packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_dgram_recv</p></td>
+<td><p>UDP socket remote address restriction for incoming packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_bind</p></td>
+<td><p>TCP socket bind() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_listen</p></td>
+<td><p>TCP socket listen() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_connect</p></td>
+<td><p>TCP socket connect() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_stream_accept</p></td>
+<td><p>TCP socket's accept() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_bind</p></td>
+<td><p>RAW socket local address restriction</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_send</p></td>
+<td><p>RAW socket remote address restriction for outgoing packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::inet_raw_recv</p></td>
+<td><p>RAW socket remote address restriction for incoming packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_bind</p></td>
+<td><p>UNIX domain datagram socket local address restriction</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_send</p></td>
+<td><p>UNIX domain datagram socket remote address restriction for outgoing packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_dgram_recv</p></td>
+<td><p>UNIX domain datagram socket remote address restriction for incoming packets</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_bind</p></td>
+<td><p>UNIX domain stream socket bind() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_listen</p></td>
+<td><p>UNIX domain stream socket listen() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_connect</p></td>
+<td><p>UNIX domain stream socket connect() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_stream_accept</p></td>
+<td><p>UNIX domain stream socket accept() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_bind</p></td>
+<td><p>UNIX domain seqpacket socket bind() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_listen</p></td>
+<td><p>UNIX domain seqpacket socket listen() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_connect</p></td>
+<td><p>UNIX domain seqpacket socket connect() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::network::unix_seqpacket_accept</p></td>
+<td><p>UNIX domain seqpacket socket accept() operation</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::misc::env</p></td>
+<td><p>Environment variable names</p></td>
+</tr>
+<tr>
+<td><p>CONFIG::ipc::signal</p></td>
+<td><p>Use of signal transmission requests</p></td>
+</tr>
+</table>
+</div>
+
+<p>For example, you could create a profile for only restricting file execution:</p>
+
+<pre>
+6-COMMENT=-----Enforcing file::execute only-----
+6-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+6-CONFIG::file::execute={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>For performance, permission checks for getting attributes for files and directories could be disabled while still enabling other permission checks for files:</p>
+
+<pre>
+7-COMMENT=-----Enforcing file operations without getattr-----
+7-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+7-CONFIG::file={ mode=enforcing grant_log=no reject_log=yes }
+7-CONFIG::file::getattr={ mode=disabled grant_log=no reject_log=yes }
+</pre>
+
+<p>Note that the settings for "CONFIG::file::getattr" overwrite the settings for "CONFIG::file", which in turn overwrite the settings for "CONFIG" (which in this case has not been set and so is equivalent to "mode=disabled"). This allows fine-grained control over which operations you wish to restrict.</p>
+
+<h4><a name="9.2.3">9.2.3. The PREFERENCE field</a></h4>
+
+<p>The PREFERENCE line holds the following options:</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr>
+<th><p>Name</p></th>
+<th><p>Function</p></th>
+</tr>
+<tr>
+<td><p>max_audit_log</p></td>
+<td><p>Set maximum audit log (grant/reject logs) entries that the kernel will spool in the <a href="policy-specification/proc-interface.html.en#audit">/proc/ccs/audit</a> interface. This value must be an integer, and can be set to "0" if audit logs are not required. Maximum memory used can also be controlled using the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface.</p></td>
+</tr>
+<tr>
+<td><p>max_learning_entry</p></td>
+<td><p>Set the maximum number of ACL entries automatically added to each domain by the kernel when using learning mode. This value must be an integer, and setting to "0" makes the "Learning Mode" as if "Permissive Mode". Maximum memory used can also be controlled using the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface.</p></td>
+</tr>
+<tr>
+<td><p>enforcing_penalty</p></td>
+<td><p>Set the sleep penalty in deciseconds (1 decisecond = 0.1 seconds) that occurs when a process violates policy in "Enforcing Mode". This value must be an integer. This is useful to prevent CPU consumption issues.</p></td>
+</tr>
+</table>
+</div>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-8.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-10.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 8: Interface permissions</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 10: Using conditional parameters in policy</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-9.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-24 07:35:42 +0000 (Thu, 24 Mar 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

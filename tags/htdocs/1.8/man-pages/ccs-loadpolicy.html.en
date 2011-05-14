@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<TITLE>TOMOYO Linux : ccs-loadpolicy man page</TITLE>
+</head>
+
+<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
+<!-- .\" -->
+<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
+<!-- .\" -->
+<!-- .\" You may distribute under the terms of the GNU General Public -->
+<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
+<!-- .\" ccs-tools source tarball. -->
+<!-- .\" -->
+<!-- .TH "CCS-LOADPOLICY" "8" "April 2011" "ccs-loadpolicy 1.8.1" "System Administration Utilities" -->
+<CENTER>
+<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>CCS-LOADPOLICY (8)</NOBR><HR></H1>
+</CENTER>
+<!-- .SH "NAME" -->
+<A name=>
+
+     <H3>NAME</H3>
+
+</A>
+<BLOCKQUOTE>
+ccs-loadpolicy - load TOMOYO Linux policy manually
+<!-- .SH "SYNOPSIS" -->
+</BLOCKQUOTE>
+<A name=1>
+
+     <H3>SYNOPSIS</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .B ccs-loadpolicy [options] -->
+<B>ccs-loadpolicy [options]</B> <!-- .sp -->
+<P>
+<!-- .B ccs-loadpolicy [options] <remote_ip:remote_port> -->
+<B>ccs-loadpolicy [options] &lt;remote_ip:remote_port&gt;</B> <!-- .SH "DESCRIPTION" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>DESCRIPTION</H3>
+
+</A>
+<BLOCKQUOTE>
+This program reads TOMOYO Linux policy from standard input and loads it into the kernel.
+<!-- .SH "OPTIONS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>OPTIONS</H3>
+
+</A>
+<BLOCKQUOTE>
+<B>-e</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Append to <I>/proc/ccs/exception_policy</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-ef</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Overwrite to <I>/proc/ccs/exception_policy</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-d</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Append to <I>/proc/ccs/domain_policy</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-df</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Overwrite to <I>/proc/ccs/domain_policy</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-m</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Append to <I>/proc/ccs/manager</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-p</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Append to <I>/proc/ccs/profile</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>-s</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Append to <I>/proc/ccs/stat</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>&lt;remote_ip:remote_port&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Instead of writing to local kernel memory, write to an agent waiting at port <I>&lt;remote_port&gt;</I> on IP address <I>&lt;remote_ip&gt;</I>.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<!-- .SH "EXAMPLES" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>EXAMPLES</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .B Add \&"file read proc:/meminfo\&" to acl_group 0: -->
+<B>Add  file read proc:/meminfo to acl_group 0:</B> <!-- .nf -->
+<PRE>
+echo "acl_group 0 file read proc:/meminfo" | ccs-loadpolicy -e
+<!-- .fi -->
+</PRE>
+<!-- .PP -->
+<P>
+<!-- .B Remove \&"file read proc:/meminfo\&" from acl_group 0: -->
+<B>Remove  file read proc:/meminfo from acl_group 0:</B> <!-- .nf -->
+<PRE>
+echo "delete acl_group 0 file read proc:/meminfo" | ccs-loadpolicy -e
+<!-- .fi -->
+</PRE>
+<!-- .PP -->
+<P>
+<!-- .B Add \&"file execute /sbin/init\&" to <kernel> domain: -->
+<B>Add  file execute /sbin/init to &lt;kernel&gt; domain:</B> <!-- .nf -->
+<PRE>
+( echo "&lt;kernel&gt;"; echo "file execute /sbin/init" ) | ccs-loadpolicy -d
+<!-- .fi -->
+</PRE>
+<!-- .PP -->
+<P>
+<!-- .B Replace currently loaded domain policy with \&"/etc/ccs/domain_policy.conf\&": -->
+<B>Replace currently loaded domain policy with  /etc/ccs/domain_policy.conf :</B> <!-- .nf -->
+<PRE>
+ccs-loadpolicy -df &lt; /etc/ccs/domain_policy.conf
+<!-- .fi -->
+</PRE>
+<!-- .PP -->
+<P>
+<!-- .B Append \&"/etc/ccs/192.168.1.1/domain_policy.conf to 192.168.1.1:10000: -->
+<B>Append /etc/ccs/192.168.1.1/domain_policy.conf to 192.168.1.1:10000:</B> <!-- .nf -->
+<PRE>
+ccs-loadpolicy -d 192.168.1.1:10000 &lt; /etc/ccs/192.168.1.1/domain_policy.conf
+<!-- .fi -->
+</PRE>
+<!-- .PP -->
+<P>
+<!-- .B Remove \&"/usr/sbin/ccs-queryd\&" from \&"/proc/ccs/manager\&": -->
+<B>Remove  /usr/sbin/ccs-queryd from  /proc/ccs/manager :</B> <!-- .nf -->
+<PRE>
+echo "delete /usr/sbin/ccs-queryd" | ccs-loadpolicy -m
+<!-- .fi -->
+</PRE>
+<!-- .SH "NOTES" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>NOTES</H3>
+
+</A>
+<BLOCKQUOTE>
+Before this program can be invoked, it must be registered in <I>/proc/ccs/manager</I>. After initializing policy, this is usually as simple as rebooting the system.
+<!-- .SH "BUGS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>BUGS</H3>
+
+</A>
+<BLOCKQUOTE>
+If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.sourceforge.jp">tomoyo-users-en@lists.sourceforge.jp</A>
+<!-- .SH "AUTHORS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>AUTHORS</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .sp -->
+Main authors:
+<BLOCKQUOTE>
+Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+Other contributers:
+<BLOCKQUOTE>
+<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
+<P>Man pages, documentation and website.</P>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>SEE ALSO</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>ccs-savepolicy</B>(8), <B>ccs-editpolicy</B>(8), <B>ccs-editpolicy-agent</B>(8), <B>ccs-init</B>(8)
+<!-- .sp -->
+<P>
+See <A HREF="http://tomoyo.sourceforge.jp/">http://tomoyo.sourceforge.jp/</A> for more information.
+</BLOCKQUOTE>
+<P><HR>
+<TABLE width=100%><TR> <TD width=33%><I>ccs-loadpolicy 1.8.1</I></TD> <TD width=33% align=center>CCS-LOADPOLICY (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from ccs-loadpolicy using man macros.</FONT>
+</BODY></HTML>

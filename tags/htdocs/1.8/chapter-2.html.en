@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 2</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-2.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-1.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-3.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 2: Why do I need TOMOYO Linux?</h2>
+
+<h3><a name="2.1">2.1. What is TOMOYO Linux?</a></h3>
+
+<p>TOMOYO Linux is a <strong>Mandatory Access Control (MAC)</strong> implementation for Linux that can be used for system analysis or to increase the security of a system. The project was launched in March 2003 and is sponsored by NTT DATA Corporation, Japan. For further technical information, see the <a href="http://tomoyo.sourceforge.jp/">SourceForge project page</a>.</p>
+
+<p><strong>TOMOYO Linux 1.x</strong> is the original branch of development, which was first released on 11th November 2005 under the GPL. It was implemented as a patch that can be applied to the Linux kernel and is still in active development.</p>
+
+<p><strong>TOMOYO Linux 2.x</strong> is the Linux mainline kernel branch of development. In June 2009, a subset of TOMOYO functionality was merged into the Linux kernel 2.6.30 and makes use of standard Linux Security Module (LSM) hooks. However, the LSM hooks must be extended further in order to port the full MAC functionality of TOMOYO Linux 1.x into the Linux kernel. Thus, it does not yet provide equal functionality with the 1.x branch of development. <a href="http://tomoyo.sourceforge.jp/comparison.html.en">This chart compares the differences</a> between each branch.</p>
+
+<p>This guide is specifically intended for the TOMOYO Linux 1.8.x branch.</p>
+
+<h3><a name="2.2">2.2. What is Mandatory Access Control?</a></h3>
+
+<p>In an operating system (OS), <strong>each program or process is mostly unrestricted</strong> in the tasks that they are able to perform (see illustration below). A security focused OS should implement some form of restriction that prevents a process from performing tasks that they should not perform, or that the administrator specifically wants to prevent them from performing. For example, a web server such as Apache should be allowed to provide only web services. It should not have access to areas of the filesystem that it does not need, and it should not be allowed to start or interact with other unrelated processes. The Linux filesystem Access Control Lists (ACLs) provide little protection, especially as many services are run as the root user. MAC on the other hand can take this protection much further, allowing very precise control over what each process is allowed to do, even for processes running as root (see illustration below). This is important in the event that a process is compromised. Without MAC, <strong>a compromised process would be free to do what it wants!</strong></p>
+
+<p><strong>Unrestricted access on a normal OS:</strong></p>
+<img src="media/fig-1-1.jpg" alt="fig-1-1.jpg" width="500" height="350">
+<p><strong>Restricted access on an OS using MAC:</strong></p>
+<img src="media/fig-1-2.jpg" alt="fig-1-2.jpg" width="500" height="350">
+
+<p>MAC therefore provides a way to create a <strong>"policy of least privilege"</strong>. This is where each process has a definition of what they are allowed to do, which is called the "policy". <strong>This policy allows as little as possible for the process to function normally.</strong> If a process or application tries to perform a task that is not allowed by this policy, it is denied the ability to perform this task. This prevents any unwanted activity from occurring.</p>
+
+<h3><a name="2.3">2.3. How can TOMOYO Linux help me?</a></h3>
+
+<p>An important part of MAC is the creation and management of this policy for every process in a system, which requires knowledge of precisely what each process should be allowed to do. This may sound like a fiendishly difficult task and it requires a high degree of understanding and skill. However, TOMOYO Linux provides a "Learning Mode" for automatically generating policy easily and can provide a base from which policy can be developed and refined. <strong>This "Learning Mode" can thus be used alongside a firm understanding of the concepts involved in TOMOYO Linux to secure a system in a short amount of time</strong>. Any experienced Linux administrator should be able to set up and use TOMOYO Linux within a day!</p>
+
+<p>A restricted system helps to reduce the damage done when an application is compromised. For example, damage can be reduced from security exploits such as buffer overflows. Such protection is therefore especially important for internet-facing services such as Apache or SSH. If a policy of least privilege is in place, a remote attacker that gains control of such an application can be prevented from further compromising a system.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-1.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-3.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 1: Introduction</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 3: How do I install TOMOYO Linux?</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-2.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-13 23:38:34 +0000 (Sun, 13 Feb 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : TOMOYO Linux on CAT760</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="cat760-sh.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>TOMOYO Linux on CAT760</h2>
+
+<p>This page describes how to run TOMOYO Linux on <a href="http://www.si-linux.co.jp/index.php?CAT/CAT760">CAT760</a>. This page assumes Debian Sarge for x86 architecture as the host environment.</p>
+
+<a href="#basic">Basic course: Using kernel and rootfs stored on compact flash memory</a>
+<ul>
+<li><a href="#basic_1">Step 1: Building host environment</a></li>
+<li><a href="#basic_2">Step 2: Installing packaged needed for compiling</a></li>
+<li><a href="#basic_3">Step 3: Compiling kernel</a></li>
+<li><a href="#basic_4">Step 4: Compiling tools</a></li>
+<li><a href="#basic_5">Step 5: Formatting compact flash memory</a></li>
+<li><a href="#basic_6">Step 6: Copying to compact flash memory</a></li>
+<li><a href="#basic_7">Step 7: Initializing policy configuration</a></li>
+<li><a href="#basic_8">Step 8: Adjusting policy configuration</a></li>
+<li><a href="#basic_9">Step 9: Creating policy configuration</a></li>
+<li><a href="#basic_appendix">Appendix: Restoring factory defaults</a></li>
+</ul>
+<a href="#advanced">Advanced course: Using kernel and rootfs stored on flash ROM</a>
+<ul>
+<li><a href="#advanced_1">Step 1: Building host environment</a></li>
+<li><a href="#advanced_2">Step 2: Installing packaged needed for compiling</a></li>
+<li><a href="#advanced_3">Step 3: Compiling kernel</a></li>
+<li><a href="#advanced_4">Step 4: Compiling tools</a></li>
+<li><a href="#advanced_5">Step 5: Formatting compact flash memory</a></li>
+<li><a href="#advanced_6">Step 6: Making a backup</a></li>
+<li><a href="#advanced_7">Step 7: Editing rootfs</a></li>
+<li><a href="#advanced_8">Step 8: Updating flash ROM</a></li>
+<li><a href="#advanced_appendix">Appendix: Restoring factory defaults</a></li>
+</ul>
+
+<h2><a name="basic">Basic course: Using kernel and rootfs stored on compact flash memory</a></h2>
+
+<h3><a name="basic_1">Step 1: Building host environment</a></h3>
+
+<p>Since Debian Sarge is already End Of Life reached, you need to change download server for packages. Login as root user and rewrite /etc/apt/sources.list as follows.</p>
+
+<pre class="command">
+deb http://archive.debian.org/debian-archive/debian/ sarge main contrib non-free
+deb http://archive.debian.org/debian-archive/debian-security/ sarge/updates main contrib non-free
+</pre>
+
+<p>Next, install Linux 2.6 kernels so that fdisk command's "-l" option can show list of device files.</p>
+
+<pre class="command">
+# apt-get update
+# apt-get -y install kernel-image-2.6.8-4-686-smp
+</pre>
+
+<p>Reboot with 2.6.8-4-686-smp kernel.</p>
+
+<pre class="command">
+# reboot
+</pre>
+
+<h3><a name="basic_2">Step 2: Installing packaged needed for compiling</a></h3>
+
+<p>Create /mnt/cdrom as the mount point for development CDROM and mount the CDROM there.</p>
+
+<pre class="command">
+# mkdir -p /mnt/cdrom
+# mount -t iso9660 -o ro /dev/cdrom /mnt/cdrom/
+</pre>
+
+<p>Install packages needed by cross compilers in CDROM.</p>
+
+<pre class="command">
+# apt-get -y install gcc-3.4-base
+</pre>
+
+<p>Install cross compilers in CDROM. But uninstall gdb-sh4-linux package because it contains files which conflicts with binutils package.</p>
+
+<pre class="command">
+# dpkg -i /mnt/cdrom/cross-tools/debian-sarge/sh4/*.deb
+# dpkg --purge gdb-sh4-linux
+</pre>
+
+<p>Install packages needed for compiling kernel and tools.</p>
+
+<pre class="command">
+# apt-get -y install patch make gcc libc6-dev libncurses5-dev
+</pre>
+
+<h3><a name="basic_3">Step 3: Compiling kernel</a></h3>
+
+<p>Extract kernel source.</p>
+
+<pre class="command">
+# cd
+# tar -zxf /mnt/cdrom/kernel/linux-2.6.15-cat_20080502.tgz
+# cd linux-2.6.15-cat
+</pre>
+
+<p>Download and apply TOMOYO Linux patch.</p>
+
+<pre class="command">
+# wget -O ccs-patch-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz'
+# wget -O ccs-patch-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz.asc'
+# gpg ccs-patch-1.8.1-20110511.tar.gz.asc
+# tar -zxf ccs-patch-1.8.1-20110511.tar.gz
+# patch -p1 &lt; patches/ccs-patch-2.6.15-cat-760.diff
+</pre>
+
+<p>Create kernel config.</p>
+
+<pre class="command">
+# make cat760_defconfig
+</pre>
+
+<p>Compile the kernel.</p>
+
+<pre class="command">
+# make
+# make modules_install
+</pre>
+
+<p>Loadable kernel modules are installed under /home/ebihara/tmp/lib/modules/2.6.15-sh/ directory by "make modules_install". Thus, copy the kernel to under /home/ebihara/tmp/ directory.</p>
+
+<pre class="command">
+# mkdir -p /home/ebihara/tmp/
+# cp -p arch/sh/boot/zImage /home/ebihara/tmp/
+</pre>
+
+<h3><a name="basic_4">Step 4: Compiling tools</a></h3>
+
+<p>Download TOMOYO Linux's tools source code.</p>
+
+<pre class="command">
+# cd
+# wget -O ccs-tools-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz'
+# wget -O ccs-tools-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz.asc'
+# gpg ccs-tools-1.8.1-20110511.tar.gz.asc
+# tar -zxf ccs-tools-1.8.1-20110511.tar.gz
+</pre>
+
+<p>Do cross compilation for CAT760. Cross compiled programs are installed under /home/ebihara/tmp/sbin/ directory and /home/ebihara/tmp/usr/ directory.</p>
+
+<pre class="command">
+# make -C ccstools/ CC=sh4-linux-gcc INSTALLDIR=/home/ebihara/tmp/ install clean
+</pre>
+
+<p>Delete man pages as we don't need them.</p>
+
+<pre class="command">
+# rm -fR /home/ebihara/tmp/usr/share/
+</pre>
+
+<p>To operate from host environment, compile tools for host environment as well. Compiled programs are installed under /sbin/ directory and /usr/ directory.</p>
+
+<pre class="command">
+# make -sC ccstools/ install clean
+</pre>
+
+<h3><a name="basic_5">Step 5: Formatting compact flash memory</a></h3>
+
+<p>Insert a compact flash memory which will be used as / partition on CAT760 to host environment's card slot.</p>
+
+<p>Check device file's name for the compact flash memory using fdisk command.</p>
+
+<pre class="command">
+# fdisk -l
+
+Disk /dev/sda: 4294 MB, 4294967296 bytes
+255 heads, 63 sectors/track, 522 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1         522     4192933+  83  Linux
+
+Disk /dev/sdb: 251 MB, 251658240 bytes
+8 heads, 60 sectors/track, 1024 cylinders
+Units = cylinders of 480 * 512 = 245760 bytes
+
+Disk /dev/sdb doesn't contain a valid partition table
+</pre>
+
+<p>This page, hereafter, assumes device file's name for the compact flash memory in the host environment is /dev/sdb .</p>
+
+<p>Create partitions on the compact flash memory using fdisk command.</p>
+
+<pre class="command">
+# fdisk /dev/sdb
+</pre>
+
+<pre class="output">
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
+Building a new DOS disklabel. Changes will remain in memory only,
+until you decide to write them. After that, of course, the previous
+content won't be recoverable.
+
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
+
+Command (m for help): n
+Command action
+   e   extended
+   p   primary partition (1-4)
+p
+Partition number (1-4): 1
+First cylinder (1-1024, default 1):
+Using default value 1
+Last cylinder or +size or +sizeM or +sizeK (1-1024, default 1024):
+Using default value 1024
+
+Command (m for help): w
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</pre>
+
+<p>Format the compact flash memory as ext2 filesystem so that the compact flash memory can be mounted as / partition.</p>
+
+<pre class="command">
+# mke2fs /dev/sdb1
+</pre>
+
+<pre class="output">
+mke2fs 1.37 (21-Mar-2005)
+Filesystem label=
+OS type: Linux
+Block size=1024 (log=0)
+Fragment size=1024 (log=0)
+61440 inodes, 245728 blocks
+12286 blocks (5.00%) reserved for the super user
+First data block=1
+30 block groups
+8192 blocks per group, 8192 fragments per group
+2048 inodes per group
+Superblock backups stored on blocks:
+        8193, 24577, 40961, 57345, 73729, 204801, 221185
+
+Writing inode tables: done
+Writing superblocks and filesystem accounting information: done
+
+This filesystem will be automatically checked every 38 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+</pre>
+
+<h3><a name="basic_6">Step 6: Copying to compact flash memory</a></h3>
+
+<p>Create /mnt/cfcard as the mount point and mount the compact flash memory there.</p>
+
+<pre class="command">
+# mkdir -p /mnt/cfcard
+# mount /dev/sdb1 /mnt/cfcard/
+</pre>
+
+<p>Extract the image file in CDROM into the compact flash memory.</p>
+
+<pre class="command">
+# cd /mnt/cfcard/
+# tar -zxf /mnt/cdrom/rootfs/files/target_cat760_20060722.tgz --strip 2
+</pre>
+
+<p>Copy cross compiled kernel and tools to compact flash memory.</p>
+
+<pre class="command">
+# cp -a /home/ebihara/tmp/* /mnt/cfcard/
+</pre>
+
+<p>Unmount the compact flash memory and insert it into CAT760.</p>
+
+<pre class="command">
+# cd
+# umount /mnt/cfcard/
+</pre>
+
+<h3><a name="basic_7">Step 7: Initializing policy configuration</a></h3>
+
+<p>Make sure that all switches on SW1 on the SH4-760 board are set to OFF, and power CAT760 on. Then, you will see prompt shown below.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 16:44:36
+ command line = console=ttySC0,115200 root=/dev/mtdblock2 ro rootfstype=jffs2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Enter the administrator mode. Password is silinux .</p>
+
+<pre class="command">
+admin
+</pre>
+
+<p>Set default commandline. In CAT760 environment, the compact flash memory is accessible via /dev/hda .</p>
+
+<pre class="command">
+setparam zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+</pre>
+
+<p>Boot with TOMOYO Linux disabled because policy is not yet initialized.</p>
+
+<pre class="command">
+boot zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2 ccsecurity=off
+</pre>
+
+<p>Login as user root , with password root .</p>
+
+<pre class="output">
+SiliconLinux for CAT709/760 supercat ttySC0
+
+supercat login: root
+Password:
+Unable to change tty /dev/ttySC0: Read-only file system
+supercat:~#
+</pre>
+
+<p>Make / read-write mode.</p>
+
+<pre class="command">
+supercat:~# mount -o remount,rw /
+</pre>
+
+<p>Initialize policy configuration. (If the host environment and the target environment are using same architecture, you can do "chroot /mnt/cfcard/ /usr/lib/ccs/init_policy" from the host environment. But since this page uses x86 as a host architecture and sh as a target architecture, you need to do /usr/lib/ccs/init_policy from the target environment in order to obtain correct result.)</p>
+
+<pre class="command">
+supercat:~# /usr/lib/ccs/init_policy
+</pre>
+
+<pre class="output">
+Creating policy directory... OK
+Creating exception policy... OK
+Creating domain policy... OK
+Creating manager policy... OK
+Creating default profile... OK
+Creating memory quota policy... OK
+Creating module loader... OK
+</pre>
+
+<p>Make / read-only mode.</p>
+
+<pre class="command">
+supercat:~# mount -o remount,ro /
+</pre>
+
+<p>Shutdown and eject the compact flash memory.</p>
+
+<pre class="command">
+supercat:~# halt
+</pre>
+
+<h3><a name="basic_8">Step 8: Adjusting policy configuration</a></h3>
+
+<p>Mount the compact flash memory. (If the host environment and the target environment are using same architecture, you can do "chroot /mnt/cfcard/" from the host environment. But since this page uses x86 as a host architecture and sh as a target architecture, you need to do cd . Note that the directory is not /etc/ but etc/ in below steps.)</p>
+
+<pre class="command">
+# mount /dev/sdb1 /mnt/cfcard/
+# cd /mnt/cfcard/
+</pre>
+
+<p>To make policy automatically saved upon shutdown, add below lines to just before "halt -d -f -i $poweroff $hddown" in etc/init.d/halt .</p>
+
+<pre class="command">
+halt --help &gt; /dev/null 2&gt;&amp;1
+mount -o remount,ro /
+mount -o remount,rw /
+/usr/sbin/ccs-savepolicy
+mount -o remount,ro /
+</pre>
+
+<p>Similarly, add below lines to just before "reboot -d -f -i" in etc/init.d/reboot .</p>
+
+<pre class="command">
+reboot --help &gt; /dev/null 2&gt;&amp;1
+mount -o remount,ro /
+mount -o remount,rw /
+/usr/sbin/ccs-savepolicy
+mount -o remount,ro /
+</pre>
+
+<p>To be able to edit policy remotely, create etc/init.d/ccs-editpolicy-agent .</p>
+
+<pre class="command">
+# echo '#! /bin/sh' &gt; etc/init.d/ccs-editpolicy-agent
+# echo 'exec /usr/lib/ccs/ccs-editpolicy-agent 0.0.0.0:10000 &amp;' &gt;&gt; etc/init.d/ccs-editpolicy-agent
+# chmod 700 etc/init.d/ccs-editpolicy-agent
+</pre>
+
+<p>Make etc/init.d/ccs-editpolicy-agent automatically executed upon boot. (If the host environment and the target environment are using same architecture, you can do "chroot /mnt/cfcard/ update-rc.d ccs-editpolicy-agent defaults" from the host environment. But since this page uses x86 as a host architecture and sh as a target architecture, you need to do the equivalent manually.)</p>
+
+<pre class="command">
+# ln -s ../init.d/ccs-editpolicy-agent etc/rcS.d/S60ccs-editpolicy-agent
+</pre>
+
+<p>Add /usr/lib/ccs/ccs-editpolicy-agent to etc/ccs/manager.conf (this file contains list of programs which are permitted to modify policy).</p>
+
+<pre class="command">
+# echo /usr/lib/ccs/ccs-editpolicy-agent &gt;&gt; etc/ccs/manager.conf
+</pre>
+
+<p>Update etc/ccs/domain_policy.conf so that learning mode starts upon boot.</p>
+
+<pre class="command">
+# cat &gt; etc/ccs/domain_policy.conf &lt;&lt; EOF
+&lt;kernel&gt;
+use_profile 1
+EOF
+</pre>
+
+<p>Set memory quota using etc/ccs/stat.conf . Since CAT760 has 64MB of RAM, this page sets 5MB for policy and 1MB for access logs and 1MB for interactive enforcing mode.</p>
+
+<pre class="command">
+# cat &gt; etc/ccs/stat.conf &lt;&lt; EOF
+Memory used by policy:         5242880
+Memory used by audit log:      1048576
+Memory used by query message:  1048576
+EOF
+</pre>
+
+<p>Unmount the compact flash memory.</p>
+
+<pre class="command">
+# cd
+# umount /mnt/cfcard/
+</pre>
+
+<h3><a name="basic_9">Step 9: Creating policy configuration</a></h3>
+
+<p>Power on and proceed to the boot loader.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 17:14:20
+ command line = zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Boot.</p>
+
+<pre class="command">
+boot
+</pre>
+
+<p>Login and operate as you like.</p>
+
+<p>If CAT760's IPv4 address is xxx.xxx.xxx.xxx , you can run</p>
+
+<pre class="command">
+# ccs-editpolicy xxx.xxx.xxx.xxx:10000
+</pre>
+
+<p>from the host environment in order to edit policy from the host environment. Similarly, you can run</p>
+
+<pre class="command">
+# ccs-auditd xxx.xxx.xxx.xxx:10000
+</pre>
+
+<p>from the host environment in order to save access logs generated on CAT760 in the host environment. Also, you can run</p>
+
+<pre class="command">
+# ccs-savepolicy xxx.xxx.xxx.xxx:10000 -d &gt; /tmp/domain_policy.conf
+</pre>
+
+<p>from the host environment in order to save the content of /proc/ccs/domain_policy on CAT760 into /tmp/domain_policy.conf on the host environment, you can run</p>
+
+<pre class="command">
+# ccs-loadpolicy xxx.xxx.xxx.xxx:10000 -d &lt; /tmp/domain_policy.conf
+</pre>
+
+<p>from the host environment in order to append the content of /tmp/domain_policy.conf on the host environment to /proc/ccs/domain_policy on the CAT760 .</p>
+
+<p>If you cannot boot CAT760 by operation errors, you can boot with TOMOYO Linux disabled by specifying "boot zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2 ccsecurity=off" at the boot prompt.</p>
+
+<h3><a name="basic_appendix">Appendix: Restoring factory defaults</a></h3>
+
+<p>To restore boot parameters modified at <a href="#basic_7">Step 7</a>, do the below steps.</p>
+
+<p>Power on and proceed to the boot loader.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 17:44:10
+ command line = zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Enter the administrator mode. Password is silinux .</p>
+
+<pre class="command">
+admin
+</pre>
+
+<p>Set commandline.</p>
+
+<pre class="command">
+setparam console=ttySC0,115200 root=/dev/mtdblock2 ro rootfstype=jffs2
+</pre>
+
+<h2><a name="advanced">Advanced course: Using kernel and rootfs stored on flash ROM</a></h2>
+
+<h3><a name="advanced_1">Step 1: Building host environment</a></h3>
+
+<p>Same with <a href="#basic_1">Step 1 in Basic course</a>.</p>
+
+<h3><a name="advanced_2">Step 2: Installing packaged needed for compiling</a></h3>
+
+<p>Same with <a href="#basic_2">Step 2 in Basic course</a>.</p>
+
+<h3><a name="advanced_3">Step 3: Compiling kernel</a></h3>
+
+<p>You don't need to care about the size of kernel if you boot using the kernel stored in compact flash memory. But you need to care about the size of kernel if you boot using the kernel stored in flash ROM. In CAT760's default partition setting, the size of partition for kernel is 1245184 (0x130000) bytes. The size of kernel built with default kernel config is 1212416 (0x128000) bytes. Thus, there is only 32KB of free spaces for kernel partition. (Regarding CAT760A, which is newer product of CAT760, the size of partition for kernel is shrunk to 1179648 (0x120000) bytes since the sector size of flash ROM has changed from 64KB to 128KB. Thus, note that by default insufficient free space for default kernel config.)</p>
+
+<p>If you built TOMOYO Linux's functionality into kernel, the size of kernel increases by about 48KB. Thus, you need to either expand kernel partition by shrinking rootfs partition size or make some modules as loadable kernel modules using kernel config.</p>
+
+<p>You can make most part of TOMOYO Linux's functionality as a loadable kernel module. If you build TOMOYO Linux as a loadable kernel module, the size of kernel increases only about 4KB.</p>
+
+<p>Steps are same with <a href="#basic_3">Step 3 in Basic course</a> except that you need to do below operations between "Create kernel config." ( make cat760_defconfig ) and "Compile the kernel." ( make ) if you want to make TOMOYO Linux as a loadable kernel module.</p>
+
+<pre class="command">
+# make menuconfig
+</pre>
+
+<p>Goto "Security options" section and select "Compile as loadable kernel module" in the "CCSecurity support" group.</p>
+
+<pre>
+[ ] Enable access key retention support
+[ ] Enable different security models
+[*] CCSecurity support
+[*]   Compile as loadable kernel module
+[ ]   Disable by default
+[ ]   Do not modify 'struct task_struct' in order to keep KABI
+(2048) Default maximal count for learning mode
+(/sbin/ccs-init) Default policy loader
+(/sbin/ccs-start) Alternative activation trigger
+(/sbin/modprobe /sbin/hotplug) Built-in domain initializer programs
+(1024)  Default maximal count for grant log
+(1024)  Default maximal count for reject log
+</pre>
+
+<p>Select "Exit" twice, and answer "Yes" to the question whether to save kernel config or not.</p>
+
+<h3><a name="advanced_4">Step 4: Compiling tools</a></h3>
+
+<p>Same with <a href="#basic_4">Step 4 in Basic course</a>.</p>
+
+<h3><a name="advanced_5">Step 5: Formatting compact flash memory</a></h3>
+
+<p>Same with <a href="#basic_5">Step 5 in Basic course</a>. But since the CAT760's boot loader does not support writing to ext2 partitions, you need to format as fat partition rather than ext2 partition. Thus, use mkfs.vfat command rather than mke2fs command.</p>
+
+<pre class="command">
+# mkfs.vfat /dev/sdb1
+</pre>
+
+<h3><a name="advanced_6">Step 6: Making a backup</a></h3>
+
+<p>Insert the compact flash memory into CAT760 and power CAT760 on and proceed to the boot loader.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 17:14:20
+ command line = zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Get the backup of kernel and rootfs currently stored in flash ROM.</p>
+
+<pre class="command">
+cp rom:zImage cf0:zImage-orig
+cp rom:rootfs cf0:rootfs-orig
+</pre>
+
+<p>Shutdown and eject the compact flash memory.</p>
+
+<h3><a name="advanced_7">Step 7: Editing rootfs</a></h3>
+
+<p>Insert the compact flash memory into the host environment and mount.</p>
+
+<pre class="command">
+# mount /dev/sdb1 /mnt/cfcard/
+</pre>
+
+<p>Install package for mkfs.jffs2 program.</p>
+
+<pre class="command">
+# apt-get install mtd-tools
+</pre>
+
+<p>Load mtdblock kernel module.</p>
+
+<pre class="command">
+# modprobe mtdblock
+</pre>
+
+<p>Load mtdram kernel module.</p>
+
+<pre class="command">
+# modprobe mtdram total_size=16384
+</pre>
+
+<p>Create device file which is used as rootfs .</p>
+
+<pre class="command">
+# mknod /dev/mtdblock2 b 31 2
+</pre>
+
+<p>Copy the rootfs to the device which is used as rootfs .</p>
+
+<pre class="command">
+# cat /mnt/cfcard/rootfs-orig &gt; /dev/mtdblock2
+</pre>
+
+<p>Mount the rootfs .</p>
+
+<pre class="command">
+# mkdir -p /mnt/rootfs
+# mount -t jffs2 /dev/mtdblock2 /mnt/rootfs/
+# cd /mnt/rootfs/
+</pre>
+
+<p>Edit as needed. (This step corresponds with Basic course's <a href="#basic_7">step 7</a> till <a href="#basic_9">step 9</a>.)
+Be sure to copy /sbin/ccs-init and /etc/ccs/ccs-load-module and files under /lib/modules/2.6.15-sh/ . If you forgot to copy, TOMOYO Linux will not be activated. Also, you need to prepare policy under /etc/ccs/ directory.</p>
+
+<p>Solidify the content of rootfs .</p>
+
+<pre class="command">
+# cd
+# mkfs.jffs2 -p -o /mnt/cfcard/rootfs -r /mnt/rootfs/
+</pre>
+
+<p>Unmount the rootfs .</p>
+
+<pre class="command">
+# umount /mnt/rootfs/
+</pre>
+
+<p>Eject the compact flash memory and insert it into CAT760.</p>
+
+<pre class="command">
+# umount /mnt/cfcard/
+</pre>
+
+<h3><a name="advanced_8">Step 8: Updating flash ROM</a></h3>
+
+<p>Power on and proceed to the boot loader.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 17:44:10
+ command line = zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Enter the administrator mode. Password is silinux .</p>
+
+<pre class="command">
+admin
+</pre>
+
+<p>Copy the kernel and rootfs .</p>
+
+<pre class="command">
+cp cf0:zImage rom:zImage
+cp cf0:rootfs rom:rootfs
+</pre>
+
+<p>Set default commandline.</p>
+
+<pre class="command">
+setparam console=ttySC0,115200 root=/dev/mtdblock2 ro rootfstype=jffs2
+</pre>
+
+<p>Boot.</p>
+
+<pre class="command">
+boot
+</pre>
+
+<p>That's all.</p>
+
+<p>If you cannot boot, you can boot with TOMOYO Linux disabled by specifying "boot console=ttySC0,115200 root=/dev/mtdblock2 ro rootfstype=jffs2 ccsecurity=off" at the boot prompt.</p>
+
+<h3><a name="advanced_appendix">Appendix: Restoring factory defaults</a></h3>
+
+<p>To restore the backup created at <a href="#advanced_6">Step 6</a>, do the below steps.</p>
+
+<p>Power on and proceed to the boot loader.</p>
+
+<pre class="output">
+ CAT BOOT for CAT760  Version: 1.07 Feb 27 2007 17:45:59
+ RTC clock :2010/05/04 17:44:10
+ command line = zimage=cf0:zImage console=ttySC0,115200 root=/dev/hda1 ro rootfstype=ext2
+ Mac address  = 00:03:82:03:03:C8
+ Boot size    = 0x10000
+ Kernel size  = 0x130000
+&gt;&gt;
+</pre>
+
+<p>Enter the administrator mode. Password is silinux .</p>
+
+<pre class="command">
+admin
+</pre>
+
+<p>Copy kernel and rootfs .</p>
+
+<pre class="command">
+cp cf0:zImage-orig rom:zImage
+cp cf0:rootfs-orig rom:rootfs
+</pre>
+
+<p>Set command line.</p>
+
+<pre class="command">
+setparam console=ttySC0,115200 root=/dev/mtdblock2 ro rootfstype=jffs2
+</pre>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="cat760-sh.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-11 12:21:55 +0100 (Wed, 11 May 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

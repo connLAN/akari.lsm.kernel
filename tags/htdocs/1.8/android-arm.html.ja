@@ -1,0 +1,443 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : TOMOYO Linux on Android</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="android-arm.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>TOMOYO Linux on Android</h2>
+
+<p>このページでは、 TOMOYO Linux を arm 用 Android エミュレータ上で動作させる手順について説明します。ホスト環境として x86_64 上で動作している Ubuntu 10.04.2 を使用します。</p>
+
+<h3>ステップ１：必要なパッケージのインストール</h3>
+
+<p><a href="http://source.android.com/source/download.html">http://source.android.com/source/download.html</a> に示されているとおり、必要なパッケージをインストールします。</p>
+
+<pre class="command">
+sudo add-apt-repository "deb http://archive.canonical.com/ lucid partner"
+sudo add-apt-repository "deb-src http://archive.canonical.com/ubuntu lucid partner"
+sudo apt-get update
+sudo apt-get install sun-java6-jdk 
+sudo update-java-alternatives -s java-6-sun
+sudo apt-get install git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib \
+g++-multilib libc6-dev-i386 lib32ncurses5-dev ia32-libs x11proto-core-dev libx11-dev lib32readline5-dev lib32z-dev
+</pre>
+
+<h3>ステップ２：環境変数の設定</h3>
+
+<p>以下の内容を環境変数として指定します。 ~/.bashrc などに追加しておくことをお勧めします。</p>
+
+<pre class="command">
+export ANDROID_HOME=$HOME/mydroid/
+export ANDROID_IMG=$ANDROID_HOME/image/
+export ANDROID_TOOLCHAIN=$ANDROID_HOME/prebuilt/linux-x86/toolchain/arm-eabi-4.4.3/bin/
+export PATH=$PATH:$ANDROID_HOME/out/host/linux-x86/bin/:$ANDROID_TOOLCHAIN
+</pre>
+
+<p>必要なディレクトリを作成します。</p>
+
+<pre class="command">
+mkdir -p $ANDROID_HOME
+mkdir -p $ANDROID_HOME/tmp
+mkdir -p $ANDROID_HOME/tmp/policy
+mkdir -p $ANDROID_IMG
+mkdir -p $ANDROID_IMG/tmp
+sudo mkdir /var/log/tomoyo
+sudo chown -R `id -u` /var/log/tomoyo/
+</pre>
+
+<h3>ステップ３： Android 環境の構築</h3>
+
+<p>エミュレータをコンパイルします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME
+wget http://android.git.kernel.org/repo
+chmod 755 repo
+./repo init -u git://android.git.kernel.org/platform/manifest.git
+./repo sync
+make
+</pre>
+
+<h3>ステップ４：ホスト環境用ツールのインストール</h3>
+
+<p>Android エミュレータを遠隔操作するために、ホスト側に TOMOYO Linux のツールをインストールします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/
+wget -O ccs-tools-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz'
+wget -O ccs-tools-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz.asc'
+gpg ccs-tools-1.8.1-20110511.tar.gz.asc
+tar -zxf ccs-tools-1.8.1-20110511.tar.gz
+cd ccstools
+make
+sudo make install
+</pre>
+
+<p>また、ポリシーをチューニングするためのツールを使うので、そのための準備を行います。</p>
+
+<pre class="command">
+sudo /usr/lib/ccs/init_policy
+sudo chown -R `id -u` /etc/ccs/
+echo 'rewrite head_pattern /acct/uid/\$/' &gt;&gt; /etc/ccs/tools/patternize.conf
+</pre>
+
+<p>また、ポリシーファイルをカーネルのソースコード内に埋め込むためのツールをコンパイルします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/
+wget -O tomoyo2c.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/tomoyo2c.c?revision=HEAD&amp;root=tomoyo'
+gcc -o tomoyo2c tomoyo2c.c
+</pre>
+
+<h3>ステップ５：エミュレータ環境用ツールのインストール</h3>
+
+<p>Android エミュレータ側にインストールするためのエージェントをコンパイルします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/
+wget -O agcc http://plausible.org/andy/agcc
+chmod 755 agcc
+./agcc -o ccs-editpolicy-agent $ANDROID_HOME/tmp/ccstools/usr_lib_ccs/ccs-editpolicy-agent.c
+chmod 700 ccs-editpolicy-agent
+</pre>
+
+<h3>ステップ６：初期ポリシーの作成</h3>
+
+<p>カーネル内に埋め込んでおくためのポリシーを作成します。</p>
+
+<ul>
+<li>全てのドメインを学習モードに設定する。</li>
+<li>ユーザＩＤまたはグループＩＤが 1 ～ 9999 に変化した時点で &lt;kernel&gt; //./system-user ドメインへと遷移する</li>
+<li>ユーザＩＤまたはグループＩＤが 10000 以上に変化した時点で &lt;kernel&gt; //./app-user ドメインへと遷移する</li>
+<li>予めある程度のアクセス許可を与えておく</li>
+<li>個々の Android アプリは区別しない</li>
+<li>ポリシーを変更できるのは /sbin/ccs-editpolicy-agent のみとする</li>
+</ul>
+
+<p>という設定での例を示します。 &lt;kernel&gt; //./app-user ドメインに対して ANY_PATHNAME への書き込み許可は与えすぎです。実際に利用する場合には例えば /system/ 以下への書き込みを禁止するなどの対策を行うべきです。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/policy/
+cat &gt; profile.conf &lt;&lt; "EOF"
+PROFILE_VERSION=20100903
+0-COMMENT=-----Disabled Mode-----
+0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0  }
+0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+1-COMMENT=-----Learning Mode-----
+1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0  }
+1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+2-COMMENT=-----Permissive Mode-----
+2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0  }
+2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+3-COMMENT=-----Enforcing Mode-----
+3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0  }
+3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+EOF
+cat &gt; exception_policy.conf &lt;&lt; "EOF"
+path_group ANY_PATHNAME /
+path_group ANY_PATHNAME /\{\*\}/
+path_group ANY_PATHNAME /\{\*\}/\*
+path_group ANY_PATHNAME /\*
+path_group ANY_PATHNAME \*:/
+path_group ANY_PATHNAME \*:/\{\*\}/
+path_group ANY_PATHNAME \*:/\{\*\}/\*
+path_group ANY_PATHNAME \*:/\*
+path_group ANY_PATHNAME \*:[\$]
+path_group ANY_PATHNAME socket:[family=\$:type=\$:protocol=\$]
+acl_group 0 file getattr @ANY_PATHNAME
+acl_group 0 file ioctl @ANY_PATHNAME 0-0xFFFFFFFF
+acl_group 0 file read /dev/urandom
+acl_group 0 file read /system/bin/linker
+acl_group 0 file read /system/lib/lib\*.so
+acl_group 0 misc env _
+acl_group 0 misc env ANDROID_ASSETS
+acl_group 0 misc env ANDROID_BOOTLOGO
+acl_group 0 misc env ANDROID_DATA
+acl_group 0 misc env ANDROID_DNS_MODE
+acl_group 0 misc env ANDROID_PROPERTY_WORKSPACE
+acl_group 0 misc env ANDROID_ROOT
+acl_group 0 misc env ANDROID_SOCKET_\*
+acl_group 0 misc env ASEC_MOUNTPOINT
+acl_group 0 misc env BOOTCLASSPATH
+acl_group 0 misc env EXTERNAL_STORAGE
+acl_group 0 misc env HOME
+acl_group 0 misc env LD_LIBRARY_PATH
+acl_group 0 misc env LOOP_MOUNTPOINT
+acl_group 0 misc env ndns
+acl_group 0 misc env PATH
+acl_group 0 misc env qemu
+acl_group 0 misc env RANDOM
+acl_group 0 misc env SHELL
+acl_group 0 misc env TERM
+acl_group 0 task auto_domain_transition &lt;kernel&gt; //./app-user task.gid=10000-4294967295
+acl_group 0 task auto_domain_transition &lt;kernel&gt; //./app-user task.uid=10000-4294967295
+acl_group 0 task auto_domain_transition &lt;kernel&gt; //./system-user task.gid=1-9999
+acl_group 0 task auto_domain_transition &lt;kernel&gt; //./system-user task.uid=1-9999
+acl_group 1 file getattr @ANY_PATHNAME
+acl_group 1 file ioctl @ANY_PATHNAME 0-0xFFFFFFFF
+acl_group 1 file read /dev/urandom
+acl_group 1 file read /system/bin/linker
+acl_group 1 file read /system/lib/lib\*.so
+acl_group 1 misc env _
+acl_group 1 misc env ANDROID_ASSETS
+acl_group 1 misc env ANDROID_BOOTLOGO
+acl_group 1 misc env ANDROID_DATA
+acl_group 1 misc env ANDROID_PROPERTY_WORKSPACE
+acl_group 1 misc env ANDROID_ROOT
+acl_group 1 misc env ANDROID_SOCKET_\*
+acl_group 1 misc env ASEC_MOUNTPOINT
+acl_group 1 misc env BOOTCLASSPATH
+acl_group 1 misc env EXTERNAL_STORAGE
+acl_group 1 misc env HOME
+acl_group 1 misc env HOSTNAME
+acl_group 1 misc env LD_LIBRARY_PATH
+acl_group 1 misc env LOOP_MOUNTPOINT
+acl_group 1 misc env MKSH
+acl_group 1 misc env PATH
+acl_group 1 misc env PS1
+acl_group 1 misc env RANDOM
+acl_group 1 misc env SHELL
+acl_group 1 misc env TERM
+acl_group 1 misc env USER
+EOF
+cat &gt; domain_policy.conf &lt;&lt; "EOF"
+&lt;kernel&gt;
+use_profile 1
+use_group 0
+
+&lt;kernel&gt; //./system-user
+use_profile 1
+use_group 1
+
+file read/write/unlink/rmdir/truncate/symlink @ANY_PATHNAME task.euid=1-9999 task.egid=1-9999
+file create/mkdir/mkfifo/mksock/chmod @ANY_PATHNAME 0-0777 task.euid=1-9999 task.egid=1-9999
+file link/rename @ANY_PATHNAME @ANY_PATHNAME task.euid=1-9999 task.egid=1-9999
+
+&lt;kernel&gt; //./app-user
+use_profile 1
+use_group 1
+
+file read/write/unlink/rmdir/truncate/symlink @ANY_PATHNAME task.euid=10000-4294967295 task.egid=10000-4294967295
+file create/mkdir/mkfifo/mksock/chmod @ANY_PATHNAME 0-0777 task.euid=10000-4294967295 task.egid=10000-4294967295
+file link/rename @ANY_PATHNAME @ANY_PATHNAME task.euid=10000-4294967295 task.egid=10000-4294967295
+EOF
+echo /sbin/ccs-editpolicy-agent &gt; manager.conf
+echo &gt; stat.conf
+</pre>
+
+<h3>ステップ７： Android 用カーネルの構築</h3>
+
+<p>カーネルのソースコードをダウンロードして展開します。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/
+wget -O kernel-source.tar.gz \
+'http://android.git.kernel.org/?p=kernel/common.git;a=snapshot;h=b0d93fb0426911d0329f861f22c59f1c72cff815;sf=tgz'
+tar -zxf kernel-source.tar.gz
+cd common-b0d93fb/
+ARCH=arm CROSS_COMPILE=$ANDROID_TOOLCHAIN/arm-eabi- make goldfish_defconfig
+</pre>
+
+<p>TOMOYO Linux パッチを適用します。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/common-b0d93fb/
+wget -O ccs-patch-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz'
+wget -O ccs-patch-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz.asc'
+gpg ccs-patch-1.8.1-20110511.tar.gz.asc
+tar -zxf ccs-patch-1.8.1-20110511.tar.gz
+patch -p1 &lt; patches/ccs-patch-2.6.29-android-goldfish.diff
+sed -e 's/# CONFIG_CCSECURITY_USE_BUILTIN_POLICY is not set/CONFIG_CCSECURITY_USE_BUILTIN_POLICY=y/' \
+-e 's/# CONFIG_CCSECURITY_ACTIVATE_FROM_THE_BEGINNING is not set/CONFIG_CCSECURITY_ACTIVATE_FROM_THE_BEGINNING=y/' \
+-e '# CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER is not set/CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER=y/' -- config.ccs &gt;&gt; .config
+$ANDROID_HOME/tmp/tomoyo2c $ANDROID_HOME/tmp/policy/ &gt; security/ccsecurity/builtin-policy.h
+</pre>
+
+<p>カーネルをコンパイルします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/common-b0d93fb/
+ARCH=arm CROSS_COMPILE=$ANDROID_TOOLCHAIN/arm-eabi- make -s
+cp -p arch/arm/boot/zImage $ANDROID_IMG/kernel.img
+</pre>
+
+<h3>ステップ８：イメージファイルのコピー</h3>
+
+<p>Android エミュレータで指定するためのイメージファイルをコピーします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/out/target/product/generic/
+cp -p system.img ramdisk.img userdata.img $ANDROID_IMG
+</pre>
+
+<h3>ステップ９：ＲＡＭディスクの編集</h3>
+
+<p>Android エミュレータで使用するＲＡＭディスクにエージェントをコピーし、自動的に起動されるようにします。</p>
+
+<pre class="command">
+cd $ANDROID_IMG/tmp/
+zcat ../ramdisk.img | cpio -id
+echo &gt;&gt; init.rc
+echo 'service ccs_agent /sbin/ccs-editpolicy-agent 0.0.0.0:7000' &gt;&gt; init.rc
+echo '&nbsp;&nbsp;&nbsp;&nbsp;oneshot' &gt;&gt; init.rc
+cp -p $ANDROID_HOME/tmp/ccs-editpolicy-agent sbin/
+find . -print0 | cpio -o0 -H newc | gzip -9 &gt; ../ramdisk.img
+</pre>
+
+<h3>ステップ１０：エミュレータの起動</h3>
+
+<p>Android エミュレータを起動します。カーネルはステップ７で作成したものを、ＲＡＭディスクはステップ９で作成したものを指定します。</p>
+
+<pre class="command">
+emulator -kernel $ANDROID_IMG/kernel.img -ramdisk $ANDROID_IMG/ramdisk.img -sysdir $ANDROID_IMG \
+-data $ANDROID_IMG/userdata.img -show-kernel
+</pre>
+
+<h3>ステップ１１：ポート転送の指定</h3>
+
+<p>エミュレータ内で動作しているエージェントと通信するために、ポート転送を指定します。以下のように指定した場合、ホスト側でのポート 10000 への TCP 接続は、エミュレータ側でのポート 7000 へと転送されます。ステップ９で ccs-editpolicy-agent をポート 7000 で待機するように指定しているので、ホスト側でポート 10000 へ接続することにより、エージェントとの通信が可能になります。</p>
+
+<pre class="command">
+adb forward tcp:10000 tcp:7000
+</pre>
+
+<h3>ステップ１２：エージェント経由での操作</h3>
+
+<p>以下のように ccs-editpolicy を起動すると、エミュレータ内のエージェント経由で ポリシーを閲覧／編集できます。</p>
+
+<pre class="command">
+/usr/sbin/ccs-editpolicy 127.0.0.1:10000
+</pre>
+
+<p>以下のように ccs-auditd を起動すると、エミュレータ内のエージェント経由でアクセス許可ログ／拒否ログを取得して保存することができます。なお、アクセスログは大量に出力されるため、ディスクの空き容量に注意してください。</p>
+
+<pre class="command">
+/usr/sbin/ccs-auditd 127.0.0.1:10000
+</pre>
+
+<p>以下のように ccs-queryd を実行すると、エミュレータ内のエージェント経由で、強制モードでのポリシー違反を対話的に処理できます。 ccs-queryd を終了させるには Ctrl-C を押してください。</p>
+
+<pre class="command">
+/usr/sbin/ccs-queryd 127.0.0.1:10000
+</pre>
+
+<p>ワイルドカード化を行うには以下のようにしてください。ワイルドカード化のルールは /etc/ccs/tools/patternize.conf で定義されているので、適宜編集してください。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/policy/
+/usr/sbin/ccs-savepolicy -d 127.0.0.1:10000 &gt; domain_policy.old
+/usr/sbin/ccs-patternize &lt; domain_policy.old &gt; domain_policy.new
+/usr/sbin/ccs-diffpolicy domain_policy.old domain_policy.new &gt; domain_policy.diff
+less domain_policy.diff
+/usr/sbin/ccs-loadpolicy -d 127.0.0.1:10000 &lt; domain_policy.diff
+</pre>
+
+<h3>ステップ１３：ポリシーのアップデート</h3>
+
+<p>ポリシーはメモリ上にのみ存在しているため、エミュレータを終了すると失われてしまいます。エミュレータを終了する前に忘れずにポリシーを保存するようにしてください。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/policy/
+/usr/sbin/ccs-savepolicy -e 127.0.0.1:10000 &gt; exception_policy.conf
+/usr/sbin/ccs-savepolicy -d 127.0.0.1:10000 &gt; domain_policy.conf
+/usr/sbin/ccs-savepolicy -p 127.0.0.1:10000 &gt; profile.conf
+</pre>
+
+<p>また、保存したポリシーをカーネル内に埋め込むには以下のように行ってください。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/common-b0d93fb/
+$ANDROID_HOME/tmp/tomoyo2c $ANDROID_HOME/tmp/policy/ &gt; security/ccsecurity/builtin-policy.h
+</pre>
+
+<p>カーネルを再コンパイルします。</p>
+
+<pre class="command">
+cd $ANDROID_HOME/tmp/common-b0d93fb/
+ARCH=arm CROSS_COMPILE=$ANDROID_TOOLCHAIN/arm-eabi- make -s
+cp -p arch/arm/boot/zImage $ANDROID_IMG/kernel.img
+</pre>
+
+<p>再度エミュレータを実行します。</p>
+
+<pre class="command">
+emulator -kernel $ANDROID_IMG/kernel.img -ramdisk $ANDROID_IMG/ramdisk.img -sysdir $ANDROID_IMG \
+-data $ANDROID_IMG/userdata.img -show-kernel
+</pre>
+
+<p>最終的なポリシーが完成したら、カーネル内に埋め込まれている domain_policy.conf に enforcing mode 用のプロファイルを割り当てておく（ use_profile 3 ）ことにより、 /init が実行される時点からアクセス制御を有効にすることができます。その状態で正常に動作することを確認したら、ステップ９で追加した /sbin/ccs-editpolicy-agent を削除します。また、 /init.rc およびカーネル内に埋め込まれた profile.conf からも ccs-editpolicy-agent を削除します。</p>
+
+<h3>補足：ポリシーの更新を認めたい場合のヒント</h3>
+
+<p>Android ではユーザがアプリケーションを追加することができます。上記手順では、ユーザＩＤに基づいて３つのカテゴリに分類するという方法により、アプリケーションが追加されてもポリシーを更新する必要が無いような仕様になっています。</p>
+
+<p>しかし、追加されるアプリケーションによっては、ポリシーを更新したい場合があるかもしれません。そのような場合、起動時に必要になるポリシーとしてカーネル内に埋め込む固定分と、起動後に必要になるポリシーとしてカーネル内には埋め込まない変動分とを分離することで対処するという方法が考えられます。</p>
+
+<p>起動時に必要となるポリシーはカーネルを読み込み専用のパーティションに配置することで、改ざんされる可能性を減らすことができます。起動後に必要になるポリシーは読み書きが可能なパーティションに配置することになるので改ざんされる可能性が高くなります。そのため、例えば GPG で署名し、改ざんされていないことを確認できた場合にのみポリシーを追加読み込みするという方法が考えられます。</p>
+
+<p>TOMOYO Linux では強制モードにおけるポリシー違反を契機として外部のプログラムに問い合わせを行うことができます。 ccs-queryd 相当の処理を実装し、 ccs-editpolicy-agent の代わりに常駐させておくという方法を利用できます。</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="android-arm.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-11 12:21:55 +0100 (Wed, 11 May 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

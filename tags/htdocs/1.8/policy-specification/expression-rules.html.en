@@ -1,0 +1,521 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Policy specification : Expression rules</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.en"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="expression-rules.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="domain-transition-procedure.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="exception-policy-syntax.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Expression rules</h2>
+
+<h3><a name="word">Word expression rules</a></h3>
+
+<p>Pathnames may contain not only regular characters but also spaces, carriage returns and multibyte characters. Such pathnames can be managed by TOMOYO Linux using octal expressions. Information from the table below can be used to represent special characters.</p>
+
+<p>The first row indicates the lower 4 bits and the first column indicates the higher 4 bits.</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<td>
+</td>
+<th><p>0x0</p></th>
+<th><p>0x1</p></th>
+<th><p>0x2</p></th>
+<th><p>0x3</p></th>
+<th><p>0x4</p></th>
+<th><p>0x5</p></th>
+<th><p>0x6</p></th>
+<th><p>0x7</p></th>
+<th><p>0x8</p></th>
+<th><p>0x9</p></th>
+<th><p>0xA</p></th>
+<th><p>0xB</p></th>
+<th><p>0xC</p></th>
+<th><p>0xD</p></th>
+<th><p>0xE</p></th>
+<th><p>0xF</p></th>
+</tr>
+<tr>
+<th><p>0x0</p></th>
+<td><p>\000</p></td>
+<td><p>\001</p></td>
+<td><p>\002</p></td>
+<td><p>\003</p></td>
+<td><p>\004</p></td>
+<td><p>\005</p></td>
+<td><p>\006</p></td>
+<td><p>\007</p></td>
+<td><p>\010</p></td>
+<td><p>\011</p></td>
+<td><p>\012</p></td>
+<td><p>\013</p></td>
+<td><p>\014</p></td>
+<td><p>\015</p></td>
+<td><p>\016</p></td>
+<td><p>\017</p></td>
+</tr>
+<tr>
+<th><p>0x1</p></th>
+<td><p>\020</p></td>
+<td><p>\021</p></td>
+<td><p>\022</p></td>
+<td><p>\023</p></td>
+<td><p>\024</p></td>
+<td><p>\025</p></td>
+<td><p>\026</p></td>
+<td><p>\027</p></td>
+<td><p>\030</p></td>
+<td><p>\031</p></td>
+<td><p>\032</p></td>
+<td><p>\033</p></td>
+<td><p>\034</p></td>
+<td><p>\035</p></td>
+<td><p>\036</p></td>
+<td><p>\037</p></td>
+</tr>
+<tr>
+<th><p>0x2</p></th>
+<td><p>\040</p></td>
+<td><p>!</p></td>
+<td><p>"</p></td>
+<td><p>#</p></td>
+<td><p>$</p></td>
+<td><p>%</p></td>
+<td><p>&amp;</p></td>
+<td><p>'</p></td>
+<td><p>(</p></td>
+<td><p>)</p></td>
+<td><p>*</p></td>
+<td><p>+</p></td>
+<td><p>,</p></td>
+<td><p>-</p></td>
+<td><p>.</p></td>
+<td><p>/</p></td>
+</tr>
+<tr>
+<th><p>0x3</p></th>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>:</p></td>
+<td><p>;</p></td>
+<td><p>&lt;</p></td>
+<td><p>=</p></td>
+<td><p>&gt;</p></td>
+<td><p>?</p></td>
+</tr>
+<tr>
+<th><p>0x4</p></th>
+<td><p>@</p></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+<td><p>E</p></td>
+<td><p>F</p></td>
+<td><p>G</p></td>
+<td><p>H</p></td>
+<td><p>I</p></td>
+<td><p>J</p></td>
+<td><p>K</p></td>
+<td><p>L</p></td>
+<td><p>M</p></td>
+<td><p>N</p></td>
+<td><p>O</p></td>
+</tr>
+<tr>
+<th><p>0x5</p></th>
+<td><p>P</p></td>
+<td><p>Q</p></td>
+<td><p>R</p></td>
+<td><p>S</p></td>
+<td><p>T</p></td>
+<td><p>U</p></td>
+<td><p>V</p></td>
+<td><p>W</p></td>
+<td><p>X</p></td>
+<td><p>Y</p></td>
+<td><p>Z</p></td>
+<td><p>[</p></td>
+<td><p>\\</p></td>
+<td><p>]</p></td>
+<td><p>^</p></td>
+<td><p>_</p></td>
+</tr>
+<tr>
+<th><p>0x6</p></th>
+<td><p>`</p></td>
+<td><p>a</p></td>
+<td><p>b</p></td>
+<td><p>c</p></td>
+<td><p>d</p></td>
+<td><p>e</p></td>
+<td><p>f</p></td>
+<td><p>g</p></td>
+<td><p>h</p></td>
+<td><p>i</p></td>
+<td><p>j</p></td>
+<td><p>k</p></td>
+<td><p>l</p></td>
+<td><p>m</p></td>
+<td><p>n</p></td>
+<td><p>o</p></td>
+</tr>
+<tr>
+<th><p>0x7</p></th>
+<td><p>p</p></td>
+<td><p>q</p></td>
+<td><p>r</p></td>
+<td><p>s</p></td>
+<td><p>t</p></td>
+<td><p>u</p></td>
+<td><p>v</p></td>
+<td><p>w</p></td>
+<td><p>x</p></td>
+<td><p>y</p></td>
+<td><p>z</p></td>
+<td><p>{</p></td>
+<td><p>|</p></td>
+<td><p>}</p></td>
+<td><p>~</p></td>
+<td><p>\177</p></td>
+</tr>
+<tr>
+<th><p>0x8</p></th>
+<td><p>\200</p></td>
+<td><p>\201</p></td>
+<td><p>\202</p></td>
+<td><p>\203</p></td>
+<td><p>\204</p></td>
+<td><p>\205</p></td>
+<td><p>\206</p></td>
+<td><p>\207</p></td>
+<td><p>\210</p></td>
+<td><p>\211</p></td>
+<td><p>\212</p></td>
+<td><p>\213</p></td>
+<td><p>\214</p></td>
+<td><p>\215</p></td>
+<td><p>\216</p></td>
+<td><p>\217</p></td>
+</tr>
+<tr>
+<th><p>0x9</p></th>
+<td><p>\220</p></td>
+<td><p>\221</p></td>
+<td><p>\222</p></td>
+<td><p>\223</p></td>
+<td><p>\224</p></td>
+<td><p>\225</p></td>
+<td><p>\226</p></td>
+<td><p>\227</p></td>
+<td><p>\230</p></td>
+<td><p>\231</p></td>
+<td><p>\232</p></td>
+<td><p>\233</p></td>
+<td><p>\234</p></td>
+<td><p>\235</p></td>
+<td><p>\236</p></td>
+<td><p>\237</p></td>
+</tr>
+<tr>
+<th><p>0xA</p></th>
+<td><p>\240</p></td>
+<td><p>\241</p></td>
+<td><p>\242</p></td>
+<td><p>\243</p></td>
+<td><p>\244</p></td>
+<td><p>\245</p></td>
+<td><p>\246</p></td>
+<td><p>\247</p></td>
+<td><p>\250</p></td>
+<td><p>\251</p></td>
+<td><p>\252</p></td>
+<td><p>\253</p></td>
+<td><p>\254</p></td>
+<td><p>\255</p></td>
+<td><p>\256</p></td>
+<td><p>\257</p></td>
+</tr>
+<tr>
+<th><p>0xB</p></th>
+<td><p>\260</p></td>
+<td><p>\261</p></td>
+<td><p>\262</p></td>
+<td><p>\263</p></td>
+<td><p>\264</p></td>
+<td><p>\265</p></td>
+<td><p>\266</p></td>
+<td><p>\267</p></td>
+<td><p>\270</p></td>
+<td><p>\271</p></td>
+<td><p>\272</p></td>
+<td><p>\273</p></td>
+<td><p>\274</p></td>
+<td><p>\275</p></td>
+<td><p>\276</p></td>
+<td><p>\277</p></td>
+</tr>
+<tr>
+<th><p>0xC</p></th>
+<td><p>\300</p></td>
+<td><p>\301</p></td>
+<td><p>\302</p></td>
+<td><p>\303</p></td>
+<td><p>\304</p></td>
+<td><p>\305</p></td>
+<td><p>\306</p></td>
+<td><p>\307</p></td>
+<td><p>\310</p></td>
+<td><p>\311</p></td>
+<td><p>\312</p></td>
+<td><p>\313</p></td>
+<td><p>\314</p></td>
+<td><p>\315</p></td>
+<td><p>\316</p></td>
+<td><p>\317</p></td>
+</tr>
+<tr>
+<th><p>0xD</p></th>
+<td><p>\320</p></td>
+<td><p>\321</p></td>
+<td><p>\322</p></td>
+<td><p>\323</p></td>
+<td><p>\324</p></td>
+<td><p>\325</p></td>
+<td><p>\326</p></td>
+<td><p>\327</p></td>
+<td><p>\330</p></td>
+<td><p>\331</p></td>
+<td><p>\332</p></td>
+<td><p>\333</p></td>
+<td><p>\334</p></td>
+<td><p>\335</p></td>
+<td><p>\336</p></td>
+<td><p>\337</p></td>
+</tr>
+<tr>
+<th><p>0xE</p></th>
+<td><p>\340</p></td>
+<td><p>\341</p></td>
+<td><p>\342</p></td>
+<td><p>\343</p></td>
+<td><p>\344</p></td>
+<td><p>\345</p></td>
+<td><p>\346</p></td>
+<td><p>\347</p></td>
+<td><p>\350</p></td>
+<td><p>\351</p></td>
+<td><p>\352</p></td>
+<td><p>\353</p></td>
+<td><p>\354</p></td>
+<td><p>\355</p></td>
+<td><p>\356</p></td>
+<td><p>\357</p></td>
+</tr>
+<tr>
+<th><p>0xF</p></th>
+<td><p>\360</p></td>
+<td><p>\361</p></td>
+<td><p>\362</p></td>
+<td><p>\363</p></td>
+<td><p>\364</p></td>
+<td><p>\365</p></td>
+<td><p>\366</p></td>
+<td><p>\367</p></td>
+<td><p>\370</p></td>
+<td><p>\371</p></td>
+<td><p>\372</p></td>
+<td><p>\373</p></td>
+<td><p>\374</p></td>
+<td><p>\375</p></td>
+<td><p>\376</p></td>
+<td><p>\377</p></td>
+</tr>
+</table>
+</div>
+
+<p>Notes:</p>
+<ul>
+<li>The "\" character (0x5c) is used for indicating octal expression. Thus, "\\" must be used to represent a "\".</li>
+<li>The characters 0x00 to 0x20, and 0x7F to 0xFF are represented using the expression "\ooo".</li>
+<li>The space character (0x20) is used as a delimiter that separates words, while the line feed character (0x0A) is used as a delimiter that separates lines.</li>
+<li>All other characters are regarded as a space character.</li>
+<li>Multiple spaces are automatically compressed into one space, and leading and trailing spaces are automatically deleted.</li>
+</ul>
+
+<p>Examples:</p>
+<ul>
+<li>The string "Hello world!" should be expressed as "Hello\040world!".</li>
+</ul>
+
+<h3><a name="wildcard">Wildcard expression rules</a></h3>
+
+<p>Pathnames may contain wildcards that match multiple pathnames. The supported wildcards are outlined in the following table:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Wildcard</p></th>
+<th><p>Pattern match</p></th>
+<th><p>Examples</p></th>
+</tr>
+<tr>
+<td><p>\*</p></td>
+<td><p>0 or more repetitions of characters other than "/"</p></td>
+<td><p>/var/log/samba/\*</p></td>
+</tr>
+<tr>
+<td><p>\@</p></td>
+<td><p>0 or more repetitions of characters other than "/" or "."</p></td>
+<td><p>/var/www/html/\@.html</p></td>
+</tr>
+<tr>
+<td><p>\?</p></td>
+<td><p>1 byte character other than "/"</p></td>
+<td><p>/tmp/mail.\?\?\?\?\?\?</p></td>
+</tr>
+<tr>
+<td><p>\$</p></td>
+<td><p>1 or more repetitions of decimal digits</p></td>
+<td><p>/proc/\$/cmdline</p></td>
+</tr>
+<tr>
+<td><p>\+</p></td>
+<td><p>1 decimal digit.</p></td>
+<td><p>/var/tmp/my_work.\+</p></td>
+</tr>
+<tr>
+<td><p>\X</p></td>
+<td><p>1 or more repetitions of hexadecimal digits</p></td>
+<td><p>/var/tmp/my-work.\X</p></td>
+</tr>
+<tr>
+<td><p>\x</p></td>
+<td><p>1 hexadecimal digit</p></td>
+<td><p>/tmp/my-work.\x</p></td>
+</tr>
+<tr>
+<td><p>\A</p></td>
+<td><p>1 or more repetitions of alphabet characters</p></td>
+<td><p>/var/log/my-work/\$-\A-\$.log</p></td>
+</tr>
+<tr>
+<td><p>\a</p></td>
+<td><p>1 alphabet character</p></td>
+<td><p>/home/users/\a/\*/public_html/\*.html</p></td>
+</tr>
+<tr>
+<td><p>\-</p></td>
+<td><p>Pathname subtraction operator (negative match)</p></td>
+<td>
+<p>/\*\-proc\-sys/</p>
+<p>This will match /\*/ directories except "/proc/" and "/sys/".</p>
+</td>
+</tr>
+<tr>
+<td><p>/\{dir\}/</p></td>
+<td><p>Recursive directory matching operator.</p>
+<p>Matches "/" and 1 or more repetitions of "dir/".</p></td>
+<td>
+<p>/var/www/html/\{\*\}/</p>
+<p>This will match all subdirectories under /var/www/html/ . Note that /var/www/html/ will not match.</p>
+<br>
+<p>/var/www/html/\{\*\}/\*.html</p>
+<p>This will match all *.html files in subdirectories under /var/www/html/ . Note that /var/www/html/\*.html will not match.</p>
+</td>
+</tr>
+</table>
+</div>
+
+<h3><a name="filesystem">Filesystem expression rules</a></h3>
+
+<p>Pathnames generally begin with a "/", but pathnames on filesystems that do not support rename() operation are represented using filesystem's name as a prefix.</p>
+
+<p>To see a list of filesystems supported by your kernel, run the following command:</p>
+
+<pre class="command">
+$ cat /proc/filesystems
+</pre>
+
+<p>The proc filesystem (which is likely mounted on /proc/ directory) is an example of filesystems that do not support rename() operation. Therefore, the file "/proc/meminfo" is represented as "proc:/meminfo".</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="domain-transition-procedure.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="exception-policy-syntax.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A2: Domain transition procedure</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.en">Main Index</a>
+</td>
+<td class="docs-next-description">
+<p>A4: Exception policy syntax</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="expression-rules.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-22 08:23:32 +0000 (Tue, 22 Mar 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

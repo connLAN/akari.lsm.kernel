@@ -1,0 +1,592 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 10</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-10.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-9.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-11.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 10: Using conditional parameters in policy</h2>
+
+<p>A permission line takes syntax shown below:</p>
+
+<pre>
+Category Operations Targets Conditions
+</pre>
+
+<p>The "Category Operations Targets" arguments are "Mandatory (non-omissible) parameters" and the "Conditions" argument is "Optional (omissible) parameters". This chapter describes "Optional (omissible) parameters".</p>
+
+<h3><a name="10.1">10.1. Conditional parameters</a></h3>
+
+<p>Conditions can be used to refine policy and make entries more specific. This is useful for taking into account the user ID of a process when deciding what to allow or reject. This table summarizes the possible conditional parameters:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Conditional</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>task.type</p></td>
+<td><p><a href="#10.4">Task type</a> of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.uid</p></td>
+<td><p>UID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.euid</p></td>
+<td><p>Effective UID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.suid</p></td>
+<td><p>Saved UID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.fsuid</p></td>
+<td><p>Filesystem UID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.gid</p></td>
+<td><p>GID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.egid</p></td>
+<td><p>Effective GID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.sgid</p></td>
+<td><p>Saved GID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.fsgid</p></td>
+<td><p>Filesystem GID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.pid</p></td>
+<td><p>PID of the current process</p></td>
+</tr>
+<tr>
+<td><p>task.ppid</p></td>
+<td><p>PID of the parent process</p></td>
+</tr>
+<tr>
+<td><p>path1.type</p></td>
+<td><p><a href="#10.5">File type</a> of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.uid</p></td>
+<td><p>UID of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.gid</p></td>
+<td><p>GID of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.ino</p></td>
+<td><p>Inode number of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.perm</p></td>
+<td><p><a href="#10.6">Permissions</a> of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.major</p></td>
+<td><p>Major device number of the device file in which the first object resides.</p></td>
+</tr>
+<tr>
+<td><p>path1.minor</p></td>
+<td><p>Minor device number of the device file in which the first object resides.</p></td>
+</tr>
+<tr>
+<td><p>path1.dev_major</p></td>
+<td><p>Major device number of the first object, assuming it is a device file.<br>
+Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+</tr>
+<tr>
+<td><p>path1.dev_minor</p></td>
+<td><p>Device minor number of the first object, assuming it is a device file.<br>
+Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.uid</p></td>
+<td><p>UID of the parent directory of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.gid</p></td>
+<td><p>GID of the parent directory of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.ino</p></td>
+<td><p>Inode number of the parent directory of the first object</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.perm</p></td>
+<td><p><a href="#10.6">Permissions</a> of the parent directory of the first object</p></td>
+</tr>
+<tr>
+<td><p>path2.type</p></td>
+<td><p><a href="#10.5">File type</a> of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.uid</p></td>
+<td><p>UID of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.gid</p></td>
+<td><p>GID of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.ino</p></td>
+<td><p>Inode number of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.perm</p></td>
+<td><p><a href="#10.6">Permissions</a> of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.major</p></td>
+<td><p>Major device number of the device file in which the second object resides.</p></td>
+</tr>
+<tr>
+<td><p>path2.minor</p></td>
+<td><p>Minor device number of the device file in which the second object resides.</p></td>
+</tr>
+<tr>
+<td><p>path2.dev_major</p></td>
+<td><p>Major device number of the second object, assuming it is a device file.<br>
+Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+</tr>
+<tr>
+<td><p>path2.dev_minor</p></td>
+<td><p>Minor device number of the second object, assuming it is a device file.<br>
+Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.uid</p></td>
+<td><p>UID of the parent directory of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.gid</p></td>
+<td><p>GID of the parent directory of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.ino</p></td>
+<td><p>Inode number of the parent directory of the second object</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.perm</p></td>
+<td><p><a href="#10.6">Permissions</a> of the parent directory of the second object</p></td>
+</tr>
+<tr>
+<td><p>exec.argc</p></td>
+<td><p>Number of argv[] passed for the execute request.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#misc_env">misc env</a> directive has been specified.</p></td>
+</tr>
+<tr>
+<td><p>exec.envc</p></td>
+<td><p>Number of envp[] passed for the execute request.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#misc_env">misc env</a> directive has been specified.</p></td>
+</tr>
+<tr>
+<td><p>exec.argv[n]</p></td>
+<td><p>The "n"-th argument passed to the execute request.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#misc_env">misc env</a> directive has been specified.</p></td>
+</tr>
+<tr>
+<td><p>exec.envp[var]</p></td>
+<td><p>Value of environment variable "var" for the execute request.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#misc_env">misc env</a> directive has been specified.</p></td>
+</tr>
+<tr>
+<td><p>exec.realpath</p></td>
+<td><p>Dereferenced pathname of the requested program.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#misc_env">misc env</a> directive has been specified.</p></td>
+</tr>
+<tr>
+<td><p>symlink.target</p></td>
+<td><p>Content of a symlink to be created.<br>
+Only available when the <a href="policy-specification/domain-policy-syntax.html.en#file_symlink">file symlink</a> directive has been specified.</p></td>
+</tr>
+</table>
+</div>
+
+<p>The conditional parameters containing <strong>path1</strong> and <strong>path2</strong> refer to the first and second pathnames specified by the directive. In this example, path1 refers to the file "/dev/sda1" and path2 refers to the directory "/mnt/sda1/":</p>
+
+<pre>
+file mount /dev/sda1 /mnt/sda1/ ext3 0 path1.uid=0 path2.uid=0
+</pre>
+
+<p>However, you cannot use conditions like path2.uid=0 in this example because the second pathname does not exist as of the permission checks:</p>
+
+<pre>
+file rename /tmp/file1 /tmp/file2 path1.uid=0 path2.parent.uid=0
+</pre>
+
+<p>Likewise, you cannot use conditions like path1.uid=0 in this example because the pathname does not exist as of the permission checks:</p>
+
+<pre>
+file create /tmp/file 0644 path1.parent.uid=0
+</pre>
+
+<h3><a name="10.2">10.2. Tests</a></h3>
+
+<p>Matches may be made using the following tests:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Operator</p></th>
+<th><p>Meaning</p></th>
+<th><p>Example</p></th>
+</tr>
+<tr>
+<td><p>=</p></td>
+<td><p>"String value" or "Single numeric value" or "Bitmask operations": Positive match<br>"Numeric value range": One or more values match</p></td>
+<td><p>task.uid=0</p></td>
+</tr>
+<tr>
+<td><p>!=</p></td>
+<td><p>"String value" or "Single numeric value" or "Bitmask operations": Negative match<br>"Numeric value range": None of the values match</p></td>
+<td><p>task.gid!=0</p></td>
+</tr>
+</table>
+</div>
+
+<h3><a name="10.3">10.3. Values</a></h3>
+
+<p>The value to be compared with one variable may take the form of a single integer, a range of integers, or another variable:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Value</p></th>
+<th><p>Example</p></th>
+</tr>
+<tr>
+<td><p>Integer</p></td>
+<td><p>task.uid=0<br>task.uid!=0</p></td>
+</tr>
+<tr>
+<td><p>Range</p></td>
+<td><p>task.uid=100-500<br>task.uid!=100-500</p></td>
+</tr>
+<tr>
+<td><p>Conditional</p></td>
+<td><p>task.uid=path1.uid<br>task.uid!=path1.uid</p></td>
+</tr>
+</table>
+</div>
+
+<p>There are two exceptions. the "exec.argv[n]", "exec.envp[var]", "exec.realpath" and "symlink.target" variables can be compared with only string values. The "task.type" variable can be compared with only execute_handler .</p>
+
+<h3><a name="10.4">10.4. Types of task</a></h3>
+
+<p>The following types of task are available:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Type of task</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>task.type=execute_handler</p></td>
+<td><p>The current process is a program specified by either <a href="policy-specification/domain-policy-syntax.html.en#task_auto_execute_handler">task auto_execute_handler</a> or <a href="policy-specification/domain-policy-syntax.html.en#task_denied_execute_handler">task denied_execute_handler</a> directives.</p></td>
+</tr>
+<tr>
+<td><p>task.type!=execute_handler</p></td>
+<td><p>The current process is a program specified by neither <a href="policy-specification/domain-policy-syntax.html.en#task_auto_execute_handler">task auto_execute_handler</a> nor <a href="policy-specification/domain-policy-syntax.html.en#task_denied_execute_handler">task denied_execute_handler</a> directives.</p></td>
+</tr>
+</table>
+</div>
+
+<h3><a name="10.5">10.5. Types of file</a></h3>
+
+<p>The following types of file are available:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Type of file</p></th>
+<th><p>Meaning</p></th>
+</tr>
+<tr>
+<td><p>path1.type=block</p></td>
+<td><p>path1 is a block device file</p></td>
+</tr>
+<tr>
+<td><p>path1.type=char</p></td>
+<td><p>path1 is a character device file</p></td>
+</tr>
+<tr>
+<td><p>path1.type=directory</p></td>
+<td><p>path1 is a directory</p></td>
+</tr>
+<tr>
+<td><p>path1.type=fifo</p></td>
+<td><p>path1 is a FIFO</p></td>
+</tr>
+<tr>
+<td><p>path1.type=file</p></td>
+<td><p>path1 is a regular file</p></td>
+</tr>
+<tr>
+<td><p>path1.type=socket</p></td>
+<td><p>path1 is a socket</p></td>
+</tr>
+<tr>
+<td><p>path1.type=symlink</p></td>
+<td><p>path1 is a symbolic link</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=block</p></td>
+<td><p>path1 is not a block device file</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=char</p></td>
+<td><p>path1 is not a character device file</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=directory</p></td>
+<td><p>path1 is not a directory</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=fifo</p></td>
+<td><p>path1 is not a FIFO</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=file</p></td>
+<td><p>path1 is not a regular file</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=socket</p></td>
+<td><p>path1 is not a socket</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=symlink</p></td>
+<td><p>path1 is not a symbolic link</p></td>
+</tr>
+</table>
+</div>
+
+<p>You can apply for "path2" as well as "path1". But you cannot apply "path1.parent" and "path2.parent" because they are by definition always directories.</p>
+
+<h3><a name="10.6">10.6. Types of permission</a></h3>
+
+<p>The following types of DAC permission comparison are available:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<td><p>Condition</p></td>
+<td><p>Meaning</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=num1-num2</p></td>
+<td><p>Permissions are between num1 and num2</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=setuid</p></td>
+<td><p>Setuid bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=setgid</p></td>
+<td><p>Setgid bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=sticky</p></td>
+<td><p>Sticky bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_read</p></td>
+<td><p>Owner read bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_write</p></td>
+<td><p>Owner write bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_execute</p></td>
+<td><p>Owner execute bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_read</p></td>
+<td><p>Group read bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_write</p></td>
+<td><p>Group write bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_execute</p></td>
+<td><p>Group execute bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_read</p></td>
+<td><p>Others read bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_write</p></td>
+<td><p>Others write bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_execute</p></td>
+<td><p>Others execute bit is on</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=num1-num2</p></td>
+<td><p>Permissions are not between num1 and num2</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=setuid</p></td>
+<td><p>Setuid bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=setgid</p></td>
+<td><p>Setgid bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=sticky</p></td>
+<td><p>Sticky bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_read</p></td>
+<td><p>Owner read bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_write</p></td>
+<td><p>Owner write bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_execute</p></td>
+<td><p>Owner execute bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_read</p></td>
+<td><p>Group read bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_write</p></td>
+<td><p>Group write bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_execute</p></td>
+<td><p>Group execute bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_read</p></td>
+<td><p>Others read bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_write</p></td>
+<td><p>Others write bit is off</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_execute</p></td>
+<td><p>Others execute bit is off</p></td>
+</tr>
+</table>
+</div>
+
+<p>You can apply for "path1.parent", "path2" and "path2.parent" as well as "path1".</p>
+
+<h3><a name="10.7">10.7. Example usage</a></h3>
+
+<p>If you wish to deny login as the root user from a specific domain (e.g. "&lt;kernel&gt; /sbin/agetty /bin/login"), the following could be inserted into domain policy:</p>
+
+<pre>
+file execute /bin/bash task.uid!=0
+</pre>
+
+<p>If you wish to allow login for a range of user ID's from a specific domain (e.g. "&lt;kernel&gt; /sbin/agetty /bin/login"), the following could be inserted into domain policy:</p>
+
+<pre>
+file execute /bin/bash task.uid=500-1000
+</pre>
+
+<p>If you wish to allow a domain to read a temporary file only if they own it, the following could be inserted into domain policy:</p>
+
+<pre>
+file read /tmp/file001.tmp task.uid=path1.uid
+</pre>
+
+<p>If you wish to allow the execution of a program only when certain conditions are met, the following could be inserted into domain policy:</p>
+
+<pre>
+file execute /usr/bin/ssh exec.realpath="/usr/bin/ssh" exec.argv[0]="ssh"
+file execute /usr/bin/firefox exec.realpath="/usr/lib/firefox-3.6/firefox" exec.argv[0]="/usr/bin/firefox" exec.envc=0
+</pre>
+
+<p>If you wish to perform more complicated checks, you can use execute_handler feature described in <a href="chapter-13.html.en">Chapter 13: Judging execute requests outside of the kernel</a>.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-9.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-11.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 9: Advanced profile management</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 11: Using ACL groups</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-10.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-04-02 14:24:50 +0100 (Sat, 02 Apr 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

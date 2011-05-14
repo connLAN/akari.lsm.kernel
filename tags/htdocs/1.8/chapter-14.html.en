@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 14</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-14.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-13.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="index.html.en#appendix">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 14: Securing Apache with the mod_ccs module</h2>
+
+<h3><a name="14.1">14.1. The mod_ccs module</a></h3>
+
+<p>mod_ccs is an Apache 2.x module that allows more precise control over Apache. This module allows domain transition based on virtual host names and CGI pathnames without requiring program execution. This way, each virtual host or CGI script can be isolated from each other and given different permissions in policy.</p>
+
+<h3><a name="14.2">14.2. Installing the module</a></h3>
+
+<h4><a name="14.2.1">14.2.1. Install dependencies</a></h4>
+
+<p>This module is available for Linux 2.6 kernels only, and will not work with Linux 2.4 kernels.</p>
+
+<p>These packages are required for compiling the module:</p>
+
+<p><strong>RedHat distributions</strong></p>
+
+<pre class="command">
+# yum -y install httpd-devel
+</pre>
+
+<p><strong>Debian distributions</strong></p>
+
+<pre class="command">
+# apt-get -y install apache2-threaded-dev apache2-prefork-dev
+</pre>
+
+<h4><a name="14.2.2">14.2.2. Downloading the module</a></h4>
+
+<p>Download the source code for the mod_ccs:</p>
+
+<pre class="command">
+# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=4393&amp;root=tomoyo'
+</pre>
+
+<p>Compile, install and activate mod_ccs:</p>
+
+<h4><a name="14.2.3">14.2.3. Installing the module</a></h4>
+
+<p><strong>RedHat distributions</strong></p>
+
+<pre class="command">
+# apxs -i -a -c mod_ccs.c
+</pre>
+
+<p><strong>Debian distributions</strong></p>
+
+<pre class="command">
+# apxs2 -i -a -c mod_ccs.c
+</pre>
+
+<p>If installation completed successfully, the following should be present in the Apache configuration files:</p>
+
+<pre>
+LoadModule ccs_module /usr/lib/httpd/modules/mod_ccs.so
+</pre>
+
+<h3><a name="14.3">14.3. Configuration</a></h3>
+
+<p>The mod_ccs module performs domain transition based on the pathname of a requested file by specifying the mapping table of pathnames and domain names using the CCS_TransitionMap directive. This can be placed in the Apache configuration files like this (assuming that IP addresses for www.tomoyo00.com etc. are specified in "/etc/hosts"):</p>
+
+<pre>
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-00
+    ServerName www.tomoyo00.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo00.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-01
+    ServerName www.tomoyo01.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo01.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-02
+    ServerName www.tomoyo02.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo02.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-03
+    ServerName www.tomoyo03.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo03.conf
+&lt;/VirtualHost&gt;
+</pre>
+
+<p>In the file specified by the CCS_TransitionMap directive, the pathname of a requested file needs to be mapped to a domain name. For example, in "/etc/ccs/httpd-tomoyo00.com" the following might be specified:</p>
+
+<pre>
+/var/www/cgi-bin/\*         &lt;kernel&gt; //apache /www.tomoyo00.com /cgi-programs
+/usr/share/horde/\{\*\}/\*  &lt;kernel&gt; //apache /www.tomoyo00.com /horde
+/var/www/html/\{\*\}/\*     &lt;kernel&gt; //apache /www.tomoyo00.com /static-files
+/\{\*\}/\*                  &lt;kernel&gt; //apache /www.tomoyo00.com /default
+</pre>
+
+<p>In domain policy, the domain transitions must be specified beforehand (otherwise Apache will fail with an Internal Server Error):</p>
+
+<pre>
+&lt;kernel&gt; /usr/sbin/httpd
+
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /cgi-programs
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /horde
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /static-files
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /default
+</pre>
+
+<p>If SELinux is enabled, policy must be configured to allow Apache to write to the <a href="policy-specification/proc-interface.html.en#self_domain">/proc/ccs/self_domain</a> interface. On CentOS 5.6, this may be done with the following commands, though this depends on policy configuration, distribution and package versions:</p>
+
+<pre class="command">
+# cd /etc/selinux/
+# echo 'type=AVC msg=audit(1277948886.369:106): avc:  denied  { write } for pid=32078 comm="httpd" name="self_domain" dev=proc ino=-268435010 scontext=root:system_r:httpd_t:s0 tcontext=system_u:object_r:proc_t:s0 tclass=file' | audit2allow -M ccsecurity
+# semodule -i ccsecurity.pp
+</pre>
+
+<p>Restart Apache. If the following error occurs on startup, then writing to the <a href="policy-specification/proc-interface.html.en#self_domain">/proc/ccs/self_domain</a> interface failed:</p>
+
+<pre class="output">
+mod_ccs: Unable to open /proc/ccs/self_domain for writing. (errno = 13)
+</pre>
+
+<p>This may appear in the error logs for Apache (e.g. "/var/log/httpd/error_log"):</p>
+
+<pre class="output">
+[Thu Jul 01 16:31:10 2010] [error] [client 127.0.0.1] (13)Permission denied: mod_ccs: Unable to open /proc/ccs/self_domain for writing.
+</pre>
+
+<p>Other error messages may appear if there are problems in the mapping file specified by the CCS_TransitionMap directive.</p>
+
+<p>To confirm that domain transitions are performed, create a simple CGI program:</p>
+
+<pre class="command">
+# cat &gt; /var/www/cgi-bin/test.cgi &lt;&lt; "EOF"
+#!/usr/bin/perl
+
+print "Content-type:text/html\r\n\r\n";
+print "&lt;HTML&gt;\n";
+print "&lt;HEAD&gt;\n";
+print "&lt;TITLE&gt;test&lt;/TITLE&gt;\n";
+print "&lt;/HEAD&gt;\n";
+print "&lt;BODY&gt;\n";
+
+open(IN, "/proc/ccs/self_domain") || print "error";
+$domain = &lt;IN&gt;;
+$domain =~ s/&amp;/&amp;amp;/g;
+$domain =~ s/&lt;/&amp;lt;/g;
+$domain =~ s/&gt;/&amp;gt;/g;
+close(IN);
+print $domain;
+print "\n";
+
+print "&lt;/BODY&gt;\n";
+print "&lt;/HTML&gt;\n";
+EOF
+# chmod 755 /var/www/cgi-bin/test.cgi
+</pre>
+
+<p>Run the CGI programs using the curl command (or web browsers) and confirm that domain transitions are performed:</p>
+
+<pre class="command">
+# curl http://www.tomoyo00.com/cgi-bin/test.cgi
+</pre>
+
+<pre class="output">
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo00.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo01.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo01.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo02.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo02.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo03.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo03.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+</pre>
+
+<p>Policy can now be developed for these domains as described in the <a href="index.html.en#core">core topics</a>.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-13.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="index.html.en#appendix">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 13: Judging execute requests outside of the kernel</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Appendix</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-14.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-04-07 02:20:16 +0100 (Thu, 07 Apr 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

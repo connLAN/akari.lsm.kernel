@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 1</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-1.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p>&lt;Prev&gt; <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-2.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 1: Introduction</h2>
+
+<h3><a name="1.1">1.1. Introduction to this guide</a></h3>
+
+<p>This guide aims to provide an informative and easy to read set of instructions on how to use TOMOYO Linux, allowing the reader to experience and master the tools involved in securing a system. The chapters have been grouped into <a href="index.html.en#core">core topics</a> and <a href="index.html.en#advanced">advanced topics</a>. It is recommended to follow the core topics in the order that they are presented, as each chapter will build on knowledge learnt in preceding chapters. The advanced topics can be explored at your leisure.</p>
+
+<p>For those using this project for system analysis, the first six chapters are relevant. The sixth chapter itself is not strictly necessary for system analysis, but may be useful. For those using this project for system restriction, the whole guide should provide a solid foundation from which a policy of least privilege can be developed for any particular system. The Mandatory Access Control (MAC) provided by this project is not designed to offer protection "out of the box", but instead requires time and an understanding of the concepts and tools involved. It is therefore extremely worthwhile to read this guide thoroughly. Only then can you ensure that your system is as secure as possible.</p>
+
+<h3><a name="1.2">1.2. Typography</a></h3>
+
+<p>To make sure the guide is easy to read, there are some typographical conventions used. This sections contains some examples.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-editpolicy
+</pre>
+
+<p>The formatting above indicates that the text should be run as a command in your terminal. A line starting with a "#" symbol indicates that it must be run as the root user, while a "$" symbol indicates that it should be run as your regular user. When commands are embededded in text, it will look like this: <code>ccs-editpolicy</code>.</p>
+
+<pre class="output">
+Memory used by policy:                    165728
+Memory used by audit log:                      0 (Quota:   16777216)
+Memory used by query message:                  0 (Quota:    1048576)
+Total memory used:                        165728
+</pre>
+
+<p>The formatting above indicates that the text is terminal output following a command.</p>
+
+<pre>
+number_group WEB-CLIENT-PORTS 1024-65535
+</pre>
+
+<p>This formatting above indicates that the string is not a command or terminal output. It could be text from a configuration file. It could also be text to enter into a configuration file or the policy editor.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-2.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 2: Why do I need TOMOYO Linux?</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-1.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-10 01:09:35 +0000 (Thu, 10 Feb 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

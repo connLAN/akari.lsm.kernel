@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : ポリシー仕様 : 例外ポリシー構文</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="exception-policy-syntax.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="expression-rules.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="domain-policy-syntax.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>例外ポリシー構文</h2>
+
+<h3><a name="acl_group">acl_group</a></h3>
+
+<p>このディレクティブは、アクセス許可のグループを指定します。このディレクティブで指定されたアクセス許可は、ドメインポリシーから <a href="domain-policy-syntax.html.ja#use_group">use_group</a> ディレクティブを指定することで参照されます。このディレクティブは、グループ番号に続けて、ドメインポリシー構文で説明されているアクセス許可を指定します。</p>
+
+<p>以下の例では use_group 0 という指定が行われているドメインに対して /dev/null の参照を許可しています：</p>
+
+<pre>
+acl_group 0 file read /dev/null
+</pre>
+
+<h3><a name="aggregator">aggregator</a></h3>
+
+<p>このディレクティブは、複数のプログラムを同一視するために使用します。このディレクティブは、よく似た振る舞いをする一連のプログラムを集約するためのものです。</p>
+
+<p>以下の例では <code>/usr/bin/tac</code> を <code>/usr/bin/cat</code> として扱うように指定しています：</p>
+
+<pre>
+aggregator /usr/bin/tac /usr/bin/cat
+</pre>
+
+<h3><a name="initialize_domain">initialize_domain</a></h3>
+
+<p>このディレクティブは、指定されたプログラム実行された場合に &lt;kernel&gt; の子ドメインで動作させるために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>initialize_domain "program" from any</li>
+<li>initialize_domain "program" from "last_pathname_of_domain"</li>
+<li>initialize_domain "program" from "domain"</li>
+<li>initialize_domain any from any</li>
+<li>initialize_domain any from "last_pathname_of_domain"</li>
+<li>initialize_domain any from "domain"</li>
+</ul>
+
+<p>以下の例では <code>/usr/sbin/sshd</code> が実行されると &lt;kernel&gt; /usr/sbin/sshd ドメインに遷移するように指定しています：</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<h3><a name="no_initialize_domain">no_initialize_domain</a></h3>
+
+<p>このディレクティブは <a href="#initialize_domain">initialize_domain</a> ディレクティブの効果を打ち消すために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>no_initialize_domain "program" from any</li>
+<li>no_initialize_domain "program" from "last_pathname_of_domain"</li>
+<li>no_initialize_domain "program" from "domain"</li>
+<li>no_initialize_domain any from any</li>
+<li>no_initialize_domain any from "last_pathname_of_domain"</li>
+<li>no_initialize_domain any from "domain"</li>
+</ul>
+
+<p>以下の例ではドメイン名が /bin/mail で終わるドメインから <code>/usr/sbin/sendmail.sendmail</code> が実行された場合には &lt;kernel&gt; /usr/sbin/sendmail.sendmail ドメインへと遷移しないようにしています：</p>
+
+<pre>
+initialize_domain /usr/sbin/sendmail.sendmail from any
+no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
+<h3><a name="keep_domain">keep_domain</a></h3>
+
+<p>このディレクティブは、指定されたプログラム実行された場合にドメイン遷移を行わせないようにするために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>keep_domain "program" from any</li>
+<li>keep_domain "program" from "last_pathname_of_domain"</li>
+<li>keep_domain "program" from "domain"</li>
+<li>keep_domain any from any</li>
+<li>keep_domain any from "last_pathname_of_domain"</li>
+<li>keep_domain any from "domain"</li>
+</ul>
+
+<p>以下の例では &lt;kernel&gt; /usr/sbin/sshd /bin/bash ドメインからプログラムが実行されてもドメイン遷移を行わないように指定しています：</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<h3><a name="no_keep_domain">no_keep_domain</a></h3>
+
+<p>このディレクティブは <a href="#keep_domain">keep_domain</a> ディレクティブの効果を打ち消すために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>no_keep_domain "program" from any</li>
+<li>no_keep_domain "program" from "last_pathname_of_domain"</li>
+<li>no_keep_domain "program" from "domain"</li>
+<li>no_keep_domain any from any</li>
+<li>no_keep_domain any from "last_pathname_of_domain"</li>
+<li>no_keep_domain any from "domain"</li>
+</ul>
+
+<p>以下の例では /bin/cat が &lt;kernel&gt; /usr/sbin/sshd /bin/bash ドメインから実行された場合にはドメイン遷移を行うように指定しています：</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<h3><a name="address_group">address_group</a></h3>
+
+<p>このディレクティブは、ＩＰアドレスのグループを定義します。</p>
+
+<p>例えば、例外ポリシーで以下のように定義しておくことにより：</p>
+
+<pre>
+address_group LOCAL-ADDRESS 10.0.0.0-10.255.255.255
+address_group LOCAL-ADDRESS 172.16.0.0-172.31.255.255
+address_group LOCAL-ADDRESS 192.168.0.0-192.168.255.255
+</pre>
+
+<p>ドメインポリシーで以下のように参照することができます：</p>
+
+<pre>
+network inet stream accept @LOCAL-ADDRESS 1024-65535
+</pre>
+
+<h3><a name="number_group">number_group</a></h3>
+
+<p>このディレクティブは、数値のグループを定義します。</p>
+
+<p>例えば、例外ポリシーで以下のように定義しておくことにより：</p>
+
+<pre>
+number_group CREATE-MODES 0644
+number_group CREATE-MODES 0664
+</pre>
+
+<p>ドメインポリシーで以下のように参照することができます：</p>
+
+<pre>
+file create /tmp/file @CREATE-MODES
+</pre>
+
+<h3><a name="path_group">path_group</a></h3>
+
+<p>このディレクティブは、パス名のグループを定義します。</p>
+
+<p>例えば、例外ポリシーで以下のように定義しておくことにより：</p>
+
+<pre>
+path_group HOME-DIR-FILE /home/\*/\*
+path_group HOME-DIR-FILE /home/\*/\{\*\}/\*
+</pre>
+
+<p>ドメインポリシーで以下のように参照することができます：</p>
+
+<pre>
+file read @HOME-DIR-FILE
+</pre>
+
+<h3><a name="deny_autobind">deny_autobind</a></h3>
+
+<p>このディレクティブは、指定されたローカルポートが自動的に割り当てられないようにします。</p>
+
+<p>例えば、プロキシサーバはローカルポートの 8080 を必要とする場合があります。そのため、そのポートが他のプログラムの一時的な利用目的のために割り当てられるべきではありません：</p>
+
+<pre>
+deny_autobind 1-1023
+deny_autobind 8080
+</pre>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="expression-rules.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="domain-policy-syntax.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A3: 表記規則</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.ja">大目次</a>
+</td>
+<td class="docs-next-description">
+<p>A5: ドメインポリシー構文</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="exception-policy-syntax.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-14 08:27:22 +0100 (Sat, 14 May 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

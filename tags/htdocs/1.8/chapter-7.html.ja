@@ -1,0 +1,418 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 7</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-7.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-6.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-8.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 7: ポリシーの適用はどのように行いますか？</h2>
+
+<h3><a name="7.1">7.1. 強制モードを有効にする</a></h3>
+
+<p>ドメインポリシーと例外ポリシーの調整が完了したら、ドメインに対して強制モードを割り当てることができます。</p>
+
+<p>ポリシーエディタを実行して、対象となるドメインにプロファイル 3 を割り当てます：</p>
+
+<img src="media/editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="675" height="375">
+
+<p>@ キーを押してプロセス一覧表示に切り替えてください。そして、 <code>/usr/sbin/httpd</code> プロセスとその子孫に対してプロファイル 3 が割り当てられていることを確認してください：</p>
+
+<img src="media/editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="675" height="375">
+
+<p>ポリシーエディタを終了して、ポリシーで許可されている操作をしてみましょう：</p>
+
+<img src="media/operation-permitted.png" alt="operation-permitted.png" width="547" height="729">
+
+<p>メールの送信はポリシーで許可されているので、操作は正常に終了しました。</p>
+
+<p>ポリシーで許可されていない操作をしてみましょう：</p>
+
+<img src="media/unix-penguin.png" alt="unix-penguin.png" width="547" height="729">
+
+<p>一見すると正常に終了したように見えますが、実際には <code>/bin/mail</code> が「入力が空っぽです」と警告しているとおり、 <code>/bin/cat</code> の実行が拒否されています：</p>
+
+<img src="media/unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="547" height="477">
+
+<p>確認モードと同様、 <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースからポリシー違反の発生回数と最後に発生した時刻について知ることができます：</p>
+
+<pre class="command">
+# cat /proc/ccs/stat
+</pre>
+
+<pre class="output">
+Policy update:                              1571 (Last: 2010/12/25 16:10:48)
+Policy violation in learning mode:           453 (Last: 2010/12/25 15:33:21)
+Policy violation in permissive mode:          22 (Last: 2010/12/25 15:47:10)
+Policy violation in enforcing mode:            2 (Last: 2010/12/25 16:08:35)
+Memory used by policy:                    165728
+Memory used by audit log:                      0 (Quota:   16777216)
+Memory used by query message:                  0 (Quota:    1048576)
+Total memory used:                        165728
+</pre>
+
+<p>もしアクセスログの設定を <a href="chapter-4.html.ja#4.6">4.6. アクセスログを保存する（任意）</a>で行っていた場合は、拒否されたアクセス要求を /var/log/tomoyo/reject_003.log から抽出することができます：</p>
+
+<pre class="command">
+# cat /var/log/tomoyo/reject_003.log
+</pre>
+
+<pre class="output">
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh
+file execute /bin/cat
+
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 }
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh
+file read /bin/cat
+</pre>
+
+<p>最初のログは、 <code>/usr/sbin/httpd</code> から実行された <code>/bin/sh</code> から <code>/bin/cat</code> の実行が要求され、そのときの０番目の引数（ argv[0] と呼ばれます）は cat 、１番目の引数（ argv[1] と呼ばれます）は /etc/passwd であったことを示しています。このログの１行目に mode=enforcing および granted=no という内容が含まれているため、この要求は拒否されたことが判ります。</p>
+
+<p>２番目のログは、 <code>/usr/sbin/httpd</code> から実行された <code>/bin/sh</code> が <code>/bin/cat</code> を読み込みモードでオープンしようとして拒否されたことを示しています。これは、要求されたプログラムを実行できなかった場合そのプログラムの内容を確認するために読み込みモードでオープンしようとするという習性が <code>/bin/sh</code> にあるためです。</p>
+
+<p>もし、強制モード用のプロファイルで <a href="chapter-9.html.ja#9.2.3">PREFERENCE={ enforcing_penalty=1 }</a> という設定が行われていた場合、強制モードでポリシー違反が発生した場合に、ポリシー違反の原因となったプロセスを 0.1 秒間スリープ状態にさせることができます。無限ループの中でポリシー違反が発生した場合に、ＣＰＵ使用率が 100% になってしまうのを回避するのに役にたちます。ハイジャックされた Samba サーバプロセスがポリシーで許可されていない要求を繰り返すことによりＣＰＵを浪費している状況について以下のムービーで紹介しています：</p>
+
+<p><object data="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<h3><a name="7.2">7.2. 全てのドメインに対して強制モードを有効にする</a></h3>
+
+<p>これまでに紹介してきた概念を理解しツールを使いこなせるようになれば、システム全体をアクセス制御の対象とするようなポリシーを作成することができることでしょう。全てのドメインを「強制モード」で運用すれば、システムの侵害へとつながるような弱点を減らすのに有効です。 Apache を制限する例で示した手順は、そのまま全てのドメインを制限するために使うことができます。</p>
+
+<h3><a name="7.3">7.3. ポリシー違反を対話的に処理する</a></h3>
+
+<p>強制モードで発生したポリシー違反は、 <code>ccs-queryd</code> を用いることで対話的に処理することができます。この機能は、ソフトウェアアップデート時に便利です。なぜなら、ソフトウェアのアップデートにより、以下の何れかの状況が発生した場合にポリシーを修正する必要が生じる場合があるからです：</p>
+
+<ul>
+<li>ファイルのパス名が変化した場合 
+<li>ファイルの依存関係が変化した場合
+<li>必要なアクセス許可が変化したり増えたりした場合 
+</ul>
+
+<p>学習モードを使ってポリシーを最初から再取得するのが理想です。しかし、一度強制モードでの運用を開始したシステムを強制モード以外に変更することは、アクセスが制限されていないドメインへの攻撃に対してシステム全体が無防備になってしまうため、望ましくありません。</p>
+
+<p>幸いなことに、 <code>ccs-queryd</code> を使うことで、管理者は強制モードでシステムを稼働させた状態のままポリシーの修正を行うことができます。ただし、この方法は、全てのケースに対応できるとは限らず、最適なポリシーであることを保証するものではありません。</p>
+
+<h4><a name="7.3.1">7.3.1. ccs-queryd の操作例</a></h4>
+
+<p>実際の <code>ccs-queryd</code> の操作手順について以下のムービーで紹介しています。また、以下にテキストでも示します：</p>
+
+<p><object data="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/t_jZZfmNKpc&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<p>ポリシーに違反したアクセス要求を処理するために <code>ccs-queryd</code> コマンドを利用します：</p>
+
+<pre class="command">
+# /usr/sbin/ccs-queryd
+</pre>
+
+<pre class="output">
+Monitoring /proc/ccs/query . Press Ctrl-C to terminate.
+</pre>
+
+<p>パッケージのアップデート中に、デーモンの再起動などのように普段行われない動作によりポリシー違反が発生するかもしれません。ポリシー違反が発生した場合、 <code>ccs-queryd</code> にプロンプトが表示されます：</p>
+
+<pre class="output">
+#2010/12/30 00:21:11# profile=3 mode=enforcing granted=no (global-pid=11788) task={ pid=11788 ppid=11779 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=753729 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=753665 perm=0755 } exec={ realpath="/bin/sleep" argc=2 envc=6 argv[]={ "sleep" "1" } envp[]={ "TERM=xterm" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/" "LANG=en_US.UTF-8" "SHLVL=1" "_=/bin/sleep" } }
+&lt;kernel&gt; /etc/rc.d/init.d/sshd
+file execute /bin/sleep
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):
+</pre>
+
+<p>上記の例は、  &lt;kernel&gt; /etc/rc.d/init.d/sshd というドメインに属しているプロセスが <code>sleep 1</code> というコマンドラインを処理するために <code>/bin/sleep</code> の実行を要求したが、ポリシーによって拒否されたことを示しています。通常であればポリシーに違反したアクセス要求は直ちに拒否されますが、 <code>ccs-queryd</code> が動作しているため、カーネルはあなたの判断を仰いでいることを示しています：</p>
+
+<p><strong>Y</strong> を押すと許可します。<br>
+<strong>N</strong> を押すと拒否します。<br>
+<strong>R</strong> を押すと再試行します。（手作業でドメインポリシーを変更した後などに利用します。）<br>
+<strong>S</strong> を押すとそのプロセスのドメインポリシーが表示します。<br>
+<strong>A</strong> を押すと編集した上でドメイン用ポリシーに追加後、再試行します。（先にドメインポリシーを編集することができます。）</p>
+
+<p>無条件にアクセス要求を許可しないようにしてください。ポリシー違反の原因がパッケージのアップデートによるものとは限らず、侵入者の攻撃によるものである可能性があるからです。</p>
+
+<p>このプログラムが動作している間は、ポリシーによって拒否されたアクセス要求は、あなたが応答するまで永遠に保留状態となりますので、ログアウトしないでください。プログラムが必要とするアクセス許可が与えられるようにするために、出力の監視を忘れないようにしてください。もし、アクセス許可の不足が検出された場合にはプロンプトが表示されます。ポリシーをのアップデートが完了したら、 Ctrl-C を入力して終了させてください。</p>
+
+<p>このプログラムはメモリ上のポリシーを直接編集します。シャットダウンすると失われてしまいますので、忘れずに <code>ccs-savepolicy</code> を実行してポリシーを保存してください。</p>
+
+<pre class="command">
+# /usr/sbin/ccs-savepolicy
+</pre>
+
+<h4><a name="7.3.2">7.3.2. ccs-queryd の出力例</a></h4>
+
+<p>以下は <code>ccs-queryd</code> がどのような出力を行うかの例を示しています：</p>
+
+<pre class="output">
+#2010/12/30 00:21:11# profile=3 mode=enforcing granted=no (global-pid=11788) task={ pid=11788 ppid=11779 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=753729 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=753665 perm=0755 } exec={ realpath="/bin/sleep" argc=2 envc=6 argv[]={ "sleep" "1" } envp[]={ "TERM=xterm" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PWD=/" "LANG=en_US.UTF-8" "SHLVL=1" "_=/bin/sleep" } }
+&lt;kernel&gt; /etc/rc.d/init.d/sshd
+file execute /bin/sleep
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a
+Enter new entry&gt; file execute /bin/sleep
+Added 'file execute /bin/sleep'.
+
+----------------------------------------
+#2010/12/30 00:22:12# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=0 gid=0 ino=690602 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=690114 perm=0755 }
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster
+file read /usr/share/zoneinfo/posix/Pacific/Pohnpei
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):s
+# select global-pid=11937
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster
+use_profile 3
+use_group 0
+
+network unix stream connect /var/run/nscd/socket
+file read /usr/lib/locale/locale-archive
+file read /var/lib/pgsql/data/postgresql.conf
+file read /var/lib/pgsql/data/PG_VERSION
+file read /var/lib/pgsql/data/global/pg_control
+file write /var/lib/pgsql/data/global/pg_control
+file create /var/lib/pgsql/data/postmaster.pid 0600
+file read /var/lib/pgsql/data/postmaster.pid
+file write /var/lib/pgsql/data/postmaster.pid
+file unlink /var/lib/pgsql/data/postmaster.pid
+file read /usr/share/zoneinfo/MST7MDT
+(...snipped...)
+file read /usr/share/zoneinfo/EST5EDT
+network inet stream bind 127.0.0.1 5432
+network inet stream listen 127.0.0.1 5432
+file create /tmp/.s.PGSQL.5432.lock 0600
+file read /tmp/.s.PGSQL.5432.lock
+file write /tmp/.s.PGSQL.5432.lock
+file unlink /tmp/.s.PGSQL.5432.lock
+file unlink /tmp/.s.PGSQL.5432
+network unix stream bind /tmp/.s.PGSQL.5432
+network unix stream listen /tmp/.s.PGSQL.5432
+file mksock /tmp/.s.PGSQL.5432 0700
+file chmod /tmp/.s.PGSQL.5432 0777
+file write /var/lib/pgsql/data/postmaster.opts
+file truncate /var/lib/pgsql/data/postmaster.opts
+file mkdir /var/lib/pgsql/data/pg_log/ 0700
+file append /var/lib/pgsql/data/pg_log/postgresql-Wed.log
+network inet dgram bind 127.0.0.1 0
+file read /var/lib/pgsql/data/pg_hba.conf
+file read /var/lib/pgsql/data/pg_ident.conf
+file read /var/lib/pgsql/data/pg_xlog/000000010000000000000000
+file write /var/lib/pgsql/data/pg_xlog/000000010000000000000000
+file read /var/lib/pgsql/data/pg_clog/0000
+file write /var/lib/pgsql/data/pg_clog/0000
+file read /var/lib/pgsql/data/pg_multixact/offsets/0000
+file write /var/lib/pgsql/data/pg_multixact/offsets/0000
+file read /var/lib/pgsql/data/global/pg_fsm.cache
+file write /var/lib/pgsql/data/global/pg_fsm.cache
+file unlink /var/lib/pgsql/data/global/pg_fsm.cache
+file read /var/lib/pgsql/data/global/1262
+file write /var/lib/pgsql/data/global/1262
+file read /var/lib/pgsql/data/global/1260
+file write /var/lib/pgsql/data/global/1260
+file read /var/lib/pgsql/data/global/1261
+file write /var/lib/pgsql/data/global/1261
+file read /var/lib/pgsql/data/global/pg_auth
+file read /var/lib/pgsql/data/global/pgstat.stat
+file create /var/lib/pgsql/data/global/pgstat.tmp 0666
+file write /var/lib/pgsql/data/global/pgstat.tmp
+file rename /var/lib/pgsql/data/global/pgstat.tmp /var/lib/pgsql/data/global/pgstat.stat
+file read /var/lib/pgsql/data/pg_subtrans/0000
+file write /var/lib/pgsql/data/pg_subtrans/0000
+file create /var/lib/pgsql/data/global/pg_fsm.cache 0666
+file create /var/lib/pgsql/data/global/pg_auth.\$ 0666
+file create /var/lib/pgsql/data/global/pg_database.\$ 0666
+file rename /var/lib/pgsql/data/global/pg_auth.\$ /var/lib/pgsql/data/global/pg_auth
+file rename /var/lib/pgsql/data/global/pg_database.\$ /var/lib/pgsql/data/global/pg_database
+file unlink /var/lib/pgsql/data/base/\$/pg_internal.init
+file write /var/lib/pgsql/data/global/pg_auth.\$
+file write /var/lib/pgsql/data/global/pg_database.\$
+network inet dgram send 127.0.0.1 1024-65535
+network inet dgram recv 127.0.0.1 1024-65535
+
+
+#2010/12/30 00:22:26# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=0 gid=0 ino=690602 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=690114 perm=0755 }
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster
+file read /usr/share/zoneinfo/posix/Pacific/Pohnpei
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a
+Enter new entry&gt; file read /usr/share/zoneinfo/\{\*\}/\*
+Added 'file read /usr/share/zoneinfo/\{\*\}/\*'.
+
+----------------------------------------
+#2010/12/30 00:22:23# profile=3 mode=enforcing granted=no (global-pid=11974) task={ pid=11974 ppid=11968 uid=0 gid=0 euid=0 egid=0 suid=0 sgid=0 fsuid=0 fsgid=0 type!=execute_handler } path1={ uid=0 gid=0 ino=524564 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=524555 perm=0755 }
+&lt;kernel&gt; /usr/sbin/sshd
+file read /etc/pki/tls/openssl.cnf
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a
+Enter new entry&gt; file read /etc/pki/tls/openssl.cnf
+Added 'file read /etc/pki/tls/openssl.cnf'.
+
+----------------------------------------
+#2010/12/30 00:22:53# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1.parent={ uid=26 gid=26 ino=426399 perm=0700 }
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster
+file create /var/lib/pgsql/data/pg_log/postgresql-Thu.log 0666
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a
+Enter new entry&gt; file create /var/lib/pgsql/data/pg_log/postgresql-\*
+Added 'file create /var/lib/pgsql/data/pg_log/postgresql-\*.log 0666'.
+
+#2010/12/30 00:23:04# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=26 gid=26 ino=426434 major=253 minor=0 perm=0600 type=file } path1.parent={ uid=26 gid=26 ino=426399 perm=0700 }
+&lt;kernel&gt; /etc/rc.d/init.d/postgresql /sbin/runuser /bin/bash /usr/bin/postmaster
+file append /var/lib/pgsql/data/pg_log/postgresql-Thu.log
+Allow? ('Y'es/'N'o/'R'etry/'S'how policy/'A'dd to policy and retry):a
+Enter new entry&gt; file append /var/lib/pgsql/data/pg_log/postgresql-\*
+Added 'file append /var/lib/pgsql/data/pg_log/postgresql-\*.log'.
+</pre>
+
+<h3><a name="7.4">7.4. 通知デーモン</a></h3>
+
+<p>ポリシー違反の発生を通知するために <code>ccs-notifyd</code> というデーモンプログラムが提供されています。 /etc/rc.local 等から /usr/sbin/ccs-notifyd を起動するようにしてください。</p>
+
+<p>通知方法は /etc/ccs/tools/notifyd.conf に記録されています。以下に初期設定を示します：</p>
+
+<pre>
+# This file contains configuration used by ccs-notifyd command.
+
+# ccs-notifyd is a daemon that notifies the occurrence of policy violation
+# in enforcing mode.
+#
+# time_to_wait is grace time in second before rejecting the request that
+# caused policy violation in enforcing mode. For example, if you specify
+# 30, you will be given 30 seconds for starting ccs-queryd command and
+# responding to the policy violation event.
+# If you specify non 0 value, you need to register ccs-notifyd command to
+# /proc/ccs/manager as well as ccs-queryd command, for ccs-notifyd needs to
+# behave as if ccs-queryd command is running.
+# Also, you should avoid specifying too large value (e.g. 3600) because
+# the request will remain pending for that period if you can't respond.
+#
+# action_to_take is a command line you want to use for notification.
+# The command specified by this parameter must read the policy violation
+# notifycation from standard input. For example, mail, curl and xmessage
+# commands can read from standard input.
+# This parameter is passed to execve(). Thus, please use a wrapper program
+# if you need shell processing (e.g. wildcard expansion, environment
+# variables).
+#
+# minimal_interval is grace time in second before re-notifying the next
+# occurrence of policy violation. You can specify 60 to limit notifycation
+# to once per a minute, 3600 to limit notifycation to once per an hour.
+# You can specify 0 to unlimit, but notifying of every policy violation
+# events (e.g. sending a mail) might annoy you because policy violation
+# can occur in clusters if once occurred.
+
+# Please use TOMOYO Linux's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Examples:
+#
+# time_to_wait 180
+# action_to_take mail admin@example.com
+#
+#    Wait for 180 seconds before rejecting the request.
+#    The occurrence is notified by sending mail to admin@example.com
+#    (if SMTP service is available).
+#
+# time_to_wait 0
+# action_to_take curl --data-binary @- https://your.server/path_to_cgi
+#
+#    Reject the request immediately.
+#    The occurrence is notified by executing curl command.
+#
+time_to_wait 0
+action_to_take mail -s Notification\040from\040ccs-notifyd root@localhost
+minimal_interval 60
+</pre>
+
+<p>action_to_take 行を変更して <code>ccs-notifyd</code> を実行してください。</p>
+
+<p>ポリシー違反が発生すると以下のようなメールが届くはずです。このメールの内容は、ヘッダにシリアルナンバーが付与されている点を除いてアクセスログと同一内容です：</p>
+
+<pre class="command">
+# mail
+</pre>
+
+<pre class="output">
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/root": 1 messages 1 new
+&gt;N  1 root@localhost.local  Sun Dec 26 01:08  18/1211 "Notification from ccs-notifyd"
+&amp;
+Message 1:
+From root@localhost.localdomain  Sun Dec 26 01:08:35 2010
+Date: Sun, 26 Dec 2010 01:08:35 +0900
+From: root &lt;root@localhost.localdomain&gt;
+To: root@localhost.localdomain
+Subject: Notification from ccs-notifyd
+
+Q0-0
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh
+file execute /bin/cat
+</pre>
+
+<h3><a name="7.5">7.5. おわりに</a></h3>
+
+<p>このガイドのこの章までの内容は、 TOMOYO Linux を設定するのに十分な知識を提供することを狙っています。より深い知識を得るために、この先の章も読んでください。次の章から先は必ずしも不可欠とはいえない応用的な内容ですが、システムのセキュリティを高めるために役に立つことでしょう。このガイドの末尾にある付録、特に仕様についての解説は役に立つことでしょう。</p>
+
+<p>セキュリティ対策が最も弱い場所を狙われるということを忘れないでください。 TOMOYO Linux が提供する強制アクセス制御機能を正しく使うことは、システムが侵害されることへの対策ではありますが、その他のシステムのセキュリティを高めるための手法や実践も忘れないでください。その他のシステムのセキュリティを高めるための手法や実践はこのガイドの対象外ですが、システムのセキュリティを最大限に高めたいと思うのならば真剣に取り組むようにしてください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-6.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-8.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 6: ポリシーはどのように作成しますか？</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 8: ポリシーを変更する権限</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-7.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-12 15:40:29 +0100 (Thu, 12 May 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

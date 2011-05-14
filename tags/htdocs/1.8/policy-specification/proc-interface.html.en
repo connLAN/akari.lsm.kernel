@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Policy specification : The /proc/ccs/ interface</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.en"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="proc-interface.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p>&lt;Prev&gt; <a href="index.html.en">&lt;Index&gt;</a> <a href="domain-transition-procedure.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>The /proc/ccs/ interface</h2>
+
+<h3><a name="audit">/proc/ccs/audit</a></h3>
+
+<p>This read-only interface contains the audit log. The reader process returns immediately if no audit log exists. To wait until an audit log is generated, use select(2) for readability.</p>
+
+<p>This interface is dependent on how the profiles have been configured in <a href="#profile">/proc/ccs/profile</a>. The following profile options affect it:</p>
+<ul>
+<li>grant_log</li>
+<li>reject_log</li>
+<li>max_audit_log</li>
+</ul>
+
+<p>Also, <a href="#stat">/proc/ccs/stat</a> affects how much memory can be assigned for audit logs.</p>
+
+<p>This interface is used primarily by the userspace tool <a href="../man-pages/index.html.en#ccs-auditd">ccs-auditd</a>.</p>
+
+<h3><a name="domain_policy">/proc/ccs/domain_policy</a></h3>
+
+<p>This read/write interface contains the policy that is defined for each domain. Any lines starting with "&lt;kernel&gt;" indicate the start of a new block of access permissions.</p>
+
+<p>The associated configuration file is "/etc/ccs/domain_policy.conf".</p>
+
+<p>This interface is used primarily by the userspace tools <a href="../man-pages/index.html.en#ccs-editpolicy">ccs-editpolicy</a>, <a href="../man-pages/index.html.en#ccs-loadpolicy">ccs-loadpolicy</a> and <a href="../man-pages/index.html.en#ccs-savepolicy">ccs-savepolicy</a>.</p>
+
+<h3><a name="exception_policy">/proc/ccs/exception_policy</a></h3>
+
+<p>This read/write interface contains the exception policy. Each line is an individual entry.</p>
+
+<p>The associated configuration file is "/etc/ccs/exception_policy.conf".</p>
+
+<p>This interface is used primarily by the userspace tools <a href="../man-pages/index.html.en#ccs-editpolicy">ccs-editpolicy</a>, <a href="../man-pages/index.html.en#ccs-loadpolicy">ccs-loadpolicy</a> and <a href="../man-pages/index.html.en#ccs-savepolicy">ccs-savepolicy</a>.</p>
+
+<h3><a name="manager">/proc/ccs/manager</a></h3>
+
+<p>This read/write interface contains a list of either domains or full pathnames that have been given permission to write to the "/proc/ccs/" interface.</p>
+
+<p>As an exception, all domains can write to below interfaces for restricted purposes.</p>
+
+<ul>
+<li><a href="#.process_status">/proc/ccs/.process_status</a> for reading information of processes</li>
+<li><a href="#domain_policy">/proc/ccs/domain_policy</a> for reading specific domain's (or specific process's) access permissions</li>
+<li><a href="#self_domain">/proc/ccs/self_domain</a> for changing the domain of the caller process</li>
+</ul>
+
+<p>The associated configuration file is "/etc/ccs/manager.conf".</p>
+
+<p>This interface is used primarily by the userspace tools <a href="../man-pages/index.html.en#ccs-editpolicy">ccs-editpolicy</a>, <a href="../man-pages/index.html.en#ccs-loadpolicy">ccs-loadpolicy</a> and <a href="../man-pages/index.html.en#ccs-savepolicy">ccs-savepolicy</a>.</p>
+
+<pre class="command">
+# cat /proc/ccs/manager
+</pre>
+
+<pre class="output">
+/usr/sbin/ccs-loadpolicy
+/usr/sbin/ccs-editpolicy
+/usr/sbin/ccs-setlevel
+/usr/sbin/ccs-setprofile
+/usr/sbin/ccs-queryd
+</pre>
+
+<h3><a name="profile">/proc/ccs/profile</a></h3>
+
+<p>This read/write interface contains the profile configuration.</p>
+
+<p>The associated configuration file is "/etc/ccs/profile.conf".</p>
+
+<p>This interface is used primarily by the userspace tools <a href="../man-pages/index.html.en#ccs-editpolicy">ccs-editpolicy</a>, <a href="../man-pages/index.html.en#ccs-loadpolicy">ccs-loadpolicy</a>, <a href="../man-pages/index.html.en#ccs-savepolicy">ccs-savepolicy</a> and <a href="../man-pages/index.html.en#ccs-setlevel">ccs-setlevel</a>.</p>
+
+<h3><a name="query">/proc/ccs/query</a></h3>
+
+<p>This read/write interface is used to grant or reject individual access requests that occur within domains in "Enforcing Mode".</p>
+
+<p>This interface is used primarily by the userspace tool <a href="../man-pages/ccs-queryd.html.en">ccs-queryd</a>.</p>
+
+<h3><a name="self_domain">/proc/ccs/self_domain</a></h3>
+
+<p>This read/write interface shows the domain of the caller process.</p>
+
+<p>This interface allows the caller to change the domain of the caller process if explicitly permitted by <a href="domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directive.</p>
+
+<h3><a name="stat">/proc/ccs/stat</a></h3>
+
+<p>This read/write interface contains information about policy violations and memory usage in bytes.</p>
+
+<pre class="command">
+# cat /proc/ccs/stat
+</pre>
+
+<pre class="output">
+Policy update:                               172 (Last: 2011/02/03 18:03:01)
+Policy violation in learning mode:             0
+Policy violation in permissive mode:           0
+Policy violation in enforcing mode:            0
+Memory used by policy:                     41792
+Memory used by audit log:                 159328
+Memory used by query message:                  0
+Total memory used:                        201120
+</pre>
+
+<ul>
+<li><strong>Policy update</strong> shows the total number of policy updates and the last time that policy was updated.</li>
+<li><strong>Policy violation in learning mode</strong> shows the total number of policy violations that have occurred in domains set to "Learning Mode" and the last time the violation occurred.</li>
+<li><strong>Policy violation in permissive mode</strong> shows the total number of policy violations that have occurred in domains set to "Permissive Mode"and the last time the violation occurred.</li>
+<li><strong>Policy violation in enforcing mode</strong> shows the total number of policy violations that have occurred in domains set to "Enforcing Mode"and the last time the violation occurred.</li>
+<li><strong>Memory used by policy</strong> shows the memory used for holding access permissions.</li>
+<li><strong>Memory used by audit log</strong> shows the memory used for holding audit logs.</li>
+<li><strong>Memory used by query message</strong> shows the memory used for waiting for administrator's decision.</li>
+<li><strong>Total memory used</strong> shows the total memory used.</li>
+</ul>
+
+<p>This interface allows the administrator to configure memory quota.</p>
+
+<p>The associated configuration file is "/etc/ccs/stat.conf".</p>
+
+<p>This interface is used primarily by the userspace tools <a href="../man-pages/index.html.en#ccs-editpolicy">ccs-editpolicy</a>, <a href="../man-pages/index.html.en#ccs-loadpolicy">ccs-loadpolicy</a> and <a href="../man-pages/index.html.en#ccs-savepolicy">ccs-savepolicy</a>.</p>
+
+<h3><a name="version">/proc/ccs/version</a></h3>
+
+<p>This read-only interface contains the currently running version of TOMOYO Linux.</p>
+
+<h3><a name=".domain_status">/proc/ccs/.domain_status</a></h3>
+
+<p>This read/write interface contains a list of domain names and profile numbers currently defined in domain policy.</p>
+
+<p>This is used primarily by the userspace tool <a href="../man-pages/ccs-setprofile.html.en">ccs-setprofile</a>.</p>
+
+<h3><a name=".execute_handler">/proc/ccs/.execute_handler</a></h3>
+
+<p>This read/write interface is openable by only processes running as an execute_handler process. The content is identical to <a href="#.process_status">"/proc/ccs/.process_status"</a>.</p>
+
+<p>This interface is intended to allow programs specified by <a href="domain-policy-syntax.html.en#task_auto_execute_handler">task auto_execute_handler</a> or <a href="domain-policy-syntax.html.en#task_denied_execute_handler">task denied_execute_handler</a> directives verify that they are executed as an execute_handler and arguments are passed by the kernel.</p>
+
+<h3><a name=".process_status">/proc/ccs/.process_status</a></h3>
+
+<p>This read/write interface contains a list of domain names and profile numbers that the currently running process belongs to.</p>
+
+<p>This interface is used primarily by the userspace tool <a href="../man-pages/index.html.en#ccs-pstree">ccs-pstree</a>.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="domain-transition-procedure.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+<a href="../index.html.en">Main Index</a>
+</td>
+<td class="docs-next-description">
+<p>A2: Domain transition procedure</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="proc-interface.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-22 07:35:44 +0000 (Tue, 22 Mar 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

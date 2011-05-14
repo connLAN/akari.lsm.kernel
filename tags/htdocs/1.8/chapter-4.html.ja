@@ -1,0 +1,407 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 4</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-4.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-3.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-5.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 4: TOMOYO Linux はどのように動きますか？</h2>
+
+<h3><a name="4.1">4.1. ドメインを理解する</a></h3>
+
+<p>TOMOYO Linux では、強制アクセス制御の適用は<strong>ドメイン</strong>という単位で行われます。これは重要な概念です。システム上に存在する全てのプロセスはそれぞれ１個のドメインに属しています。ドメインはプロセスの実行履歴により決定されます。大まかに言うと、プログラムが実行されるたびに新しいドメインが作成されます。あるドメインの名前はそのドメインに到達するまでに実行された全てのプログラムのパス名を連結したものとして定義されます。このドメインを作成することは<strong>ドメイン遷移</strong>と呼ばれています。以下の図を見てください：</p>
+
+<img src="media/fig-3-1.png" alt="fig-3-1.png" width="600" height="450">
+
+<p>カーネルは常に最初のドメインであり、 TOMOYO Linux においては <strong>&lt;kernel&gt;</strong> というドメイン名で定義されます。この例では、カーネルが <code>/sbin/init</code> を実行します。プログラムが実行されたことにより、新しいドメイン、この場合は <strong>&lt;kernel&gt; /sbin/init</strong> という名前を持つドメインが作成されます。起動スクリプトが実行されると、より多くのドメインが作成されていきます。</p>
+
+<p>このプロセス実行履歴は重要です。以下のドメインを考えてください：</p>
+
+<p>&lt;kernel&gt; /sbin/init <strong>/etc/rc.d/rc</strong><br>
+&lt;kernel&gt; /sbin/init /etc/rc.d/rc.sysinit <strong>/etc/rc.d/rc</strong></p>
+
+<p>どちらのドメインも /etc/rc.d/rc というプログラムが実行されることにより作成されています。しかし、<strong>プロセス実行履歴が異なるため、これらは２つの異なるドメインとして扱われます。</strong>これは、あるドメインから実行できるプログラムを制御できることを、また、そのプロセスがどのように実行されたかにより異なるレベルの制限を行う柔軟なポリシーを記述できることを示しています。また、とても正確なドメイン遷移を行いつつ、例えばプロセスがどのように実行されたかによらずに同じ制限を適用することも可能であることを示しています。この項目については後述します。</p>
+
+<h3><a name="4.2">4.2. ポリシーエディタを用いてドメインを確認する</a></h3>
+
+<p>よりドメインについて理解するために、ポリシーエディタを見てみましょう。ポリシーエディタは TOMOYO Linux で使用する中心的なツールであり、使い方に慣れることが重要です。このページの説明を補足するものとして、<a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a>も参照してください。</p>
+
+<p>システムを TOMOYO Linux カーネルで起動させてから、（ /etc/ccs/ ディレクトリに存在しているポリシーファイルを編集するために） /etc/ccs/ というオプションを指定してポリシーエディタを実行してください：</p>
+
+<pre class="command">
+# /usr/sbin/ccs-editpolicy /etc/ccs/
+</pre>
+
+<p>ポリシーエディタにはいくつもの画面が存在し、それぞれが異なる役割を提供しています。デフォルトで最初に表示される画面は <strong>Domain Transition Editor</strong> です。以下の画面は上記のコマンドを実行することで表示されるドメインのツリーです。現時点では &lt;kernel&gt; ドメインだけが定義されています：</p>
+
+<img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="675" height="375">
+
+<p>初期化されたばかりのポリシーであるため、 /etc/ccs/ ディレクトリに存在するポリシーファイルは空っぽです。<strong>TOMOYO Linux には２種類のポリシーのセットが存在しています：１つは現在カーネル内にロードされているポリシーのセットであり、もう１つは /etc/ccs/ ディレクトリ内に保存されているポリシーのセットです。</strong> /etc/ccs/ ディレクトリには複数のポリシーのセットを保存することができ、起動時または必要な時にカーネル内へと読み込ませることができます。ポリシーをディスクに保存する方法については後述します。 q キーを押してポリシーエディタを終了してください。</p>
+
+<p>今度は、（現在カーネル内にロードされているポリシーを閲覧するために） /etc/ccs/ というオプションを<strong>指定しない</strong>でポリシーエディタを実行してください：</p>
+
+<pre class="command">
+# /usr/sbin/ccs-editpolicy
+</pre>
+
+<p>システムが動作するにつれて、 TOMOYO Linux は新しいドメインが作成されたことを記録して、ドメインのツリーへと追加していきます。上記のコマンドを実行することにより、システム起動時から現在までに作成された全てのドメインを含むドメインのツリーが表示されます：</p>
+
+<img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="675" height="375">
+
+<p><strong>１行目</strong>は現在表示されている画面の名前と、存在しているドメインの数が表示されます。<br>
+<strong>２行目</strong>はメッセージを表示するための領域です。<br>
+<strong>３行目</strong>は現在カーソルのある行のドメイン名が表示されます。<br>
+<strong>４行目</strong>以降は現在定義されているドメインのツリーが表示されます。</p>
+
+<p>適当にコマンドを実行してどのようにドメインが作成されるかを確認してみてください。コマンドを別の画面などで実行する場合は、ポリシーエディタを終了させる必要はありません。</p>
+
+<p><strong>矢印キー</strong>や <strong>Home/End/PageUp/PageDown</strong> キーを使って画面をスクロールすることができます。<br>
+<strong>r</strong> キーを押すと、最新の状態に更新されます。<br>
+<strong>f</strong> キーを押すと、検索ができます。<br>
+<strong>?</strong> キーを押すと、利用可能なコマンドが表示されます。再度 ? キーを押すと元の画面に戻ります。</p>
+
+<p>新しいドメインは同じ名前のドメインが存在しない場合だけ作成されます。そのため、同じコマンドを何度も実行しても、繰り返した数だけドメインが作成されるわけではありません。</p>
+
+<h3><a name="4.3">4.3. プロファイルを理解する</a></h3>
+
+<p>それぞれのドメインは<strong>プロファイル</strong>というものを指定することにより制限が行われるようになります。プロファイルは他のドメインに割り当てられているプロファイルとは無関係に自由にドメインに割り当てることができます。そのため、ドメインに対するアクセス制限の設定を１個ずつ順番に行っていくことも可能です。また、特定のドメインに対して専用のプロファイルを割り当てることも可能です。この応用についてはここではまだ説明しません。</p>
+
+<p>ポリシーエディタの画面で、それぞれの行の２番目に表示されている数値に注目してください：</p>
+
+<img src="media/editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" width="675" height="375">
+
+<p>この数値は<strong>プロファイル番号</strong>と呼ばれています。プロファイル番号は０～２５５の整数値です。デフォルトのプロファイル番号は０であり、プロファイル０は無効モードとも呼ばれています。無効モードのプロファイルが割り当てられたドメインでは全く制限が行われません。</p>
+
+<p><strong>w</strong> キーを押してポリシーエディタで利用可能な画面の一覧を表示してみましょう：</p>
+
+<img src="media/editpolicy-window-list.png" alt="editpolicy-window-list.png" width="675" height="375">
+
+<p><strong>p</strong> キーを押して <strong>Profile Editor</strong> 画面を表示すると、以下のようなプロファイルの一覧が表示されます：</p>
+
+<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" width="675" height="375">
+
+<p>それぞれのプロファイルには３種類の行が存在しています：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>COMMENT</p></td>
+<td><p>プロファイルの用途を表すコメント</p></td>
+</tr>
+<tr>
+<td><p>CONFIG</p></td>
+<td><p>アクセス制御モードの設定</p></td>
+</tr>
+<tr>
+<td><p>PREFERENCE</p></td>
+<td><p>各種オプションの設定</p></td>
+</tr>
+</table>
+</div>
+
+<p>CONFIG 行の mode パラメータには以下の何れかの値を指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>値</p></th>
+<th><p>意味</p></th>
+</tr>
+<tr>
+<td><p>disabled</p></td>
+<td><p>通常のカーネルのように動作します。</p></td>
+</tr>
+<tr>
+<td><p>learning</p></td>
+<td><p>アクセス要求がポリシーで許可されていなくても拒否しません。また、同じアクセス要求を次回以降は許可するためにポリシーに追加します。</p></td>
+</tr>
+<tr>
+<td><p>permissive</p></td>
+<td><p>アクセス要求がポリシーで許可されていなくても拒否しません。ただし、ポリシーへの追加も行いません。</p></td>
+</tr>
+<tr>
+<td><p>enforcing</p></td>
+<td><p>アクセス要求がポリシーで許可されていない場合には拒否します。また、ポリシーへの追加も行いません。</p></td>
+</tr>
+</table>
+</div>
+
+<p>PREFERENCE 行には以下のオプションを指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>名前</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>max_audit_log</p></td>
+<td><p>カーネルが保持するアクセスログの件数の上限</p></td>
+</tr>
+<tr>
+<td><p>max_learning_entry</p></td>
+<td><p>学習モードによりドメインポリシーへと自動的に追加されるアクセス許可の件数の上限</p>
+</tr>
+<tr>
+<td><p>enforcing_penalty</p></td>
+<td><p>強制モードでポリシー違反を起こしたプロセスに対して強制的にスリープさせる時間</p>
+</tr>
+</table>
+</div>
+
+<p>デフォルトでは役割の異なる４つのプロファイルが定義されています：</p>
+
+<img src="media/fig-2-5-ja.png" alt="fig-2-5-ja.png" width="640" height="320">
+
+<p>これらのプロファイルをドメインへと割り当てていきます：</p>
+
+<img src="media/fig-2-6.png" alt="fig-2-6.png" width="600" height="450">
+
+<p>学習モード用プロファイルというのはポリシーの作成を容易にするための TOMOYO Linux の特徴です。学習モードが割り当てられたドメインではドメインポリシーが自動的に作成されます。学習モードで作成されたポリシーを精製していくことでしっかりとしたポリシーを作成することができます。他のプロファイル（確認モード用と強制モード用）は後でドメインの動作に制限をかける際に利用します。</p>
+
+<p>プロファイル管理の詳細については <a href="chapter-9.html.ja">Chapter 9: より詳細なプロファイルの管理</a>を参照してください。</p>
+
+<h3><a name="4.4">4.4. ドメインポリシーを理解する</a></h3>
+
+<p>それぞれのドメインに対する制限の内容は <strong>Domain Policy Editor</strong> 画面で確認できます。この画面は Domain Transition Editor 画面でドメインを選択して Enter キーを押すことで表示されます。現時点ではまだポリシーが定義されていないので、空っぽです。以下の写真は Apache 用のドメインポリシーの例です：</p>
+
+<a href="media/editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375"></a>
+
+<p>ドメインポリシーのパーミッションは file read や file write などのディレクティブと一緒にこの画面に表示されます。ドメインに対して強制モード用のプロファイルを割り当てることにより、ここで定義されているアクセス許可（および例外ポリシーで定義されているアクセス許可（ <a href="chapter-4.html.ja#4.5">4.5: 例外ポリシーを理解する</a>）を参照してください）だけが許可されるようになります。正常な動作をするのに必要最小限の権限を持ったポリシーを作成するために、学習モードと確認モードを使うことができます。ドメインポリシーで指定できるディレクティブについての詳細は <a href="policy-specification/index.html.ja">Appendix B: ポリシー仕様</a>の中の<a href="policy-specification/domain-policy-syntax.html.ja">ドメインポリシー仕様</a>を参照してください。</p>
+
+<h3><a name="4.5">4.5. 例外ポリシーを理解する</a></h3>
+
+<p>w キーを押して、次に e キーを押すと、 <strong>Exception Policy Editor</strong> という画面が表示されます：</p>
+
+<a href="media/editpolicy-exception-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" width="675" height="375"></a>
+
+<p>矢印キーや Home/End/PageUp/PageDown キーを使って画面をスクロールすることができます。</p>
+
+<p>この画面で表示されるパーミッションはドメインポリシーで表示されるパーミッションと似ていますが、全てのドメインに対して適用されるという点が異なります。この画面で定義されたパーミッションはドメインポリシーには表示されません。また、例外ポリシーで与えられているアクセス許可に一致するアクセス要求は自動的に許可されます。また、例外ポリシーはグループ化ディレクティブを指定することによりドメインポリシーを削減および単純化するためにも利用されます。</p>
+
+<p>例外ポリシーで指定できるディレクティブについての詳細は <a href="policy-specification/index.html.ja">Appendix B: ポリシー仕様</a>の中の<a href="policy-specification/exception-policy-syntax.html.ja">例外ポリシー仕様</a>を参照してください。</p>
+
+<h3><a name="4.6">4.6. アクセスログを保存する（任意）</a></h3>
+
+<p>あるドメインに属しているプロセスがそのドメインのドメインポリシーまたは例外ポリシーで許可されているアクセスを要求した場合、その要求は許可されます。ポリシーで許可されておらず、なおかつ、そのドメインに対して強制モードが割り当てられている場合には、その要求は拒否されます。</p>
+
+<p>ポリシーを作成中は、ドメインポリシーや例外ポリシーで許可されていないアクセス要求が発生する度にログとして残しておくと有用かもしれません。ポリシーが完成して強制モードが割り当てられた後はログに残しておくことが特に重要ですが、学習モードの時点でもポリシーを作成するためにログに残しておくことができます。</p>
+
+<p>TOMOYO Linux では<strong>アクセス許可ログ</strong>（ドメインポリシーまたは例外ポリシーで許可されたアクセス要求）と<strong>アクセス拒否ログ</strong>（ドメインポリシーと例外ポリシーのどちらでも許可されなかったアクセス要求）という２種類のログが存在します。これらのログは、ドメインポリシーの形式で出力されます。これは、現在のポリシーでは許可されていないアクセス要求を行った際にその要求をポリシーとして許可したい場合に便利です。アクセス拒否ログはドメインポリシーにパーミッションを追加する用途で利用できます。<a href="chapter-5.html.ja">次の章</a>で説明する学習モードは、学習モードが割り当てられているドメインで発生したアクセス拒否ログをドメインポリシーへと追加するという作業をほとんど自動的に行ってくれます。</p>
+
+<p>CONFIG 行の grant_log パラメータには以下の値を指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th>
+<p>値</p>
+</th>
+<th>
+<p>意味</p>
+</th>
+</tr>
+<tr>
+<td>
+<p>no</p>
+</td>
+<td>
+<p>アクセス許可ログを生成しない。ただし、個別のアクセス許可で grant_log=yes と指定されている場合には生成する。</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>yes</p>
+</td>
+<td>
+<p>アクセス許可ログを生成する。ただし、個別のアクセス許可で grant_log=no と指定されている場合には生成しない。</p>
+</td>
+</tr>
+</table>
+</div>
+
+<p>CONFIG 行の reject_log パラメータには以下の値を指定できます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th>
+<p>値</p>
+</th>
+<th>
+<p>意味</p>
+</th>
+</tr>
+<tr>
+<td>
+<p>no</p>
+</td>
+<td>
+<p>アクセス拒否ログを生成しない。</p>
+</td>
+</tr>
+<tr>
+<td>
+<p>yes</p>
+</td>
+<td>
+<p>アクセス拒否ログを生成する。</p>
+</td>
+</tr>
+</table>
+</div>
+
+<p><a href="policy-specification/proc-interface.html.ja#audit">/proc/ccs/audit</a> からアクセスログを読み出して指定されたログファイルに保存するために <code>ccs-auditd</code> というデーモンプログラムが提供されています。このデーモンプログラムを利用する場合、 /etc/rc.local 等に /usr/sbin/ccs-auditd という行を追加してください。</p>
+
+<p>このデーモンの設定ファイルは /etc/ccs/tools/auditd.conf です。 <a href="policy-specification/proc-interface.html.ja#audit">/proc/ccs/audit</a> から読みだされたアクセスログはこの設定ファイルの内容に従って振り分けが行われ、指定されたファイルへと書き出されます。幾つかの有用なデフォルトルールが定義されていますが、上級者はより管理しやすくするために様々なルールを定義することができます。以下に初期設定を示します：</p>
+
+<pre>
+# This file contains sorting rules used by ccs-auditd command.
+
+# An audit log consists with three lines. You can refer the first line
+# using 'header' keyword, the second line using 'domain' keyword, and the
+# third line using 'acl' keyword.
+#
+# Words in each line are separated by a space character. Therefore, you can
+# use 'header[index]', 'domain[index]', 'acl[index]' for referring index'th
+# word of the line. The index starts from 1, and 0 refers the whole line
+# (i.e. 'header[0]' = 'header', 'domain[0]' = 'domain', 'acl[0]' = 'acl').
+#
+# Three operators are provided for conditional sorting.
+# '.contains' is for 'fgrep keyword' match.
+# '.equals' is for 'grep ^keyword$' match.
+# '.starts' is for 'grep ^keyword' match.
+#
+# Sorting rules are defined using multi-lined chunks. A chunk is terminated
+# by a 'destination' line which specifies the pathname to write the audit
+# log. A 'destination' line is processed only when all preceding 'header',
+# 'domain' and 'acl' lines in that chunk have matched.
+# Evaluation stops at the first processed 'destination' line.
+# Therefore, no audit logs are written more than once.
+#
+# More specific matches should be placed before less specific matches.
+# For example:
+#
+# header.contains profile=3
+# domain.contains /usr/sbin/httpd
+# destination     /var/log/tomoyo/reject_003_httpd.log
+#
+# This chunk should be placed before the chunk that matches logs with
+# profile=3. If placed after, the audit logs for /usr/sbin/httpd will be
+# sent to /var/log/tomoyo/reject_003.log .
+
+# Please use TOMOYO Linux's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Discard all granted logs.
+header.contains granted=yes
+destination     /dev/null
+
+# Save rejected logs with profile=0 to /var/log/tomoyo/reject_000.log
+header.contains profile=0
+destination     /var/log/tomoyo/reject_000.log
+
+# Save rejected logs with profile=1 to /var/log/tomoyo/reject_001.log
+header.contains profile=1
+destination     /var/log/tomoyo/reject_001.log
+
+# Save rejected logs with profile=2 to /var/log/tomoyo/reject_002.log
+header.contains profile=2
+destination     /var/log/tomoyo/reject_002.log
+
+# Save rejected logs with profile=3 to /var/log/tomoyo/reject_003.log
+header.contains profile=3
+destination     /var/log/tomoyo/reject_003.log
+</pre>
+
+<p>アクセス許可ログはあっという間に大きくなるので<strong>アクセス許可ログを保存する場合にはディスクのスペースに注意してください。</strong>理解していないのならばアクセス許可ログを保存するべきではありません。</p>
+
+<p><code>logrotate</code> によるローテーションを行わせたい場合は、以下のような内容のファイルを /etc/logrotate.d/tomoyo という名前で作成してください。（ nocreate オプションを必ず指定してください。 nocreate オプションを忘れると、最初のローテーションが実行されて以降のログが保存されなくなってしまいます。）：</p>
+
+<pre>
+/var/log/tomoyo/*.log {
+&nbsp;&nbsp;weekly
+&nbsp;&nbsp;rotate 9
+&nbsp;&nbsp;missingok
+&nbsp;&nbsp;notifempty
+&nbsp;&nbsp;nocreate
+}
+</pre>
+
+<p>アクセスログを保存する必要が無い場合は、  <code>ccs-auditd</code> を実行する必要はありません。また、プロファイルで <a href="chapter-9.html.ja#9.2.3">PREFERENCE={ max_audit_log=0 }</a> という指定をすることにより、消費メモリの節約と応答速度の向上が期待できます。ドメインに対して強制モードを割り当てるまでアクセスログは保存しないという選択肢もありますが、より厳密なアクセス制御を行うためのポリシーを作成できるようにするために、現時点でアクセス拒否ログを保存するように設定しておくことをお勧めします。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-3.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-5.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 3: どうすれば TOMOYO Linux をインストールできますか？</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 5: ドメインの管理はどのように行いますか？</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-4.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-27 06:23:40 +0100 (Sun, 27 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

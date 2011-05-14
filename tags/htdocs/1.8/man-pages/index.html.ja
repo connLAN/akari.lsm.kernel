@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 管理ツール</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="index.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="../index.html.ja">&lt;目次&gt;</a></p>
+</div>
+
+<h2>管理ツール</h2>
+
+<h3><a name="ccs-auditd">ccs-auditd</a></h3>
+
+<p>このツールは、許可されたまたは拒否されたアクセス要求のログを <a href="../policy-specification/proc-interface.html.ja#audit">/proc/ccs/audit</a> から読み出してファイルに保存するためのデーモンです。設定ファイルを用いて振り分け方法を指定できます。</p>
+
+<p>詳細については <a href="ccs-auditd.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-checkpolicy">ccs-checkpolicy</a></h3>
+
+<p>このツールはポリシーを標準入力から読み込んで構文が正しいかどうかをチェックします。</p>
+
+<p>詳細については <a href="ccs-checkpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-diffpolicy">ccs-diffpolicy</a></h3>
+
+<p>このツールは２つのドメインポリシーの差分を、そのままドメインポリシーとして利用可能な形式で表示します。</p>
+
+<p>詳細については <a href="ccs-diffpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-domainmatch">ccs-domainmatch</a></h3>
+
+<p>このツールは現在カーネル内に存在しているドメインポリシーの中から指定されたパス名を含むアクセス許可を表示します。 <code>fgrep</code> と似ています。</p>
+
+<p>詳細については <a href="ccs-domainmatch.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-editpolicy">ccs-editpolicy</a></h3>
+
+<p>このツールは /etc/ccs/ ディレクトリ内に保存されているポリシーおよび現在カーネル内に存在しているポリシーを編集します。</p>
+
+<p>詳細については <a href="ccs-editpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-editpolicy-agent">ccs-editpolicy-agent</a></h3>
+
+<p>このツールはポリシーを遠隔操作するためのエージェントとして動作するデーモンです。リソースの制約により <code><a href="#ccs-editpolicy">ccs-editpolicy</a></code> を動作させることが難しいシステムのために提供されています。</p>
+
+<p>詳細については <a href="ccs-editpolicy-agent.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-findtemp">ccs-findtemp</a></h3>
+
+<p>このツールは、ドメインポリシーを標準入力から読み込んで、存在しないパス名を表示します。表示されたパス名はテンポラリファイルである可能性が高いです。</p>
+
+<p>詳細については <a href="ccs-findtemp.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-loadpolicy">ccs-loadpolicy</a></h3>
+
+<p>このツールは、標準入力からポリシーを読み込んで <a href="../policy-specification/proc-interface.html.ja">/proc/ccs/</a> 経由でカーネル内のポリシーを更新します。</p>
+
+<p>詳細については <a href="ccs-loadpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-notifyd">ccs-notifyd</a></h3>
+
+<p>このツールは、強制モードにおけるポリシー違反の発生をシステム管理者に通知するためのデーモンです。設定ファイルの中で、 <code>mail</code> などの外部コマンドを実行するように指定しておきます。</p>
+
+<p>詳細については <a href="ccs-notifyd.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-patternize">ccs-patternize</a></h3>
+
+<p>このツールは、ドメインポリシーに含まれるパス名や数値やアドレスをパターン化します。パターン化の規則は設定ファイルで指定します。</p>
+
+<p>詳細については <a href="ccs-patternize.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-pstree">ccs-pstree</a></h3>
+
+<p>このツールは、現在動作中のプロセスが属しているドメインに割り当てられているプロファイル番号、現在動作中のプロセスの名前、現在動作中のプロセスのＰＩＤ、現在動作中のプロセスが属しているドメインのドメイン名を <code>pstree</code>のように一覧表示します。</p>
+
+<p>詳細については <a href="ccs-pstree.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-queryd">ccs-queryd</a></h3>
+
+<p>このツールは、強制モードにおいてポリシーに違反したアクセス要求を、許可するか拒否するかを指定することにより対話的に処理します。</p>
+
+<p>詳細については <a href="ccs-queryd.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-savepolicy">ccs-savepolicy</a></h3>
+
+<p>このツールは、現在カーネル内に存在しているポリシーを /etc/ccs/ ディレクトリ内に保存します。</p>
+
+<p>詳細については <a href="ccs-savepolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-selectpolicy">ccs-selectpolicy</a></h3>
+
+<p>このツールは、ドメインポリシーを標準入力から読み込んで、指定されたドメイン名に一致するドメインポリシーだけを表示します。</p>
+
+<p>詳細については <a href="ccs-selectpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-setlevel">ccs-setlevel</a></h3>
+
+<p>このツールは、プロファイルの設定を変更します。</p>
+
+<p>詳細については <a href="ccs-setlevel.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-setprofile">ccs-setprofile</a></h3>
+
+<p>このツールは、ドメインに対するプロファイル番号の割り当てを変更します。</p>
+
+<p>詳細については <a href="ccs-setprofile.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="ccs-sortpolicy">ccs-sortpolicy</a></h3>
+
+<p>このツールは、ドメインポリシーをドメイン名単位で並べ替え、重複を除去します。 <code><a href="#ccs-auditd">ccs-auditd</a></code> によって保存されたアクセスログを並べ替えて圧縮するために提供されています。</p>
+
+<p>詳細については <a href="ccs-sortpolicy.html.en">man page</a> を参照してください。</p>
+
+<h3><a name="init_policy">init_policy</a></h3>
+
+<p>このツールは、システムの動作を解析または制限するために利用するポリシーを初期化します。</p>
+
+<p>詳細については <a href="init_policy.html.en">man page</a> を参照してください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="../index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="index.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-13 18:55:31 +0000 (Sun, 13 Feb 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

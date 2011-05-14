@@ -1,0 +1,521 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : ポリシー仕様 : 表記規則</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="expression-rules.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="domain-transition-procedure.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="exception-policy-syntax.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>表記規則</h2>
+
+<h3><a name="word">単語の表記規則</a></h3>
+
+<p>パス名には英数字だけでなく空白や改行などの文字、漢字のような複数バイトで構成される文字などが含まれる可能性があります。そのような文字は TOMOYO Linux では８進数表記で扱います。以下は特別な文字を表現するためのテーブルです。</p>
+
+<p>横方向が下位の４ビットを、縦方向が上位の４ビットを示しています。</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<td>
+</td>
+<th><p>0x0</p></th>
+<th><p>0x1</p></th>
+<th><p>0x2</p></th>
+<th><p>0x3</p></th>
+<th><p>0x4</p></th>
+<th><p>0x5</p></th>
+<th><p>0x6</p></th>
+<th><p>0x7</p></th>
+<th><p>0x8</p></th>
+<th><p>0x9</p></th>
+<th><p>0xA</p></th>
+<th><p>0xB</p></th>
+<th><p>0xC</p></th>
+<th><p>0xD</p></th>
+<th><p>0xE</p></th>
+<th><p>0xF</p></th>
+</tr>
+<tr>
+<th><p>0x0</p></th>
+<td><p>\000</p></td>
+<td><p>\001</p></td>
+<td><p>\002</p></td>
+<td><p>\003</p></td>
+<td><p>\004</p></td>
+<td><p>\005</p></td>
+<td><p>\006</p></td>
+<td><p>\007</p></td>
+<td><p>\010</p></td>
+<td><p>\011</p></td>
+<td><p>\012</p></td>
+<td><p>\013</p></td>
+<td><p>\014</p></td>
+<td><p>\015</p></td>
+<td><p>\016</p></td>
+<td><p>\017</p></td>
+</tr>
+<tr>
+<th><p>0x1</p></th>
+<td><p>\020</p></td>
+<td><p>\021</p></td>
+<td><p>\022</p></td>
+<td><p>\023</p></td>
+<td><p>\024</p></td>
+<td><p>\025</p></td>
+<td><p>\026</p></td>
+<td><p>\027</p></td>
+<td><p>\030</p></td>
+<td><p>\031</p></td>
+<td><p>\032</p></td>
+<td><p>\033</p></td>
+<td><p>\034</p></td>
+<td><p>\035</p></td>
+<td><p>\036</p></td>
+<td><p>\037</p></td>
+</tr>
+<tr>
+<th><p>0x2</p></th>
+<td><p>\040</p></td>
+<td><p>!</p></td>
+<td><p>"</p></td>
+<td><p>#</p></td>
+<td><p>$</p></td>
+<td><p>%</p></td>
+<td><p>&amp;</p></td>
+<td><p>'</p></td>
+<td><p>(</p></td>
+<td><p>)</p></td>
+<td><p>*</p></td>
+<td><p>+</p></td>
+<td><p>,</p></td>
+<td><p>-</p></td>
+<td><p>.</p></td>
+<td><p>/</p></td>
+</tr>
+<tr>
+<th><p>0x3</p></th>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>4</p></td>
+<td><p>5</p></td>
+<td><p>6</p></td>
+<td><p>7</p></td>
+<td><p>8</p></td>
+<td><p>9</p></td>
+<td><p>:</p></td>
+<td><p>;</p></td>
+<td><p>&lt;</p></td>
+<td><p>=</p></td>
+<td><p>&gt;</p></td>
+<td><p>?</p></td>
+</tr>
+<tr>
+<th><p>0x4</p></th>
+<td><p>@</p></td>
+<td><p>A</p></td>
+<td><p>B</p></td>
+<td><p>C</p></td>
+<td><p>D</p></td>
+<td><p>E</p></td>
+<td><p>F</p></td>
+<td><p>G</p></td>
+<td><p>H</p></td>
+<td><p>I</p></td>
+<td><p>J</p></td>
+<td><p>K</p></td>
+<td><p>L</p></td>
+<td><p>M</p></td>
+<td><p>N</p></td>
+<td><p>O</p></td>
+</tr>
+<tr>
+<th><p>0x5</p></th>
+<td><p>P</p></td>
+<td><p>Q</p></td>
+<td><p>R</p></td>
+<td><p>S</p></td>
+<td><p>T</p></td>
+<td><p>U</p></td>
+<td><p>V</p></td>
+<td><p>W</p></td>
+<td><p>X</p></td>
+<td><p>Y</p></td>
+<td><p>Z</p></td>
+<td><p>[</p></td>
+<td><p>\\</p></td>
+<td><p>]</p></td>
+<td><p>^</p></td>
+<td><p>_</p></td>
+</tr>
+<tr>
+<th><p>0x6</p></th>
+<td><p>`</p></td>
+<td><p>a</p></td>
+<td><p>b</p></td>
+<td><p>c</p></td>
+<td><p>d</p></td>
+<td><p>e</p></td>
+<td><p>f</p></td>
+<td><p>g</p></td>
+<td><p>h</p></td>
+<td><p>i</p></td>
+<td><p>j</p></td>
+<td><p>k</p></td>
+<td><p>l</p></td>
+<td><p>m</p></td>
+<td><p>n</p></td>
+<td><p>o</p></td>
+</tr>
+<tr>
+<th><p>0x7</p></th>
+<td><p>p</p></td>
+<td><p>q</p></td>
+<td><p>r</p></td>
+<td><p>s</p></td>
+<td><p>t</p></td>
+<td><p>u</p></td>
+<td><p>v</p></td>
+<td><p>w</p></td>
+<td><p>x</p></td>
+<td><p>y</p></td>
+<td><p>z</p></td>
+<td><p>{</p></td>
+<td><p>|</p></td>
+<td><p>}</p></td>
+<td><p>~</p></td>
+<td><p>\177</p></td>
+</tr>
+<tr>
+<th><p>0x8</p></th>
+<td><p>\200</p></td>
+<td><p>\201</p></td>
+<td><p>\202</p></td>
+<td><p>\203</p></td>
+<td><p>\204</p></td>
+<td><p>\205</p></td>
+<td><p>\206</p></td>
+<td><p>\207</p></td>
+<td><p>\210</p></td>
+<td><p>\211</p></td>
+<td><p>\212</p></td>
+<td><p>\213</p></td>
+<td><p>\214</p></td>
+<td><p>\215</p></td>
+<td><p>\216</p></td>
+<td><p>\217</p></td>
+</tr>
+<tr>
+<th><p>0x9</p></th>
+<td><p>\220</p></td>
+<td><p>\221</p></td>
+<td><p>\222</p></td>
+<td><p>\223</p></td>
+<td><p>\224</p></td>
+<td><p>\225</p></td>
+<td><p>\226</p></td>
+<td><p>\227</p></td>
+<td><p>\230</p></td>
+<td><p>\231</p></td>
+<td><p>\232</p></td>
+<td><p>\233</p></td>
+<td><p>\234</p></td>
+<td><p>\235</p></td>
+<td><p>\236</p></td>
+<td><p>\237</p></td>
+</tr>
+<tr>
+<th><p>0xA</p></th>
+<td><p>\240</p></td>
+<td><p>\241</p></td>
+<td><p>\242</p></td>
+<td><p>\243</p></td>
+<td><p>\244</p></td>
+<td><p>\245</p></td>
+<td><p>\246</p></td>
+<td><p>\247</p></td>
+<td><p>\250</p></td>
+<td><p>\251</p></td>
+<td><p>\252</p></td>
+<td><p>\253</p></td>
+<td><p>\254</p></td>
+<td><p>\255</p></td>
+<td><p>\256</p></td>
+<td><p>\257</p></td>
+</tr>
+<tr>
+<th><p>0xB</p></th>
+<td><p>\260</p></td>
+<td><p>\261</p></td>
+<td><p>\262</p></td>
+<td><p>\263</p></td>
+<td><p>\264</p></td>
+<td><p>\265</p></td>
+<td><p>\266</p></td>
+<td><p>\267</p></td>
+<td><p>\270</p></td>
+<td><p>\271</p></td>
+<td><p>\272</p></td>
+<td><p>\273</p></td>
+<td><p>\274</p></td>
+<td><p>\275</p></td>
+<td><p>\276</p></td>
+<td><p>\277</p></td>
+</tr>
+<tr>
+<th><p>0xC</p></th>
+<td><p>\300</p></td>
+<td><p>\301</p></td>
+<td><p>\302</p></td>
+<td><p>\303</p></td>
+<td><p>\304</p></td>
+<td><p>\305</p></td>
+<td><p>\306</p></td>
+<td><p>\307</p></td>
+<td><p>\310</p></td>
+<td><p>\311</p></td>
+<td><p>\312</p></td>
+<td><p>\313</p></td>
+<td><p>\314</p></td>
+<td><p>\315</p></td>
+<td><p>\316</p></td>
+<td><p>\317</p></td>
+</tr>
+<tr>
+<th><p>0xD</p></th>
+<td><p>\320</p></td>
+<td><p>\321</p></td>
+<td><p>\322</p></td>
+<td><p>\323</p></td>
+<td><p>\324</p></td>
+<td><p>\325</p></td>
+<td><p>\326</p></td>
+<td><p>\327</p></td>
+<td><p>\330</p></td>
+<td><p>\331</p></td>
+<td><p>\332</p></td>
+<td><p>\333</p></td>
+<td><p>\334</p></td>
+<td><p>\335</p></td>
+<td><p>\336</p></td>
+<td><p>\337</p></td>
+</tr>
+<tr>
+<th><p>0xE</p></th>
+<td><p>\340</p></td>
+<td><p>\341</p></td>
+<td><p>\342</p></td>
+<td><p>\343</p></td>
+<td><p>\344</p></td>
+<td><p>\345</p></td>
+<td><p>\346</p></td>
+<td><p>\347</p></td>
+<td><p>\350</p></td>
+<td><p>\351</p></td>
+<td><p>\352</p></td>
+<td><p>\353</p></td>
+<td><p>\354</p></td>
+<td><p>\355</p></td>
+<td><p>\356</p></td>
+<td><p>\357</p></td>
+</tr>
+<tr>
+<th><p>0xF</p></th>
+<td><p>\360</p></td>
+<td><p>\361</p></td>
+<td><p>\362</p></td>
+<td><p>\363</p></td>
+<td><p>\364</p></td>
+<td><p>\365</p></td>
+<td><p>\366</p></td>
+<td><p>\367</p></td>
+<td><p>\370</p></td>
+<td><p>\371</p></td>
+<td><p>\372</p></td>
+<td><p>\373</p></td>
+<td><p>\374</p></td>
+<td><p>\375</p></td>
+<td><p>\376</p></td>
+<td><p>\377</p></td>
+</tr>
+</table>
+</div>
+
+<p>まとめ：</p>
+<ul>
+<li>\ 文字（ 0x5C ）は 8 進数表記であることを示すために使用されるため、 \\ のように 2 個続けます。</li>
+<li>0x00 ～ 0x20 および 0x7F ～ 0xFF は \ooo という形式の 8 進数で表記します。</li>
+<li>単語と単語を区切るデリミタとして空白文字（ 0x20 ）を、行と行を区切るデリミタとして改行文字（ 0x0A ）を使用します。</li>
+<li>それ以外の文字は空白文字とみなされます。</li>
+<li>連続する空白文字は自動的に 1 個の空白文字に圧縮されます。行頭及び行末の空白文字は自動的に削除されます。</li>
+</ul>
+
+<p>例：</p>
+<ul>
+<li>Hello world! という文字列は Hello\040world! のように表記します。</li>
+</ul>
+
+<h3><a name="wildcard">パターンの表記規則</a></h3>
+
+<p>複数のパス名に一致させるためのワイルドカードを使用することができます。以下のワイルドカードをサポートしています：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>ワイルドカード</p></th>
+<th><p>意味</p></th>
+<th><p>使用例</p></th>
+</tr>
+<tr>
+<td><p>\*</p></td>
+<td><p>/ 以外の０回以上の繰り返し</p></td>
+<td><p>/var/log/samba/\*</p></td>
+</tr>
+<tr>
+<td><p>\@</p></td>
+<td><p>/ と . 以外の０回以上の繰り返し</p></td>
+<td><p>/var/www/html/\@.html</p></td>
+</tr>
+<tr>
+<td><p>\?</p></td>
+<td><p>/ 以外の１文字</p></td>
+<td><p>/tmp/mail.\?\?\?\?\?\?</p></td>
+</tr>
+<tr>
+<td><p>\$</p></td>
+<td><p>１桁以上の１０進数</p></td>
+<td><p>/proc/\$/cmdline</p></td>
+</tr>
+<tr>
+<td><p>\+</p></td>
+<td><p>１０進数１桁</p></td>
+<td><p>/var/tmp/my_work.\+</p></td>
+</tr>
+<tr>
+<td><p>\X</p></td>
+<td><p>１桁以上の１６進数</p></td>
+<td><p>/var/tmp/my-work.\X</p></td>
+</tr>
+<tr>
+<td><p>\x</p></td>
+<td><p>１６進数１桁</p></td>
+<td><p>/tmp/my-work.\x</p></td>
+</tr>
+<tr>
+<td><p>\A</p></td>
+<td><p>１文字以上のアルファベット</p></td>
+<td><p>/var/log/my-work/\$-\A-\$.log</p></td>
+</tr>
+<tr>
+<td><p>\a</p></td>
+<td><p>アルファベット１文字</p></td>
+<td><p>/home/users/\a/\*/public_html/\*.html</p></td>
+</tr>
+<tr>
+<td><p>\-</p></td>
+<td><p>パス名を除外する演算子（否定的一致）</p></td>
+<td>
+<p>/\*\-proc\-sys/</p>
+<p>/proc/ と /sys/ 以外の /\*/</p>
+</td>
+</tr>
+<tr>
+<td><p>/\{dir\}/</p></td>
+<td><p>再帰的にディレクトリに一致する演算子</p>
+<p>/ ＋１回以上の dir/ の繰り返し</p></td>
+<td>
+<p>/var/www/html/\{\*\}/</p>
+<p>/var/www/html/ 以下にあるサブディレクトリ全て（ /var/www/html/ を含まないことに注意）</p>
+<br>
+<p>/var/www/html/\{\*\}/\*.html</p>
+<p>/var/www/html/ 以下のサブディレクトリにある全ての *.html （ /var/www/html/\*.html を含まないことに注意）</p>
+</td>
+</tr>
+</table>
+</div>
+
+<h3><a name="filesystem">ファイルシステムの表記規則</a></h3>
+
+<p>パス名は通常 / で始まりますが、 rename 操作をサポートしないファイルシステム上のパス名についてはファイルシステムの名前をプレフィックスとして指定します。</p>
+
+<p>カーネルでサポートされているファイルシステムの一覧を見るには、以下のコマンドを実行してください：</p>
+
+<pre class="command">
+$ cat /proc/filesystems
+</pre>
+
+<p>（通常 /proc/ ディレクトリにマウントされている） proc ファイルシステムは rename 操作をサポートしないファイルシステムの一例です。そのため、 /proc/meminfo というパス名は proc:/meminfo と表記します。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="domain-transition-procedure.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="exception-policy-syntax.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A2: ドメイン遷移</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.ja">大目次</a>
+</td>
+<td class="docs-next-description">
+<p>A4: 例外ポリシー構文</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="expression-rules.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-23 04:40:27 +0000 (Wed, 23 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

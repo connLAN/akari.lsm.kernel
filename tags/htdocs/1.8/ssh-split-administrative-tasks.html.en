@@ -1,0 +1,304 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Restricting administrative operations in SSH</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="ssh-split-administrative-tasks.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>Restricting administrative operations in SSH</h2>
+
+<h3>About this page</h3>
+
+<p><object data="http://www.youtube.com/v/aEJAGBKc8uY&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/aEJAGBKc8uY&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<p>This page explains you how to restrict administrative operations by selecting roles before starting SSH login shell.</p>
+
+<h3>Step 1: Compiling the program</h3>
+
+<p>Decide what roles you want to define. In this page, we use 3 roles ("Web server administrator", "Mail server administrator", "Security administrator").</p>
+
+<p>Compile the below program. In this page, we assume the location of compiled program as /bin/sshd_login . We assume the location of SSH server program as /usr/sbin/sshd . </p>
+
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;syslog.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define SSHD_EXECUTABLE_PATH "/usr/sbin/sshd"
+
+int main(int raw_argc, char *raw_argv[])
+{
+	int i;
+	int argc;
+	int envc;
+	char *filename;
+	char **argv;
+	char **envp;
+	{ /* Check that I'm an execute handler process.  */
+		int fd = open("/proc/ccs/.execute_handler", O_RDONLY);
+		close(fd);
+		if (fd == EOF) {
+			fprintf(stderr, "FATAL: I'm not execute_handler.\n");
+			return 1;
+		}
+	}
+	if (raw_argc &lt; 7)
+		return 1;
+	filename = raw_argv[4];
+	argc = atoi(raw_argv[5]);
+	envc = atoi(raw_argv[6]);
+	if (raw_argc != argc + envc + 7)
+		return 1;
+	for (i = 5; i &lt; argc + 5; i++)
+		raw_argv[i] = raw_argv[i + 2];
+	raw_argv[argc + 5] = NULL;
+	for (i = argc + 6; i &lt; argc + envc + 6; i++)
+		raw_argv[i] = raw_argv[i + 1];
+	raw_argv[argc + envc + 6] = NULL;
+	argv = raw_argv + 5;
+	envp = raw_argv + argc + 6;
+	/* "/usr/sbin/sshd" executes "/usr/sbin/sshd" with "-R" option. */
+	if (argc == 2 &amp;&amp; !strcmp(argv[1], "-R") &amp;&amp;
+	    !strcmp(raw_argv[2], SSHD_EXECUTABLE_PATH) &amp;&amp;
+	    !strcmp(filename, SSHD_EXECUTABLE_PATH)) {
+		execve(filename, argv, envp);
+		return 1;
+	}
+	/* Don't allow 'shell -c "command"' request. */
+	if (argc == 3 &amp;&amp; !strcmp(argv[1], "-c")) {
+		fprintf(stderr, "You are not permitted to run %s\n", argv[2]);
+		return 1;
+	}
+	printf("Select your role.\n\n");
+	printf("1: Web administrator\n");
+	printf("2: Mail administrator\n");
+	printf("3: Security administrator\n\n");
+	while (1) {
+		int c = getchar();
+		if (c == EOF)
+			break;
+		if (c == '1') {
+			execve("/bin/webadmin-auth", argv, envp);
+			break;
+		}
+		if (c == '2') {
+			execve("/bin/mailadmin-auth", argv, envp);
+			break;
+		}
+		if (c == '3') {
+			execve("/bin/securityadmin-auth", argv, envp);
+			break;
+		}
+	}
+	return 1;
+}
+</pre>
+
+<p>Save the program listed below as /bin/webadmin-auth and set executable bit.</p>
+
+<pre>
+#! /bin/sh
+echo "Enter password for web administrator."
+stty -echo
+read
+stty echo
+[ "$REPLY" == "webadmin" ] &amp;&amp; exec /bin/bash
+echo "Authentication failure"
+sleep 5
+exit 1
+</pre>
+
+<p>Save the program listed below as /bin/mailadmin-auth and set executable bit.</p>
+
+<pre>
+#! /bin/sh
+echo "Enter password for mail administrator."
+stty -echo
+read
+stty echo
+[ "$REPLY" == "mailadmin" ] &amp;&amp; exec /bin/bash
+echo "Authentication failure"
+sleep 5
+exit 1
+</pre>
+
+<p>Save the program listed below as /bin/securityadmin-auth and set executable bit.</p>
+
+<pre>
+#! /bin/sh
+echo "Enter password for security administrator."
+stty -echo
+read
+stty echo
+[ "$REPLY" == "securityadmin" ] &amp;&amp; exec /bin/bash
+echo "Authentication failure"
+sleep 5
+exit 1
+</pre>
+
+<h3>Step 2: Install and initialize TOMOYO Linux</h3>
+
+<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy
+</pre>
+
+<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+
+<p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /usr/sbin/sshd is executed.</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>Append below lines to /etc/ccs/domain_policy.conf so that program execution requests from /usr/sbin/sshd are passed to /bin/sshd_login .</p>
+
+<pre>
+&lt;kernel&gt; /usr/sbin/sshd
+task auto_execute_handler /bin/sshd_login
+</pre>
+
+<h3>Step 3: Learning and operation</h3>
+
+<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+
+<p>Access the SSH server. Confirm that a prompt is shown by /bin/sshd_login after passing existing SSH authentication. Logout the SSH session by pressing Ctrl-C. Now, the domain for /bin/sshd_login was created as "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login".</p>
+
+<p>Change access control mode to learning mode by assigning profile 1 so that we can restrict operations from /bin/sshd_login .</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 1 '&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login'
+</pre>
+
+<p>Access the SSH server. Please select 1 for the prompt shown by /bin/sshd_login and enter "webadmin" to the prompt shown by /bin/webadmin-auth . Now, the domain for "Web server administrator" was created as "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/webadmin-auth /bin/bash".</p>
+
+<p>Then, please do operations you want to allow for "Web server administrator". In the above movie, below operations are done.</p>
+
+<pre class="command">
+# service httpd restart
+# cd /var/www/html/
+# tar -zxf ~/htdocs.tar.gz --strip 1
+# less /var/log/httpd/access_log
+</pre>
+
+<p>Logout from the SSH session after you finished doing all operations you want to allow.</p>
+
+<p>Access the SSH server. Please select 2 for the prompt shown by /bin/sshd_login and enter "mailadmin" for the prompt shown by /bin/mailadmin-auth . Now, the domain for "Mail server administrator" was created as "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/mailadmin-auth /bin/bash".</p>
+
+<p>Then, please do operations you want to allow for "Mail server administrator". In the above movie, below operations are done.</p>
+
+<pre class="command">
+# service sendmail restart
+# mailq
+# less /var/log/maillog
+</pre>
+
+<p>Logout from the SSH session after you finished doing all operations you want to allow.</p>
+
+<p>Access the SSH server. Please select 3 for the prompt shown by /bin/sshd_login and enter "securityadmin" for the prompt shown by /bin/securityadmin-auth . Now, the domain for "Security administrator" was created as "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/securityadmin-auth /bin/bash".</p>
+
+<p>Then, please do operations you want to allow for "Security administrator". In the above movie, below operations are done.</p>
+
+<pre class="command">
+# less /var/log/tomoyo/reject_log.conf
+</pre>
+
+<p>Logout from the SSH session after you finished doing all operations you want to allow.</p>
+
+<p>Change access control mode to permissive mode by assigning profile 2 and verify that you can do operations you want to allow.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 2 '&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login'
+</pre>
+
+<p>Change access control mode to enforcing mode by assigning profile 3. Now, the operations are restricted.</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 3 '&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login'
+</pre>
+
+<h3>Explanation</h3>
+
+<p>We divide roles in the following way. We insert 3 programs ( /bin/webadmin-auth /bin/mailadmin-auth /bin/securityadmin-auth ) between /usr/sbin/sshd and login shell for SSH session. As a result, we get 3 domains with different parent domain ("&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/webadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/mailadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/securityadmin-auth /bin/bash" ). We assign these 3 domains to 3 roles ("Web server administrator", "Mail server administrator", "Security administrator") by granting only necessary operations for each domain. Since these programs are just for example, we used simple shell scripts. When you use at real systems, please use appropriate programs with appropriate authentication functionality.</p>
+
+<p>TOMOYO Linux's execute_handler functionality intercepts program execution requests from /usr/sbin/sshd and passes the program execution requests to /bin/sshd_login . Then, /bin/sshd_login shows a prompt for selecting role and receives response from the user.</p>
+
+<p>The role selection is applied after SSH authentication. Thus, operations without shell execution (e.g. TCP port forwarding) are permitted. If you want to restrict operations without shell execution, you need to develop policy for SSH server process and apply enforcing mode to the SSH server processes.</p>
+
+<p>Regarding within each domain, domain transition occurs whenever a program is executed. If you want to suppress domain transition within each domain,  you can append "keep_domain" lines (like shown below) to /etc/ccs/exception_policy.conf .</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/webadmin-auth /bin/bash
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/mailadmin-auth /bin/bash
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/securityadmin-auth /bin/bash
+</pre>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="ssh-split-administrative-tasks.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-12 08:45:11 +0000 (Sat, 12 Feb 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

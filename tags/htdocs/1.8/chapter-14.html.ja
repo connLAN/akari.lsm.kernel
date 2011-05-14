@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 14</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-14.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-13.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="index.html.ja#appendix">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 14: Apache で mod_ccs モジュールを使用する</h2>
+
+<h3><a name="14.1">14.1. mod_ccs モジュールについて</a></h3>
+
+<p>mod_ccs は Apache に対してより詳細なアクセス制御を行うための Apache 2.x 向けのモジュールです。このモジュールはバーチャルホスト名や要求されたファイルのパス名などに応じて（外部のプログラムを実行することなく）ドメイン遷移を行います。そのため、バーチャルホストやＣＧＩプログラムに対して権限を分割することができるようになります。</p>
+
+<h3><a name="14.2">14.2. モジュールのインストール</a></h3>
+
+<h4><a name="14.2.1">14.2.1. 依存するパッケージのインストール</a></h4>
+
+<p>このモジュールは Linux 2.6 カーネル専用です。 Linux 2.4 カーネルでは動作しません。</p>
+
+<p>Apache モジュールをコンパイルするのに必要なパッケージをインストールします：</p>
+
+<p><strong>RedHat 系の場合</strong></p>
+
+<pre class="command">
+# yum -y install httpd-devel
+</pre>
+
+<p><strong>Debian 系の場合</strong></p>
+
+<pre class="command">
+# apt-get -y install apache2-threaded-dev apache2-prefork-dev
+</pre>
+
+<h4><a name="14.2.2">14.2.2. モジュールのダウンロード</a></h4>
+
+<p>mod_ccs モジュールのソースコードをダウンロードします：</p>
+
+<pre class="command">
+# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=4393&amp;root=tomoyo'
+</pre>
+
+<p>mod_ccs モジュールをコンパイル／インストール／有効化します：</p>
+
+<h4><a name="14.2.3">14.2.3. モジュールのコンパイルとインストール</a></h4>
+
+<p><strong>RedHat 系の場合</strong></p>
+
+<pre class="command">
+# apxs -i -a -c mod_ccs.c
+</pre>
+
+<p><strong>Debian 系の場合</strong></p>
+
+<pre class="command">
+# apxs2 -i -a -c mod_ccs.c
+</pre>
+
+<p>正常に終了した場合， Apache の設定ファイルの中に以下のような指定が見つかるはずです：</p>
+
+<pre>
+LoadModule ccs_module /usr/lib/httpd/modules/mod_ccs.so
+</pre>
+
+<h3><a name="14.3">14.3. 設定</a></h3>
+
+<p>Apache の設定ファイルの中で CCS_TransitionMap ディレクティブを用いてパス名とドメイン名の対応表を指定することにより， mod_ccs モジュールは要求されたファイルのパス名に基づくドメイン遷移を行います。以下の例では /etc/hosts で www.tomoyo00.com 等のＩＰアドレスが登録されているものと仮定します：</p>
+
+<pre>
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-00
+    ServerName www.tomoyo00.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo00.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-01
+    ServerName www.tomoyo01.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo01.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-02
+    ServerName www.tomoyo02.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo02.conf
+&lt;/VirtualHost&gt;
+
+&lt;VirtualHost *:80&gt;
+    DocumentRoot /var/www/html-03
+    ServerName www.tomoyo03.com
+    CCS_TransitionMap /etc/ccs/httpd-tomoyo03.conf
+&lt;/VirtualHost&gt;
+</pre>
+
+<p>CCS_TransitionMap キーワードで指定されたファイルには，リクエストされたファイルのパス名と遷移先のドメイン名との対応表を定義しておきます。例えば、 /etc/ccs/httpd-tomoyo00.com には以下のように指定することができます：</p>
+
+<pre>
+/var/www/cgi-bin/\*         &lt;kernel&gt; //apache /www.tomoyo00.com /cgi-programs
+/usr/share/horde/\{\*\}/\*  &lt;kernel&gt; //apache /www.tomoyo00.com /horde
+/var/www/html/\{\*\}/\*     &lt;kernel&gt; //apache /www.tomoyo00.com /static-files
+/\{\*\}/\*                  &lt;kernel&gt; //apache /www.tomoyo00.com /default
+</pre>
+
+<p>ドメイン遷移を行う許可を Apache のドメインに対して予め与えておく必要があります。これを忘れると Internal Server Error になるので注意してください：</p>
+
+<pre>
+&lt;kernel&gt; /usr/sbin/httpd
+
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /cgi-programs
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /horde
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /static-files
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /default
+</pre>
+
+<p>TOMOYO Linux は SELinux と同時に使用することができますが， SELinux のデフォルトの設定では <a href="policy-specification/proc-interface.html.ja#self_domain">/proc/ccs/self_domain</a> への書き込みが拒否されてしまいます． SELinux が有効になっている場合， Apache に対して /proc/ccs/self_domain への書き込みを認めるようにしてください． SELinux の設定を変更する手順はディストリビューションやバージョンにより異なります．以下の例は CentOS 5.6 では使えますが，それより古いバージョンでは使えないことがあります：</p>
+
+<pre class="command">
+# cd /etc/selinux/
+# echo 'type=AVC msg=audit(1277948886.369:106): avc:  denied  { write } for pid=32078 comm="httpd" name="self_domain" dev=proc ino=-268435010 scontext=root:system_r:httpd_t:s0 tcontext=system_u:object_r:proc_t:s0 tclass=file' | audit2allow -M ccsecurity
+# semodule -i ccsecurity.pp
+</pre>
+
+<p>Apache を再起動してください。 Apache の起動時に <a href="policy-specification/proc-interface.html.ja#self_domain">/proc/ccs/self_domain</a> への書き込みができなかった場合、以下のようなエラーメッセージが表示されます：</p>
+
+<pre class="output">
+mod_ccs: Unable to open /proc/ccs/self_domain for writing. (errno = 13)
+</pre>
+
+<p>また、 Apache のエラーログファイル（例えば /var/log/httpd/error_log ）にも記録されているかもしれません：</p>
+
+<pre class="output">
+[Thu Jul 01 16:31:10 2010] [error] [client 127.0.0.1] (13)Permission denied: mod_ccs: Unable to open /proc/ccs/self_domain for writing.
+</pre>
+
+<p>CCS_TransitionMap キーワードで指定されたファイルに問題があった場合、その他のエラーメッセージが表示されるかもしれません。</p>
+
+<p>ドメイン遷移が行われていることを確認するために、簡単なＣＧＩプログラムを作成します：</p>
+
+<pre class="command">
+# cat &gt; /var/www/cgi-bin/test.cgi &lt;&lt; "EOF"
+#!/usr/bin/perl
+
+print "Content-type:text/html\r\n\r\n";
+print "&lt;HTML&gt;\n";
+print "&lt;HEAD&gt;\n";
+print "&lt;TITLE&gt;test&lt;/TITLE&gt;\n";
+print "&lt;/HEAD&gt;\n";
+print "&lt;BODY&gt;\n";
+
+open(IN, "/proc/ccs/self_domain") || print "error";
+$domain = &lt;IN&gt;;
+$domain =~ s/&amp;/&amp;amp;/g;
+$domain =~ s/&lt;/&amp;lt;/g;
+$domain =~ s/&gt;/&amp;gt;/g;
+close(IN);
+print $domain;
+print "\n";
+
+print "&lt;/BODY&gt;\n";
+print "&lt;/HTML&gt;\n";
+EOF
+# chmod 755 /var/www/cgi-bin/test.cgi
+</pre>
+
+<p>curl コマンド（またはＷｅｂブラウザ）を使ってサンプルプログラムを表示し、ドメイン遷移が行われていることを確認します：</p>
+
+<pre class="command">
+# curl http://www.tomoyo00.com/cgi-bin/test.cgi
+</pre>
+
+<pre class="output">
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo00.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo01.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo01.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo02.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo02.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+[root@tomoyo ~]# curl http://www.tomoyo03.com/cgi-bin/test.cgi
+&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;test&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&amp;lt;kernel&amp;gt; //apache /www.tomoyo03.com /cgi-programs /var/www/cgi-bin/test.cgi
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+</pre>
+
+<p>ここから先は、<a href="index.html.ja#core">基本編</a>で説明している手順に従ってポリシーを作成してください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-13.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="index.html.ja#appendix">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 13: カーネルの外部でプログラムの実行可否を判断する</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>付録</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-14.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-04-07 02:20:16 +0100 (Thu, 07 Apr 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

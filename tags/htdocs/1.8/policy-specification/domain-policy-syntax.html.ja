@@ -1,0 +1,785 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : ポリシー仕様 : ドメインポリシー構文</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="domain-policy-syntax.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="exception-policy-syntax.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a></p>
+</div>
+
+<h2>ドメインポリシー構文</h2>
+
+<h3><a name="file_execute">file execute</a></h3>
+
+<p>このディレクティブは、指定されたパス名の実行を許可します。</p>
+
+<p>以下の例では <code>/bin/ls</code> の実行を許可しています：</p>
+
+<pre>
+file execute /bin/ls
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#aggregator">aggregator</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_read">file read</a></h3>
+
+<p>このディレクティブは、指定されたパス名を読み込みモードでオープンすることを許可します。</p>
+
+<p>以下の例では /proc/meminfo の参照を許可しています：</p>
+
+<pre>
+file read proc:/meminfo
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_write">file write</a></h3>
+
+<p>このディレクティブは、指定されたパス名を書き込みモードでオープンすることを許可します。</p>
+
+<p>以下の例では /dev/null への書き込みを許可しています：</p>
+
+<pre>
+file write /dev/null
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_append">file append</a></h3>
+
+<p>このディレクティブは、指定されたパス名を追記モードでオープンすることを許可します。</p>
+
+<p>以下の例では /var/log/auth.log への追記を許可しています：</p>
+
+<pre>
+file append /var/log/auth.log
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_create">file create</a></h3>
+
+<p>このディレクティブは、指定されたファイルを指定されたパーミッションで作成することを許可します。</p>
+
+<p>以下の例では /var/lock/subsys/crond の作成を許可しています：</p>
+
+<pre>
+file create /var/lock/subsys/crond 0644
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_unlink">file unlink</a></h3>
+
+<p>このディレクティブは、指定されたパス名を削除することを許可します。</p>
+
+<p>以下の例では /var/lock/subsys/crond の削除を許可しています：</p>
+
+<pre>
+file unlink /var/lock/subsys/crond
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chown">file chown</a></h3>
+
+<p>このディレクティブは、指定されたパス名の所有者を指定されたユーザＩＤに変更することを許可します。</p>
+
+<p>以下の例では /dev/sda の所有者のユーザＩＤを 0 に設定することを許可しています：</p>
+
+<pre>
+file chown /dev/sda 0
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chgrp">file chgrp</a></h3>
+
+<p>このディレクティブは、指定されたパス名のグループを指定されたグループＩＤに変更することを許可します。</p>
+
+<p>以下の例では /dev/audio のグループのグループＩＤを 92 に設定することを許可しています：</p>
+
+<pre>
+file chgrp /dev/audio 92
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chmod">file chmod</a></h3>
+
+<p>このディレクティブは、指定されたパス名のパーミッションを指定された数値に変更することを許可します。</p>
+
+<p>以下の例では /dev/mem のパーミッションを 0644 に設定することを許可しています：</p>
+
+<pre>
+file chmod /dev/mem 0644
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkdir">file mkdir</a></h3>
+
+<p>このディレクティブは、指定されたパス名のディレクトリを指定されたパーミッションで作成することを許可します。</p>
+
+<p>以下の例では /tmp/logwatch.\*/ というパターンに一致するディレクトリの作成を許可しています：</p>
+
+<pre>
+file mkdir /tmp/logwatch.\*/ 0755
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_rmdir">file rmdir</a></h3>
+
+<p>このディレクティブは、指定されたディレクトリを削除することを許可します。</p>
+
+<p>以下の例では /tmp/logwatch.\*/ というパターンに一致するディレクトリの削除を許可しています：</p>
+
+<pre>
+file rmdir /tmp/logwatch.\*/
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkfifo">file mkfifo</a></h3>
+
+<p>このディレクティブは、指定されたＦＩＦＯを指定されたパーミッションで作成することを許可します。</p>
+
+<p>以下の例では /dev/initctl という名前のＦＩＦＯの作成を許可しています：</p>
+
+<pre>
+file mkfifo /dev/initctl 0644
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mksock">file mksock</a></h3>
+
+<p>このディレクティブは、指定されたソケットを指定されたパーミッションで作成することを許可します。</p>
+
+<p>以下の例では /dev/log という名前のソケットの作成を許可しています：</p>
+
+<pre>
+file mksock /dev/log 0755
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkblock">file mkblock</a></h3>
+
+<p>このディレクティブは、指定されたブロックデバイスを指定されたパーミッションおよびメジャー番号／マイナー番号で作成することを許可します。</p>
+
+<p>以下の例では /dev/loop0 というブロックデバイスの作成を許可しています：</p>
+
+<pre>
+file mkblock /dev/loop0 0600 7 0
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkchar">file mkchar</a></h3>
+
+<p>このディレクティブは、指定されたキャラクタデバイスを指定されたパーミッションおよびメジャー番号／マイナー番号で作成することを許可します。</p>
+
+<p>以下の例では /dev/console というキャラクタデバイスの作成を許可しています：</p>
+
+<pre>
+file mkchar /dev/console 0755 5 1
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_truncate">file truncate</a></h3>
+
+<p>このディレクティブは、指定されたパス名を切り詰めたり伸長したりすることを許可します。</p>
+
+<p>以下の例では /etc/mtab を切り詰めることを許可しています：</p>
+
+<pre>
+file truncate /etc/mtab
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_symlink">file symlink</a></h3>
+
+<p>このディレクティブは、指定されたシンボリックリンクを作成することを許可します。</p>
+
+<p>以下の例では /dev/cdrom というシンボリックリンクの作成を許可しています：</p>
+
+<pre>
+file symlink /dev/cdrom
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_link">file link</a></h3>
+
+<p>このディレクティブは、１番目に指定されたパス名と２番目に指定されたパス名とでハードリンクを作成することを許可します。</p>
+
+<p>以下の例では /etc/mtab~\$ というパターンに一致するパス名と /etc/mtab~ というパス名とでハードリンクを作成することを許可しています：</p>
+
+<pre>
+file link /etc/mtab~\$ /etc/mtab~
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_rename">file rename</a></h3>
+
+<p>このディレクティブは、１番目に指定されたパス名から２番目に指定されたパス名にリネームすることを許可します。</p>
+
+<p>以下の例では /etc/mtab.tmp というパス名を /etc/mtab というパス名にリネームすることを許可しています：</p>
+
+<pre>
+file rename /etc/mtab.tmp /etc/mtab
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_ioctl">file ioctl</a></h3>
+
+<p>このディレクティブは、指定されたパス名に対して指定されたコマンド番号の ioctl 要求を行うことを許可します。 ioctl のコマンド番号については、対象となるモジュールの ioctl 機能の説明を参照してください。</p>
+
+<p>以下の例ではファミリーが２、タイプが２、プロトコルが１７のソケット（ＵＤＰ／ＩＰｖ４ソケット）に対して、 0x8915 番の ioctl 要求（ SIOCGIFADDR 要求）を行うことを許可しています：</p>
+
+<pre>
+file ioctl socket:[family=2:type=2:protocol=17] 0x8915
+</pre>
+
+<p>以下の例では /dev/null に対して 10000 ～ 20000 番の ioctl 要求を行うことを許可しています：</p>
+
+<pre>
+file ioctl /dev/null 10000-20000
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mount">file mount</a></h3>
+
+<p>このディレクティブは、指定されたデバイス／ファイルシステムタイプ／マウントオプションで指定されたマウントポイントにマウントすることを許可します。</p>
+
+<p>構文は <strong>file mount $DEVICE $MOUNTPOINT $FILESYSTEM $OPTIONS</strong> です。 $FILESYSTEM がデバイスファイルを必要とする場合、 $DEVICE にはデバイスファイルを指定します。 $OPTIONS は１６進数（または８進数／１０進数）の整数です。 $FILESYSTEM には以下の値も指定できます：</p>
+
+<ul>
+<li>--bind</li>
+<li>--move</li>
+<li>--remount</li>
+<li>--make-unbindable</li>
+<li>--make-private</li>
+<li>--make-slave</li>
+<li>--make-shared</li>
+</ul>
+
+<p>以下の例では / ディレクトリの再マウントを許可しています：</p>
+
+<pre>
+file mount any / --remount 0x0
+</pre>
+
+<p>以下の例では ext3 ファイルシステムとしてフォーマットされた /dev/hdc を /var/www/ ディレクトリにマウントすることを許可しています：</p>
+
+<pre>
+file mount /dev/hdc /var/www/ ext3 0xF
+</pre>
+
+<p>以下の例では /dev/shm/ ディレクトリに tmpfs ファイルシステムをマウントすることを許可しています：</p>
+
+<pre>
+file mount none /dev/shm/ tmpfs 0xE
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+<li><a href="expression-rules.html.ja#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_unmount">file unmount</a></h3>
+
+<p>このディレクティブは、指定されたパス名をアンマウントすることを許可します。</p>
+
+<p>以下の例では /mnt/cdrom/ ディレクトリをアンマウントすることを許可しています：</p>
+
+<pre>
+file unmount /mnt/cdrom/
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+<li><a href="expression-rules.html.ja#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_chroot">file chroot</a></h3>
+
+<p>このディレクティブは、指定されたパス名を新しい / ディレクトリに設定することを許可します。</p>
+
+<p>以下の例では /var/empty/sshd/ を新しい / ディレクトリに設定することを許可しています：</p>
+
+<pre>
+file chroot /var/empty/sshd/
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+<li><a href="expression-rules.html.ja#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_pivot_root">file pivot_root</a></h3>
+
+<p>このディレクティブは、１番目に指定されたパス名を新しい / ディレクトリに設定し、古い / ディレクトリを２番目に指定されたパス名へと移動させることを許可します。</p>
+
+<p>この機能は通常、 initrd/initramfs が使用していた / ディレクトリからハードディスクが使用する / ディレクトリへと切り替えるために１回だけ呼ばれます。この機能は通常、 TOMOYO Linux が有効にされるよりも前に呼び出されるため、このディレクティブが必要になることは滅多にありません。</p>
+
+<p>以下の例では /proc/ を新しい / ディレクトリに設定し、古い / ディレクトリを /proc/ccs/ に移動させることを許可しています：</p>
+
+<pre>
+file pivot_root proc:/ proc:/ccs/
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+<li><a href="expression-rules.html.ja#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="misc_env">misc env</a></h3>
+
+<p>このディレクティブは、指定された環境変数名を参照することを許可します。多くのプログラムは環境変数により動作が変化します。</p>
+
+<p>以下の例では LD_PRELOAD という環境変数名を参照することを許可しています：</p>
+
+<pre>
+misc env LD_PRELOAD
+</pre>
+
+<h3><a name="capability">capability</a></h3>
+
+<p>このディレクティブは、（ POSIX ではない）ケイパビリティを使用することを許可します。</p>
+
+<p>構文を以下の表に示します：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>構文</p></th>
+<th><p>意味</p></th>
+</tr>
+<tr>
+<td><p>capability use_kernel_module</p></td>
+<td><p>create_module(2), init_module(2) および delete_module(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability use_packet</p></td>
+<td><p>PACKET ソケットの使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability use_route</p></td>
+<td><p>ROUTE ソケットの使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_KEXEC_LOAD</p></td>
+<td><p>kexec_load(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_NICE</p></td>
+<td><p>nice(2) および setpriority(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_PTRACE</p></td>
+<td><p>ptrace(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_REBOOT</p></td>
+<td><p>reboot(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_SETHOSTNAME</p></td>
+<td><p>sethostname(2) および setdomainname(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_TIME</p></td>
+<td><p>stime(2), settimeofday(2) および adjtimex(2) の使用を許可</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_VHANGUP</p></td>
+<td><p>vhangup(2) の使用を許可</p></td>
+</tr>
+</table>
+</div>
+
+<p>以下の例では SYS_REBOOT ケイパビリティの使用を許可しています：</p>
+
+<pre>
+capability SYS_REBOOT
+</pre>
+
+<h3><a name="ipc_signal">ipc signal</a></h3>
+
+<p>このディレクティブは、指定されたドメインに対して指定された番号のシグナルを送信することを許可します。</p>
+
+<p>指定されたドメインとその子孫ドメインに対して許可されます。そのため、 &lt;kernel&gt; ドメインを指定した場合、全てのドメインに対して許可されるようになります。また、 0 番のシグナルは常に許可されます。また、送信元プロセスのドメインと送信先プロセスのドメインが同じ場合も常に許可されます。</p>
+
+<p>以下の例では &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm およびその子孫ドメインに対して 10 番のシグナルを送信することを許可しています：</p>
+
+<pre>
+ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
+</pre>
+
+<h3><a name="network_inet">network inet</a></h3>
+
+<p>このディレクティブは、インターネットドメインのネットワークソケットを用いた操作を許可します。</p>
+
+<p>IPv4 および IPv6 アドレスを指定できます。ただし、 IPv6 アドレスを指定する場合、 ::1 のような省略表記はサポートされていませんので、 0:0:0:0:0:0:0:1 のように指定する必要があります。</p>
+
+<p>構文を以下の表に示します：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>構文</p></th>
+<th><p>意味</p></th>
+</tr>
+<tr>
+<td><p>network inet stream bind $ADDRESS $PORT</p></td>
+<td><p>ＴＣＰソケットを指定されたアドレスおよびポート番号にバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet stream listen $ADDRESS $PORT</p></td>
+<td><p>ＴＣＰソケットが指定されたアドレスおよびポート番号で接続要求を待つことを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet stream accept $ADDRESS $PORT</p></td>
+<td><p>ＴＣＰソケットが指定されたアドレスおよびポート番号からの接続要求を受け入れることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet stream connect $ADDRESS $PORT</p></td>
+<td><p>ＴＣＰソケットが指定されたアドレスおよびポート番号へ接続することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram bind $ADDRESS $PORT</p></td>
+<td><p>ＵＤＰソケットを指定されたアドレスおよびポート番号にバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram recv $ADDRESS $PORT</p></td>
+<td><p>ＵＤＰソケットが指定されたアドレスおよびポート番号からのデータを受信することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram send $ADDRESS $PORT</p></td>
+<td><p>ＵＤＰソケットが指定されたアドレスおよびポート番号へデータを送信することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet raw bind $ADDRESS $PROTOCOL</p></td>
+<td><p>指定されたプロトコル番号のＩＰソケットを指定されたアドレスにバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet raw recv $ADDRESS $PROTOCOL</p></td>
+<td><p>指定されたプロトコル番号のＩＰソケットが指定されたアドレスからのデータを受信することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network inet raw send $ADDRESS $PROTOCOL</p></td>
+<td><p>指定されたプロトコル番号のＩＰソケットが指定されたアドレスへデータを送信することを許可します。</p></td>
+</tr>
+</table>
+</div>
+
+<p>以下の例ではＩＰアドレス 202.221.179.21 のポート 80 番に対して接続要求を送信することを許可しています：</p>
+
+<pre>
+network inet stream connect 202.221.179.21 80
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#address_group">address_group</a></li>
+</ul>
+
+<h3><a name="network_unix">network unix</a></h3>
+
+<p>このディレクティブは、ＵＮＩＸドメインのネットワークソケットを用いた操作を許可します。</p>
+
+<p>構文を以下の表に示します：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>構文</p></th>
+<th><p>意味</p></th>
+</tr>
+<tr>
+<td><p>network unix stream bind $ADDRESS</p></td>
+<td><p>STREAM ソケットを指定されたアドレスにバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix stream listen $ADDRESS</p></td>
+<td><p>STREAM ソケットが指定されたアドレスで接続要求を待つことを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix stream accept $ADDRESS</p></td>
+<td><p>STREAM ソケットが指定されたアドレスからの接続要求を受け入れることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix stream connect $ADDRESS</p></td>
+<td><p>STREAM ソケットが指定されたアドレスへ接続することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram bind $ADDRESS</p></td>
+<td><p>DATAGRAM ソケットを指定されたアドレスにバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram recv $ADDRESS</p></td>
+<td><p>DATAGRAM ソケットが指定されたアドレスからのデータを受信することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram send $ADDRESS</p></td>
+<td><p>DATAGRAM ソケットが指定されたアドレスへデータを送信することを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket bind $ADDRESS</p></td>
+<td><p>SEQPACKET ソケットを指定されたアドレスにバインドすることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket listen $ADDRESS</p></td>
+<td><p>SEQPACKET ソケットが指定されたアドレスで接続要求を待つことを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket accept $ADDRESS</p></td>
+<td><p>SEQPACKET ソケットが指定されたアドレスからの接続要求を受け入れることを許可します。</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket connect $ADDRESS</p></td>
+<td><p>SEQPACKET ソケットが指定されたアドレスへ接続することを許可します。</p></td>
+</tr>
+</table>
+</div>
+
+<p>以下の例では /tmp/.X11-unix/X0 および \000/tmp/.X11-unix/X0 へのバインドを許可しています：</p>
+
+<pre>
+network unix stream bind /tmp/.X11-unix/X0
+network unix stream bind \000/tmp/.X11-unix/X0
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="use_group">use_group</a></h3>
+
+<p>このディレクティブは、グループに対して定義されたアクセス許可を参照します。グループに対するアクセス許可は例外ポリシーで定義されています。</p>
+
+<p>以下の例では /dev/null の参照を許可しています：</p>
+
+<p>例外ポリシーでの指定：</p>
+<pre>
+acl_group 2 file read /dev/null
+</pre>
+
+<p>ドメインポリシーでの指定：</p>
+<pre>
+use_group 2
+</pre>
+
+<h3><a name="use_profile">use_profile</a></h3>
+
+<p>このディレクティブは、ドメインに対して適用されるプロファイル番号を指定します。</p>
+
+<p>以下の例ではドメインに対してプロファイル 3 を割り当てています：</p>
+
+<pre>
+use_profile 3
+</pre>
+
+<h3><a name="task_auto_execute_handler">task auto_execute_handler</a></h3>
+
+<p>このディレクティブは、このディレクティブが割り当てられたドメインからのプログラムの実行要求がこのディレクティブで指定されたプログラムによって処理されるようになります。このドメインでプログラムの実行要求が発生すると、要求されたプログラムの代わりにこのディレクティブで指定されたプログラムが実行されます。そして、このディレクティブで指定されたプログラムが要求されたプログラムを実行すべきかどうかを判断し、実行すべきと判断した場合だけ要求されたプログラムが実行されます。</p>
+
+<p>以下の例では <code>/usr/sbin/check-and-exec</code> というプログラムが要求されたプログラムの代わりに実行されます：</p>
+
+<pre>
+task auto_execute_handler /usr/sbin/check-and-exec
+</pre>
+
+<h3><a name="task_denied_execute_handler">task denied_execute_handler</a></h3>
+
+<p>このディレクティブは、このディレクティブが割り当てられているドメインからのプログラムの実行要求がポリシーによって拒否された場合に、要求されたプログラムの代わりにこのディレクティブで指定されたプログラムが実行されるようになります。このディレクティブは強制モードが割り当てられている状態でポリシーによって拒否された場合のみ機能することに注意してください。ポリシーによって拒否されたとしても、強制モードではない限りプログラムの実行要求は受け入れられます。アクセス制御モードに関わらず別のプログラムを実行させたい場合には、 <a href="#task_auto_execute_handler">task auto_execute_handler</a> を（必要であれば <a href="exception-policy-syntax.html.ja#keep_domain">keep_domain</a> と組み合わせて）使ってください。</p>
+
+<p>以下の例では、プログラムの実行要求がポリシーによって拒否された場合に <code>/bin/true</code> というプログラムが要求されたプログラムの代わりに実行されます：</p>
+
+<pre>
+task denied_execute_handler /bin/true
+</pre>
+
+<h3><a name="task_manual_domain_transition">task manual_domain_transition</a></h3>
+
+<p>このディレクティブは、アプリケーションがこのディレクティブで指定されたドメイン名を /proc/ccs/self_domain インタフェースに書き込むことにより、そのドメインへと遷移するようになります。これは、プログラムの実行要求を伴わずに権限を分割するために使用することができますが、アプリケーションからドメイン遷移を行うべきタイミングにこのインタフェースへの書き込みを行うようにアプリケーションを修正することが必要になります。</p>
+
+<p>以下の例では、 /proc/ccs/self_domain に対して &lt;kernel&gt; //apache /www.tomoyo00.com というドメイン名を書き込むことにより、そのドメインへと遷移することを示しています：</p>
+
+<pre>
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com
+</pre>
+
+<h3><a name="task_auto_domain_transition">task auto_domain_transition</a></h3>
+
+<p>このディレクティブは、指定された条件に一致した場合にこのディレクティブで指定されたドメイン名に自動的に遷移するようになります。これは、プログラムの実行要求を伴わずに権限を分割するために使用することができます。</p>
+
+<p>以下の例では、プロセスのＵＩＤが０ではなくなった時点で &lt;kernel&gt; //non-root-session ドメインへと自動的に遷移することを示しています：</p>
+
+<pre>
+task auto_domain_transition &lt;kernel&gt; //non-root-session task.uid!=0
+</pre>
+
+<h3><a name="quota_exceeded">quota_exceeded</a></h3>
+
+<p>このディレクティブは、ドメインに対するアクセス許可の数がプロファイルの max_learning_entry で指定された数に達したために、学習モードにおいて自動的に追加できなかったアクセス許可があることを示しています。</p>
+
+<h3><a name="transition_failed">transition_failed</a></h3>
+
+<p>このディレクティブは、プログラムの実行要求に対してドメイン遷移を行わないまま処理を継続したことを示しています。</p>
+
+<p>これは、強制モードが割り当てられない限り TOMOYO が原因でアクセス拒否が発生しないようにするために、強制モードではない場合にはドメイン遷移に失敗してもプログラムの実行要求を受け入れるようにしているために発生します。ドメイン遷移が失敗する原因としては、ドメイン名が長すぎたか、ドメインを作成するためのメモリを割り当てられなかったかのどちらかです。この問題を修正するには、ドメイン遷移を抑制するか、 TOMOYO が使ってよいメモリ使用量の上限を増やしてください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="exception-policy-syntax.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A4: 例外ポリシー構文</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.ja">大目次</a>
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="domain-policy-syntax.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-21 12:07:48 +0000 (Mon, 21 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 10</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-10.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-9.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-11.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 10: 条件付きアクセス許可の使用</h2>
+
+<p>アクセス許可を記述する際には、以下の構文をとります：</p>
+
+<pre>
+カテゴリ 操作 対象 条件
+</pre>
+
+<p>「カテゴリ 操作 対象」の部分が「必須（省略不可能）パラメータ」で「条件」の部分が「任意（省略可能）パラメータ」です。この章では、「任意（省略可能）パラメータ」について説明します。</p>
+
+<h3><a name="10.1">10.1. 利用可能な条件</a></h3>
+
+<p>より詳細なアクセス制御を行うために、アクセス許可に対して条件を指定することができます。これは、アクセス可否の判断基準にユーザＩＤを利用したい場合などに役に立ちます。以下に、指定可能な条件パラメータを示します：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>条件</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>task.type</p></td>
+<td><p>カレントプロセスの<a href="#10.4">プロセスの種類</a></p></td>
+</tr>
+<tr>
+<td><p>task.uid</p></td>
+<td><p>カレントプロセスのユーザＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.euid</p></td>
+<td><p>カレントプロセスの実効ユーザＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.suid</p></td>
+<td><p>カレントプロセスの保存ユーザＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.fsuid</p></td>
+<td><p>カレントプロセスのファイルシステムユーザＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.gid</p></td>
+<td><p>カレントプロセスのグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.egid</p></td>
+<td><p>カレントプロセスの実効グループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.sgid</p></td>
+<td><p>カレントプロセスの保存グループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.fsgid</p></td>
+<td><p>カレントプロセスのファイルシステムグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.pid</p></td>
+<td><p>カレントプロセスのプロセスＩＤ</p></td>
+</tr>
+<tr>
+<td><p>task.ppid</p></td>
+<td><p>カレントプロセスの親プロセスＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path1.type</p></td>
+<td><p>１個目のパス名の<a href="#10.5">ファイルの種類</a></p></td>
+</tr>
+<tr>
+<td><p>path1.uid</p></td>
+<td><p>１個目のパス名の所有者ＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path1.gid</p></td>
+<td><p>１個目のパス名のグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path1.ino</p></td>
+<td><p>１個目のパス名のｉノード番号</p></td>
+</tr>
+<tr>
+<td><p>path1.perm</p></td>
+<td><p>１個目のパス名の<a href="#10.6">パーミッションの種類</a></p></td>
+</tr>
+<tr>
+<td><p>path1.major</p></td>
+<td><p>１個目のパス名の置かれているデバイスファイルのメジャー番号</p></td>
+</tr>
+<tr>
+<td><p>path1.minor</p></td>
+<td><p>１個目のパス名の置かれているデバイスファイルのマイナー番号</p></td>
+</tr>
+<tr>
+<td><p>path1.dev_major</p></td>
+<td><p>１個目のパス名（デバイスファイル）のメジャー番号<br>
+<a href="#10.5">path1.type=block</a> または <a href="#10.5">path1.type=char</a> という条件との組み合わせが可能。</p></td>
+</tr>
+<tr>
+<td><p>path1.dev_minor</p></td>
+<td><p>１個目のパス名（デバイスファイル）のマイナー番号<br>
+<a href="#10.5">path1.type=block</a> または <a href="#10.5">path1.type=char</a> という条件との組み合わせが可能。</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.uid</p></td>
+<td><p>１個目のパス名の親ディレクトリの所有者ＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.gid</p></td>
+<td><p>１個目のパス名の親ディレクトリのグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.ino</p></td>
+<td><p>１個目のパス名の親ディレクトリのｉノード番号</p></td>
+</tr>
+<tr>
+<td><p>path1.parent.perm</p></td>
+<td><p>１個目のパス名の親ディレクトリの<a href="#10.6">パーミッションの種類</a></p></td>
+</tr>
+<tr>
+<td><p>path2.type</p></td>
+<td><p>２個目のパス名の<a href="#10.5">ファイルの種類</a></p></td>
+</tr>
+<tr>
+<td><p>path2.uid</p></td>
+<td><p>２個目のパス名の所有者ＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path2.gid</p></td>
+<td><p>２個目のパス名のグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path2.ino</p></td>
+<td><p>２個目のパス名のｉノード番号</p></td>
+</tr>
+<tr>
+<td><p>path2.perm</p></td>
+<td><p>２個目のパス名の<a href="#10.6">パーミッションの種類</a></p></td>
+</tr>
+<tr>
+<td><p>path2.major</p></td>
+<td><p>２個目のパス名の置かれているデバイスファイルのメジャー番号</p></td>
+</tr>
+<tr>
+<td><p>path2.minor</p></td>
+<td><p>２個目のパス名の置かれているデバイスファイルのマイナー番号</p></td>
+</tr>
+<tr>
+<td><p>path2.dev_major</p></td>
+<td><p>２個目のパス名（デバイスファイル）のメジャー番号<br>
+<a href="#10.5">path2.type=block</a> または <a href="#10.5">path2.type=char</a> という条件との組み合わせが可能。</p></td>
+</tr>
+<tr>
+<td><p>path2.dev_minor</p></td>
+<td><p>２個目のパス名（デバイスファイル）のマイナー番号<br>
+<a href="#10.5">path2.type=block</a> または <a href="#10.5">path2.type=char</a> という条件との組み合わせが可能。</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.uid</p></td>
+<td><p>２個目のパス名の親ディレクトリの所有者ＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.gid</p></td>
+<td><p>２個目のパス名の親ディレクトリのグループＩＤ</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.ino</p></td>
+<td><p>２個目のパス名の親ディレクトリのｉノード番号</p></td>
+</tr>
+<tr>
+<td><p>path2.parent.perm</p></td>
+<td><p>２個目のパス名の親ディレクトリの<a href="#10.6">パーミッションの種類</a></p></td>
+</tr>
+<tr>
+<td><p>exec.argc</p></td>
+<td><p>プログラムの実行要求時に渡されたコマンドライン引数（ argv[] ）の数<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブおよび <a href="policy-specification/domain-policy-syntax.html.ja#misc_env">misc env</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+<tr>
+<td><p>exec.envc</p></td>
+<td><p>プログラムの実行要求時に渡された環境変数（ envp[] ）の数<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブおよび <a href="policy-specification/domain-policy-syntax.html.ja#misc_env">misc env</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+<tr>
+<td><p>exec.argv[n]</p></td>
+<td><p>プログラムの実行要求時に渡された n 番目の引数の値<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブおよび <a href="policy-specification/domain-policy-syntax.html.ja#misc_env">misc env</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+<tr>
+<td><p>exec.envp[var]</p></td>
+<td><p>プログラムの実行要求時に渡された環境変数 var の値<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブおよび <a href="policy-specification/domain-policy-syntax.html.ja#misc_env">misc env</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+<tr>
+<td><p>exec.realpath</p></td>
+<td><p>プログラムの実行要求時の要求されたプログラムのシンボリックリンクを解決したパス名<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブおよび <a href="policy-specification/domain-policy-syntax.html.ja#misc_env">misc env</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+<tr>
+<td><p>symlink.target</p></td>
+<td><p>作成されるシンボリックリンクの内容<br>
+<a href="policy-specification/domain-policy-syntax.html.ja#file_symlink">file symlink</a> ディレクティブでのみ指定可能</p></td>
+</tr>
+</table>
+</div>
+
+<p><strong>path1</strong> および <strong>path2</strong> はそれぞれディレクティブの１個目のパス名と２個目のパス名に対応しています。以下の例では、 path1 が /dev/sda1 に、 path2 が /mnt/sda1/ に対応しています：</p>
+
+<pre>
+file mount /dev/sda1 /mnt/sda1/ ext3 0 path1.uid=0 path2.uid=0
+</pre>
+
+<p>しかし、以下の例では、パーミッションチェックの時点では２つめのパス名は存在していないため、 path2.uid=0 のような条件を指定することはできません：</p>
+
+<pre>
+file rename /tmp/file1 /tmp/file2 path1.uid=0 path2.parent.uid=0
+</pre>
+
+<p>同様に、以下の例では、パーミッションチェックの時点では存在しないパス名であるため、 path1.uid=0 のような条件を指定することはできません：</p>
+
+<pre>
+file create /tmp/file 0644 path1.parent.uid=0
+</pre>
+
+<h3><a name="10.2">10.2. 比較</a></h3>
+
+<p>比較では以下の演算を行うことができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>演算子</p></th>
+<th><p>意味</p></th>
+<th><p>使用例</p></th>
+</tr>
+<tr>
+<td><p>=</p></td>
+<td><p>文字列および数値およびビット演算の場合：一致する<br>数値の範囲比較の場合：１つ以上一致する値が存在する</p></td>
+<td><p>task.uid=0</p></td>
+</tr>
+<tr>
+<td><p>!=</p></td>
+<td><p>文字列および数値およびビット演算の場合：一致しない<br>数値の範囲比較の場合：１つも一致する値が存在しない</p></td>
+<td><p>task.gid!=0</p></td>
+</tr>
+</table>
+</div>
+
+<h3><a name="10.3">10.3. 値</a></h3>
+
+<p>変数との比較の対象となる数値は１個の数値、数値の範囲、あるいは別の変数です：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>値</p></th>
+<th><p>例</p></th>
+</tr>
+<tr>
+<td><p>数値</p></td>
+<td><p>task.uid=0<br>task.uid!=0</p></td>
+</tr>
+<tr>
+<td><p>数値の範囲</p></td>
+<td><p>task.uid=100-500<br>task.uid!=100-500</p></td>
+</tr>
+<tr>
+<td><p>別の変数</p></td>
+<td><p>task.uid=path1.uid<br>task.uid!=path1.uid</p></td>
+</tr>
+</table>
+</div>
+
+<p>２つの例外があります。 exec.argv[n] exec.envp[var] exec.realpath および symlink.target は常に文字列が比較の対象です。 task.type は常に execute_handler が比較の対象です。</P>
+
+<h3><a name="10.4">10.4. プロセスの種類</a></h3>
+
+<p>プロセスの種類については以下の値をとることができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>条件</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>task.type=execute_handler</p></td>
+<td><p>カレントプロセスは <a href="policy-specification/domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> ディレクティブまたは <a href="policy-specification/domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブにより実行されたプログラムである</p></td>
+</tr>
+<tr>
+<td><p>task.type!=execute_handler</p></td>
+<td><p>カレントプロセスは <a href="policy-specification/domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> ディレクティブまたは <a href="policy-specification/domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブにより実行されたプログラムではない</p></td>
+</tr>
+</table>
+</div>
+
+<h3><a name="10.5">10.5. ファイルの種類</a></h3>
+
+<p>ファイルの種類については、以下の条件を指定することができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>条件</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>path1.type=block</p></td>
+<td><p>path1 はブロックデバイスファイルである</p></td>
+</tr>
+<tr>
+<td><p>path1.type=char</p></td>
+<td><p>path1 はキャラクタデバイスファイルである</p></td>
+</tr>
+<tr>
+<td><p>path1.type=directory</p></td>
+<td><p>path1 はディレクトリである</p></td>
+</tr>
+<tr>
+<td><p>path1.type=fifo</p></td>
+<td><p>path1 は FIFO である</p></td>
+</tr>
+<tr>
+<td><p>path1.type=file</p></td>
+<td><p>	path1 は通常のファイルである</p></td>
+</tr>
+<tr>
+<td><p>path1.type=socket</p></td>
+<td><p>path1 はソケットである</p></td>
+</tr>
+<tr>
+<td><p>path1.type=symlink</p></td>
+<td><p>path1 はシンボリックリンクである</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=block</p></td>
+<td><p>path1 はブロックデバイスファイルではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=char</p></td>
+<td><p>path1 はキャラクタデバイスファイルではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=directory</p></td>
+<td><p>path1 はディレクトリではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=fifo</p></td>
+<td><p>path1 は FIFO ではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=file</p></td>
+<td><p>	path1 は通常のファイルではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=socket</p></td>
+<td><p>path1 はソケットではない</p></td>
+</tr>
+<tr>
+<td><p>path1.type!=symlink</p></td>
+<td><p>path1 はシンボリックリンクではない</p></td>
+</tr>
+</table>
+</div>
+
+<p>path2 についても path1 と同様に指定ができます。しかし、 path1.parent および path2.parent については定義からディレクトリであるため指定できません。</p>
+
+<h3><a name="10.6">10.6. パーミッションの種類</a></h3>
+
+<p>ファイルのパーミッションについては、以下の条件を指定することができます：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<td><p>条件</p></td>
+<td><p>内容</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=num1-num2</p></td>
+<td><p>path1 のパーミッションが「 num1 ～ num2 」である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=setuid</p></td>
+<td><p>path1 に関して setuid ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=setgid</p></td>
+<td><p>path1 に関して setgid ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=sticky</p></td>
+<td><p>path1 に関して sticky ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_read</p></td>
+<td><p>path1 に関して owner に対する read ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_write</p></td>
+<td><p>path1 に関して owner に対する write ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=owner_execute</p></td>
+<td><p>path1 に関して owner に対する execute ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_read</p></td>
+<td><p>path1 に関して group に対する read ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_write</p></td>
+<td><p>path1 に関して group に対する write ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=group_execute</p></td>
+<td><p>path1 に関して group に対する execute ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_read</p></td>
+<td><p>path1 に関して others に対する read ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_write</p></td>
+<td><p>path1 に関して others に対する write ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm=others_execute</p></td>
+<td><p>path1 に関して others に対する execute ビットが on である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=num1-num2</p></td>
+<td><p>path1 のパーミッションが「 num1 ～ num2 」ではない</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=setuid</p></td>
+<td><p>path1 に関して setuid ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=setgid</p></td>
+<td><p>path1 に関して setgid ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=sticky</p></td>
+<td><p>path1 に関して sticky ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_read</p></td>
+<td><p>path1 に関して owner に対する read ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_write</p></td>
+<td><p>path1 に関して owner に対する write ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=owner_execute</p></td>
+<td><p>path1 に関して owner に対する execute ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_read</p></td>
+<td><p>path1 に関して group に対する read ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_write</p></td>
+<td><p>path1 に関して group に対する write ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=group_execute</p></td>
+<td><p>path1 に関して group に対する execute ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_read</p></td>
+<td><p>path1 に関して others に対する read ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_write</p></td>
+<td><p>path1 に関して others に対する write ビットが off である</p></td>
+</tr>
+<tr>
+<td><p>path1.perm!=others_execute</p></td>
+<td><p>path1 に関して others に対する execute ビットが off である</p></td>
+</tr>
+</table>
+</div>
+
+<p>path1.parent path2 および path2.parent についても path1 と同様に指定ができます。</p>
+
+<h3><a name="10.7">10.7. 指定例</a></h3>
+
+<p>特定のドメイン（例えば &lt;kernel&gt; /sbin/agetty /bin/login ）から root ユーザとしてログインシェルを実行することを禁止したい場合、以下のように指定することができます：</p>
+
+<pre>
+file execute /bin/bash task.uid!=0
+</pre>
+
+<p>特定のドメイン（例えば &lt;kernel&gt; /sbin/agetty /bin/login ）から特定の範囲のユーザＩＤを持つユーザのログインだけを認めたい場合、以下のように指定することができます：</p>
+
+<pre>
+file execute /bin/bash task.uid=500-1000
+</pre>
+
+<p>カレントプロセスがテンポラリファイルの所有者である場合だけそのファイルの参照を認めたい場合、以下のように指定することができます：</p>
+
+<pre>
+file read /tmp/file001.tmp task.uid=path1.uid
+</pre>
+
+<p>特定のコマンドライン引数や環境変数が渡された場合だけプログラムの実行を認めたい場合、以下のように指定することができます：</p>
+
+<pre>
+file execute /usr/bin/ssh exec.realpath="/usr/bin/ssh" exec.argv[0]="ssh"
+file execute /usr/bin/firefox exec.realpath="/usr/lib/firefox-3.6/firefox" exec.argv[0]="/usr/bin/firefox" exec.envc=0
+</pre>
+
+<p>より複雑な判断を行いたい場合には、 <a href="chapter-13.html.ja">Chapter 13: カーネルの外部でプログラムの実行可否を判断する</a>で説明している execute_handler 機能を利用してください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-9.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-11.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 9: より詳細なプロファイルの管理</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 11: アクセス許可のグループ化</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-10.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-25 02:08:39 +0000 (Fri, 25 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 環境変数を用いた SSH サービスのブルートフォース対策</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="ssh-protection-using-environment.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>環境変数を用いた SSH サービスのブルートフォース対策</h2>
+
+<h3>概要</h3>
+
+<p><object data="http://www.youtube.com/v/-2AQSqNa58c&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/-2AQSqNa58c&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
+
+<p>このページでは、ＳＳＨサーバからログインシェルが実行される時に環境変数を用いた追加のユーザ認証を行うことにより、ブルートフォース対策を行う手順について紹介します。</p>
+
+<p>システムのユーザ認証で使うパスワードがブルートフォース攻撃により割り出されてしまっても、もう１つのパスワードとして環境変数名とその値の両方が割り出されない限り、ログインシェルが実行されることがありません。</p>
+
+<p>従来のブルートフォース対策は、認証が失敗したＩＰアドレスからの接続を一定時間拒否するという方法のため、多数のＩＰアドレスに分散されると防ぎきれない場合があります。この方法は２段階に分けているので、第１段階が突破されたとしても被害を防ぐことが可能です。また、第２段階での認証の自由度が高く認証方式も秘密にできるのでブルートフォース攻撃を仕掛けることが困難です。</p>
+
+<h3>ステップ１：ソースコードのコンパイル</h3>
+
+<p>パスワードとして使用する環境変数の名前と値を決めます。このページでは、環境変数名として CERBERUS を、値として sftp を使用します。</p>
+
+<p>以下のソースコードをコンパイルします。コンパイルされたプログラムの名前を /bin/env_chk とします。また、ＳＳＨサーバのパス名を /usr/sbin/sshd とします。</p>
+
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;syslog.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define SECRET_ENVIRONMENT "CERBERUS=sftp"
+#define SSHD_EXECUTABLE_PATH "/usr/sbin/sshd"
+
+int main(int raw_argc, char *raw_argv[])
+{
+	int i;
+	int argc;
+	int envc;
+	char *filename;
+	char **argv;
+	char **envp;
+	{ /* Check that I'm an execute handler process.  */
+		int fd = open("/proc/ccs/.execute_handler", O_RDONLY);
+		close(fd);
+		if (fd == EOF) {
+			fprintf(stderr, "FATAL: I'm not execute_handler.\n");
+			return 1;
+		}
+	}
+	if (raw_argc &lt; 7)
+		return 1;
+	filename = raw_argv[4];
+	argc = atoi(raw_argv[5]);
+	envc = atoi(raw_argv[6]);
+	if (raw_argc != argc + envc + 7)
+		return 1;
+	for (i = 5; i &lt; argc + 5; i++)
+		raw_argv[i] = raw_argv[i + 2];
+	raw_argv[argc + 5] = NULL;
+	for (i = argc + 6; i &lt; argc + envc + 6; i++)
+		raw_argv[i] = raw_argv[i + 1];
+	raw_argv[argc + envc + 6] = NULL;
+	argv = raw_argv + 5;
+	envp = raw_argv + argc + 6;
+	/* "/usr/sbin/sshd" executes "/usr/sbin/sshd" with "-R" option. */
+	if (argc == 2 &amp;&amp; !strcmp(argv[1], "-R") &amp;&amp;
+	    !strcmp(raw_argv[2], SSHD_EXECUTABLE_PATH) &amp;&amp;
+	    !strcmp(filename, SSHD_EXECUTABLE_PATH)) {
+		execve(filename, argv, envp);
+		return 1;
+	}
+	/*
+	 * Check environment variables passed to execve() request
+	 * and execute the program if it has SECRET_ENVIRONMENT environment.
+	 */
+	for (i = 0; i &lt; envc; i++) {
+		if (strcmp(envp[i], SECRET_ENVIRONMENT))
+			continue;
+		while (i &lt; envc) {
+			envp[i] = envp[i + 1];
+			i++;
+		}
+		execve(filename, argv, envp);
+		break;
+	}
+	return 1;
+}
+</pre>
+
+<h3>ステップ２：環境変数を渡すための設定</h3>
+
+<p>サーバ側の /etc/ssh/sshd_config の末尾に環境変数名を指定します。</p>
+
+<pre>
+AcceptEnv CERBERUS
+</pre>
+
+<p>クライアント側の /etc/ssh/ssh_config の末尾に環境変数名を指定します。</p>
+
+<pre>
+SendEnv CERBERUS
+</pre>
+
+<h3>ステップ３： TOMOYO Linux のインストールと初期化</h3>
+
+<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy
+</pre>
+
+<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+
+<p>/usr/sbin/sshd が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>/usr/sbin/sshd からのプログラムの実行要求が /bin/env_chk に渡されるようにするために、 /etc/ccs/domain_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+&lt;kernel&gt; /usr/sbin/sshd<br>
+task auto_execute_handler /bin/env_chk
+</pre>
+
+<h3>ステップ４：運用</h3>
+
+<p>以上で設定は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+
+<p>クライアント側から sftp でサーバ側にアクセスし、すぐに切断されることを確認してください。</p>
+
+<p>クライアント側で環境変数 CERBERUS=sftp を設定してください。</p>
+
+<p>クライアント側から sftp でサーバ側にアクセスし、操作が行えることを確認してください。</p>
+
+<h3>説明</h3>
+
+<p>TOMOYO Linux の execute_handler 機能が /usr/sbin/sshd からのプログラムの実行要求を横取りして、 /bin/env_chk に渡しています。 /bin/env_chk がプログラムの実行要求に渡されたパラメータの検査を行い、適切であると判断した場合には要求されたプログラムを実行します。</p>
+
+<p>システムのユーザ認証を通過後なので、シェルの実行要求を伴わないＳＳＨの機能は許可されています。ポートフォワーディングの制限やシェルセッションの制限なども行いたい場合は、通常通り学習モードで動作を学習させて、強制モードで動作を制限してやる必要があります。</p>
+
+<h3>応用</h3>
+
+<p>冒頭の動画では sftp を実行するために ssh ログインをしているため、パスワードとして sftp を指定しています。パスワードは固定されている必要は無く、パスワードの内容に応じて異なる動作をさせることもできます。例えば、 ssh_type=ro-sftp の場合はダウンロード専用の sftp サービス、 ssh_type=rw-sftp の場合はアップロードも可能な sftp サービスとして動作させることができます。</p>
+
+<p>また、プログラム実行時のパラメータが渡されるので、その内容を記録に残すことができます。例えば、ＳＳＨセッションで実行されたプログラムと引数や環境変数などの情報を取得することができます。</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="ssh-protection-using-environment.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-12 08:45:11 +0000 (Sat, 12 Feb 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

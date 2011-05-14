@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 12</title>
+<title>AKARI : The Official Guide : Chapter 12</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -40,7 +38,7 @@
 
 <h3><a name="12.1">12.1. Illegal SSH logins</a></h3>
 
-<p>Illegal logins can occur for example through SSH brute force attacks, or through vulnerabilities in other Internet-facing services. It is possible to add another layer of defence using a tiered authentication system. Using TOMOYO Linux, you can enforce login authentication as many times as you want. Suppose we create the following script:</p>
+<p>Illegal logins can occur for example through SSH brute force attacks, or through vulnerabilities in other Internet-facing services. It is possible to add another layer of defence using a tiered authentication system. Using AKARI, you can enforce login authentication as many times as you want. Suppose we create the following script:</p>
 
 <pre>
 #! /bin/sh -p
@@ -126,7 +124,7 @@ fi
 
 <div class="simple-table-wrap">
 <table>
-<tr><td><code><a name="falsh">falsh</a></code></td><td><p>This is a very restricted shell with no built-in commands. Since login shell such as /bin/bash provides many built-in commands such as <code>kill</code>, an attacker can do bad things (e.g. killing processes) without executing external programs even if execution of executing external programs are restricted by TOMOYO Linux. To prevent the attacker from using shell's built-in commands, you may want to use this shell as a login shell when using reinforced authentication.</p></td></tr>
+<tr><td><code><a name="falsh">falsh</a></code></td><td><p>This is a very restricted shell with no built-in commands. Since login shell such as /bin/bash provides many built-in commands such as <code>kill</code>, an attacker can do bad things (e.g. killing processes) without executing external programs even if execution of executing external programs are restricted by AKARI. To prevent the attacker from using shell's built-in commands, you may want to use this shell as a login shell when using reinforced authentication.</p></td></tr>
 <tr><td><code><a name="proxy">proxy</a></code></td><td><p>This is a simple port forwarder program. This program can be used by the client to bind to a specific local port on the server so that the server-side firewall, such as <code>iptables</code> can use packet filtering based on the port number of the client.</p></td></tr>
 </table>
 </div>

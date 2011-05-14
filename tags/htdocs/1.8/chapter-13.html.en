@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 13</title>
+<title>AKARI : The Official Guide : Chapter 13</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -40,7 +38,7 @@
 
 <h3><a name="13.1">13.1. task denied_execute_handler</a></h3>
 
-<p>A system administrator using TOMOYO Linux will generally know the programs that need to be executed from any particular domain. Thus, a normally functioning system will generally not make any execution requests that violate policy. If such an execution request occurs, such as <code>/bin/bash</code>, from a domain that does not usually need to make that execution, then the domain has probably been compromised.</p>
+<p>A system administrator using AKARI will generally know the programs that need to be executed from any particular domain. Thus, a normally functioning system will generally not make any execution requests that violate policy. If such an execution request occurs, such as <code>/bin/bash</code>, from a domain that does not usually need to make that execution, then the domain has probably been compromised.</p>
 
 <p>At this point, the kernel will reject the request. However, it is unlikely that the domain will regain control from the attacker. This is where the <a href="policy-specification/domain-policy-syntax.html.en#task_denied_execute_handler">task denied_execute_handler</a> directive can be useful. This directive allows an external program to be called whenever an execute request is rejected. This external program can for example be <code>/bin/true</code>, which will cause the process that made the execute request to terminate immediately. The process is therefore no longer compromised.</p>
 

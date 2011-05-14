@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux Home Page</title>
+<title>AKARI Home Page</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="index.html.en"><img src="media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-home">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="links.html.en" title="Links">Links</a></li>
@@ -39,11 +37,11 @@
 <div id="introduction">
 <h3>A security module for system analysis and protection</h3>
 
-<p>TOMOYO Linux is a Mandatory Access Control (MAC) implementation for Linux that can be used to increase the security of a system, while also being useful purely as a system analysis tool. It was launched in March 2003 and is sponsored by <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>, Japan.</p>
+<p>AKARI is a Mandatory Access Control (MAC) implementation for Linux that can be used to increase the security of a system, while also being useful purely as a system analysis tool. It is a Linux kernel module based on <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a>, which was launched in March 2003.</p>
 
-<p>TOMOYO Linux focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, TOMOYO Linux allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, TOMOYO Linux acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
+<p>AKARI focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, AKARI allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, AKARI acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
 
-<p>The main features of TOMOYO Linux include:</p>
+<p>The main features of AKARI include:</p>
 <ul>
 <li>System analysis</li>
 <li>Increased security through Mandatory Access Control</li>
@@ -54,7 +52,7 @@
 <li>Requires no modification of existing binaries</li>
 </ul>
 
-<p>Find out more on our <a href="about.html.en">About Page</a>, and experience TOMOYO Linux in only 10 minutes with these short <a href="about.html.en#videos">tutorial videos</a>!</p>
+<p>Find out more on our <a href="about.html.en">About Page</a>!</p>
 
 </div>
 
@@ -62,59 +60,37 @@
 
 <div id="news">
 
-<h3>News <span class="archive">(<a href="news.html.en" title="Browse the news archives">archive</a>)</span>
-<!--
-<a href="feeds/news" title="TOMOYO Linux News RSS Feed" class="rss-icon">
-<img src="media/rss.png" alt="RSS Feed"></a>
--->
-</h3>
+<h3>News</h3>
+
 <hr>
 
+<p class="timestamp">15th May, 2011</p>
+<h4>Website and documentation update</h4>
+<p class="article">Both our website and documentation have been given a major revamp! We hope that you like the new design, and find the documentation informative and easy to read. If you have any comments, please send an email to our <a href="mailto:tomoyo-users-en@lists.sourceforge.jp">Mailing List</a>.</p>
+
+<br>
+
 <p class="timestamp">11th May, 2011</p>
-<h4><a href="news/20110511-multiple-releases.html.en" title="View full article">tomoyo-tools, ccs-patch and ccs-tools updated</a></h4>
-<p class="article">A new version of tomoyo-tools for the 2.3.x branch has been released, as well as new versions of ccs-patch and ccs-tools for the 1.8.x branch.</p>
+<h4>AKARI 1.0.14 released</h4>
+<p class="article">New versions of AKARI and ccs-tools have been released.</p>
 
 <br>
 
 <p class="timestamp">5th May, 2011</p>
-<h4><a href="news/20110505-ccs-patch-1.8.1p2-released.html.en" title="View full article">ccs-patch 1.8.1p2 released</a></h4>
-<p class="article">New versions of ccs-patch for 1.8.x, 1.7.x and 1.6.x branches have been released.</p>
+<h4>AKARI 1.0.13 released</h4>
+<p class="article">New versions of AKARI and ccs-tools have been released.</p>
 
 <br>
 
 <p class="timestamp">11th April, 2011</p>
-<h4><a href="news/20110411-ccs-patch-1.8.1p1-released.html.en" title="View full article">ccs-patch 1.8.1p1 released</a></h4>
-<p class="article">New versions of ccs-patch for 1.8.x, 1.7.x and 1.6.x branches have been released.</p>
+<h4>AKARI 1.0.12 released</h4>
+<p class="article">A new version of AKARI has been released.</p>
 
 <br>
 
 <p class="timestamp">1st April, 2011</p>
-<h4><a href="news/20110401-ccs-patch-1.8.1-released.html.en" title="View full article">ccs-patch 1.8.1 released</a></h4>
-<p class="article">New versions of ccs-patch and ccs-tools for 1.8.x, 1.7.x and 1.6.x branches have been released.</p>
-
-<br>
-
-<p class="timestamp">14th February, 2011</p>
-<h4><a href="news/20110214-ccs-tools-1.8.0p3-released.html.en" title="View full article">ccs-tools 1.8.0p3 released</a></h4>
-<p class="article">A new version of ccs-tools for the 1.8.x branch has been released (<a href="changelogs/ccs-tools-1.8.html.en">ChangeLog</a>).</p>
-
-<br>
-
-<p class="timestamp">11th February, 2011</p>
-<h4><a href="news/20110211-tomoyo-tools-2.2.0p2-2.3.0p1-released.html.en" title="View full article">tomoyo-tools 2.2.0p2 and 2.3.0p1 released</a></h4>
-<p class="article">New versions of tomoyo-tools for both the 2.2.x (<a href="changelogs/tomoyo-tools-2.2.html.en">ChangeLog</a>) and 2.3.x (<a href="changelogs/tomoyo-tools-2.3.html.en">ChangeLog</a>) branches have been released.</p>
-
-<br>
-
-<p class="timestamp">7th February, 2011</p>
-<h4><a href="news/20110207-ccs-patch-1.8.0p3-released.html.en" title="View full article">ccs-patch 1.8.0p3 released</a></h4>
-<p class="article">A new patch for the 1.8.x branch has been released (<a href="changelogs/ccs-patch-1.8.html.en">ChangeLog</a>).</p>
-
-<br>
-
-<p class="timestamp">31st January, 2011</p>
-<h4><a href="news/20110131-website-update.html.en" title="View full article">Website update</a></h4>
-<p class="article">Our website has just been given a major revamp! We hope that you like the new design. If you have any comments, please send an email to our <a href="mailto:tomoyo-users-en@lists.sourceforge.jp">Mailing List</a>. Our documentation has also been receiving a lot of attention over the last few months. The 1.8.x documentation is currently undergoing almost a complete rewrite, and the 2.3.x documentation will soon inherit some of these changes. Watch this space!</p>
+<h4>ccs-tools 1.8.1 released</h4>
+<p class="article">A new version of ccs-tools has been released.</p>
 
 </div><!-- news -->
 
@@ -122,8 +98,7 @@
 
 <div id="footer">
 <p class="language">Go to <a href="index.html.ja">Japanese page</a>.</p>
-<p class="counter"><!--#include virtual="/cgi-bin/counter.pl" --></p>
-<p class="timestamp">Last modified: $Date: 2011-05-11 22:59:47 +0100 (Wed, 11 May 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

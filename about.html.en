@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux About Page</title>
+<title>AKARI About Page</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="index.html.en"><img src="media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-about">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="links.html.en" title="Links">Links</a></li>
@@ -32,32 +30,32 @@
 
 <div id="regular-content">
 
-<h3><a name="about">About TOMOYO Linux</a></h3>
+<h3><a name="about">About AKARI</a></h3>
 
-<p>TOMOYO Linux is a Mandatory Access Control (MAC) implementation for Linux that can be used to increase the security of a system, while also being useful purely as a system analysis tool. It was launched in March 2003 and is sponsored by <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>, Japan.</p>
+<p>AKARI is a Mandatory Access Control (MAC) implementation for Linux that can be used to increase the security of a system, while also being useful purely as a system analysis tool. It is a Linux kernel module based on <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a>, which was launched in 2003.</p>
 
-<p>TOMOYO Linux focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, TOMOYO Linux allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, TOMOYO Linux acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
+<p>AKARI focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, AKARI allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, AKARI acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
 
 <h3><a name="what">What can TOMOYO Linux be used for?</a></h3>
 
 <p>In a normal operating system (OS), every application is unmonitored and it is difficult to determine what is happening in a system:</p>
 <p><img src="media/disabled.png" alt="disabled.png" width="500" height="350"></p>
 
-<p>If TOMOYO Linux is introduced, each application can be monitored to determine exactly what it is doing and a policy configuration can be automatically generated. Every action that an application performs is automatically appended to an Access Control List (ACL). Browsing this list can allow a precise understanding of what each application is doing:</p>
+<p>If AKARI is introduced, each application can be monitored to determine exactly what it is doing and a policy configuration can be automatically generated. Every action that an application performs is automatically appended to an Access Control List (ACL). Browsing this list can allow a precise understanding of what each application is doing:</p>
 <p><img src="media/permissive.png" alt="permissive.png" width="500" height="350"></p>
 
-<p>TOMOYO Linux can therefore be used as a system analysis tool, which can aid in:</p>
+<p>AKARI can therefore be used as a system analysis tool, which can aid in:</p>
 <ul>
 <li>debugging applications</li>
 <li>understanding the behaviour of a Linux system</li>
 <li>writing documentation</li>
 </ul>
 
-<p>If protection is enabled, TOMOYO Linux uses Mandatory Access Control to restrict each application to do only what the administrator has allowed it to do:</p>
+<p>If protection is enabled, AKARI uses Mandatory Access Control to restrict each application to do only what the administrator has allowed it to do:</p>
 
 <p><img src="media/enforcing.png" alt="enforcing.png" width="500" height="350"></p>
 
-<p>TOMOYO Linux can therefore be used as a system restriction tool, which can aid in:</p>
+<p>AKARI can therefore be used as a system restriction tool, which can aid in:</p>
 <ul>
 <li>restricting services such as SSH and Apache</li>
 <li>restricting system administrator operations</li>
@@ -66,25 +64,13 @@
 <li>deploying a honeypot system</li>
 </ul>
 
-<h3><a name="videos">Videos</a></h3>
-
-<p>The video below demonstrates how to initialize, configure and enforce TOMOYO Linux on a Ubuntu 10.04 system. Experience TOMOYO Linux in only 10 minutes!</p>
-
-<p><object data="http://www.youtube.com/v/5cgqbQI9bEM&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/5cgqbQI9bEM&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
-
-<p>The videos below demonstrate how to install, initialize, configure and enforce TOMOYO Linux on CentOS 5 and Ubuntu 10.04 systems. Experience TOMOYO Linux in only 10 minutes!</p>
-
-<p><object data="http://www.youtube.com/v/kvmWLRddzaM&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/kvmWLRddzaM&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
-
-<p><object data="http://www.youtube.com/v/siL9-nNa-24&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/siL9-nNa-24&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
-
 </div><!-- regular-content -->
 
 </div><!-- content -->
 
 <div id="footer">
 <p class="language">Go to <a href="about.html.ja">Japanese page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-02-12 11:12:10 +0000 (Sat, 12 Feb 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

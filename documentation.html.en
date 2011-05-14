@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux Documentation</title>
+<title>AKARI Documentation</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="index.html.en"><img src="media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="links.html.en" title="Links">Links</a></li>
@@ -71,7 +69,7 @@ Some MAC functionality in TOMOYO Linux 1.8 is not provided.</p></td>
 </table>
 </div>
 
-<p>See <a href="comparison.html.en">this chart</a> for detailed comparison between TOMOYO Linux 1.x branch and TOMOYO Linux 2.x branch. See <a href="http://akari.sourceforge.jp/comparison.html.en">this chart</a> for detailed comparison between AKARI and both the TOMOYO Linux 1.x and 2.x branches.</p>
+<p>See <a href="http://tomoyo.sourceforge.jp/comparison.html.en">this chart</a> for detailed comparison between TOMOYO Linux 1.x branch and TOMOYO Linux 2.x branch. See <a href="comparison.html.en">this chart</a> for detailed comparison between AKARI and both the TOMOYO Linux 1.x and 2.x branches.</p>
 
 <p>Use the 2.x branch if your priority is to use TOMOYO Linux without modifying the kernel, and you do not require any of the missing features. Although this branch is already integrated into the upstream Linux kernel, some distributions may not set certain kernel configuration options that TOMOYO Linux depends on. In this case, you may still need to compile your own kernel.</p>
 
@@ -79,21 +77,21 @@ Some MAC functionality in TOMOYO Linux 1.8 is not provided.</p></td>
 
 <p>Use AKARI if your priority is to obtain the most out of TOMOYO Linux and the MAC functionality available, but without recompiling the kernel. This may hopefully allow you to receive support from your distribution for kernel problems unrelated to AKARI.</p>
 
+<h3>Documentation for AKARI:</h3>
+<ul>
+<li><a href="1.8/index.html.en">AKARI Documentation</a></li>
+</ul>
+
 <h3>Documentation for 2.x branch:</h3>
 <ul>
-<li><a href="2.3/index.html.en">2.3.x Documentation</a> (Linux 2.6.36 and later)</li>
-<li><a href="2.2/index.html.en">2.2.x Documentation</a> (Linux 2.6.30 to 2.6.35)</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">2.3.x Documentation</a> (Linux 2.6.36 and later)</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.2/index.html.en">2.2.x Documentation</a> (Linux 2.6.30 to 2.6.35)</li>
 </ul>
 
 <h3>Documentation for 1.x branch:</h3>
 <ul>
-<li><a href="1.8/index.html.en">1.8.x Documentation</a> (current)</li>
-<li><a href="1.7/index.html.en">1.7.x Documentation</a> (old)</li>
-</ul>
-
-<h3>Documentation for AKARI:</h3>
-<ul>
-<li><a href="http://akari.sourceforge.jp/">AKARI Documentation</a></li>
+<li><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">1.8.x Documentation</a> (current)</li>
+<li><a href="http://tomoyo.sourceforge.jp/1.7/index.html.en">1.7.x Documentation</a> (old)</li>
 </ul>
 
 </div><!-- regular-content -->
@@ -102,7 +100,7 @@ Some MAC functionality in TOMOYO Linux 1.8 is not provided.</p></td>
 
 <div id="footer">
 <p class="language">Go to <a href="documentation.html.ja">Japanese page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-03-03 05:33:03 +0000 (Thu, 03 Mar 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

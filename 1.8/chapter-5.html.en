@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 5</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-5.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-4.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-6.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 5: How do I manage domains?</h2>
+
+<h3><a name="5.1">5.1. Domain creation</a></h3>
+
+<p>Each domain will behave differently and require a unique set of permissions. Their behaviour must therefore be analyzed to determine which actions you wish to permit in domain policy. TOMOYO Linux can be used to restrict only a subset of the domains in a system, but the most secure system would restrict every domain in order to make sure there are no points of vulnerability.</p>
+
+<p>First, choose an application that you wish to analyze or protect. To demonstrate the procedure, this guide will use Apache in CentOS 5.6.</p>
+
+<p>Start the target application:</p>
+
+<pre class="command">
+# service httpd start
+</pre>
+
+<p>Run the policy editor again <strong>without</strong> the "/etc/ccs/" option so that the policy loaded by the kernel can be edited directly. If you are already running the policy editor, switch to the "Domain Transition Editor" screen.</p>
+
+<p>In CentOS 5.6, the location of Apache is "/usr/sbin/httpd".</p>
+
+<p>Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
+
+<img src="media/editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="675" height="375">
+
+<p>If <code>/usr/sbin/httpd</code> is invoked by "&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash", then the domain name is <strong>"&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd"</strong>.</p>
+
+<p>You will notice that the picture above may look a little different to what you can see on your own screen. This is because the domain "&lt;kernel&gt; /usr/sbin/httpd" has been registered with the <a href="#5.2.1">initialize_domain</a> directive. Let's spend some time exploring the management of domains before we continue.</p>
+
+<h3><a name="5.2">5.2. Management of domain transitions</a></h3>
+
+<p>Advanced control of domain transition is possible with TOMOYO Linux, and involves changes to exception policy. The instructions in this section require use of the policy editor tool. To edit exception policy, run the policy editor and <a href="chapter-4.html.en#4.5">switch to the exception policy editor screen</a>. To add an entry, press the "a" key, type out the new entry you wish to add and press "Enter". To see what other commands are available, press the "?" key.</p>
+
+<h4><a name="5.2.1">5.2.1. initialize_domain</a></h4>
+
+<p>When a unique execution occurs for application, a new domain is created. This allows for an application to receive different permissions depending on how it was executed (e.g. from an Xterm). However, it may be desirable to give the same permissions to an application without regard to how it was executed. This can simplify policy and make it easier to manage.</p>
+
+<p>To do this, we need to enter a new entry into the exception policy. For example, you might add the following directive to exception policy:</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>Of course, "/usr/sbin/sshd" can be the full pathname of any application you wish to control domain transitions for. Having added this to exception policy, the application will now not create a new domain every time a unique execution occurs. Instead, it will reinitialize the domain to <strong>"&lt;kernel&gt; /usr/sbin/sshd"</strong>:</p>
+
+<img src="media/fig-3-4.png" alt="fig-3-4.png" width="600" height="315">
+
+<p>The text "from any" included in the above directive signifies that the application domain should be reinitialized when invoked by <strong>any domain</strong>. It is possible to cause reinitialization to happen only when the application domain is invoked by <strong>a single specified domain</strong>. This is achieved by adding the following to exception policy:</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from &lt;kernel&gt; /etc/rc.d/init.d/sshd
+</pre>
+
+<img src="media/fig-3-5.png" alt="fig-3-5.png" width="600" height="360">
+
+<p>It is also allowable to specify only the last part of the domain name instead of the whole domain name. For example, just <strong>"from /etc/rc.d/init.d/sshd"</strong> instead of <strong>"from &lt;kernel&gt; /etc/rc.d/init.d/sshd"</strong>. This would of course be less specific a rule, and would for example still apply to the sshd daemon being run from a terminal.</p>
+
+<p>If you switch back to the "Domain Transition Editor" screen, you may see domains with a "!" mark in the third column. This means that the domain is unreachable and can safely be deleted. The domain you have chosen to initialize to will appear with a "*" mark.</p>
+
+<p>Note that any policy specified in the unreachable domains will not automatically carry over into the initialized domain. For now, we have not developed any policy yet so this is not a problem. If you use this directive later on for domains that you have already developed policy for, you will need to either re-learn policy or copy over policy to the initialized domain.</p>
+
+<h4><a name="5.2.2">5.2.2. no_initialize_domain</a></h4>
+
+<p>After using the initialize_domain rule, a situation may arise where you do not want an application to be reinitialized from a particular domain. For example, the application <code>/bin/mail</code> executes <code>/usr/sbin/sendmail.sendmail</code> in order to send mails. Consider that the following has been added to exception policy:</p>
+
+<pre>
+initialize_domain /usr/sbin/sendmail.sendmail from any
+</pre>
+
+<p>For example, if you wish to have separate permissions for sending mail and receiving mail, you can add the following to exception policy:</p>
+
+<pre>
+no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
+<img src="media/fig-3-6.png" alt="fig-3-6.png" width="600" height="375">
+
+<h4><a name="5.2.3">5.2.3. keep_domain</a></h4>
+
+<p>It may be preferable that any executed applications from a particular domain are <strong>suppressed from undergoing a domain transition</strong>. They therefore act within the permissions of the domain that has invoked it. For example, suppose you wish apply the same policy to all applications run within an ssh shell, you would add the following to exception policy:</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-9.png" alt="fig-3-9.png" width="600" height="262">
+
+<p>Now the execution of any application, such as <code>/bin/ls</code> or <code>/bin/cat</code> will not result in the creation of a new domain. It will instead remain in the domain specified above and thus act within the permissions of that domain.</p>
+
+<p>This could also be done for any shell instance by adding the following to exception policy:</p>
+
+<pre>
+keep_domain any from /bin/bash
+</pre>
+
+<img src="media/fig-3-8.png" alt="fig-3-8.png" width="600" height="315">
+
+<p>This can be made even more specific, causing the suppression of domain transition only to occur when a specific application is executed from a specific domain. To do this, you could add the following to exception policy:</p>
+
+<pre>
+keep_domain /usr/bin/xargs from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-10.png" alt="fig-3-10.png" width="600" height="322">
+
+<p>The <a href="#5.2.3">keep_domain</a> directive does not take precedence over the <a href="#5.2.1">initialize_domain</a> directive. If the <a href="#5.2.1">initialize_domain</a> directive has been specified for a particular application, that application will leave any domain with the <a href="#5.2.3">keep_domain</a> directive and reinitialize into its own domain.</p>
+
+<p>If you switch back to the "Domain Transition Editor" screen, you may see domains with a "!" mark in the third column. This means that the domain is unreachable and can safely be deleted. The domain that you have chosen to suppress domain transition from will appear with a "#" mark.</p>
+
+<p>Note that any policy specified in the unreachable domains will not automatically be added to the parent domain (from which domain transition has been suppressed). For now, we have not developed any policy yet so this is not a problem. If you use this directive later on for domains that you have already developed policy for, you will need to either re-learn policy or copy over policy to the parent domain.</p>
+
+<h4><a name="5.2.4">5.2.4. no_keep_domain</a></h4>
+
+<p>The <a href="#5.2.3">keep_domain</a> directive is useful in managing ssh login sessions as you cannot predict the commands the user will run and the order in which they will do so. However, there may be cases where you wish to resume domain transition, such as allowing access to password files when changing passwords or for restarting daemon services.</p>
+
+<p>For example, if you wish to resume domain transition only for <code>/bin/cat</code>, you could add the following to exception policy:</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-11.png" alt="fig-3-11.png" width="600" height="300">
+
+<br>
+
+<h3><a name="5.3">5.3. Switching to learning mode</a></h3>
+
+<p>To continue with our target application, Apache, let's register it with the <a href="#5.2.1">initialize_domain</a> directive:</p>
+
+<pre>
+initialize_domain /usr/sbin/httpd from any
+</pre>
+
+<p>Now we can manage all instances of Apache from the "&lt;kernel&gt; /usr/sbin/httpd" domain. Any domains that appear with a "!" mark can be safely deleted as they are unreachable. To start developing policy for this domain, we need to switch it to "Learning Mode".</p>
+
+<p>Press the "s" key, enter '1' and press the "Enter" key:</p>
+
+<img src="media/editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="675" height="375">
+
+<p>Now the profile number of the "/usr/sbin/httpd" domain has changed to 1:</p>
+
+<img src="media/editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="675" height="375">
+
+<p>Press the "@" key to switch to the process list. Verify that "/usr/sbin/httpd" processes are assigned profile number 1:</p>
+
+<img src="media/editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="675" height="375">
+
+<h3><a name="5.4">5.4. Gathering necessary permissions</a></h3>
+
+<p>Restart the Apache in order to learn what permissions are required for starting/finishing the Apache:</p>
+
+<pre class="command">
+# service httpd restart
+</pre>
+
+<p>Run the policy editor again and go to the "/usr/sbin/httpd" line. The line number may have changed due to the creation of new domains from executed programs.</p>
+
+<p>Press the "Enter" key to browse the permissions that have been gathered:</p>
+
+<img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375">
+
+<p>This list was previously empty, but because the domain is in "Learning Mode", any new actions that occurred were appended to domain policy. This will continue until the domain is no longer placed in "Learning Mode". You can press the "r" key to refresh the screen.</p>
+
+<p>Quit the editor and use Apache to generate necessary permissions for normal usage. All actions should be performed that you wish to allow:</p>
+
+<img src="media/operation-learning.png" alt="operation-learning.png" width="551" height="725">
+
+<h3><a name="5.5">5.5. Saving permissions to disk</a></h3>
+
+<p>Remember to save policy, as permissions are accumulated only in kernel memory. <strong>If the system is rebooted, the gathered permissions will be lost.</strong></p>
+
+<p>To save policy to disk, use the following command:</p>
+
+<pre class="command">
+# /usr/sbin/ccs-savepolicy
+</pre>
+
+<p>By executing <code>ccs-savepolicy</code>, four files ("exception_policy.conf", "domain_policy.conf", "profile.conf", "manager.conf") are created in the "/etc/ccs/policy/YYYY-MM-DD.hh:mm:ss/" directory. ( YYYY-MM-DD.hh:mm:ss is current timestamp.)</p>
+
+<p>To load the policy currently on the disk into the kernel, use the <code>ccs-loadpolicy</code> command:</p>
+
+<pre class="command">
+# /usr/sbin/ccs-loadpolicy -df &lt; /etc/ccs/domain_policy.conf
+# /usr/sbin/ccs-loadpolicy -ef &lt; /etc/ccs/exception_policy.conf
+# /usr/sbin/ccs-loadpolicy -p &lt; /etc/ccs/profile.conf
+# /usr/sbin/ccs-loadpolicy -m &lt; /etc/ccs/manager.conf
+</pre>
+
+<p>The <strong>"-df"</strong> option means overwrite "/proc/ccs/domain_policy".<br>
+The <strong>"-ef"</strong> option means overwrite "/proc/ccs/exception_policy".<br>
+The <strong>"-p"</strong> option means append to "/proc/ccs/profile".<br>
+The <strong>"-m"</strong> option means append to "/proc/ccs/manager".</p>
+
+<p>To make it harder for fatal mistakes to happen, "-pf" and "-mf" are not supported.</p>
+
+<h3><a name="5.6">5.6. Managing memory usage</a></h3>
+
+<p>You might see warning messages like below printed on the console and the entry <a href="policy-specification/domain-policy-syntax.html.en#quota_exceeded">quota_exceeded</a> appear in domain policy:</p>
+
+<pre class="output">
+WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stopped learning mode.
+</pre>
+
+<p>This is a safeguard to prevent TOMOYO Linux from consuming all the memory available on the system. If "Learning Mode" did not have a limit, the system may become unusably slow due to comparison with already learned permissions. This limit can be increased with the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> values in each of the profiles. However, care should be taken when increasing this value as this will require more memory. It is recommended to tune policy before increasing this value. Steps for tuning policy are described in the next chapter, and doing so can reduce the size of domain policy to become more manageable. You would then no longer need to increase the <a href="chapter-9.html.en#9.2.3">max_learning_entry</a> value.</p>
+
+<p>The configuration file "/etc/ccs/stat.conf" can be used to specify quotas for memory usage:</p>
+
+<pre>
+# Memory quota (byte). 0 means no quota.
+Memory used by policy:               0
+Memory used by audit log:     16777216
+Memory used by query message:  1048576
+</pre>
+
+<p>These settings can be loaded into kernel memory by running the following command:</p>
+
+<pre class="command">
+ccs-loadpolicy -s &lt; /etc/ccs/stat.conf
+</pre>
+
+<p>It is important to set a limit on the "Memory used by policy", as the creation of domains consumes kernel memory. If enough domains are created, the system will run out of memory and crash. If a limit is set, the creation of new domains can be stopped before the system crashes. At the end of this guide after you have set up a complete policy, view how much memory is being used by policy in the "Statistics" screen. Use this information to set an appropriate limit, such as 25% more than the current memory being used. If you make many additions to policy or create many additional domains, this limit should be changed appropriately.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-4.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-6.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 4: How does TOMOYO Linux work?</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 6: How do I develop policy?</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-5.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-14 13:16:29 +0100 (Sat, 14 May 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 5</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-5.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-4.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-6.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 5: ドメインの管理はどのように行いますか？</h2>
+
+<h3><a name="5.1">5.1. ドメインの作成</a></h3>
+
+<p>それぞれのドメインは異なる振る舞いをするので、それぞれのドメインの振る舞いに適合したアクセス許可を必要とします。そのため、あなたが許可すべきアクセス許可を決める上で、ドメインの振る舞いを解析することが必要になります。TOMOYO Linux は特定のドメインだけをアクセス制限の対象とすることもできます、しかし、最も安全なシステムにするためには、脆弱なままのドメインを残さないようにするために全てのドメインをアクセス制限の対象とすることが望まれるでしょう。</p>
+
+<p>最初に、どのアプリケーションを解析／保護の対象とするかを決めてください。以下の手順は CentOS 5.6 環境で Apache を保護する場合で説明します。</p>
+
+<p>対象となるアプリケーションを開始させます：</p>
+
+<pre class="command">
+# service httpd start
+</pre>
+
+<p>現在カーネル内に存在しているポリシーを直接編集するので、 /etc/ccs/ オプションを<strong>指定しないで</strong>ポリシーエディタを実行してください。既にポリシーエディタを実行中であれば、 Domain Transition 画面に切り替えてください。</p>
+
+<p>CentOS 5.6 では、 Apache プログラムパス名は /usr/sbin/httpd です。</p>
+
+<p>矢印キーや Home/End/PageUp/PageDown キーを使ってカーソルをスクロールして、 /usr/sbin/httpd の行を見つけてください。この絵では 386 行目です：</p>
+
+<img src="media/editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="675" height="375">
+
+<p>もし、 <code>/usr/sbin/httpd</code> が &lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash ドメインから起動された場合、 <strong>&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd</strong> という名前のドメインが作成されます。</p>
+
+<p>あなたのシステムで表示されている内容は上記の写真の内容とは多少異なっていることでしょう。これは、 &lt;kernel&gt; /usr/sbin/httpd ドメインが <a href="#5.2.1">initialize_domain</a> ディレクティブによって作成されているためです。続ける前に、ドメインの管理について少し勉強してみることにしましょう。</p>
+
+<h3><a name="5.2">5.2. ドメイン遷移の管理</a></h3>
+
+<p>TOMOYO Linux では複雑なドメイン遷移の制御が可能です。そのためには、例外ポリシーを修正します。このセクションの手順はポリシーエディタを用いて行います。例外ポリシーを編集するには、ポリシーエディタを実行して <a href="chapter-4.html.ja#4.5">例外ポリシー編集画面に切り替えます</a>。エントリを追加するには a キーを押して、追加したいエントリを入力してから Enter キーを押します。利用可能なコマンドの一覧を表示するには ? キーを押します。</p>
+
+<h4><a name="5.2.1">5.2.1. initialize_domain</a></h4>
+
+<p>今までにない動作パターンでプログラムが実行された場合、新しいドメインが作成されます。これにより、プログラムがどのように起動されたか（例えば Xterm から起動された）に応じて異なるアクセス許可を与えることができます。しかし、どのように起動されたかによらず同一のアクセス許可を与えた方が好都合な場合があります。同一のアクセス許可を与える場合、ポリシーを単純化することができます。</p>
+
+<p>そのためには、例外ポリシーにエントリを追加する必要があります。例えば、例外ポリシーに以下のディレクティブを追加するかもしれません：</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>もちろん、 /usr/sbin/sshd の部分はドメイン遷移を制御したいアプリケーションのパス名に置き換えてください。このディレクティブを追加すると、これ以降、今までにない動作パターンでプログラムが実行されても、新しいドメインを作成しないようになります。代わりに、<strong>&lt;kernel&gt; /usr/sbin/sshd</strong> というドメインで動作するようになります：</p>
+
+<img src="media/fig-3-4.png" alt="fig-3-4.png" width="600" height="315">
+
+<p>上記のディレクティブの from any という部分は、<strong>任意のドメイン</strong>から実行された場合にドメイン遷移を初期化するという意味です。<strong>特定のドメイン</strong>から実行された場合だけドメイン遷移を初期化させるようにもできます。これは、例外ポリシーに以下のようなエントリを追加することで実現できます：</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from &lt;kernel&gt; /etc/rc.d/init.d/sshd
+</pre>
+
+<img src="media/fig-3-5.png" alt="fig-3-5.png" width="600" height="360">
+
+<p>ドメイン名の全体ではなくドメイン名の最後のプログラム名部分だけを指定することもできます。例えば、 <strong>from &lt;kernel&gt; /etc/rc.d/init.d/sshd</strong> の代わりに <strong>from /etc/rc.d/init.d/sshd</strong> のように指定します。これは、もちろんあいまいな指定方法であり、ターミナルからＳＳＨサーバを実行した場合にも適用されるかもしれません。</p>
+
+<p>Domain Transition Editor 画面に戻ると、３番目のカラムに ! 印の付いたドメインを見つけるかもしれません。これは、そのドメインへは到達できないので削除することができることを意味しています。ドメイン遷移を初期化するよう指定したドメインには * 印が表示されます。</p>
+
+<p>到達不可能になったドメインのアクセス許可はドメイン遷移を初期化したドメインへと自動的に引き継がれることはありません。現時点では、まだアクセス許可を与えていないのでこれは問題にはならないでしょう。もし、アクセス許可を与えた後でこのディレクティブを使用した場合、アクセス許可を再度学習させるか、あるいはドメイン遷移を初期化したドメインへとコピーしてやる必要があります。</p>
+
+<h4><a name="5.2.2">5.2.2. no_initialize_domain</a></h4>
+
+<p>initialize_domain を指定した後で、特定のドメインから実行された場合にはドメイン遷移を初期化させたくないと思うことがあるかもしれません。例えば、 <code>/bin/mail</code> はメールを送信するために <code>/usr/sbin/sendmail.sendmail</code> を実行します。以下のエントリが例外ポリシーに追加されている場合を考えてみましょう：</p>
+
+<pre>
+initialize_domain /usr/sbin/sendmail.sendmail from any
+</pre>
+
+<p>例えば、メールを送信するためと受信するためとで異なるアクセス許可を与えたい場合、以下のエントリを例外ポリシーに追加することができます：</p>
+
+<pre>
+no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
+<img src="media/fig-3-6.png" alt="fig-3-6.png" width="600" height="375">
+
+<h4><a name="5.2.3">5.2.3. keep_domain</a></h4>
+
+<p>特定のドメインからプログラムが実行された場合には<strong>ドメイン遷移を行わない</strong>方が好都合な場合があります。そのようにすると、プログラムの実行を要求したプロセスのドメインに与えられているアクセス許可で動作することになります。例えば、ＳＳＨセッションから起動されたシェルから実行されるプログラムに対しては全て同じアクセス許可を与えたいと思うかもしれません。その場合、例外ポリシーに以下のエントリを追加します：</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-9.png" alt="fig-3-9.png" width="600" height="262">
+
+<p>このようにすると、 <code>/bin/ls</code> や <code>/bin/cat</code> を実行した場合に、新しいドメインを作成しないようになります。代わりに、上記で指定したドメインに留まり、そのドメインに与えられているアクセス許可で動作するようになります。</p>
+
+<p>例外ポリシーで以下のように指定すると、 /bin/bash のプロセスから実行されるプログラムを /bin/bash のドメインで動作させることができるようになります：</p>
+
+<pre>
+keep_domain any from /bin/bash
+</pre>
+
+<img src="media/fig-3-8.png" alt="fig-3-8.png" width="600" height="315">
+
+<p>これは、特定のドメインから特定のプログラムが実行された場合にのみドメイン遷移を抑制するような、より限定的な指定を行うこともできます。そのようにするには、例外ポリシーに以下のエントリを指定します：</p>
+
+<pre>
+keep_domain /usr/bin/xargs from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-10.png" alt="fig-3-10.png" width="600" height="322">
+
+<p><a href="#5.2.3">keep_domain</a> ディレクティブは、 <a href="#5.2.1">initialize_domain</a> ディレクティブより優先度が低くなります。もし、特定のプログラムに対して <a href="#5.2.1">initialize_domain</a> ディレクティブが指定されている場合、そのアプリケーションは <a href="#5.2.3">keep_domain</a> ディレクティブが指定されているドメインから抜け出してドメイン遷移を初期化させます。</p>
+
+<p>Domain Transition Editor 画面に戻ると、３番目のカラムに ! 印の付いたドメインを見つけるかもしれません。これは、そのドメインへは到達できないので削除することができることを意味しています。ドメイン遷移を初期化するよう指定したドメインには * 印が表示されます。ドメイン遷移を抑制するよう指定したドメインには # 印が表示されます。</p>
+
+<p>到達不可能になったドメインのアクセス許可は（ドメイン遷移を抑制した）親ドメインへと自動的に追加されることはありません。現時点では、まだアクセス許可を与えていないのでこれは問題にはならないでしょう。もし、アクセス許可を与えた後でこのディレクティブを使用した場合、アクセス許可を再度学習させるか、あるいはドメイン遷移を親ドメインへとコピーしてやる必要があります。</p>
+
+<h4><a name="5.2.4">5.2.4. no_keep_domain</a></h4>
+
+<p><a href="#5.2.3">keep_domain</a> ディレクティブは、どのようなコマンドをどのような順番で実行するかを予測することが不可能なＳＳＨログインセッションを制限するのに便利です。しかし、パスワードを変更するためにパスワード情報が格納されたファイルへのアクセスを認めたい場合や、デーモンを再起動させたい場合など、ドメイン遷移を再開させたいと思う場合があるかもしれません。</p>
+
+<p>例えば、 <code>/bin/cat</code> が実行される場合だけドメイン遷移を再開させたい場合、例外ポリシーに以下のエントリを追加することができます：</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<img src="media/fig-3-11.png" alt="fig-3-11.png" width="600" height="300">
+
+<br>
+
+<h3><a name="5.3">5.3. 学習モードへの切り替え</a></h3>
+
+<p>解析／保護の対象である Apache の話に戻りましょう。 Apache を <a href="#5.2.1">initialize_domain</a> ディレクティブに指定します：</p>
+
+<pre>
+initialize_domain /usr/sbin/httpd from any
+</pre>
+
+<p>これで、 Apache がどのように実行されても &lt;kernel&gt; /usr/sbin/httpd ドメインで動作するようになりました。 ! 印が付いているドメインは到達不可能なので削除して構いません。このドメインに対するアクセス許可を与えるために、学習モードに切り替えます。</p>
+
+<p>s キーを押して、 1 と入力し、 Enter キーを押してください：</p>
+
+<img src="media/editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="675" height="375">
+
+<p>/usr/sbin/httpd ドメインのプロファイル番号が 1 に変化しました：</p>
+
+<img src="media/editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="675" height="375">
+
+<p>@ キーを押してプロセス一覧に切り替えてください。 /usr/sbin/httpd プロセスにプロファイル 1 が割り当てられていることを確認してください：</p>
+
+<img src="media/editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="675" height="375">
+
+<h3><a name="5.4">5.4. 必要なアクセス許可の収集</a></h3>
+
+<p>Apache を起動／終了させるのに必要なアクセス許可を学習させるために、 Apache を再起動させます：</p>
+
+<pre class="command">
+# service httpd restart
+</pre>
+
+<p>ポリシーエディタを再度実行して /usr/sbin/httpd の行を見てください。プログラムの実行によりドメインが新しく作成されたことで、行番号が変化しているかもしれません。</p>
+
+<p>Enter キーを押して、現在までに学習されたアクセス許可を閲覧します：</p>
+
+<a href="media/editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375"></a>
+
+<p>最初は空っぽでしたが、学習モードが割り当てられているので、新しい動作を行うとドメインポリシーへと追加されていきます。追加は学習モードを終わらせるまで続きます。 r キーを押すと最新の情報に更新できます。</p>
+
+<p>ポリシーエディタを終了し、 Apache が通常の使い方をするのに必要なアクセス許可を生成するために、 Apache に対して許可したい操作を全て行ってください：</p>
+
+<img src="media/operation-learning.png" alt="operation-learning.png" width="551" height="725">
+
+<h3><a name="5.5">5.5. アクセス許可をディスク上に保存する</a></h3>
+
+<p>収集されたアクセス許可はカーネル内のメモリにしか存在しないため、時々ポリシーファイルとしてディスク上に保存することを忘れないでください。<strong>システムを再起動した場合、カーネル内のメモリに存在しているアクセス許可は失われます。</strong></p>
+
+<p>現在カーネル内のメモリに存在しているポリシーをディスク上に保存するには、以下のコマンドを実行します：</p>
+
+<pre class="command">
+# /usr/sbin/ccs-savepolicy
+</pre>
+
+<p><code>ccs-savepolicy</code> を実行することにより、４個のファイル（ exception_policy.conf domain_policy.conf profile.conf manager.conf ）が /etc/ccs/policy/YYYY-MM-DD.hh:mm:ss/ ディレクトリ内に作成されます。（ YYYY-MM-DD.hh:mm:ss は現在時刻です。）</p>
+
+<p>ディスク上に保存されているポリシーをカーネル内のメモリに読み込ませるには、 <code>ccs-loadpolicy</code> コマンドを利用します：</p>
+
+<pre class="command">
+# /usr/sbin/ccs-loadpolicy -df &lt; /etc/ccs/domain_policy.conf
+# /usr/sbin/ccs-loadpolicy -ef &lt; /etc/ccs/exception_policy.conf
+# /usr/sbin/ccs-loadpolicy -p &lt; /etc/ccs/profile.conf
+# /usr/sbin/ccs-loadpolicy -m &lt; /etc/ccs/manager.conf
+</pre>
+
+<p><strong>-df</strong> オプションは /proc/ccs/domain_policy を上書きします。<br>
+<strong>-ef</strong> オプションは /proc/ccs/exception_policy を上書きします。<br>
+<strong>-p</strong> オプションは /proc/ccs/profile に追記します。<br>
+<strong>-m</strong> オプションは /proc/ccs/manager に追記します。</p>
+
+<p>致命的な操作ミスを防ぐために、 -pf および -mf というオプションはサポートされていません。</p>
+
+<h3><a name="5.6">5.6. メモリの使用量を管理する</a></h3>
+
+<p>コンソール上に以下のようなメッセージが表示され、ドメインポリシーに <a href="policy-specification/domain-policy-syntax.html.ja#quota_exceeded">quota_exceeded</a> というエントリが表示される場合があります：</p>
+
+<pre class="output">
+WARNING: Domain '&lt;kernel&gt; /usr/sbin/httpd' has too many ACLs to hold. Stopped learning mode.
+</pre>
+
+<p>これは、 TOMOYO Linux が全てのメモリを消費してしまうのを予防するための安全装置です。もし、学習モードに対して制限が存在しない場合、学習モードにより学習されたポリシーとの比較処理のために使い物にならないくらい応答が遅くなってしまうかもしれません。この制限はプロファイルの <a href="chapter-9.html.ja#9.2.3">max_learning_entry</a> の値を増やすことで緩めることができます。しかし、 max_learning_entry の値を増やすとメモリ消費が増えるため、注意が必要です。 max_learning_entry の値を増やす前に、ポリシーのチューニングを行ってください。チューニングを行う手順は次章で紹介します。ポリシーのチューニングを行うことで、ドメインポリシーの量を減らして管理しやすくなり、 <a href="chapter-9.html.ja#9.2.3">max_learning_entry</a> の値を増やす必要性も解消できることが期待されます。</p>
+
+<p>メモリ使用量の上限は /etc/ccs/stat.conf で指定することができます：</p>
+
+<pre>
+# Memory quota (byte). 0 means no quota.
+Memory used by policy:               0
+Memory used by audit log:     16777216
+Memory used by query message:  1048576
+</pre>
+
+<p>この設定は以下のコマンドを実行することでカーネル内に反映することができます：</p>
+
+<pre class="command">
+ccs-loadpolicy -s &lt; /etc/ccs/stat.conf
+</pre>
+
+<p>ドメインを作成することでカーネル内のメモリを消費するため、 Memory used by policy の制限を行うことは重要です。もし、大量のドメインが作成された場合、メモリ不足に陥ってシステムがクラッシュしてしまうかもしれません。制限を行うことにより、システムがクラッシュしてしまう前に新しいドメインの作成を止めることができます。このガイドに従ってポリシーを完成させた後、 Statistics 画面でどれくらいのメモリを消費しているかを確認してください。そこで得られた情報を、上限（例えば現在の使用量＋２５％程度）を設定するための参考にしてください。大量のアクセス許可を追加したり大量のドメインを作成した場合には、この上限を適切に修正してください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-4.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-6.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 4: TOMOYO Linux はどのように動きますか？</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 6: ポリシーはどのように作成しますか？</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-5.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-14 13:16:29 +0100 (Sat, 14 May 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 13</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-13.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-12.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-14.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 13: カーネルの外部でプログラムの実行可否を判断する</h2>
+
+<h3><a name="13.1">13.1. task denied_execute_handler</a></h3>
+
+<p>TOMOYO Linux を利用しているシステム管理者は通常、それぞれのドメインからどのようなプログラムが実行されるかについて把握しているはずです。そのため、正常に動作している限りはポリシーに違反するようなプログラムの実行要求が生じることは通常はありません。もし、 <code>/bin/bash</code> のようなプログラムの実行要求がそのようなプログラムを実行する必要の無いドメインから生じた場合、それはそのドメインに属しているプロセスが侵害されて制御を失っているであろうと考えることができます。</p>
+
+<p>この時点で、カーネルは実行要求を拒否します。しかし、実行要求を拒否したところで、攻撃者が奪取した制御をプロセスに戻してくれることはまず期待できません。そのような場合に、 <a href="policy-specification/domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブを使うことができます。このディレクティブは、プログラムの実行要求が拒否された場合に、要求されたプログラムの代わりにディレクティブで指定されたプログラムを実行します。プログラムとして <code>/bin/true</code> を指定した場合、プログラムの実行を要求したプロセスはすぐに終了することでしょう。そのため、それ以上の侵害を防ぐことができます。</p>
+
+<p>このディレクティブには他のプログラムを指定することもできます。例えば、攻撃者の振る舞いを観察するためにハニーポットプログラムを実行したり、警告メッセージを表示するプログラムを実行したり、攻撃者のＩＰアドレスを調べてファイアウォールの設定を変更するプログラムを実行したりすることもできます。</p>
+
+<p>このディレクティブは以下のように指定します。強制モード用のプロファイルが割り当てられている場合のみ機能することに注意してください：</p>
+
+<pre>
+task denied_execute_handler /bin/true
+</pre>
+
+<p>このディレクティブから実行されたプロセスは以下のコマンドライン引数を受け取ります：</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>引数</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>argv[0]</p></td>
+<td><p>このディレクティブで指定されたプログラムのパス名</p></td>
+</tr>
+<tr>
+<td><p>argv[1]</p></td>
+<td><p>プログラムの実行を要求したプロセスのドメイン名</p></td>
+</tr>
+<tr>
+<td><p>argv[2]</p></td>
+<td><p>プログラムの実行を要求したプロセスのパス名</p></td>
+</tr>
+<tr>
+<td><p>argv[3]</p></td>
+<td><p>プログラムの実行を要求したプロセスの情報</p></td>
+</tr>
+<tr>
+<td><p>argv[4]</p></td>
+<td><p>実行が要求されたプログラムのパス名</p></td>
+</tr>
+<tr>
+<td><p>argv[5]</p></td>
+<td><p>プログラム実行要求時の引数の数（ argc ）</p></td>
+</tr>
+<tr>
+<td><p>argv[6]</p></td>
+<td><p>プログラム実行要求時の環境変数の数（ envc ）</p></td>
+</tr>
+<tr>
+<td><p>argv[7] ～ argv[6 + argc]</p></td>
+<td><p>呼び出し元プロセスが渡した argv[] の内容</p></td>
+</tr>
+<tr>
+<td><p>argv[7 + argc] ～ argv[6 + argc + envc]</p></td>
+<td><p>呼び出し元プロセスが渡した envp[] の内容</p></td>
+</tr>
+</table>
+</div>
+
+<p>重要な注意：</p>
+<ul>
+<li>このディレクティブで指定したプログラムには <a href="policy-specification/domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブを指定すべきではありません。</li>
+<li>このディレクティブで指定したプログラムのためのドメインは強制モードの状態にしておくべきです。</li>
+<li>LD_PRELOAD などの危険な環境変数によって想定外の動作をすることを予防するため、全ての環境変数はクリアされます。環境変数 PATH もクリアされることに注意してください。その他の資源、例えば標準入力や標準出力などは引き継がれます。</li>
+<li>プロセスが chroot 内部の環境で動作している場合、このディレクティブで指定されたプログラムがその chroot 環境の内部に存在している場合のみ機能します。</li>
+</ul>
+
+<h3><a name="13.2">13.2. task auto_execute_handler</a></h3>
+
+<p>通常、プログラムの実行が要求されると、カーネルがポリシーの内容と比較して実行要求を許可するかどうかを判断します。しかし、カーネルの中で判断するには幾つかの制約があります。カーネル内では利用可能なライブラリ関数がほとんどありません。また、連続したメモリ領域を割り当てることが困難です。そのため、 <a href="policy-specification/domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> ディレクティブを用いて、プログラムの実行要求を許可するかどうかの判断をカーネルの外部で行わせることができます。そのようにすることで、豊富なライブラリ関数の活用や連続したメモリ領域の確実な割り当てが可能になります。しかし、この方法にも１つ制約があります。プログラムの実行要求を許可しなかった場合に、プログラムの実行を要求したプロセスへと制御を戻す方法が存在しないのです。</p>
+
+<p>この機能は、任意の外部プログラムを活用できます。ＳＳＨを利用して他のホストに問い合わせを行うことさえできます。このディレクティブを利用するテンプレートとして ccs-tools パッケージに含まれている <a href="#audit-exec-param">audit-exec-param</a> を参考にすることができます。</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr><td><code><a name="audit-exec-param">audit-exec-param</a></code></td><td><p>このプログラムは、プログラムの実行要求に渡されたコマンドライン引数および環境変数を記録に残すためのプリプロセッサとして動作します。<br>このプログラム自身は要求されたプログラムの実行を許可すべきかどうか判断しません。<br>このプログラムを好きなようにカスタマイズして使うことができます。</p></td></tr>
+</table>
+</div>
+
+<p>このディレクティブは以下のように指定します：</p>
+
+<pre>
+task auto_execute_handler /usr/lib/ccs/audit-exec-param
+</pre>
+
+<p>このディレクティブが受け取る引数は <a href="#13.1">13.1. task denied_execute_handler</a> と同じです。</p>
+
+<p>重要な注意：</p>
+<ul>
+<li>LD_PRELOAD などの危険な環境変数によって想定外の動作をすることを予防するため、全ての環境変数はクリアされます。環境変数 PATH もクリアされることに注意してください。その他の資源、例えば標準入力や標準出力などは引き継がれます。</li>
+<li>プロセスが chroot 内部の環境で動作している場合、このディレクティブで指定されたプログラムがその chroot 環境の内部に存在している場合のみ機能します。</li>
+</ul>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-12.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-14.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 12: ユーザ認証の強化</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 14: Apache で mod_ccs モジュールを使用する</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-13.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-25 06:12:23 +0000 (Fri, 25 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

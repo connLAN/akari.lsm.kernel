@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 12</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-12.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-11.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-13.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 12: ユーザ認証の強化</h2>
+
+<h3><a name="12.1">12.1. 不正なＳＳＨログイン</a></h3>
+
+<p>例えばＳＳＨのブルートフォース攻撃やインターネットに接続されている他のサーバの脆弱性を攻撃することで不正にログインされる場合があります。 TOMOYO Linux を用いてドメインを階層化することにより、追加のユーザ認証を行う防御層を配備することが可能になります。 TOMOYO Linux であれば、好きな回数だけログイン認証を強制することができます。以下のようなスクリプトを考えてみましょう：</p>
+
+<pre>
+#! /bin/sh -p
+read -r -s -e -p "Password: " password
+sleep 2
+if [ "$password" = "123456" ]; then
+  exec $SHELL
+else
+  echo "Authentication failed."
+fi
+</pre>
+
+<p>このスクリプトを auth1 と呼ぶことにします。 auth1 を実行可能にして /bin/ ディレクトリに置いてください。これはサンプルのスクリプトですが、強制アクセス制御機能により auth1 を読み込みモードでオープンすることを禁止することができるのでパスワードを平文のまま保存しています。その他のサンプルについては <a href="#12.3">12.3. 認証プログラムの例</a>を参照してください。以下のエントリが例外ポリシーで指定されている場合を考えます：</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>この指定により、ＳＳＨログイン時のログインシェルのドメインは &lt;kernel&gt; /usr/sbin/sshd /bin/bash のようになります。なお、このドメインに対して <a href="policy-specification/exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブが指定されていないことを確認してください。このドメインに対しては、 auth1 スクリプトの実行だけを認め、その他のプログラムの実行を認めないようにしてください：</p>
+
+<pre>
+file execute /bin/auth1 exec.realpath="/bin/auth1"
+</pre>
+
+<p>これ以降、ＳＳＨログインをした後、ログインしたユーザは追加のログイン認証を経なければ先へ進めなくなります。もし、攻撃者による不正なログインであった場合、追加のログイン認証のメカニズムを知ることができないことでしょう。上記のスクリプトにはあなたか望む突拍子もないメカニズムを使用することができます。</p>
+
+<p>追加のログイン認証を経た後のドメインには、通常の権限を与えることができます。また、例えば以下のように例外ポリシーで指定することで、それ以上ドメイン遷移を行わないようにすることもできます：</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/auth1 /bin/bash
+</pre>
+
+<img src="media/fig-6-2.png" alt="fig-6-2.png" width="600" height="450">
+
+<h3><a name="12.2">12.2. 管理者権限の分割</a></h3>
+
+<p>この階層化構造を利用することにより、 root ユーザの権限を分割することも可能です。 /bin/auth1 のパスワード部分を変更して /bin/auth2 として保存します。 /bin/auth1 を通過することで実行されるシェルに対しては全ての動作を認めるように設定し、 /bin/auth2 を通過することで実行されるシェルに対しては限られた動作（例えばＷｅｂサーバの管理）のみを認めるように設定します：</p>
+
+<img src="media/fig-6-14-en.png" alt="fig-6-14-en.png" width="600" height="450">
+
+<h3><a name="12.3">12.3. 認証プログラムの例</a></h3>
+
+<p>以下のスクリプトは上記で使用したものと同じですが、パスワードをハッシュ値で保存するようにしています：</p>
+
+<pre class="command">
+echo "password" | sha1sum
+</pre>
+
+<pre class="output">
+c8fed00eb2e87f1cee8e90ebbe870c190ac3848c  -
+</pre>
+
+<pre>
+#!/bin/sh -p
+
+hash="c8fed00eb2e87f1cee8e90ebbe870c190ac3848c  -"
+
+read -r -s -e -p "Password: " password
+hash_attempt="$(echo "$password" | sha1sum)"
+sleep 2
+if [ "$hash_attempt" = "$hash" ]; then
+  exec $SHELL
+else
+  echo "Authentication failed"
+fi
+</pre>
+
+<p>ユーザ認証プログラムのサンプルを以下に示します。ただし、これらのプログラムは独自のユーザ認証プログラムを作成する際の参考にしてもらうために用意されているものです。アルゴリズムが貧弱で実際のシステムにそのまま適用するには不向きなものも含まれています。以下のプログラムのソースコードは ccs-tools の tarball 中に含まれていますが、 <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools/examples/?root=tomoyo">subversion レポジトリ</a>からもダウンロードできます。</p>
+
+<div class="simple-table-wrap">
+<table border="1">
+<tr><td><code><a name="candy">candy</a></code></td><td><p>この認証プログラムは、親プロセス（例えば /bin/bash ）が起動されてから１０秒以内に開始して、かつ正しいパスワードを入力した場合にのみ認証が成功します。このプログラムが時間内に開始されなかった場合、正しいパスワードを入力しても先へ進むことはできません。攻撃者は正しいパスワードを入力しても先へ進めないことを知らないため、ブルートフォース攻撃を防ぐのに役に立ちます。</p></td></tr>
+<tr><td><code><a name="chaplet">chaplet</a></code></td><td><p>この認証プログラムは、チャレンジとして文字列を表示し、チャレンジ文字列中に含まれる数値のみをレスポンスとして入力した場合にのみ認証が成功します。このサンプルプログラムはアルゴリズムが貧弱であるため、実際のシステムに適用する場合にはカスタマイズをするべきです。</p></td></tr>
+<tr><td><code><a name="checktoken_gettoken">checktoken/gettoken</a></code></td><td><p>これらの認証プログラムはシステムの現在時刻に基づいて生成されるトークンを利用します。 <code>gettoken</code> を実行することで表示されたトークンを <code>checktoken</code> を実行して入力することにより認証が成功します。このサンプルプログラムはアルゴリズムが貧弱であるため、実際のシステムに適用する場合にはカスタマイズをするべきです。</p></td></tr>
+<tr><td><code><a name="groovy">groovy</a></code></td><td><p>この認証プログラムはパスワードの入力を求めるプロンプトを表示しますが、実際にはパスワードはチェックしません。代わりに、 /tmp/.lockme というファイルの有無をチェックし、そのファイルが存在しない場合のみ認証が成功します。これは、ブルートフォース攻撃を防ぐのに利用できます。このサンプルプログラムは攻撃者が見つけやすい場所にあるファイルを使っているため、実際のシステムに適用する場合にはカスタマイズをするべきです。</p></td></tr>
+<tr><td><code><a name="honey">honey</a></code></td><td><p>この認証プログラムは、正しいパスワードを正しい時間間隔で入力した場合にのみ認証が成功します。これは、ブルートフォース攻撃を防ぐのに利用できます。</p></td></tr>
+<tr><td><code><a name="mailauth">mailauth</a></code></td><td><p>この認証プログラムは、ワンタイムパスワードを生成し、そのパスワードを <code>mail</code> コマンドを利用してユーザに送信します。ユーザが受け取ったメールに書かれているワンタイムパスワードを入力することにより、ユーザ認証が成功します。このプログラムを使うには、メールサーバが必要になります。</p></td></tr>
+<tr><td><code><a name="timeauth">timeauth</a></code></td><td><p>この認証プログラムは、 <code><a href="#honey">honey</a></code> を他のスクリプト型プログラムのインタプリタとして利用できるように修正したものです。</p></td></tr>
+</table>
+</div>
+
+<p>また、追加のユーザ認証を行う場合、以下のサンプルプログラムも役に立つかもしれません。</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr><td><code><a name="falsh">falsh</a></code></td><td><p>これは、内部コマンドを持たないシェルです。ログインシェルとして使われる /bin/bash のようなプログラムには <code>kill</code> コマンドのような内部コマンドが多数含まれているため、たとえ外部コマンドの実行が TOMOYO Linux により制限されていたとしても、攻撃者は内部コマンドを用いて（例えばプロセスを強制終了させるなどの）悪事を働くことができてしまいます。追加のユーザ認証を行う場合には、攻撃者がシェルの内部コマンドを悪用するのを防ぐために、このプログラムをログインシェルとして使うことができます。</p></td></tr>
+<tr><td><code><a name="proxy">proxy</a></code></td><td><p>これは、単純なポート転送プログラムです。このプログラムをクライアント側で実行することで特定のポート番号からサーバに接続要求を送ることが可能になり、サーバ側のファイアウォール（例えば <code>iptables</code> ）で接続元ポート番号に基づくフィルタリングを行うことが可能になります。</p></td></tr>
+</table>
+</div>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-11.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-13.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 11: アクセス許可のグループ化</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 13: カーネルの外部でプログラムの実行可否を判断する</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-12.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-27 06:23:40 +0100 (Sun, 27 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

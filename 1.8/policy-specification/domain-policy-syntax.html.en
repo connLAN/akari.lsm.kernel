@@ -1,0 +1,785 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Policy specification : Domain policy syntax</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.en"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="domain-policy-syntax.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="exception-policy-syntax.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a></p>
+</div>
+
+<h2>Domain policy syntax</h2>
+
+<h3><a name="file_execute">file execute</a></h3>
+
+<p>This directive allows execution of the specified pathname.</p>
+
+<p>This example allows the domain to execute <code>/bin/ls</code>:</p>
+
+<pre>
+file execute /bin/ls
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#aggregator">aggregator</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_read">file read</a></h3>
+
+<p>This directive allows the domain to open the specified pathname for reading.</p>
+
+<p>This example allows the domain to read "/proc/meminfo":</p>
+
+<pre>
+file read proc:/meminfo
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_write">file write</a></h3>
+
+<p>This directive allows the domain to open the specified pathname for writing.</p>
+
+<p>This example allows the domain to write to "/dev/null":</p>
+
+<pre>
+file write /dev/null
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_append">file append</a></h3>
+
+<p>This directive allows the domain to append to the specified pathname.</p>
+
+<p>This example allows the domain to append to the file "/var/log/auth.log":</p>
+
+<pre>
+file append /var/log/auth.log
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_create">file create</a></h3>
+
+<p>This directive allows the domain to create the specified file with the specified permissions.</p>
+
+<p>This example allows the domain to create the file "/var/lock/subsys/crond":</p>
+
+<pre>
+file create /var/lock/subsys/crond 0644
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_unlink">file unlink</a></h3>
+
+<p>This directive allows the domain to delete the specified pathname.</p>
+
+<p>This example allows the domain to delete the file "/var/lock/subsys/crond":</p>
+
+<pre>
+file unlink /var/lock/subsys/crond
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chown">file chown</a></h3>
+
+<p>This directive allows the domain to change the user ownership of the specified pathname to the specified UID.</p>
+
+<p>This example allows the domain to change the owner of "/dev/sda" to UID=0:</p>
+
+<pre>
+file chown /dev/sda 0
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chgrp">file chgrp</a></h3>
+
+<p>This directive allows the domain to change group ownership of the specified pathname to the specified GID.</p>
+
+<p>This example allows the domain to change the GID of "/dev/audio" to 92:</p>
+
+<pre>
+file chgrp /dev/audio 92
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_chmod">file chmod</a></h3>
+
+<p>This directive allows the domain to change permissions of the specified pathname to the specified octal permissions.</p>
+
+<p>This example allows the domain to change the octal permissions of "/dev/mem" to 0644:</p>
+
+<pre>
+file chmod /dev/mem 0644
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkdir">file mkdir</a></h3>
+
+<p>This directive allows the domain to create the specified directory with the specified permissions.</p>
+
+<p>This example allows the domain to create directories that match "/tmp/logwatch.\*/":</p>
+
+<pre>
+file mkdir /tmp/logwatch.\*/ 0755
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_rmdir">file rmdir</a></h3>
+
+<p>This directive allows the domain to delete the specified directory.</p>
+
+<p>This example allows the domain to delete directories that match "/tmp/logwatch.\*/":</p>
+
+<pre>
+file rmdir /tmp/logwatch.\*/
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkfifo">file mkfifo</a></h3>
+
+<p>This directive allows the domain to create the specified FIFO with the specified permissions.</p>
+
+<p>This example allows the domain to create the FIFO "/dev/initctl":</p>
+
+<pre>
+file mkfifo /dev/initctl 0644
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mksock">file mksock</a></h3>
+
+<p>This directive allows the domain to create the specified socket with the specified permissions.</p>
+
+<p>This example allows the domain to create the socket "/dev/log":</p>
+
+<pre>
+file mksock /dev/log 0755
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkblock">file mkblock</a></h3>
+
+<p>This directive allows the domain to create the specified block device with the specified permissions, major number and minor number.</p>
+
+<p>This example allows the domain to create the block device "/dev/loop0":</p>
+
+<pre>
+file mkblock /dev/loop0 0600 7 0
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mkchar">file mkchar</a></h3>
+
+<p>This directive allows the domain to create the specified character device with the specified permissions, major number and minor number.</p>
+
+<p>This example allows the domain to create the character device "/dev/console":</p>
+
+<pre>
+file mkchar /dev/console 0755 5 1
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_truncate">file truncate</a></h3>
+
+<p>This directive allows the domain to truncate or extend the specified pathname.</p>
+
+<p>This example allows the domain to truncate the contents of "/etc/mtab":</p>
+
+<pre>
+file truncate /etc/mtab
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_symlink">file symlink</a></h3>
+
+<p>This directive allows the domain to symlink the specified pathname.</p>
+
+<p>This example allows the domain to symlink "/dev/cdrom":</p>
+
+<pre>
+file symlink /dev/cdrom
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_link">file link</a></h3>
+
+<p>This directive allows the domain to create hard link between the first and second specified pathnames.</p>
+
+<p>This example allows a hard link to be created between pathnames that match "/etc/mtab~\$" and "/etc/mtab~":</p>
+
+<pre>
+file link /etc/mtab~\$ /etc/mtab~
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_rename">file rename</a></h3>
+
+<p>This directive allows the domain to rename the first specified pathname to the second specified pathname.</p>
+
+<p>This example allows "/etc/mtab.tmp" to be renamed "/etc/mtab":</p>
+
+<pre>
+file rename /etc/mtab.tmp /etc/mtab
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_ioctl">file ioctl</a></h3>
+
+<p>This directive allows the domain to make an ioctl request with the specified command number. For information on the ioctl command numbers, refer to manuals provided by each module with ioctl functionality.</p>
+
+<p>This example allows the domain to issue an ioctl request with command number 0x8915 (i.e. SIOCGIFADDR request) on sockets with family = 2, type = 2, protocol = 17 (i.e. UDP/IPv4 sockets):</p>
+
+<pre>
+file ioctl socket:[family=2:type=2:protocol=17] 0x8915
+</pre>
+
+<p>This example allows the domain to issue an ioctl request with command numbers between 10000 and 20000 on "/dev/null":</p>
+
+<pre>
+file ioctl /dev/null 10000-20000
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="file_mount">file mount</a></h3>
+
+<p>This directive allows the domain to mount a filesystem with the specified devices, pathnames and options.</p>
+
+<p>The syntax is: "<strong>file mount $DEVICE $MOUNTPOINT $FILESYSTEM $OPTIONS</strong>". If $FILESYSTEM requires a device file, a block device file's pathname is specified for $DEVICE. The $OPTIONS is a hexadecimal (or otcal or decimal) integer expression. The following options can also be specified for $FILESYSTEM:</p>
+
+<ul>
+<li>--bind</li>
+<li>--move</li>
+<li>--remount</li>
+<li>--make-unbindable</li>
+<li>--make-private</li>
+<li>--make-slave</li>
+<li>--make-shared</li>
+</ul>
+
+<p>This example allows the domain to remount the / directory:</p>
+
+<pre>
+file mount any / --remount 0x0
+</pre>
+
+<p>This example allows the domain to mount "/dev/hdc" which was formatted as an ext3 filesystem at "/var/www/" directory:</p>
+
+<pre>
+file mount /dev/hdc /var/www/ ext3 0xF
+</pre>
+
+<p>This example allows the domain to mount a tmpfs filesystem at "/dev/shm/" directory:</p>
+
+<pre>
+file mount none /dev/shm/ tmpfs 0xE
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#number_group">number_group</a></li>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+<li><a href="expression-rules.html.en#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_unmount">file unmount</a></h3>
+
+<p>This directive allows the domain to unmount a filesystem from the specified pathname.</p>
+
+<p>This example allows the domain to unmount the filesystem mounted at "/mnt/cdrom/" directory:</p>
+
+<pre>
+file unmount /mnt/cdrom/
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+<li><a href="expression-rules.html.en#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_chroot">file chroot</a></h3>
+
+<p>This directive allows the domain to use the specified pathname as a new / directory.</p>
+
+<p>This example allows the domain to use "/var/empty/sshd/" as a new / directory:</p>
+
+<pre>
+file chroot /var/empty/sshd/
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+<li><a href="expression-rules.html.en#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="file_pivot_root">file pivot_root</a></h3>
+
+<p>This directive allows the domain to use the first specified pathname as a new / directory and bring the old / directory to the second specified pathname.</p>
+
+<p>This functionality is generally used for only once for switching the / directory from initrd/initramfs to the hard drive, which generally occurs before TOMOYO Linux has been activated. It is therefore unlikely that you will need this directive.</p>
+
+<p>This example allows the domain to use "/proc/" as a new / directory and bring the old / directory to "/proc/ccs/" directory:</p>
+
+<pre>
+file pivot_root proc:/ proc:/ccs/
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+<li><a href="expression-rules.html.en#filesystem">Filesystem expressions</a></li>
+</ul>
+
+<h3><a name="misc_env">misc env</a></h3>
+
+<p>This directive allows the domain to read the specified environment variable. Many programs behave differently depending on the environment variables.</p>
+
+<p>This example allows the domain to read the environment variable "LD_PRELOAD":</p>
+
+<pre>
+misc env LD_PRELOAD
+</pre>
+
+<h3><a name="capability">capability</a></h3>
+
+<p>This directive allows the domain to make use of the specified non-POSIX Capability.</p>
+
+<p>The syntax is summarised in this table:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Directive</p></th>
+<th><p>Function</p></th>
+</tr>
+<tr>
+<td><p>capability use_kernel_module</p></td>
+<td><p>Use of the create_module(2), init_module(2) and delete_module(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>capability use_packet</p></td>
+<td><p>Use of PACKET sockets</p></td>
+</tr>
+<tr>
+<td><p>capability use_route</p></td>
+<td><p>Use of ROUTE sockets</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_KEXEC_LOAD</p></td>
+<td><p>Use of kexec_load(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_NICE</p></td>
+<td><p>Use of nice(2) and setpriority(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_PTRACE</p></td>
+<td><p>Use of ptrace(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_REBOOT</p></td>
+<td><p>Use of reboot(2) syscall</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_SETHOSTNAME</p></td>
+<td><p>Use of sethostname(2) and setdomainname(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_TIME</p></td>
+<td><p>Use of stime(2), settimeofday(2) and adjtimex(2) syscalls</p></td>
+</tr>
+<tr>
+<td><p>capability SYS_VHANGUP</p></td>
+<td><p>Use of vhangup(2) syscall</p></td>
+</tr>
+</table>
+</div>
+
+<p>This example allows the domain to use the SYS_REBOOT capability:</p>
+
+<pre>
+capability SYS_REBOOT
+</pre>
+
+<h3><a name="ipc_signal">ipc signal</a></h3>
+
+<p>This directive allows the domain to use the inter-process communication signal number specified and the target domain specified.</p>
+
+<p>All domains that start with the target domain are matched. Thus, a target domain of "&lt;kernel&gt;" will match all domains. A signal number of 0 is always granted, and if the source and target destination are the same it is always granted.</p>
+
+<p>This example allows the domain to send ipc signal number 10 to the specified domain:</p>
+
+<pre>
+ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
+</pre>
+
+<h3><a name="network_inet">network inet</a></h3>
+
+<p>This directive allows the domain to perform network socket operations.</p>
+
+<p>IPv4 and IPv6 addresses are both supported. However, note that use of "::1" for IPv6 addresses is not supported. The address "0:0:0:0:0:0:0:1" must be used instead.</p>
+
+<p>The syntax is summarised in the following table:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Directive</p></th>
+<th><p>Function</p></th>
+</tr>
+<tr>
+<td><p>network inet stream bind $ADDRESS $PORT</p></td>
+<td><p>Bind TCP sockets to specified local IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet stream listen $ADDRESS $PORT</p></td>
+<td><p>Listen TCP sockets at specified local IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet stream accept $ADDRESS $PORT</p></td>
+<td><p>Accept TCP sockets from specified remote IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet stream connect $ADDRESS $PORT</p></td>
+<td><p>Connect TCP sockets to specified remote IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram bind $ADDRESS $PORT</p></td>
+<td><p>Bind UDP sockets to specified local IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram recv $ADDRESS $PORT</p></td>
+<td><p>Receive UDP packets from specified remote IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet dgram send $ADDRESS $PORT</p></td>
+<td><p>Send UDP packets to specified remote IP address and port</p></td>
+</tr>
+<tr>
+<td><p>network inet raw bind $ADDRESS $PROTOCOL</p></td>
+<td><p>Bind IP sockets for specified protocol to specified local IP address</p></td>
+</tr>
+<tr>
+<td><p>network inet raw recv $ADDRESS $PROTOCOL</p></td>
+<td><p>Receive IP packets for specified protocol from specified remote IP address</p></td>
+</tr>
+<tr>
+<td><p>network inet raw send $ADDRESS $PROTOCOL</p></td>
+<td><p>Send IP packets for specified protocol to specified remote IP address</p></td>
+</tr>
+</table>
+</div>
+
+<p>This example allows the domain to connect to port 80 on IP address 202.221.179.21:</p>
+
+<pre>
+network inet stream connect 202.221.179.21 80
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#address_group">address_group</a></li>
+</ul>
+
+<h3><a name="network_unix">network unix</a></h3>
+
+<p>This directive allows the domain to perform unix domain socket operations.</p>
+
+<p>The syntax is summarised in the following table:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Directive</p></th>
+<th><p>Function</p></th>
+</tr>
+<tr>
+<td><p>network unix stream bind $ADDRESS</p></td>
+<td><p>Bind byte stream sockets to specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix stream listen $ADDRESS</p></td>
+<td><p>Listen byte stream sockets at specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix stream accept $ADDRESS</p></td>
+<td><p>Accept byte stream sockets from specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix stream connect $ADDRESS</p></td>
+<td><p>Connect byte stream sockets to specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram bind $ADDRESS</p></td>
+<td><p>Bind datagram sockets to specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram recv $ADDRESS</p></td>
+<td><p>Receive datagrams from specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix dgram send $ADDRESS</p></td>
+<td><p>Send datagrams to specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket bind $ADDRESS</p></td>
+<td><p>Bind seqpacket sockets to specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket listen $ADDRESS</p></td>
+<td><p>Listen seqpacket sockets at specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket accept $ADDRESS</p></td>
+<td><p>Accept seqpacket sockets from specified address</p></td>
+</tr>
+<tr>
+<td><p>network unix seqpacket connect $ADDRESS</p></td>
+<td><p>Connect seqpacket sockets to specified address</p></td>
+</tr>
+</table>
+</div>
+
+<p>This example allows the domain to bind to "/tmp/.X11-unix/X0" and "\000/tmp/.X11-unix/X0":</p>
+
+<pre>
+network unix stream bind /tmp/.X11-unix/X0
+network unix stream bind \000/tmp/.X11-unix/X0
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
+<h3><a name="use_group">use_group</a></h3>
+
+<p>This directive allows the domain to inherit permissions defined for the specified group. These permissions are defined in exception policy.</p>
+
+<p>This example allows the domain to read "/dev/null":</p>
+
+<p>In exception policy:</p>
+<pre>
+acl_group 2 file read /dev/null
+</pre>
+
+<p>In domain policy:</p>
+<pre>
+use_group 2
+</pre>
+
+<h3><a name="use_profile">use_profile</a></h3>
+
+<p>This directive is changes the profile number of the domain.</p>
+
+<p>This example changes the profile number of the domain to 3:</p>
+
+<pre>
+use_profile 3
+</pre>
+
+<h3><a name="task_auto_execute_handler">task auto_execute_handler</a></h3>
+
+<p>This directive causes executions from the domain to be handled by an external program, as specified by the directive. When an execute request is made within this domain, the specified external program is executed instead. This then decides whether it is appropriate to continue.</p>
+
+<p>This example causes the program <code>/usr/sbin/check-and-exec</code> to be launched whenever the domain makes an execute request:</p>
+
+<pre>
+task auto_execute_handler /usr/sbin/check-and-exec
+</pre>
+
+<h3><a name="task_denied_execute_handler">task denied_execute_handler</a></h3>
+
+<p>This directive causes an external program, as specified by the directive, to be launched when executions within the domain have been rejected by policy. Note that this directive takes effect only when an execute request was rejected by policy in enforcing mode. Even if an execute request was rejected by policy, the request will be accepted unless in enforcing mode. Use <a href="#task_auto_execute_handler">task auto_execute_handler</a> (optionally with <a href="exception-policy-syntax.html.en#keep_domain">keep_domain</a>) if you want to execute an external program regardless of access control mode.</p>
+
+<p>This example causes the program <code>/bin/true</code> to be launched whenever an execution request from the domain is rejected by policy:</p>
+
+<pre>
+task denied_execute_handler /bin/true
+</pre>
+
+<h3><a name="task_manual_domain_transition">task manual_domain_transition</a></h3>
+
+<p>This directive causes a domain transition to occur when the application writes a domain name to the "/proc/ccs/self_domain" interface. This can be used to split permissions without requiring an execution, but the application must be modified to write to the interface at the appropriate time.</p>
+
+<p>This example causes a domain transition to the "&lt;kernel&gt; //apache /www.tomoyo00.com" domain to occur when "&lt;kernel&gt; //apache /www.tomoyo00.com" is written to "/proc/ccs/self_domain" by the domain:</p>
+
+<pre>
+task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com
+</pre>
+
+<h3><a name="task_auto_domain_transition">task auto_domain_transition</a></h3>
+
+<p>This directive causes a domain transition to occur when the specified conditions have been met. This can be used to split permissions without requiring an execution.</p>
+
+<p>This example causes a domain transition to the "&lt;kernel&gt; //non-root-session" domain to occur when the task UID becomes non-root:</p>
+
+<pre>
+task auto_domain_transition &lt;kernel&gt; //non-root-session task.uid!=0
+</pre>
+
+<h3><a name="quota_exceeded">quota_exceeded</a></h3>
+
+<p>This directive indicates that the domain has failed to append an entry while in "Learning Mode" due to the "max_learning_entry" value being reached.</p>
+
+<h3><a name="transition_failed">transition_failed</a></h3>
+
+<p>This directive indicates that a process within this domain was not able to undergo a domain transition following an execute request.</p>
+
+<p>This problem occurs, in order to avoid access denials by TOMOYO unless enforcing mode is used, due to TOMOYO accepting program execution requests unless enforcing mode even if domain transition has failed. The cause of this problem is either the name of the domain being too long, or the kernel being unable to allocate memory. To fix this problem, either suppress domain transitions or increase the memory quota which TOMOYO can use.</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="exception-policy-syntax.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A4: Exception policy syntax</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.en">Main Index</a>
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="domain-policy-syntax.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-14 08:27:22 +0100 (Sat, 14 May 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : ポリシー仕様 : /proc/ccs/ インタフェース</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="proc-interface.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p>&lt;前&gt; <a href="index.html.ja">&lt;目次&gt;</a> <a href="domain-transition-procedure.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>/proc/ccs/ インタフェース</h2>
+
+<h3><a name="audit">/proc/ccs/audit</a></h3>
+
+<p>この読み込み専用インタフェースは、アクセスログを保持しています。読み出すべきアクセスログが存在しない場合にはすぐに戻ります。アクセスログが発生するまで待つには select(2) を使用してください。</p>
+
+<p>このインタフェースは、プロファイルが <a href="#profile">/proc/ccs/profile</a> でどのように設定されているかに依存します。以下のプロファイルのオプションが影響します：</p>
+<ul>
+<li>grant_log</li>
+<li>reject_log</li>
+<li>max_audit_log</li>
+</ul>
+
+<p>また、 <a href="#stat">/proc/ccs/stat</a> で指定可能な、アクセスログのために割り当てるメモリ上限の指定の影響も受けます。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-auditd">ccs-auditd</a> が利用します。</p>
+
+<h3><a name="domain_policy">/proc/ccs/domain_policy</a></h3>
+
+<p>この読み書きインタフェースは、ドメインポリシーを保持しています。 &lt;kernel&gt; から始まる行がドメインの定義であり、その後そのドメインに与えられるアクセス許可の内容が続きます。</p>
+
+<p>対応する設定ファイルは /etc/ccs/domain_policy.conf です。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-editpolicy">ccs-editpolicy</a> <a href="../man-pages/index.html.ja#ccs-loadpolicy">ccs-loadpolicy</a> および <a href="../man-pages/index.html.ja#ccs-savepolicy">ccs-savepolicy</a> が利用します。</p>
+
+<h3><a name="exception_policy">/proc/ccs/exception_policy</a></h3>
+
+<p>この読み書きインタフェースは、例外ポリシーを保持しています。行の間に関連はありません。</p>
+
+<p>対応する設定ファイルは /etc/ccs/exception_policy.conf です。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-editpolicy">ccs-editpolicy</a> <a href="../man-pages/index.html.ja#ccs-loadpolicy">ccs-loadpolicy</a> および <a href="../man-pages/index.html.ja#ccs-savepolicy">ccs-savepolicy</a> が利用します。</p>
+
+<h3><a name="manager">/proc/ccs/manager</a></h3>
+
+<p>この読み書きインタフェースは、 /proc/ccs/ インタフェースを経由して設定を変更することができるドメイン名およびプログラムのパス名を保持しています。</p>
+
+<p>例外として、以下のインタフェースは全てのドメインから書き込みを行うことができます。</p>
+
+<ul>
+<li>プロセスの情報を取得するための <a href="#.process_status">/proc/ccs/.process_status</a></li>
+<li>特定のドメインあるいは特定のプロセスＩＤの属するドメインのアクセス許可だけを選択するための <a href="#domain_policy">/proc/ccs/domain_policy</a></li>
+<li>自分のドメインを変更するための <a href="#self_domain">/proc/ccs/self_domain</a></li>
+</ul>
+
+<p>対応する設定ファイルは /etc/ccs/manager.conf です。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-editpolicy">ccs-editpolicy</a> <a href="../man-pages/index.html.ja#ccs-loadpolicy">ccs-loadpolicy</a> および <a href="../man-pages/index.html.ja#ccs-savepolicy">ccs-savepolicy</a> が利用します。</p>
+
+<pre class="command">
+# cat /proc/ccs/manager
+</pre>
+
+<pre class="output">
+/usr/sbin/ccs-loadpolicy
+/usr/sbin/ccs-editpolicy
+/usr/sbin/ccs-setlevel
+/usr/sbin/ccs-setprofile
+/usr/sbin/ccs-queryd
+</pre>
+
+<h3><a name="profile">/proc/ccs/profile</a></h3>
+
+<p>この読み書きインタフェースは、プロファイルの設定を保持しています。</p>
+
+<p>対応する設定ファイルは /etc/ccs/profile.conf です。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-editpolicy">ccs-editpolicy</a> <a href="../man-pages/index.html.ja#ccs-loadpolicy">ccs-loadpolicy</a> <a href="../man-pages/index.html.ja#ccs-savepolicy">ccs-savepolicy</a> および <a href="../man-pages/index.html.ja#ccs-setlevel">ccs-setlevel</a> が利用します。</p>
+
+<h3><a name="query">/proc/ccs/query</a></h3>
+
+<p>この読み書きインタフェースは、強制モード用のプロファイルが割り当てられているドメインで発生したポリシーに違反するアクセス要求を許可するか拒否するかを伝えるために使用します。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/ccs-queryd.html.ja">ccs-queryd</a> が利用します。</p>
+
+<h3><a name="self_domain">/proc/ccs/self_domain</a></h3>
+
+<p>この読み書きインタフェースは、呼び出し元プロセスが属しているドメイン名を保持しています。</p>
+
+<p>このインタフェースに対して <a href="domain-policy-syntax.html.ja#task_manual_domain_transition">task manual_domain_transition</a> ディレクティブで指定されているドメイン名を書き込むことにより、そのドメインへと遷移することができます。</p>
+
+<h3><a name="stat">/proc/ccs/stat</a></h3>
+
+<p>この読み書きインタフェースは、ポリシー違反の発生状況とバイト単位のメモリ使用状況を保持しています。</p>
+
+<pre class="command">
+# cat /proc/ccs/stat
+</pre>
+
+<pre class="output">
+Policy update:                               172 (Last: 2011/02/03 18:03:01)
+Policy violation in learning mode:             0
+Policy violation in permissive mode:           0
+Policy violation in enforcing mode:            0
+Memory used by policy:                     41792
+Memory used by audit log:                 159328
+Memory used by query message:                  0
+Total memory used:                        201120
+</pre>
+
+<ul>
+<li><strong>Policy update</strong> はポリシーがアップデートされた回数と最後にアップデートされた時刻を示しています。</li>
+<li><strong>Policy violation in learning mode</strong> は学習モードでのポリシー違反の発生回数と最後に発生した時刻を示しています。</li>
+<li><strong>Policy violation in permissive mode</strong> は確認モードでのポリシー違反の発生回数と最後に発生した時刻を示しています。</li>
+<li><strong>Policy violation in enforcing mode</strong> は強制モードでのポリシー違反の発生回数と最後に発生した時刻を示しています。</li>
+<li><strong>Memory used by policy</strong> はアクセス許可を保持しておくために使われているメモリの量です。</li>
+<li><strong>Memory used by audit log</strong> はアクセスログを保持しておくために使われているメモリの量です。</li>
+<li><strong>Memory used by query message</strong> は管理者の判断を待っているアクセス要求を保持しておくために使われているメモリの量です。</li>
+<li><strong>Total memory used</strong> は使用しているメモリの合計です。</li>
+</ul>
+
+<p>このインタフェースは、メモリ使用量の上限を設定することが可能です。</p>
+
+<p>対応する設定ファイルは /etc/ccs/stat.conf です。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-editpolicy">ccs-editpolicy</a> <a href="../man-pages/index.html.ja#ccs-loadpolicy">ccs-loadpolicy</a> および <a href="../man-pages/index.html.ja#ccs-savepolicy">ccs-savepolicy</a> が利用します。</p>
+
+<h3><a name="version">/proc/ccs/version</a></h3>
+
+<p>この読み込み専用インタフェースは、現在実行中の TOMOYO Linux のバージョンを保持しています。</p>
+
+<h3><a name=".domain_status">/proc/ccs/.domain_status</a></h3>
+
+<p>この読み書きインタフェースは、ドメイン名の一覧とそれぞれのドメインに割り当てられているプロファイル番号を保持しています。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/ccs-setprofile.html.ja">ccs-setprofile</a> が利用します。</p>
+
+<h3><a name=".execute_handler">/proc/ccs/.execute_handler</a></h3>
+
+<p>この読み書きインタフェースは、 execute_handler として動作しているプロセスからのみオープンすることができます。内容は <a href="#.process_status">/proc/ccs/.process_status</a> と同一です。</p>
+
+<p>このインタフェースは、 <a href="domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> および <a href="domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブで指定されたプログラムが、コマンドラインに与えられた引数がカーネルから渡された信頼できるものであるかどうかを判断するために、 execute_handler として動作していることを確認できるようにするために提供されています。</p>
+
+<h3><a name=".process_status">/proc/ccs/.process_status</a></h3>
+
+<p>この読み書きインタフェースは、現在動作中のプロセスが属しているドメイン名とそのドメインに割り当てられているプロファイル番号を保持しています。</p>
+
+<p>このインタフェースは、主に <a href="../man-pages/index.html.ja#ccs-pstree">ccs-pstree</a> が利用します。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="domain-transition-procedure.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+<a href="../index.html.ja">大目次</a>
+</td>
+<td class="docs-next-description">
+<p>A2: ドメイン遷移</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="proc-interface.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-22 07:35:44 +0000 (Tue, 22 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

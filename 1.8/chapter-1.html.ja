@@ -1,0 +1,109 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 1</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-1.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p>&lt;前&gt; <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-2.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 1: はじめに</h2>
+
+<h3><a name="1.1">1.1. このガイドについて</a></h3>
+
+<p>このガイドは、 TOMOYO Linux の使い方に関する有益で読みやすい一連の手順を提供することを目指しています。読者はシステムのセキュリティを高めるために必要となるツールについて体験し習得することができるようになっています。このガイドは<a href="index.html.ja#core">基本編</a>と<a href="index.html.ja#advanced">応用編</a>の２つにグループ分けされています。基本編ではそれまでの章で習得した知識を前提に次の章を説明する形式となっているため、この順番で辿って行くことをお勧めします。応用編は好きなように辿っていただいて構いません。</p>
+
+<p>このプロジェクトをシステムの動作を解析する用途で使おうとしている場合、最初の６章が関係します。第６章自身は解析する用途で使い場合には必須ではありませんが、役に立つと思います。このプロジェクトをシステムの動作を制限する用途で使おうとしている場合、このガイド全体がどのようなシステムに対しても必要最小限の権限を持ったアクセス許可を定義するための基礎を提供します。このプロジェクトが提供する強制アクセス制御機能（ MAC ）は「導入するだけで何も設定を行うことなく使える」ものではなく、概念や管理ツールの使い方について理解するための時間が必要です。可能な限り安全なシステムを構築するために、このガイドをしっかりと読んで理解しておくことはとても価値があります。</p>
+
+<h3><a name="1.2">1.2. 表記に関して</a></h3>
+
+<p>このガイドを読みやすくするために、幾つかの表記方法に関する慣例を用いています。このセクションで例を示します。</p>
+
+<pre class="command">
+# /usr/sbin/ccs-editpolicy
+</pre>
+
+<p>上記の書式は、この書式内のテキストがコマンドとしてターミナルから実行されるものであることを示しています。 # で始まる行は root ユーザとして実行する必要があるコマンドを、 $ で始まる行は非 root ユーザとして実行すべきコマンドを示しています。テキスト中のコマンド名は <code>ccs-editpolicy</code> のように表記されています。</p>
+
+<pre class="output">
+Memory used by policy:                    165728
+Memory used by audit log:                      0 (Quota:   16777216)
+Memory used by query message:                  0 (Quota:    1048576)
+Total memory used:                        165728
+</pre>
+
+<p>上記の書式は、この書式内のテキストがターミナルから実行されたコマンドの出力であることを示しています。</p>
+
+<pre>
+number_group WEB-CLIENT-PORTS 1024-65535
+</pre>
+
+<p>上記の書式は、この書式内のテキストがコマンドラインでもコマンドやターミナルの出力でも無いことを示しています。例えば設定ファイルの内容かもしれませんし、ポリシーエディタや設定ファイルに入力すべきテキストかもしれません。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-2.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 2: なぜ TOMOYO Linux が必要なのですか？</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-1.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-12 06:17:31 +0000 (Sat, 12 Feb 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

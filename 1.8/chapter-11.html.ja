@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 11</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-11.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="chapter-10.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-12.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 11: アクセス許可のグループ化</h2>
+
+<h3><a name="11.1">11.1. acl_group と use_group</a></h3>
+
+<p>例外ポリシーの <a href="policy-specification/exception-policy-syntax.html.ja#acl_group">acl_group</a> ディレクティブとドメインポリシーの <a href="policy-specification/domain-policy-syntax.html.ja#use_group">use_group</a> ディレクティブはポリシーの管理を強力かつ容易に行う方法を提供します。</p>
+
+<p><code>/usr/lib/ccs/init_policy</code> を実行することにより作成されたデフォルトの例外ポリシーには以下のようなエントリが含まれています：</p>
+
+<pre>
+initialize_domain /sbin/modprobe from any
+initialize_domain /sbin/hotplug from any
+initialize_domain /sbin/init from any
+initialize_domain /sbin/udevd from any
+initialize_domain /usr/bin/dbus-daemon from any
+initialize_domain /usr/sbin/crond from any
+initialize_domain /usr/sbin/gpm from any
+initialize_domain /usr/sbin/logrotate from any
+initialize_domain /usr/sbin/sshd from any
+path_group ANY_PATHNAME /
+path_group ANY_PATHNAME /\*
+path_group ANY_PATHNAME /\{\*\}/
+path_group ANY_PATHNAME /\{\*\}/\*
+path_group ANY_PATHNAME \*:/
+path_group ANY_PATHNAME \*:/\*
+path_group ANY_PATHNAME \*:/\{\*\}/
+path_group ANY_PATHNAME \*:/\{\*\}/\*
+path_group ANY_PATHNAME \*:[\$]
+path_group ANY_DIRECTORY /
+path_group ANY_DIRECTORY /\{\*\}/
+path_group ANY_DIRECTORY \*:/
+path_group ANY_DIRECTORY \*:/\{\*\}/
+number_group COMMON_IOCTL_CMDS 0x5401
+acl_group 0 file read /etc/ld.so.cache
+acl_group 0 file read proc:/meminfo
+acl_group 0 file read proc:/sys/kernel/version
+acl_group 0 file read /etc/localtime
+acl_group 0 file read /usr/share/locale/locale.alias
+acl_group 0 file read proc:/self/\*
+acl_group 0 file read proc:/self/\{\*\}/\*
+acl_group 0 file read /lib/lib\*.so\*
+acl_group 0 file read /usr/lib/lib\*.so\*
+acl_group 0 file read /lib64/lib\*.so\*
+acl_group 0 file read /lib/ld-2.\*.so
+acl_group 0 file ioctl @ANY_PATHNAME @COMMON_IOCTL_CMDS
+acl_group 0 file read @ANY_DIRECTORY
+acl_group 0 file getattr @ANY_PATHNAME
+</pre>
+
+<p><a href="policy-specification/exception-policy-syntax.html.ja#acl_group">acl_group</a> ディレクティブを用いてグループ 0 に対して以下のアクセス許可が定義されています：</p>
+
+<ul>
+<li>ほとんどの共有ライブラリを参照する許可</li>
+<li>自プロセスに関する情報を参照する許可</li>
+<li>一般的な ioctl 要求を行う許可</li>
+<li>任意のディレクトリを参照する許可</li>
+<li>任意のファイルおよびディレクトリの属性を取得する許可</li>
+</ul>
+
+<p>グループ 0 に対して定義されているアクセス許可は use_group 0 という指定が行われている全てのドメインに対して適用されます。デフォルトのグループ番号は 0 であるため、デフォルトで全てのドメインに対して適用されます。上記の設定はデフォルトで許可しても問題がないと考えられているものですが、より厳密に制御したい場合には削除してください。</p>
+
+<h3><a name="11.2">11.2. アクセス許可の分割</a></h3>
+
+<p>個々の acl_group 行は、グループ番号によってグループ化されます。グループ番号を用いることで、アクセス許可が与えられるドメインの範囲を制御することができます。グループ番号を用いることで、共通するアクセス許可をグループ化することができ、ドメインポリシーを単純化することができます。例えば、例外ポリシーで以下のようなグループを定義することができます：</p>
+
+<pre>
+acl_group 0 file read /etc/passwd
+acl_group 0 file read /home/\{\*\-.\*}/\*
+acl_group 0 file write /dev/null
+acl_group 1 file read /etc/passwd
+acl_group 1 file read /etc/shadow
+acl_group 1 file create /etc/shadow.\$ 0600
+acl_group 1 file write /etc/shadow.\$
+acl_group 1 file rename /etc/shadow.\$ /etc/shadow
+acl_group 2 file read /usr/lib/xulrunner-1.9.2/libmozjs.so
+acl_group 2 file read /usr/lib/xulrunner-1.9.2/libxpcom.so
+acl_group 2 file read /usr/lib/xulrunner-1.9.2/libxul.so
+</pre>
+
+<p><a href="policy-specification/domain-policy-syntax.html.ja#use_group">use_group</a> ディレクティブはドメインポリシーの中で使用します。以下のエントリがあるドメインを考えます：</p>
+
+<pre>
+use_group 2
+</pre>
+
+<p>このドメインは、 xulrunner パッケージの共有ライブラリファイルを参照することができます。 <a href="policy-specification/domain-policy-syntax.html.ja#use_group">use_group</a> ディレクティブは全てのドメインに１個ずつ存在しており、それぞれのドメインはグループ番号で参照されるアクセス許可を利用することができます。</p>
+
+<p>特定のドメインに対して、ディレクトリの参照を許可したくない場合には、 acl_group 0 からそのアクセス許可を削除するか、あるいはそのアクセス許可を含まない別の acl_group を定義するようにします。なお、 acl_group 0 から削除した場合、 use_domain 0 が指定されているドメインの内、ディレクトリの参照を許可する必要がある全てのドメインに対してそのアクセス許可を追加していく必要が生じますのでちゅういしてください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-10.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-12.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 10: 条件付きアクセス許可の使用</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 12: ユーザ認証の強化</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-11.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-25 06:12:23 +0000 (Fri, 25 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

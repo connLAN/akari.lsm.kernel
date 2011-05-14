@@ -1,0 +1,246 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : Policy specification : Exception policy syntax</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.en"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="exception-policy-syntax.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="expression-rules.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="domain-policy-syntax.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Exception policy syntax</h2>
+
+<h3><a name="acl_group">acl_group</a></h3>
+
+<p>This directive specifies a group entry. This can be referenced to in domain policy by the <a href="domain-policy-syntax.html.en#use_group">use_group</a> directive. This directive should be followed by a group number, followed by an entry that matches domain policy syntax.</p>
+
+<p>This example allows domains with "use_group 0" to read /dev/null:</p>
+
+<pre>
+acl_group 0 file read /dev/null
+</pre>
+
+<h3><a name="aggregator">aggregator</a></h3>
+
+<p>This directive allows multiple applications to be aggregated together. This directive is intended to aggregate similar programs whose behaviours are very similar.</p>
+
+<p>This example causes the application <code>/usr/bin/tac</code> to be treated as <code>/usr/bin/cat</code>:</p>
+
+<pre>
+aggregator /usr/bin/tac /usr/bin/cat
+</pre>
+
+<h3><a name="initialize_domain">initialize_domain</a></h3>
+
+<p>This directive causes programs to run in a child of "&lt;kernel&gt;" domain.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>initialize_domain "program" from any</li>
+<li>initialize_domain "program" from "last_pathname_of_domain"</li>
+<li>initialize_domain "program" from "domain"</li>
+<li>initialize_domain any from any</li>
+<li>initialize_domain any from "last_pathname_of_domain"</li>
+<li>initialize_domain any from "domain"</li>
+</ul>
+
+<p>This example causes all executions of <code>/usr/sbin/sshd</code> to be reinitialized to "&lt;kernel&gt; /usr/sbin/sshd" domain:</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<h3><a name="no_initialize_domain">no_initialize_domain</a></h3>
+
+<p>This directive cancels the effect of <a href="#initialize_domain">initialize_domain</a> directive.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>no_initialize_domain "program" from any</li>
+<li>no_initialize_domain "program" from "last_pathname_of_domain"</li>
+<li>no_initialize_domain "program" from "domain"</li>
+<li>no_initialize_domain any from any</li>
+<li>no_initialize_domain any from "last_pathname_of_domain"</li>
+<li>no_initialize_domain any from "domain"</li>
+</ul>
+
+<p>This example causes all executions of <code>/usr/sbin/sendmail.sendmail</code> not to be reinitialized to "&lt;kernel&gt; /usr/sbin/sendmail.sendmail" domain when <code>/usr/sbin/sendmail.sendmail</code> is executed from domains which the name of domains end with "/bin/mail":</p>
+
+<pre>
+initialize_domain /usr/sbin/sendmail.sendmail from any
+no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
+<h3><a name="keep_domain">keep_domain</a></h3>
+
+<p>This directive prevents any domain transitions from occurring from a particular domain.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>keep_domain "program" from any</li>
+<li>keep_domain "program" from "last_pathname_of_domain"</li>
+<li>keep_domain "program" from "domain"</li>
+<li>keep_domain any from any</li>
+<li>keep_domain any from "last_pathname_of_domain"</li>
+<li>keep_domain any from "domain"</li>
+</ul>
+
+<p>This example causes domain transition not to occur when programs are executed from "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain:</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<h3><a name="no_keep_domain">no_keep_domain</a></h3>
+
+<p>This directive cancels the effect of <a href="#keep_domain">keep_domain</a> directive.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>no_keep_domain "program" from any</li>
+<li>no_keep_domain "program" from "last_pathname_of_domain"</li>
+<li>no_keep_domain "program" from "domain"</li>
+<li>no_keep_domain any from any</li>
+<li>no_keep_domain any from "last_pathname_of_domain"</li>
+<li>no_keep_domain any from "domain"</li>
+</ul>
+
+<p>This example causes domain transition to occur when /bin/cat is executed from "&lt;kernel&gt; /usr/sbin/sshd /bin/bash" domain:</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<h3><a name="address_group">address_group</a></h3>
+
+<p>This directive declares a group name that can be used in domain policy to refer to a range of IP addresses.</p>
+
+<p>For example, if suppose the following are defined in exception policy:</p>
+
+<pre>
+address_group LOCAL-ADDRESS 10.0.0.0-10.255.255.255
+address_group LOCAL-ADDRESS 172.16.0.0-172.31.255.255
+address_group LOCAL-ADDRESS 192.168.0.0-192.168.255.255
+</pre>
+
+<p>The following can then be defined in domain policy:</p>
+
+<pre>
+network inet stream accept @LOCAL-ADDRESS 1024-65535
+</pre>
+
+<h3><a name="number_group">number_group</a></h3>
+
+<p>This directive declares a group name that can be used in domain policy to refer to a range of numbers.</p>
+
+<p>For example, if suppose the following are defined in exception policy:</p>
+
+<pre>
+number_group CREATE-MODES 0644
+number_group CREATE-MODES 0664
+</pre>
+
+<p>The following can then be defined in domain policy:</p>
+
+<pre>
+file create /tmp/file @CREATE-MODES
+</pre>
+
+<h3><a name="path_group">path_group</a></h3>
+
+<p>This directive declares a group name that can be used in domain policy to refer to a range of pathnames.</p>
+
+<p>For example, if suppose the following are defined in exception policy:</p>
+
+<pre>
+path_group HOME-DIR-FILE /home/\*/\*
+path_group HOME-DIR-FILE /home/\*/\{\*\}/\*
+</pre>
+
+<p>The following can then be defined in domain policy:</p>
+
+<pre>
+file read @HOME-DIR-FILE
+</pre>
+
+<h3><a name="deny_autobind">deny_autobind</a></h3>
+
+<p>This directive prevents a specific local port from being selected automatically.</p>
+
+<p>For example, some proxy servers use local port 8080, so this port should not be bound by other programs for temporary use:</p>
+
+<pre>
+deny_autobind 1-1023
+deny_autobind 8080
+</pre>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="expression-rules.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="domain-policy-syntax.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A3: Expression rules</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.en">Main Index</a>
+</td>
+<td class="docs-next-description">
+<p>A5: Domain policy syntax</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="exception-policy-syntax.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-14 08:27:22 +0100 (Sat, 14 May 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

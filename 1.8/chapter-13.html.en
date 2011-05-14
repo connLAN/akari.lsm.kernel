@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 13</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-13.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-12.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-14.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 13: Judging execute requests outside of the kernel</h2>
+
+<h3><a name="13.1">13.1. task denied_execute_handler</a></h3>
+
+<p>A system administrator using TOMOYO Linux will generally know the programs that need to be executed from any particular domain. Thus, a normally functioning system will generally not make any execution requests that violate policy. If such an execution request occurs, such as <code>/bin/bash</code>, from a domain that does not usually need to make that execution, then the domain has probably been compromised.</p>
+
+<p>At this point, the kernel will reject the request. However, it is unlikely that the domain will regain control from the attacker. This is where the <a href="policy-specification/domain-policy-syntax.html.en#task_denied_execute_handler">task denied_execute_handler</a> directive can be useful. This directive allows an external program to be called whenever an execute request is rejected. This external program can for example be <code>/bin/true</code>, which will cause the process that made the execute request to terminate immediately. The process is therefore no longer compromised.</p>
+
+<p>Any other programs can be specified using this directive. It can be useful to run a honeypot program to observe the actions of the attacker, to show a warning message, or to change the configuration of a firewall to derive the IP address of the attacker.</p>
+
+<p>This directive should be placed in domain policy for the appropriate domain, and will only function if the domain is in "Enforcing Mode":</p>
+
+<pre>
+task denied_execute_handler /bin/true
+</pre>
+
+<p>The directive takes the following parameters:</p>
+
+<div class="simple-table">
+<table>
+<tr>
+<th><p>Parameter</p></th>
+<th><p>Contents</p></th>
+</tr>
+<tr>
+<td><p>argv[0]</p></td>
+<td><p>The pathname of the program specified by the directive</p></td>
+</tr>
+<tr>
+<td><p>argv[1]</p></td>
+<td><p>The name of the domain that made the execute request</p></td>
+</tr>
+<tr>
+<td><p>argv[2]</p></td>
+<td><p>The name of the program that made the execute request</p></td>
+</tr>
+<tr>
+<td><p>argv[3]</p></td>
+<td><p>The information (e.g. UID) of the process that made the execute request</p></td>
+</tr>
+<tr>
+<td><p>argv[4]</p></td>
+<td><p>The name of the program that the domain tried to execute</p></td>
+</tr>
+<tr>
+<td><p>argv[5]</p></td>
+<td><p>The number of command line arguments (argc) passed to the execution request</p></td>
+</tr>
+<tr>
+<td><p>argv[6]</p></td>
+<td><p>The number of environment variables (envc) passed to the execution request</p></td>
+</tr>
+<tr>
+<td><p>argv[7] to argv[6 + argc]</p></td>
+<td><p>The command line arguments passed to the execution request</p></td>
+</tr>
+<tr>
+<td><p>argv[7 + argc] to argv[6 + argc + envc]</p></td>
+<td><p>The environment variables passed to the execution request</p></td>
+</tr>
+</table>
+</div>
+
+<p>Important notes:</p>
+<ul>
+<li>The program specified by the directive should not be specified by the <a href="policy-specification/domain-policy-syntax.html.en#file_execute">file execute</a> directive.</li>
+<li>The domain for the program specified by the directive should be placed in "Enforcing Mode".</li>
+<li>All environment variables are cleared before executing the program specified by the directive. This is to prevent dangerous environment variables like LD_PRELOAD from affecting the program. Note that even PATH is cleared. Other resources such as standard input and output are inherited.</li>
+<li>If the process making the request is in a chroot environment, the directive will only function if the program specified by the directive is within the chroot.</li>
+</ul>
+
+<h3><a name="13.2">13.2. task auto_execute_handler</a></h3>
+
+<p>Normally, when a domain makes an execution request, the kernal checks policy to determine whether it should be allowed or rejected. However, judging this within the kernel has some limitations. There are few library functions available and it is more likely to fail when allocating a contiguous area of memory. This is where the <a href="policy-specification/domain-policy-syntax.html.en#task_auto_execute_handler">task auto_execute_handler</a> directive can be useful in judging the execution request outside of the kernel, which allows the use of many library functions and more consistent allocation of a contiguous area of memory. However, there is one downside to this approach. There are no means of notifying the process that made the execution request that the execution failed.</p>
+
+<p>This is useful in creating any external program you wish, and you can even judge by using SSH to ask remotely. You can use <a href="#audit-exec-param">audit-exec-param</a> which comes with the userspace tools package as a templete for utilizing this directive.</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr><td><code><a name="audit-exec-param">audit-exec-param</a></code></td><td><p>This program acts as a preprocessor for auditing command line arguments and environment variables passed to execute requests.<br>This program itself does not judge whether the execution of requested program should be allowed or rejected.<br>You can customize this program as you wish.</p></td></tr>
+</table>
+</div>
+
+<p>This directive should be placed in domain policy for the appropriate domain:</p>
+
+<pre>
+task auto_execute_handler /usr/lib/ccs/audit-exec-param
+</pre>
+
+<p>The directive takes the same arguments described in <a href="#13.1">13.1. task denied_execute_handler</a>.</p>
+
+<p>Important notes:</p>
+<ul>
+<li>All environment variables are cleared before executing the program specified by the directive. This is to prevent dangerous environment variables like LD_PRELOAD from affecting the program. Note that even PATH is cleared. Other resources such as standard input and output are inherited.</li>
+<li>If the process making the request is in a chroot environment, the directive will only function if the program specified by the directive is within the chroot.</li>
+</ul>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-12.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-14.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 12: Reinforced authentication</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 14: Securing Apache with mod_ccs</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-13.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-25 05:33:46 +0000 (Fri, 25 Mar 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

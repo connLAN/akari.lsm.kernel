@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 8</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-8.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="chapter-7.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-9.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 8: ポリシーを変更する権限</h2>
+
+<h3><a name="8.1">8.1. プログラムを登録する</a></h3>
+
+<p><a href="policy-specification/proc-interface.html.ja">/proc/ccs/</a> インタフェースを経由してポリシーを変更することができるプログラムやドメインは、 <a href="policy-specification/proc-interface.html.ja#manager">/proc/ccs/manager</a> インタフェースに登録されている必要があります。以下の例では /usr/sbin/ccs-editpolicy を登録しています：</p>
+
+<pre class="command">
+# echo "/usr/sbin/ccs-editpolicy" | /usr/sbin/ccs-loadpolicy -m
+</pre>
+
+<h3><a name="8.2">8.2. 非 root ユーザによる変更を認める</a></h3>
+
+<p>デフォルトでは、ユーザＩＤと実効ユーザＩＤの両方が０（つまり root ユーザ）のプロセスだけがポリシーを変更することができます。$USER ユーザによるポリシーの変更を認めたい場合には、以下のコマンドを実行してください：</p>
+
+<pre class="command">
+# echo "manage_by_non_root" | /usr/sbin/ccs-loadpolicy -m
+# chown -R $USER /proc/ccs/
+</pre>
+
+<p>デフォルト状態に戻すには以下のコマンドを実行してください：</p>
+
+<pre class="command">
+# echo "delete manage_by_non_root" | /usr/sbin/ccs-loadpolicy -m
+# chown -R root /proc/ccs/
+</pre>
+
+<p>もし、特定のユーザに対してポリシーの変更を認めたい場合、 <code>/etc/ccs/ccs-post-init</code> を使うことができます。このファイルが存在する場合、起動時に <code>/sbin/ccs-init</code> から実行されます。 tomoyo ユーザによる変更を認めたい場合、以下の内容で <code>/etc/ccs/ccs-post-init</code> を作成してください：</p>
+
+<pre>
+#! /bin/sh
+echo manage_by_non_root &gt; /proc/ccs/manager
+chown -R tomoyo /proc/ccs/
+</pre>
+
+<p>そして、このファイル実行可能にして、ポリシーディレクトリ以下を tomoyo ユーザが読み書きできるようにしてください：</p>
+
+<pre class="command">
+# chmod 755 /etc/ccs/ccs-post-init
+# chown -R tomoyo /etc/ccs/
+</pre>
+
+<p>例外として、学習モード用のプロファイルが割り当てられているドメインに属しているプロセスは、 <a href="chapter-9.html.ja#9.2.3">max_learning_entry</a> で指定されている数を上限として<a href="policy-specification/proc-interface.html.ja#self_domain">そのプロセスが属しているドメイン</a>に対してアクセス許可を追加していくことができます。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-7.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-9.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 7: ポリシーの適用はどのように行いますか？</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 9: より詳細なプロファイルの管理</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-8.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-24 05:31:57 +0000 (Thu, 24 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

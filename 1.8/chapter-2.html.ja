@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : 導入ガイド : Chapter 2</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-2.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-1.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-3.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 2: なぜ TOMOYO Linux が必要なのですか？</h2>
+
+<h3><a name="2.1">2.1. TOMOYO Linux とは何ですか？</a></h3>
+
+<p>TOMOYO Linux は Linux 向けの<strong>強制アクセス制御（ MAC ）</strong>の実装で、システムの解析やシステムのセキュリティを高めるために利用できます。このプロジェクトは２００３年３月に始まり、株式会社ＮＴＴデータがスポンサーとなって開発されています。技術的な情報については，『ネットワークセキュリティ Expert 5 』（技術評論社／ ISBN4-7741-2973-9 ）や <a href="http://tomoyo.sourceforge.jp/">SourceForge のプロジェクトページ</a>にて紹介しています。</p>
+
+<p><strong>TOMOYO Linux 1.x</strong> は、２００５年１１月１１日にＧＰＬライセンスで公開されたオリジナルの実装です。 Linux カーネルに対して適用可能なパッチの形式で実装されており、現在でも活発に開発が行われています。</p>
+
+<p><strong>TOMOYO Linux 2.x</strong> は、 Linux カーネルに統合されている実装です。２００９年６月に公開されたカーネル 2.6.30 に TOMOYO Linux １系の機能の一部が統合されました。 Linux カーネルが提供しているＬＳＭ（ Linux Security Module ）フックを利用しています。しかし、 TOMOYO Linux １系が提供している全ての機能を実装するためにはＬＳＭフックを拡張する必要があります。そのため、現時点では TOMOYO Linux １系が提供している全ての機能を TOMOYO Linux ２系で提供できているわけではありません。<a href="http://tomoyo.sourceforge.jp/comparison.html.ja">機能比較表</a>に、１系と２系との違いが説明されています。</p>
+
+<p>このガイドでは TOMOYO Linux 1.8.x について説明します。</p>
+
+<h3><a name="2.2">2.2. 強制アクセス制御とは何ですか？</a></h3>
+
+<p>通常のオペレーティングシステム（ OS ）では、<strong>プログラムやプロセスはほとんど制限されておらず</strong>、プログラムやプロセスは何でもすることができます（以下のイラストを参照してください）。セキュリティに配慮された OS では、プロセスが行うべきではない動作を行わせないようにするため（あるいはシステム管理者が具体的に阻止したい動作を行わせないようにするため）に何らかの形の制限が実装されるべきです。例えば、 Apache のような Web サーバは Web サービスだけを提供することが認められるべきです。そのサーバに対して、サービスを提供するのに不要なファイルへのアクセス権が与えられるべきではありませんし、他の無関係なプロセスを開始したり干渉したりする権限も与えられるべきではありません。 Linux のファイルシステムの機能であるアクセスコントロールリスト（ ACL ）で実現できる保護は僅かです（特に、多くのサービスが root ユーザの権限で動作する場合）。それに対して、強制アクセス制御はこの保護を一層強固なものにし、（ root ユーザの権限で動作しているプロセスも含む）それぞれのプロセスができることについて、とても正確な制御を行うことができます。（以下のイラストを参照してください。）これは、プロセスが侵害された場合に威力を発揮します。強制アクセス制御が存在しない場合、<strong>侵害されたプロセスは好き放題に振る舞うことができてしまうのです！</strong></p>
+
+<p><strong>普通のＯＳにおける制限されていないアクセス：</strong></p>
+<img src="media/fig-1-1.jpg" alt="fig-1-1.jpg" width="500" height="350">
+<p><strong>強制アクセス制御を搭載したＯＳにおける制限されたアクセス：</strong></p>
+<img src="media/fig-1-2.jpg" alt="fig-1-2.jpg" width="500" height="350">
+
+<p>それゆえ、強制アクセス制御は<strong>必要最小限の権限というポリシー</strong>を実現することができます。強制アクセス制御では、それぞれのプロセスができることについての定義を持ち、その定義のことをポリシーと呼びます。<strong>このポリシーは、本来の機能を提供するのに必要最小限のことだけが許可されます。</strong>もしプロセスやアプリケーションがポリシーで許可されていないことを試みた場合、その試みは拒否されます。そのため、望まない振る舞い（破壊活動など）を阻止することができます。</p>
+
+<h3><a name="2.3">2.3. TOMOYO Linux は何の役に立ちますか？</a></h3>
+
+<p>強制アクセス制御で大事なことの一つに、システム上に存在する全てのプロセス用のポリシーを定義して管理することが挙げられます。それを行うためには、それぞれのプロセスに対して許可されるべきことについての正確な知識が必要になります。これは極悪非道なまでに困難なことであり、また、高度な理解とスキルが必要になると思えるでしょう。しかし、 TOMOYO Linux では学習モードという機能によりポリシーを簡単かつ自動的に生成し、カスタマイズして適用するための素地を提供することができます。<strong> TOMOYO Linux の概念をしっかりと理解し、この学習モードと組み合わせることにより、短時間でシステムを安全にすることができます。</strong>習熟した Linux システム管理者であれば誰でも、その日の内に TOMOYO Linux をセットアップして使うことができます！</p>
+
+<p>制限が行われているシステムは、アプリケーションが侵害された際のダメージを軽減するのに役立ちます。例えば、バッファオーバーフロー攻撃などに起因するダメージを軽減できます。それゆえ、このような保護は Apache や SSH のようにインターネットに面しているサービスにとってとても重要です。最小権限のポリシーが適用されていれば、アプリケーションの制御を奪った遠隔の攻撃者がそれ以上システムを侵害することを防ぐことができるでしょう。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-1.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="chapter-3.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 1: はじめに</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 3: どうすれば TOMOYO Linux をインストールできますか？</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-2.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-02-13 23:38:34 +0000 (Sun, 13 Feb 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

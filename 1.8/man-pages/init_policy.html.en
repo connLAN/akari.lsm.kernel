@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<TITLE>TOMOYO Linux : init_policy man page</TITLE>
+</head>
+
+<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
+<!-- .\" -->
+<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
+<!-- .\" -->
+<!-- .\" You may distribute under the terms of the GNU General Public -->
+<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
+<!-- .\" ccs-tools source tarball. -->
+<!-- .\" -->
+<!-- .TH "INIT_POLICY" "8" "April 2011" "init_policy 1.8.1" "System Administration Utilities" -->
+<CENTER>
+<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>INIT_POLICY (8)</NOBR><HR></H1>
+</CENTER>
+<!-- .SH "NAME" -->
+<A name=>
+
+     <H3>NAME</H3>
+
+</A>
+<BLOCKQUOTE>
+init_policy - initialize TOMOYO Linux policy
+<!-- .SH "SYNOPSIS" -->
+</BLOCKQUOTE>
+<A name=1>
+
+     <H3>SYNOPSIS</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .B init_policy [options] -->
+<B>init_policy [options]</B> <!-- .SH "DESCRIPTION" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>DESCRIPTION</H3>
+
+</A>
+<BLOCKQUOTE>
+Thie program generates templates for all policy files. However, the output should be reviewed because automatically generated exception policy may contain dangerous or redundant entries.
+<!-- .SH "OPTIONS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>OPTIONS</H3>
+
+</A>
+<BLOCKQUOTE>
+<B>--file-only-profile</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Create profiles with only file-related functionality enabled.
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--full-profile</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Create profiles with all functionality enabled [default].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--use_profile=&lt;integer&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set the default profile number for the "&lt;kernel&gt;" domain to the specified integer, which must be between 0 and 255 [default=0].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--use_group=&lt;integer&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set the default group number for the "&lt;kernel&gt;" domain to the specified integer, which must be between 0 and 255 [default=0].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--max_audit_log=&lt;integer&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set the default maximal audit log entries that the kernel will spool in the <I>/proc/ccs/audit</I> interface. This value must be an integer, and can be set to 0 if audit logs are not required. Maximum memory used can also be controlled via the <I>/proc/ccs/stat</I> interface.
+<!-- .sp -->
+<P>
+[default=1024]
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--max_learning_entry=&lt;integer&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set the maximum number of ACL entries automatically added to each domain by the kernel when using learning mode. This value must be an integer, and can be set to "0" if you do not wawnt to make use of the learning mode. Maximum memory used can also be controlled using the <I>/proc/ccs/stat</I> interface.
+<!-- .sp -->
+<P>
+[default=2048]
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--enforcing_penalty=&lt;integer&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set the default penalty for enforcing mode to the specified integer. This will force a process to sleep the specified number of deciseconds (1 deciseconds = 0.1 second). This is useful to prevent CPU consumption issues by processes that rapidly repeat many access requests [default=0].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--grant_log=&lt;value&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set whether grant logs should be audited. This value can be either "yes" or "no" [default=no].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>--reject_log=&lt;value&gt;</B>
+<!-- .RS 4 -->
+<BLOCKQUOTE>
+Set whether reject logs should be audited. This value can be either "yes" or "no" [default=yes].
+<!-- .RE -->
+</BLOCKQUOTE>
+<!-- .SH "EXAMPLES" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>EXAMPLES</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .B Initialize policy: -->
+<B>Initialize policy:</B> <!-- .nf -->
+<PRE>
+/usr/lib/ccs/init_policy
+<!-- .fi -->
+</PRE>
+<!-- .SH "NOTES" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>NOTES</H3>
+
+</A>
+<BLOCKQUOTE>
+This program does not have to be run again after you have successfully initialized policy.
+<!-- .SH "BUGS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>BUGS</H3>
+
+</A>
+<BLOCKQUOTE>
+If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.sourceforge.jp">tomoyo-users-en@lists.sourceforge.jp</A>
+<!-- .SH "AUTHORS" -->
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>AUTHORS</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .sp -->
+Main authors:
+<BLOCKQUOTE>
+Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<BLOCKQUOTE>
+Other contributers:
+<BLOCKQUOTE>
+<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
+<P>Man pages, documentation and website.</P>
+<P>Naohiro Aoto &lt;naoto AT namazu.org&gt;</P>
+<P>Bug fix for 64bit Gentoo.</P>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<A name=>
+
+     <H3>SEE ALSO</H3>
+
+</A>
+<BLOCKQUOTE>
+<!-- .PP -->
+<P>
+<B>ccs-init</B>(8)
+<!-- .sp -->
+<P>
+See <A HREF="http://tomoyo.sourceforge.jp/">http://tomoyo.sourceforge.jp/</A> for more information.
+</BLOCKQUOTE>
+<P><HR>
+<TABLE width=100%><TR> <TD width=33%><I>init_policy 1.8.1</I></TD> <TD width=33% align=center>INIT_POLICY (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from init_policy using man macros.</FONT>
+</BODY></HTML>

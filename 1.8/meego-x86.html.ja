@@ -1,0 +1,485 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : TOMOYO Linux on MeeGo</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="meego-x86.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>TOMOYO Linux on MeeGo 1.1</h2>
+
+<p>このページでは、 TOMOYO Linux を <a href="http://meego.com/">MeeGo</a> で使う方法について説明します。</p>
+
+<ul>
+<li><a href="#step_1">ステップ１：エミュレータ環境の構築</a></li>
+<li><a href="#step_2">ステップ２：カーネルおよびツールの構築</a></li>
+<li><a href="#step_3">ステップ３： TOMOYO Linux の初期化</a></li>
+<li><a href="#step_4">ステップ４： MeeGo 環境の解析</a></li>
+</ul>
+
+<h3><a name="step_1">ステップ１：エミュレータ環境の構築</a></h3>
+
+<p>MeeGo handset UI イメージファイルをダウンロードして展開してください。</p>
+
+<pre class="command">
+$ cd
+$ wget http://download3.meego.com/sep03/meego-handset-ia32-1.0.80.9.20100706.1-sdk-pre0901.tar.bz2
+$ tar -jxf meego-handset-ia32-1.0.80.9.20100706.1-sdk-pre0901.tar.bz2 --strip 1
+</pre>
+
+<p>このイメージファイルに含まれている root ユーザのパスワードは meego です。</p>
+
+<p>このイメージファイルを QEMU 上で利用する場合には、 <a href="http://wiki.meego.com/MeeGo_SDK_with_QEMU">http://wiki.meego.com/MeeGo_SDK_with_QEMU</a> の指示に従って qemu-gl パッケージをダウンロードしてインストールしてください。</p>
+
+<pre class="command">
+$ wget http://download3.meego.com/qemu-gl_0.12.4-3_i386.deb
+$ sudo dpkg -i qemu-gl_0.12.4-3_i386.deb
+$ wget http://download3.meego.com/qemugl_cmd.sh
+$ chmod 755 qemugl_cmd.sh
+</pre>
+
+<p>以下のようにして QEMU を実行してください。</p>
+
+<pre class="command">
+$ ./qemugl_cmd.sh meego-handset-ia32-1.0.80.9.20100706.1-sdk-pre0901.raw
+</pre>
+
+<p>MeeGo 環境が正常に開始された場合、<a href="#step_2">ステップ２</a>へと進んでください。</p>
+
+<p>このイメージファイルを VMware 上で利用する場合には、若干の修正を行う必要があります。</p>
+
+<p>まず、４ＧＢの仮想ハードディスクを持った VMware 仮想マシンを作成してください。</p>
+
+<p>次に、 <a href="http://releases.ubuntu.com/lucid/ubuntu-10.04.2-desktop-i386.iso">http://releases.ubuntu.com/lucid/ubuntu-10.04.2-desktop-i386.iso</a> (MD5: 477350cbea8936c63d587cf2be69181b) などの LiveCD を利用して仮想マシンを起動してください。この ISO ファイルから起動した場合には、 gnome 端末を起動して root ユーザになってください。</p>
+
+<pre class="command">
+$ sudo bash
+</pre>
+
+<p>仮想ハードディスクのデバイス名を確認してください。以下の例では /dev/sda が仮想ハードディスクです。</p>
+
+<pre class="command">
+# fdisk -l
+</pre>
+
+<pre class="output">
+Disk /dev/sda: 4294 MB, 4294967296 bytes
+255 heads, 63 sectors/track, 522 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+Disk /dev/sda doesn't contain a valid partition table
+</pre>
+
+<p>ＳＳＨや curl や wget などを利用してこのイメージファイルを取得して、仮想ハードディスクに書き出してください。以下の vmwarehost という文字列は VMware を動作させているホスト側のＩＰアドレスに置き換えてください。</p>
+
+<pre class="command">
+# ssh root@vmwarehost 'cat ~/meego-handset-ia32-1.0.80.9.20100706.1-sdk-pre0901.raw' &gt; /dev/sda
+# fdisk /dev/sda
+</pre>
+
+<pre class="output">
+WARNING: DOS-compatible mode is deprecated. It's strongly recommended to
+         switch off the mode (command 'c') and change display units to
+         sectors (command 'u').
+
+Command (m for help): w
+The partition table has been altered!
+
+Calling ioctl() to re-read partition table.
+Syncing disks.
+</pre>
+
+<p>次に、その仮想ハードディスクの最初のパーティションを /mnt/ にマウントしてください。</p>
+
+<pre class="command">
+# fdisk -l
+</pre>
+
+<pre class="output">
+Disk /dev/sda: 4294 MB, 4294967296 bytes
+186 heads, 61 sectors/track, 739 cylinders
+Units = cylinders of 11346 * 512 = 5809152 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00097211
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1   *           1         517     2929687+  83  Linux
+Partition 1 has different physical/logical endings:
+     phys=(364, 185, 61) logical=(516, 79, 21)
+</pre>
+
+<pre class="command">
+# mount /dev/sda1 /mnt/
+</pre>
+
+<p>マウントしたパーティション内にある /etc/X11/xorg.conf-handset をテキストエディタで開いてください。</p>
+
+<pre class="command">
+# gedit /mnt/etc/X11/xorg.conf-handset
+</pre>
+
+<p>Device セクションにある Driver および BusID 行をコメントアウトしてください。以下に diff 形式の差分を示します。</p>
+
+<pre>
+--- a/etc/X11/xorg.conf-handset
++++ b/etc/X11/xorg.conf-handset
+@@ -32,10 +32,10 @@
+         #Option     "DefaultRefresh"     	# [&lt;bool&gt;]
+         #Option     "ModeSetClearScreen" 	# [&lt;bool&gt;]
+ 	Identifier  "Card0"
+-	Driver      "vesa"
++	#Driver      "vesa"
+ 	VendorName  "Technical Corp."
+ 	BoardName   "Unknown Board"
+-	BusID       "PCI:0:2:0"
++	#BusID       "PCI:0:2:0"
+ EndSection
+ 
+ Section "Screen"
+</pre>
+
+<p>ファイルを保存してエディタを終了してください。そして、パーティションをアンマウントしてください。</p>
+
+<pre class="command">
+# umount /mnt/
+</pre>
+
+<p>ＩＰアドレスを確認してください。このＩＰアドレスはＳＳＨを用いて MeeGo 環境にログインするときに使用します。このページでは以後、このＩＰアドレスを参照するために meegohost という文字列を使用します。</p>
+
+<pre class="command">
+# ifconfig eth0
+</pre>
+
+<pre class="output">
+eth0      Link encap:Ethernet  HWaddr 00:0c:29:99:19:08
+          inet addr:192.168.1.2  Bcast:192.168.1.255  Mask:255.255.255.0
+          inet6 addr: 2001:c90:301:ba9:20c:29ff:fe99:1908/64 Scope:Global
+          inet6 addr: fe80::20c:29ff:fe99:1908/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:2210718 errors:39 dropped:40 overruns:0 frame:0
+          TX packets:270495 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:3299820248 (3.2 GB)  TX bytes:19256240 (19.2 MB)
+          Interrupt:19 Base address:0x2000
+</pre>
+
+<p>システムを再起動します。</p>
+
+<pre class="command">
+# reboot
+</pre>
+
+<p>MeeGo 環境が正常に開始された場合、<a href="#step_2">ステップ２</a> へと進んでください。問題が生じた場合、以下の内容を確認してください。</p>
+
+<p>ＳＳＨを使って MeeGo 環境にログインしてください。パスワードは meego です。</p>
+
+<pre class="command">
+$ ssh root@meegohost
+</pre>
+
+<p>次に、 /var/log/Xorg.log.0 に含まれている (EE) という文字列を含む行を確認してください。例えば、以下のように ioctl EVIOCGNAME failed: Inappropriate ioctl for device というエラーが記録されている場合、 X に対してそのデバイスを無視するように伝える必要があるかもしれません。</p>
+
+<pre class="output">
+[    35.030] (II) XKB: reuse xkmfile /var/lib/xkb/server-D378AD8F86E560F712A83EE36E4E5E92C595B9BD.xkm
+[    35.093] (II) config/udev: Adding input device AT Translated Set 2 keyboard (/dev/input/event1)
+[    35.094] (**) AT Translated Set 2 keyboard: Applying InputClass "default"
+[    35.094] (**) AT Translated Set 2 keyboard: always reports core events
+[    35.094] (**) AT Translated Set 2 keyboard: Device: "/dev/input/event1"
+[    35.094] (II) AT Translated Set 2 keyboard: Found keys
+[    35.094] (II) AT Translated Set 2 keyboard: Configuring as keyboard
+[    35.094] (II) XINPUT: Adding extended input device "AT Translated Set 2 keyboard" (type: KEYBOARD)
+[    35.094] (**) Option "xkb_rules" "evdev"
+[    35.094] (**) Option "xkb_model" "evdev"
+[    35.094] (**) Option "xkb_layout" "us"
+[    35.096] (II) config/udev: Adding input device ImPS/2 Generic Wheel Mouse (/dev/input/event2)
+[    35.096] (**) ImPS/2 Generic Wheel Mouse: Applying InputClass "default"
+[    35.096] (**) ImPS/2 Generic Wheel Mouse: always reports core events
+[    35.096] (**) ImPS/2 Generic Wheel Mouse: Device: "/dev/input/event2"
+[    35.096] (II) ImPS/2 Generic Wheel Mouse: Found 3 mouse buttons
+[    35.096] (II) ImPS/2 Generic Wheel Mouse: Found scroll wheel(s)
+[    35.096] (II) ImPS/2 Generic Wheel Mouse: Found relative axes
+[    35.096] (II) ImPS/2 Generic Wheel Mouse: Found x and y relative axes
+[    35.096] (II) ImPS/2 Generic Wheel Mouse: Configuring as mouse
+[    35.097] (**) ImPS/2 Generic Wheel Mouse: YAxisMapping: buttons 4 and 5
+[    35.097] (**) ImPS/2 Generic Wheel Mouse: EmulateWheelButton: 4, EmulateWheelInertia: 10, EmulateWheelTimeout: 200
+[    35.097] (II) XINPUT: Adding extended input device "ImPS/2 Generic Wheel Mouse" (type: MOUSE)
+[    35.098] (**) ImPS/2 Generic Wheel Mouse: (accel) keeping acceleration scheme 1
+[    35.098] (**) ImPS/2 Generic Wheel Mouse: (accel) acceleration profile 0
+[    35.098] (**) ImPS/2 Generic Wheel Mouse: (accel) acceleration factor: 2.000
+[    35.098] (**) ImPS/2 Generic Wheel Mouse: (accel) acceleration threshold: 4
+[    35.098] (II) ImPS/2 Generic Wheel Mouse: initialized for relative axes.
+[    35.099] (II) config/udev: Adding input device ImPS/2 Generic Wheel Mouse (/dev/input/mouse0)
+[    35.100] (**) ImPS/2 Generic Wheel Mouse: Applying InputClass "default"
+[    35.100] (**) ImPS/2 Generic Wheel Mouse: always reports core events
+[    35.100] (**) ImPS/2 Generic Wheel Mouse: Device: "/dev/input/mouse0"
+[    35.100] (EE) ioctl EVIOCGNAME failed: Inappropriate ioctl for device
+[    35.100] (II) UnloadModule: "evdev"
+[    35.100] (EE) PreInit returned NULL for "ImPS/2 Generic Wheel Mouse"
+</pre>
+
+<p>X に特定のデバイス（上記の例の場合は ImPS/2 Generic Wheel Mouse (/dev/input/mouse0) ）を無視するように指示するには、以下のようなセクションを追加してシステムを再起動してください。</p>
+
+<pre>
+--- a/etc/X11/xorg.conf-handset
++++ b/etc/X11/xorg.conf-handset
+@@ -23,6 +23,13 @@
+ 	ModelName    "Monitor Model"
+ EndSection
+ 
++Section "InputClass"
++	Identifier "ImPS/2 Generic Wheel Mouse"
++	MatchProduct "ImPS/2 Generic Wheel Mouse"
++	MatchDevicePath "/dev/input/mouse0"
++	Option "Ignore" "on"
++EndSection
++
+ Section "Device"
+         ### Available Driver options are:-
+         ### Values: &lt;i&gt;: integer, &lt;f&gt;: float, &lt;bool&gt;: "True"/"False",
+</pre>
+
+<p>次のステップに進む前に、現時点までで起きている問題を解決しておいてください。</p>
+
+<h3><a name="step_2">ステップ２：カーネルおよびツールの構築</a></h3>
+
+<p>カーネルおよびツールのコンパイルに必要な環境を用意してください。このセクションでは rpmbuild コマンドを利用できるようにするために Fedora 13 を利用しています。</p>
+
+<p>まず、コンパイルに必要なパッケージをインストールします。</p>
+
+<pre class="command">
+$ su -
+# yum -y install wget gcc rpm-build elfutils-libelf-devel binutils-devel newt-devel ncurses-devel
+# exit
+</pre>
+
+<p>次に、カーネルのソースパッケージをダウンロードします。</p>
+
+<pre class="command">
+$ cd
+$ wget http://repo.meego.com/MeeGo/builds/1.0.99/1.0.99.2.20101019.1/core/repos/source/kernel-2.6.35.3-10.3.src.rpm
+</pre>
+
+<p>次に、ソースパッケージをインストールして、準備段階の処理を実行します。</p>
+
+<pre class="command">
+$ rpm -ivh kernel-2.6.35.3-10.3.src.rpm
+$ rpmbuild -bp ~/rpmbuild/SPECS/kernel.spec
+$ cd ~/rpmbuild/BUILD/kernel-2.6.35.3/linux-2.6.35/
+</pre>
+
+<p>このカーネルを QEMU 上で動作させようとしている場合、カーネルパッチをダウンロードして適用してください。このカーネルを VMware 上で動作させようとしている場合にはパッチを当てる必要はありません。</p>
+
+<pre class="command">
+$ wget http://meego.gitorious.org/meego-developer-tools/meego-emulator-virtiogl-x86/blobs/raw/master/linux-2.6.35-virtio-for-qemu-gl-acceleration.patch
+$ patch -p1 &lt; linux-2.6.35-virtio-for-qemu-gl-acceleration.patch
+</pre>
+
+<p>次に、カーネルコンフィグを作成します。 QEMU 上で動作している MeeGo 環境から取得するには以下のようにしてください。</p>
+
+<pre class="command">
+$ scp -p -P 6666 root@127.0.0.1:/boot/config-\* .config
+</pre>
+
+<p>VMware 上で動作している MeeGo 環境から取得するには以下のようにしてください。</p>
+
+<pre class="command">
+$ scp -p root@meegohost:/boot/config-\* .config
+</pre>
+
+<p>次に、カーネルコンフィグをアップデートします。このカーネルを QEMU 上で動作させようとしている場合には、 Virtio userspace memory transport という項目に対して y または m と回答することを忘れないでください。</p>
+
+<pre class="command">
+$ make -s oldconfig
+</pre>
+
+<p>MeeGo カーネルは ext3 ファイルシステムイメージをマウントする際に writeback モードを使用しています。しかし、 writeback モードを使用した場合、 QEMU や VMware が突然終了してしまった場合にファイルが損傷（例えば既に削除されたファイルに含まれていたデータが暗黙のうちに直前に書き込まれたファイルの中に取り込まれる）する可能性があります。 ext3 ファイルシステムイメージをマウントする際に ordered モードを使用したい場合には以下のようにカーネルコンフィグを変更してください。</p>
+
+<pre class="command">
+$ sed -i -e 's/# CONFIG_EXT3_DEFAULTS_TO_ORDERED is not set/CONFIG_EXT3_DEFAULTS_TO_ORDERED=y/' -- .config
+</pre>
+
+<p>カーネルのデバッグを行うつもりが無いのであれば、コンパイルに要する時間とディスクスペースを節約することができます。カーネルのデバッグを行うつもりが無いのであれば、以下のようにカーネルコンフィグを変更してください。</p>
+
+<pre class="command">
+$ sed -i -e 's/CONFIG_DEBUG_INFO=y/# CONFIG_DEBUG_INFO is not set/' -- .config
+</pre>
+
+<p>次に、 TOMOYO Linux パッチをダウンロードして適用してください。</p>
+
+<pre class="command">
+$ wget -O ccs-patch-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz'
+$ wget -O ccs-patch-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz.asc'
+$ gpg ccs-patch-1.8.1-20110511.tar.gz.asc
+$ tar -zxf ccs-patch-1.8.1-20110511.tar.gz
+$ patch -p1 &lt; patches/ccs-patch-2.6.35.diff
+$ cat config.ccs &gt;&gt; .config
+</pre>
+
+<p>次に、カーネルをコンパイルしてください。</p>
+
+<pre class="command">
+$ make -s
+</pre>
+
+<p>ツールをダウンロードしてコンパイルしてください。</p>
+
+<pre class="command">
+$ cd ~/rpmbuild/BUILD/
+$ wget -O ccs-tools-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz'
+$ wget -O ccs-tools-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz.asc'
+$ gpg ccs-tools-1.8.1-20110511.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.1-20110511.tar.gz
+$ make -sC ccstools/
+</pre>
+
+<p>一時的にカーネルおよびツールを保持しておくためのディレクトリを作成して、そこにコピーしてください。</p>
+
+<pre class="command">
+$ su
+# mkdir -p /tmp/meego/boot/extlinux/
+# make -sC ccstools/ INSTALLDIR=/tmp/meego/ install
+# cd kernel-2.6.35.3/linux-2.6.35/
+# make -s INSTALL_MOD_PATH=/tmp/meego/ modules_install vdso_install
+# make -s INSTALL_PATH=/tmp/meego/boot/extlinux/ install
+# chmod -R go-w /tmp/meego/
+# chown -R root:root /tmp/meego/
+# exit
+</pre>
+
+<p>カーネルおよびツールをコピーしてください。 QEMU 上で動作している MeeGo 環境へコピーするには以下のようにしてください。</p>
+
+<pre class="command">
+$ cd /tmp/meego/
+$ tar -zcf - | ssh root@127.0.0.1 -p 6666  'cd / &amp;&amp; tar -zxf -'
+</pre>
+
+<p>VMware 上で動作している MeeGo 環境へコピーするには以下のようにしてください。</p>
+
+<pre class="command">
+$ cd /tmp/meego/
+$ tar -zcf - | ssh root@meegohost 'cd / &amp;&amp; tar -zxf -'
+</pre>
+
+<h3><a name="step_3">ステップ３： TOMOYO Linux の初期化</a></h3>
+
+<p>ＳＳＨ経由で MeeGo 環境にログインしてください。</p>
+
+<p>TOMOYO Linux の初期設定を行います。</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy --use_profile=1
+</pre>
+
+<p>ブートローダの設定を変更します。</p>
+
+<pre class="command">
+# vi /boot/extlinux/extlinux.conf
+</pre>
+
+<p>extlinux.conf を以下のように編集してください。</p>
+
+<pre>
+--- extlinux.conf
++++ extlinux.conf
+@@ -18,7 +18,7 @@
+ menu color timeout 0 #ffffffff #00000000
+ menu color cmdline 0 #ffffffff #00000000
+ label meego0
+-	menu label MeeGo (2.6.35~rc6-134.1-qemu)
+-	kernel vmlinuz-2.6.35~rc6-134.1-qemu
+-	append ro root=/dev/sda1 quiet vga=current quiet
++	menu label MeeGo (2.6.35.3)
++	kernel vmlinuz-2.6.35.3
++	append ro root=/dev/sda1 vga=current
+ 	menu default
+</pre>
+
+<p>ファイルを保存して MeeGo 環境を再起動してください。</p>
+
+<pre class="command">
+# reboot
+</pre>
+
+<h3><a name="step_4">ステップ４： MeeGo 環境の解析</a></h3>
+
+<p>ＳＳＨセッションから操作することができます。 /boot/extlinux/extlinux.conf から quiet オプションを削除すると、 ALT + F1 キーを押すとコンソール画面に、 ALT + F2 キーを押すとグラフィカル画面に切り替えることができるようになります。また、以下のようにするとグラフィカル画面上に xterm を配置することもできます。</p>
+
+<pre class="command">
+# export DISPLAY=:0
+# xterm -into `xwininfo -root -tree -int | awk ' { if ( index($2, "duihome") &gt; 0) print $1; } '`
+</pre>
+
+<p>以下の動画では TOMOYO Linux を用いて MeeGo 環境の振る舞いを解析しています。</p>
+
+<object data="http://www.youtube.com/v/H9aZv49d2iw?fs=1&amp;hl=en_US&amp;rel=0" type="application/x-shockwave-flash" width="640" height="385"><param name="movie" value="http://www.youtube.com/v/H9aZv49d2iw?fs=1&amp;hl=en_US&amp;rel=0"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object>
+
+<ul>
+<li><a href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a>：ポリシーエディタの詳細な使い方</li>
+</ul>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="meego-x86.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-05-11 12:21:55 +0100 (Wed, 11 May 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : The Official Guide : Chapter 12</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
+<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-12.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-11.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-13.html.en">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 12: Reinforced authentication</h2>
+
+<h3><a name="12.1">12.1. Illegal SSH logins</a></h3>
+
+<p>Illegal logins can occur for example through SSH brute force attacks, or through vulnerabilities in other Internet-facing services. It is possible to add another layer of defence using a tiered authentication system. Using TOMOYO Linux, you can enforce login authentication as many times as you want. Suppose we create the following script:</p>
+
+<pre>
+#! /bin/sh -p
+read -r -s -e -p "Password: " password
+sleep 2
+if [ "$password" = "123456" ]; then
+  exec $SHELL
+else
+  echo "Authentication failed."
+fi
+</pre>
+
+<p>Call this script "auth1", make it executable and place it in "/bin/" directory. This is only an example script, but it does not matter that the password is in plaintext as the attacker can be denied from reading the script. See <a href="#12.3">12.3. Example authentication programs</a> for more examples. Suppose we have the following in exception policy:</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>Now we can manage the domain "&lt;kernel&gt; /usr/sbin/sshd /bin/bash", but make sure that the <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directive is not specified for this domain. Use domain policy to restrict this domain and only allow the execution of the "auth1" script, but no other programs:</p>
+
+<pre>
+file execute /bin/auth1 exec.realpath="/bin/auth1"
+</pre>
+
+<p>Following login through SSH, the user must go through another authentication mechanism. If this is an illegal login from an attacker, then they will not be able to know what the authentication mechanism is. Ths script above can employ as foreign an authentication mechanism as you desire.</p>
+
+<p>The domain created following successful authentication can be given normal privileges, and for example may be given the entry below in exception policy:</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/auth1 /bin/bash
+</pre>
+
+<img src="media/fig-6-2.png" alt="fig-6-2.png" width="600" height="450">
+
+<h3><a name="12.2">12.2. Splitting root permissions</a></h3>
+
+<p>Using this tiered approach, it is also possible to split root permissions. The script can be repeated with a different password and saved as "/bin/auth2". The domain created by execution of "auth1" can be given maximum privileges using domain policy, but the domain create by execution of "auth2" can be given limited privileges, such as to administrate only the web server:</p>
+
+<img src="media/fig-6-14-en.png" alt="fig-6-14-en.png" width="600" height="450">
+
+<h3><a name="12.3">12.3. Example authentication programs</a></h3>
+
+<p>This example script is the same as above, but stores the password as a hash:</p>
+
+<pre class="command">
+echo "password" | sha1sum
+</pre>
+
+<pre class="output">
+c8fed00eb2e87f1cee8e90ebbe870c190ac3848c  -
+</pre>
+
+<pre>
+#!/bin/sh -p
+
+hash="c8fed00eb2e87f1cee8e90ebbe870c190ac3848c  -"
+
+read -r -s -e -p "Password: " password
+hash_attempt="$(echo "$password" | sha1sum)"
+sleep 2
+if [ "$hash_attempt" = "$hash" ]; then
+  exec $SHELL
+else
+  echo "Authentication failed"
+fi
+</pre>
+
+<p>Example authentication programs are listed below. But these programs exist only as examples of how you might design unique authentication methods. Some of the algorithms are poor and should not be used in a production environment. The source code for these programs are included in the ccs-tools source tarball, but can also be found in our <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools/examples/?root=tomoyo">subversion repository</a>.</p>
+
+<div class="simple-table-wrap">
+<table border="1">
+<tr><td><code><a name="candy">candy</a></code></td><td><p>This authentication program succeeds if the correct password is typed, but only if the program is launched within 10 seconds of the parent process (e.g. "/bin/bash") being launched. If the program is not launched within this time period, then all password attempts will fail. This is useful in preventing brute force attacks, and the attacker will not know that no attempt can succeed.</p></td></tr>
+<tr><td><code><a name="chaplet">chaplet</a></code></td><td><p>This authentication program displays a string of challenge data, and authentication will succeed only if the numerical characters from the challenge data are typed. This is only an example and the algorithm is poor. It should be customized before use in a production environment.</p></td></tr>
+<tr><td><code><a name="checktoken_gettoken">checktoken/gettoken</a></code></td><td><p>These authentication programs use tokens based on system time. The <code>gettoken</code> program generates a token to be checked by <code>checktoken</code>. Authentication will succeed if the correct token is generated. This is only an example and the algorithm is poor. It should be customized before use in a production environment.</p></td></tr>
+<tr><td><code><a name="groovy">groovy</a></code></td><td><p>This authentication program prompts for a password, but does not check the password. Instead, it checks for the existence of the file "/tmp/.lockme", succeeding only when this file does not exist. This can prevent brute force attacks. This is only an example and uses a file location that is apparent to attackers. It should be customized before use in a production environment.</p></td></tr>
+<tr><td><code><a name="honey">honey</a></code></td><td><p>This authentication program fails unless the correct password is typed within the correct time interval. This can prevent brute force attacks.</p></td></tr>
+<tr><td><code><a name="mailauth">mailauth</a></code></td><td><p>This authentication program generates a one-time password and sends it to the user using <code>mail</code>. The authentication succeeds if the user inputs this password. To use this program, a mail server is required.</p></td></tr>
+<tr><td><code><a name="timeauth">timeauth</a></code></td><td><p>This authentication program is a reimplementation of <code><a href="#honey">honey</a></code> that makes use of an external script.</p></td></tr>
+</table>
+</div>
+
+<p>Also, below examples can be useful when you use reinforced authentication.</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr><td><code><a name="falsh">falsh</a></code></td><td><p>This is a very restricted shell with no built-in commands. Since login shell such as /bin/bash provides many built-in commands such as <code>kill</code>, an attacker can do bad things (e.g. killing processes) without executing external programs even if execution of executing external programs are restricted by TOMOYO Linux. To prevent the attacker from using shell's built-in commands, you may want to use this shell as a login shell when using reinforced authentication.</p></td></tr>
+<tr><td><code><a name="proxy">proxy</a></code></td><td><p>This is a simple port forwarder program. This program can be used by the client to bind to a specific local port on the server so that the server-side firewall, such as <code>iptables</code> can use packet filtering based on the port number of the client.</p></td></tr>
+</table>
+</div>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-11.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="chapter-13.html.en">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 11: Using ACL groups</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Chapter 13: Judging execute requests outside of the kernel</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-12.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-27 06:23:40 +0100 (Sun, 27 Mar 2011) $</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../../media/tomoyolinux.css" media="all" type="text/css">
+<title>TOMOYO Linux 1.8.x : ポリシー仕様 : ドメイン遷移</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../../index.html.ja"><img src="../../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../../index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../../about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="../../download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="../../changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="../../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="domain-transition-procedure.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div id="navheader">
+<p><a href="proc-interface.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="expression-rules.html.ja">&lt;次&gt;</a></p>
+</div>
+
+<h2>ドメイン遷移</h2>
+
+<p>ドメイン遷移には２種類あります。１つはプログラムの実行要求（ execve() システムコール）を伴うドメイン遷移です。もう１つはプログラムの実行要求を伴わないドメイン遷移です。</p>
+
+<h3><a name="transition_by_execute">プログラム実行要求による遷移</a></h3>
+
+<p>この種類のドメイン遷移はアクセス制御のモードに依存します。プロファイルの <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::file または CONFIG::file::execute</a> （後者が前者より優先されます）で mode=enforcing という設定が行われていない限り、ドメイン遷移が失敗（ドメイン名が長すぎるかドメインを作成するためのメモリを割り当てることができなかった場合に発生します）してもプログラムの実行要求は拒否されません。</p>
+
+<p>プロセスがプログラムを実行しようとすると、以下の処理が行われます。</p>
+
+<p><strong>[source]</strong> は現在のドメイン名（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash ）または現在のドメイン名の最後のパス名（例： /bin/bash ）を表します。</p>
+
+<p><strong>[destination]</strong> はプログラムの実行要求が成功した場合に遷移するドメイン名（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat ）を表します。</p>
+
+<p><strong>[candidate]</strong> はパーミッションのチェックの対象となるパス名（例： /bin/cat ）で、 [destination] を計算するときにも使われるパス名を表します。</p>
+
+<div class="simple-table-wrap">
+<table>
+<tr>
+<th><p>ステップ</p></th>
+<th><p>内容</p></th>
+</tr>
+<tr>
+<td><p>(1) <a href="domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> ディレクティブのチェック</p></td>
+<td><p>
+もし、 task auto_execute_handler [pathname] というエントリが存在している場合、 [pathname] を [candidate] としてステップ (6) へと進みます。</p></td>
+</tr>
+<tr>
+<td><p>(2) プログラムのパス名を取得</p></td>
+<td><p>要求されたプログラムのパス名を取得し、それを [candidate] とします。<br>
+シンボリックリンクとして提供されているプログラムに対処するために、パス名の最後のシンボリックリンクは解決しないようにします。</p></td>
+</tr>
+<tr>
+<td><p>(3) <a href="exception-policy-syntax.html.ja#aggregator">aggregator</a> ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに aggregator [candidate] [pathname] というエントリが存在している場合、 [pathname] を [candidate] にします。</p></td>
+</tr>
+<tr>
+<td><p>(4) <a href="domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブのチェック</p></td>
+<td><p>もし、 file execute [candidate] というエントリが存在しているか、あるいは現在のドメインに割り当てられているプロファイルのモードが mode=enforcing では無い場合、ステップ (6) へと進みます。</p></td>
+</tr>
+<tr>
+<td><p>(5) <a href="domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブのチェック</p></td>
+<td><p>
+もし、 task denied_execute_handler [pathname] というエントリが存在している場合、 [pathname] を [candidate] にします。<br>
+存在しない場合、実行要求は拒否されます。</p></td>
+</tr>
+<tr>
+<td><p>(6) <a href="exception-policy-syntax.html.ja#no_initialize_domain">no_initialize_domain</a> ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに no_initialize_domain [candidate] from [source] または no_initialize_domain any from [source] または no_initialize_domain any from any というエントリが存在している場合、ステップ (8) へと進みます。</p></td>
+</tr>
+<tr>
+<td><p>(7) <a href="exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに initialize_domain [candidate] from [source] または initialize_domain any from [source] または initialize_domain any from any というエントリが存在している場合、 &lt;kernel&gt; [candidate] を [destination] としてステップ (10) へと進みます。</p></td>
+</tr>
+<tr>
+<td><p>(8) <a href="exception-policy-syntax.html.ja#no_keep_domain">no_keep_domain</a> ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに no_keep_domain [candidate] from [source] または no_keep_domain any from [source] または no_keep_domain any from any というエントリが存在している場合、現在のドメイン名と [candidate] を連結したドメイン名を [destination] としてステップ (10) へと進みます。</p></td>
+</tr>
+<tr>
+<td><p>(9) <a href="exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに keep_domain [candidate] from [source] または keep_domain any from [source] または keep_domain any from any というエントリが存在している場合、現在のドメイン名を [destination] とします。<br>
+存在しない場合、現在のドメイン名と [candidate] を連結したドメイン名を [destination] とします。</p></td>
+</tr>
+<tr>
+<td><p>(10) 遷移先ドメインの作成</p></td>
+<td><p>ステップ (6) ～ (9) で計算された [destination] ドメインが存在しない場合には作成します。<br>
+もし、 [destination] ドメインを作成することができず、かつ現在のドメインに割り当てられているプロファイルのモードが mode=enforcing の場合、実行要求は拒否されます。<br>
+そうではない場合、 <a href="domain-policy-syntax.html.ja#transition_failed">transition_failed</a> ディレクティブを設定して、ドメイン遷移を行わないまま実行要求の処理を継続します。</p></td>
+</tr>
+<tr>
+<td><p>(11) 環境変数のチェック</p></td>
+<td><p>もし、１個以上の環境変数の許可が [destination] ドメインに与えられておらず、かつ [destination] ドメインに割り当てられているプロファイル（ <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::misc または CONFIG::misc::env</a> （後者が前者より優先されます））のモードが mode=enforcing の場合、実行要求は拒否されます。</p></td>
+</tr>
+<tr>
+<td><p>(12) プログラムの実行</p></td>
+<td><p>もし、カレントプロセスが要求されたプログラムによって正常に置き換えられた場合、カレントプロセスは [destination] ドメインへと遷移します。</p></td>
+</tr>
+</table>
+</div>
+
+<h3><a name="transition_by_non_execute">プログラム実行要求によらない遷移</a></h3>
+
+<p>この種類のドメイン遷移はアクセス制御のモードに依存しません。ポリシーで許可されていないドメイン遷移要求は常に拒否されます。</p>
+
+<p>もし、ドメインに対して <a href="domain-policy-syntax.html.ja#task_auto_domain_transition">task auto_domain_transition</a> ディレクティブが指定されていた場合、カレントプロセスは条件節で指定されている条件を満たした時点で自動的にそのディレクティブで指定されたドメインへと遷移します。この遷移はプログラムの実行要求時だけでなくファイルのオープンのような全てのアクセス要求時にチェックされます。</p>
+
+<p>もし、ドメインに対して <a href="domain-policy-syntax.html.ja#task_manual_domain_transition">task manual_domain_transition</a> ディレクティブが指定されていた場合、カレントプロセスは <a href="proc-interface.html.ja#self_domain">/proc/ccs/self_domain</a> インタフェースに対してこのディレクティブで指定されているドメイン名を書き込むことにより、そのドメインへと遷移します。</p>
+
+<p>もし、ドメインポリシーのアクセス許可に auto_domain_transition="name" という条件が指定されており、カレントプロセスがそのアクセス許可に一致するアクセス要求を行った場合、カレントプロセスは「現在のドメイン名」と「 name で指定されたパス名」とを連結したドメイン名を持つドメインへと遷移します。この遷移は、アクセス許可のチェック時点で行われるものであるため、アクセス要求がアクセス許可に一致することによりドメイン遷移が発生した後にアクセス要求が失敗する可能性があります。注意して利用してください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="proc-interface.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="expression-rules.html.ja">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>A1: /proc/ccs/ インタフェース</p>
+</td>
+<td class="docs-home">
+<a href="../index.html.ja">大目次</a>
+</td>
+<td class="docs-next-description">
+<p>A3: 表記規則</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="domain-transition-procedure.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date: 2011-03-23 04:40:27 +0000 (Wed, 23 Mar 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

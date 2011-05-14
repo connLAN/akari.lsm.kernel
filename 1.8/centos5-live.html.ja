@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media.centos5/tomoyolinux.css" media="all" type="text/css">
+<link rev="made" href="mailto:k.takeda26@gmail.com"> 
+<title>TOMOYO Linux LiveCD Tutorial for CentOS 5</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media.centos5/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="http://tomoyo.sourceforge.jp/index.html.ja" title="TOMOYO Linux ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="http://tomoyo.sourceforge.jp/about.html.ja" title="TOMOYO Linux の詳細">詳細</a></li>
+<li id="tomoyo-download"><a href="http://tomoyo.sourceforge.jp/download.html.ja" title="TOMOYO Linux を入手">ダウンロード</a></li>
+<li id="tomoyo-changelogs"><a href="http://tomoyo.sourceforge.jp/changelogs.html.ja" title="TOMOYO Linux 変更履歴">変更履歴</a></li>
+<li id="tomoyo-documentation"><a href="http://tomoyo.sourceforge.jp/documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="http://tomoyo.sourceforge.jp/support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="http://tomoyo.sourceforge.jp/links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="centos5-live.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<h2>TOMOYO Linux LiveCD Tutorial for CentOS 5</h2>
+
+<ul>
+<li><a href="#l1">このページについて</a></li>
+<li><a href="#l2">LiveCD を入手する</a></li>
+<li><a href="#l3">LiveCD で起動する</a></li>
+<li><a href="#l4">LiveCD を使ってみる</a></li>
+<li><a href="#l5">アクセスを制限してみる</a></li>
+<li><a href="#l6">さらに TOMOYO Linux を使いこなす</a></li>
+</ul>
+
+<h3><a name="l1">このページについて</a></h3>
+
+<p>このページでは TOMOYO Linux の LiveCD の使い方について解説します。 TOMOYO Linux LiveCD は、 CD で起動できる Linux ディストリビューションである CentOS に、 TOMOYO Linux カーネルとツールをインストールして基本的な設定を行った状態で配布している CD イメージです。 TOMOYO Linux LiveCD を使うことで、既存の環境に影響を与えることなく手軽に TOMOYO Linux を体験できます。</p>
+
+<h3><a name="l2">LiveCD を入手する</a></h3>
+
+<p>TOMOYO Linux LiveCD の ISO イメージは、 TOMOYO Linux プロジェクトの <a href="http://tomoyo.sourceforge.jp/wiki/?TomoyoLive#g348fbb7">LiveCD のページ</a>からダウンロードできます。</p>
+
+<p>ダウンロードした ISO イメージは書き込みソフトで CD-R に焼いてください。
+CD-R に焼きたくない場合、 <a href="http://www.vmware.com/jp/products/player/">VMware Player</a> を使うことで ISO イメージのまま TOMOYO Linux LiveCD を起動することもできます。</p>
+
+<h3><a name="l3">LiveCD で起動する</a></h3>
+
+<p>CD-R に焼いた LiveCD を CD-ROM ドライブに入れてマシンを起動するか、前節で紹介した方法で VMware Player 上で ISO イメージから起動してください。
+以下のようなデスクトップが表示されれば起動完了です。
+通常の CentOS LiveCD とほとんど同じですが、デスクトップに TOMOYO Linux 関連のアイコンが追加されています：</p>
+
+<p><img src="media.centos5/desktop.png" width="800" height="600" alt="デスクトップ" title="デスクトップ"></p>
+
+<p>「 Keyboard 」アイコンをダブルクリックすると、キーボードの種類を指定できます：</p>
+
+<p><img src="media.centos5/kbdselect-ja.png" width="800" height="600" alt="キーマップ選択" title="キーマップ選択"></p>
+
+<h3><a name="l4">LiveCD を使ってみる</a></h3>
+
+<p>まずは「 TOMOYO Linux Policy Violation Log 」アイコンをダブルクリックしてみてください。
+以下のようなウィンドウが表示されます：</p>
+
+<p><img src="media.centos5/reject_log.png" width="800" height="600" alt="ポリシー違反ログウィンドウ" title="ポリシー違反ログウィンドウ"></p>
+
+<p>この画面は TOMOYO Linux のポリシーに違反したアクセスログを表示しています。
+新たなポリシー違反が発生すればすぐに表示されるようになっています。
+LiveCD では何の許可も与えていないポリシーで起動されるので、全てのアクセスがポリシー違反ログとして出力されます。
+ウィンドウを開いたままで、さまざまな操作をしてみてください。
+どんなプロセスがどんな資源にアクセスしたかが逐次表示されます。</p>
+
+<p>続けて、「 TOMOYO Linux Policy Editor 」アイコンをダブルクリックしてみてください。
+以下のようなウィンドウが表示されます：</p>
+
+<p><img src="media.centos5/editpolicy.png" width="800" height="600" alt="ポリシーエディタウィンドウ" title="ポリシーエディタウィンドウ"></p>
+
+<p>この画面には今までにどのようなプロセスが起動されたかを木構造で表示しており、それぞれの行はドメインと呼ばれます。
+システム起動時から、実行されたすべてのプロセスがTOMOYO Linuxカーネルで監視されています。
+どんなプロセスがどんな資源にアクセスしたかなどの情報が、すべてポリシーとして記録されています。
+ポリシーエディタを使ってポリシーをブラウズするだけで、システムの挙動を手に取るように把握することができます。
+これが TOMOYO Linux の最大の特徴です。</p>
+
+<p>ポリシーエディタの最初の画面では、 &lt;kernel&gt; を基点として、どんなプロセスがどんなプロセスを起動したのかが木構造で表示されます。
+カーソルキーや PageUp ／ PageDown キーで適当にスクロールして、システム内でどんなプロセスが起動されたかを調べてみてください。</p>
+
+<p>試しに gnome-terminal というプロセスを探してみましょう。
+'F' キーを押すと最下行に検索のための１行入力が表示されます。
+そこに 'gnome-terminal' と入力して Enter キーを押してください：</p>
+
+<p><img src="media.centos5/find.png" width="800" height="600" alt="gnome-terminal を検索" title="gnome-terminal を検索"></p>
+
+<p>gnome-terminal の下には /usr/bin/sudo という行が存在し、さらにその下に、 /usr/bin/tail や /usr/sbin/ccs-editpolicy という行が存在するのが見てとれます：</p>
+
+<p><img src="media.centos5/domain_gnome-terminal.png" width="800" height="600" alt="gnome-terminal のドメイン周辺" title="gnome-terminal のドメイン周辺"></p>
+
+<p>表示されている /usr/bin/tail の行にカーソルを合わせて Enter キーを押してみましょう：</p>
+
+<p><img src="media.centos5/acl_tail.png" width="800" height="600" alt="tail コマンドのアクセス許可" title="tail コマンドのアクセス許可"></p>
+
+<p>それぞれの行の一番左が行番号で、その次に表示されている単語はアクセスの種類を表しています。
+file execute が実行を許可、 file write が書き込みモードでのオープンを許可、 file read が読み込みモードでのオープンを許可、 misc env が環境変数名の受け取り許可を表しています。
+画面から、 tail コマンドがロケールファイルと、 /var/log/tomoyo/reject_000.log /var/log/tomoyo/reject_001.log /var/log/tomoyo/reject_002.log /var/log/tomoyo/reject_003.log というファイルを読み込んだことが読み取れます。
+これはデスクトップの「 TOMOYO Linux Policy Violation Log 」というアイコンをダブルクリックして実行した結果学習されたポリシーです。</p>
+
+<p>もとのドメインの木構造の画面に戻るためには Enter キーを押します。
+プロセスがどういう履歴で起動され、どんな資源にアクセスしているかをブラウズしてみてください。</p>
+
+<h3><a name="l5">アクセスを制限してみる</a></h3>
+
+<p>学習されたポリシーを見るだけでなく、 TOMOYO Linux によるアクセス制御を体験してみましょう。
+先ほどのポリシーエディタの画面は閉じずにそのままにしておいて、画面上端に表示されている「 Applications 」メニューから、「 Accessories 」「 Terminal 」を起動してください：</p>
+
+<p><img src="media.centos5/menu_terminal.png" width="800" height="600" alt="端末の起動" title="端末の起動"></p>
+
+<p>端末が起動できたら、先ほどのポリシーエディタの画面に戻り、ドメインの木構造が表示されている状態で、 'R' キーを押してポリシーを再読み込みしてください。
+そして、 gnome-terminal 以下の /bin/bash を探して見てください。
+検索は先ほどと同じく 'F' キーで行えます：</p>
+
+<p><img src="media.centos5/domain_bash.png" width="800" height="600" alt="gnome-terminal から起動された bash" title="gnome-terminal から起動された bash"></p>
+
+<p>これは先ほど起動した端末内で実行されている bash です。
+grep や id などのプログラムが bash の開始時に自動的に実行されたことにより、それらのプログラムのためのドメインが作成されています。
+端末の画面で、以下のコマンドを実行してください：</p>
+
+<pre class="command">
+$ head /etc/passwd
+$ bash
+$ tail /etc/passwd
+$ exit
+</pre>
+
+<p><img src="media.centos5/bash_learning.png" width="800" height="600" alt="bash に適当なコマンドを学習させる" title="bash に適当なコマンドを学習させる"></p>
+
+<p>再度ポリシーエディタの画面に戻って 'R' キーを押すと、実行したプログラムが追加されていることが分かります：</p>
+
+<p><img src="media.centos5/bash_learned.png" width="800" height="600" alt="学習結果" title="学習結果"></p>
+
+<p>この画面で、行番号の次に表示されている数字に注目してください。
+今は全ての行で '1' と表示されています：</p>
+
+<p><img src="media.centos5/all_learning.png" width="800" height="600" alt="プロファイル番号は全部 1" title="プロファイル番号は全部 1"></p>
+
+<p>これはそのプロセスが動いている TOMOYO Linux のモードを表しており、プロファイル番号とよばれる数値です。
+プロファイルとして以下の４種類が定義されており、 LiveCD ではあらかじめ全て 1 （学習モード）に設定されています：</p>
+
+<table border="1" summary="profile number">
+<tr><th>プロファイル番号</th><th>意味</th></tr>
+<tr><td>0</td><td>無効モード（ TOMOYO Linux は何もしない）</td></tr>
+<tr><td>1</td><td>学習モード（ポリシー違反のアクセス要求を容認して、その要求をポリシーに追加する）</td></tr>
+<tr><td>2</td><td>確認モード（ポリシー違反のアクセス要求を容認する）</td></tr>
+<tr><td>3</td><td>強制モード（ポリシー違反のアクセス要求を拒否する）</td></tr>
+</table>
+
+<p>TOMOYO Linux のアクセス制御を有効にするには、プロファイル番号 3 をドメインに割り当てる必要があります。
+今回は gnome-terminal から起動された bash での操作をアクセス制御の対象としてみましょう。
+まず、 gnome-terminal 直下の bash にカーソルを合わせてスペースキーを押します。
+すると、行番号の左側に '&amp;' マークが表示され、この行が選択された状態になります：</p>
+
+<p><img src="media.centos5/select-1.png" width="800" height="600" alt="bash を選択した状態" title="bash を選択した状態"></p>
+
+<p>この状態で 'C' キーを押すと、 '&amp;' マークの有無がカーソル行以下全部にコピーされます：</p>
+
+<p><img src="media.centos5/select-2.png" width="800" height="600" alt="bash 以下すべてを選択した状態" title="bash 以下すべてを選択した状態"></p>
+
+<p>次に、 sudo にカーソルを合わせてスペースキーを押します。すると、行番号の左側の '&amp;' マークが消えます：</p>
+
+<p><img src="media.centos5/select-3.png" width="800" height="600" alt="sudo を選択解除した状態" title="sudo を選択解除した状態"></p>
+
+<p>この状態で 'C' キーを押すと、 '&amp;' マークの有無がカーソル行以下全部にコピーされます：</p>
+
+<p><img src="media.centos5/select-4.png" width="800" height="600" alt="sudo 以下すべてを選択解除した状態" title="sudo 以下すべてを選択解除した状態"></p>
+
+<p>この状態で 'S' キーを押すと、ポリシーエディタの最下行にプロファイル番号を入力する 1 行入力が表示されます。
+アクセス制御を体験するために、プロファイル 3 （強制モード）を割り当てましょう：</p>
+
+<p><img src="media.centos5/setprofile.png" width="800" height="600" alt="プロファイル番号 3 を割り当てる" title="プロファイル番号 3 を割り当てる"></p>
+
+<p>'&amp;' マークが付いていたドメインにプロファイル番号 3 が割り当てられました：</p>
+
+<p><img src="media.centos5/bash_enforced.png" width="800" height="600" alt="プロファイルが 3 になった" title="プロファイルが 3 になった"></p>
+
+<p>これでもう gnome-terminal から起動された bash に対しては強制モードで動いています。
+端末の画面で適当なコマンドを入力してみてください。
+先ほど学習モードで実行したコマンド以外は拒否されるはずです。
+以下の画面では、 head /etc/passwd の実行には成功していますが、 ls や ps コマンドの実行は拒否されています：</p>
+
+<p><img src="media.centos5/1st_bash.png" width="800" height="600" alt="学習されたコマンド以外は拒否される" title="学習されたコマンド以外は拒否される"></p>
+
+<p>また、１段階目の bash では tail /etc/passwd は拒否されますが、 bash をもう１段起動した場合には許可されます：</p>
+
+<p><img src="media.centos5/2nd_bash.png" width="800" height="600" alt="シェルレベルによるアクセス許可の違い" title="シェルレベルによるアクセス許可の違い"></p>
+
+<p>これは、 TOMOYO Linux がプロセスをその実行履歴によって区別していることに起因しています。
+ポリシーエディタを見ると、以下の２種類の bash が存在します。</p>
+
+<ul>
+<li>gnome-terminal から実行された bash</li>
+<li>gnome-terminal から実行された bash から起動された bash</li>
+</ul>
+
+<p> head コマンドは１つ目の、 tail コマンドは２つ目の bash のみにしか許可されていないことが分かります。
+TOMOYO Linux はシステム起動時から起動されたすべてのプロセスを監視しており、プロセスは実行履歴によって細かく区別されます。</p>
+
+<p>/var/log/tomoyo/reject_003.log には、以下のように mode=enforcing という行を含んだログを見つけることができます。実行履歴と要求されたファイルのパス名だけでなく、プロセスの情報／コマンドライン引数／環境変数など詳細な情報を含んだログが記録されています。より厳密なアクセス制御を行いたい場合には、必要に応じてこれらの情報を条件として指定することもできます。</p>
+
+<pre class="output">#2011/04/08 02:06:15# profile=3 mode=enforcing granted=no (global-pid=3934) task={ pid=3934 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=442377 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=442369 perm=0755 } exec={ realpath="/bin/ls" argc=2 envc=34 argv[]={ "ls" "--color=tty" } envp[]={ "SSH_AGENT_PID=3677" "HOSTNAME=livecd.localdomain" "TERM=xterm" "SHELL=/bin/bash" "HISTSIZE=1000" "GTK_RC_FILES=/etc/gtk/gtkrc:/home/centos/.gtkrc-1.2-gnome2" "WINDOWID=22044727" "USER=centos" "LS_COLORS=no=00:fi=00:di=00;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=00;32:*.cmd=00;32:*.exe=00;32:*.com=00;32:*.btm=00;32:*.bat=00;32:*.sh=00;32:*.csh=00;32:*.tar=00;31:*.tgz=00;31:*.arj=00;31:*.taz=00;31:*.lzh=00;31:*.zip=00;31:*.z=00;31:*.Z=00;31:*.gz=00;31:*.bz2=00;31:*.bz=00;31:*.tz=00;31:*.rpm=00;31:*.cpio=00;31:*.jpg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.png=00;35:*.tif=00;35:" "GNOME_KEYRING_SOCKET=/tmp/keyring-IvV4Wp/socket" "SSH_AUTH_SOCK=/tmp/ssh-PKPqeG3646/agent.3646" "SESSION_MANAGER=local/livecd.localdomain:/tmp/.ICE-unix/3646" "USERNAME=centos" "MAIL=/var/spool/mail/centos" "PATH=/usr/kerberos/bin:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/home/centos/bin" "DESKTOP_SESSION=default.desktop" "GDM_XSERVER_LOCATION=local" "INPUTRC=/etc/inputrc" "PWD=/home/centos" "XMODIFIERS=@im=none" "LANG=en_US.UTF-8" "GDMSESSION=default.desktop" "SSH_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass" "SHLVL=2" "HOME=/home/centos" "GNOME_DESKTOP_SESSION_ID=Default" "LOGNAME=centos" "DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-Ecrl4HcESh,guid=c29a160c4e63df58dd7dd0004d9e6a06" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "DISPLAY=:0.0" "G_BROKEN_FILENAMES=1" "COLORTERM=gnome-terminal" "XAUTHORITY=/tmp/.gdmDJ5MTV" "_=/bin/ls" } }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file execute /bin/ls
+
+#2011/04/08 02:06:15# profile=3 mode=enforcing granted=no (global-pid=3934) task={ pid=3934 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=442377 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=442369 perm=0755 }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file read /bin/ls
+
+#2011/04/08 02:06:18# profile=3 mode=enforcing granted=no (global-pid=3935) task={ pid=3935 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=442405 major=253 minor=0 perm=0555 type=file } path1.parent={ uid=0 gid=0 ino=442369 perm=0755 } exec={ realpath="/bin/ps" argc=1 envc=34 argv[]={ "ps" } envp[]={ "SSH_AGENT_PID=3677" "HOSTNAME=livecd.localdomain" "TERM=xterm" "SHELL=/bin/bash" "HISTSIZE=1000" "GTK_RC_FILES=/etc/gtk/gtkrc:/home/centos/.gtkrc-1.2-gnome2" "WINDOWID=22044727" "USER=centos" "LS_COLORS=no=00:fi=00:di=00;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=00;32:*.cmd=00;32:*.exe=00;32:*.com=00;32:*.btm=00;32:*.bat=00;32:*.sh=00;32:*.csh=00;32:*.tar=00;31:*.tgz=00;31:*.arj=00;31:*.taz=00;31:*.lzh=00;31:*.zip=00;31:*.z=00;31:*.Z=00;31:*.gz=00;31:*.bz2=00;31:*.bz=00;31:*.tz=00;31:*.rpm=00;31:*.cpio=00;31:*.jpg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.png=00;35:*.tif=00;35:" "GNOME_KEYRING_SOCKET=/tmp/keyring-IvV4Wp/socket" "SSH_AUTH_SOCK=/tmp/ssh-PKPqeG3646/agent.3646" "SESSION_MANAGER=local/livecd.localdomain:/tmp/.ICE-unix/3646" "USERNAME=centos" "MAIL=/var/spool/mail/centos" "PATH=/usr/kerberos/bin:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/home/centos/bin" "DESKTOP_SESSION=default.desktop" "GDM_XSERVER_LOCATION=local" "INPUTRC=/etc/inputrc" "PWD=/home/centos" "XMODIFIERS=@im=none" "LANG=en_US.UTF-8" "GDMSESSION=default.desktop" "SSH_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass" "SHLVL=2" "HOME=/home/centos" "GNOME_DESKTOP_SESSION_ID=Default" "LOGNAME=centos" "DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-Ecrl4HcESh,guid=c29a160c4e63df58dd7dd0004d9e6a06" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "DISPLAY=:0.0" "G_BROKEN_FILENAMES=1" "COLORTERM=gnome-terminal" "XAUTHORITY=/tmp/.gdmDJ5MTV" "_=/bin/ps" } }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file execute /bin/ps
+
+#2011/04/08 02:06:18# profile=3 mode=enforcing granted=no (global-pid=3935) task={ pid=3935 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=442405 major=253 minor=0 perm=0555 type=file } path1.parent={ uid=0 gid=0 ino=442369 perm=0755 }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file read /bin/ps
+
+#2011/04/08 02:06:22# profile=3 mode=enforcing granted=no (global-pid=3936) task={ pid=3936 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=247559 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=245761 perm=0755 }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash /usr/bin/head
+file read /etc/fstab
+
+#2011/04/08 02:07:17# profile=3 mode=enforcing granted=no (global-pid=3938) task={ pid=3938 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=164563 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=164243 perm=0755 } exec={ realpath="/usr/bin/tail" argc=2 envc=34 argv[]={ "tail" "/etc/passwd" } envp[]={ "SSH_AGENT_PID=3677" "HOSTNAME=livecd.localdomain" "TERM=xterm" "SHELL=/bin/bash" "HISTSIZE=1000" "GTK_RC_FILES=/etc/gtk/gtkrc:/home/centos/.gtkrc-1.2-gnome2" "WINDOWID=22044727" "USER=centos" "LS_COLORS=no=00:fi=00:di=00;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:cd=40;33;01:or=01;05;37;41:mi=01;05;37;41:ex=00;32:*.cmd=00;32:*.exe=00;32:*.com=00;32:*.btm=00;32:*.bat=00;32:*.sh=00;32:*.csh=00;32:*.tar=00;31:*.tgz=00;31:*.arj=00;31:*.taz=00;31:*.lzh=00;31:*.zip=00;31:*.z=00;31:*.Z=00;31:*.gz=00;31:*.bz2=00;31:*.bz=00;31:*.tz=00;31:*.rpm=00;31:*.cpio=00;31:*.jpg=00;35:*.gif=00;35:*.bmp=00;35:*.xbm=00;35:*.xpm=00;35:*.png=00;35:*.tif=00;35:" "GNOME_KEYRING_SOCKET=/tmp/keyring-IvV4Wp/socket" "SSH_AUTH_SOCK=/tmp/ssh-PKPqeG3646/agent.3646" "SESSION_MANAGER=local/livecd.localdomain:/tmp/.ICE-unix/3646" "USERNAME=centos" "MAIL=/var/spool/mail/centos" "PATH=/usr/kerberos/bin:/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin:/home/centos/bin" "DESKTOP_SESSION=default.desktop" "GDM_XSERVER_LOCATION=local" "INPUTRC=/etc/inputrc" "PWD=/home/centos" "XMODIFIERS=@im=none" "LANG=en_US.UTF-8" "GDMSESSION=default.desktop" "SSH_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass" "SHLVL=2" "HOME=/home/centos" "GNOME_DESKTOP_SESSION_ID=Default" "LOGNAME=centos" "DBUS_SESSION_BUS_ADDRESS=unix:abstract=/tmp/dbus-Ecrl4HcESh,guid=c29a160c4e63df58dd7dd0004d9e6a06" "LESSOPEN=|/usr/bin/lesspipe.sh\040%s" "DISPLAY=:0.0" "G_BROKEN_FILENAMES=1" "COLORTERM=gnome-terminal" "XAUTHORITY=/tmp/.gdmDJ5MTV" "_=/usr/bin/tail" } }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file execute /usr/bin/tail
+
+#2011/04/08 02:07:17# profile=3 mode=enforcing granted=no (global-pid=3938) task={ pid=3938 ppid=3878 uid=500 gid=500 euid=500 egid=500 suid=500 sgid=500 fsuid=500 fsgid=500 type!=execute_handler } path1={ uid=0 gid=0 ino=164563 major=253 minor=0 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=164243 perm=0755 }
+&lt;kernel&gt; /sbin/init /etc/X11/prefdm /usr/sbin/gdm /usr/sbin/gdm-binary /etc/X11/xinit/Xsession /usr/bin/ssh-agent /bin/sh /bin/bash /usr/bin/dbus-launch /etc/X11/xinit/Xclients /usr/bin/gnome-session /usr/bin/nautilus /usr/bin/gnome-terminal /bin/bash
+file read /usr/bin/tail
+</pre>
+
+<h3><a name="l6">さらに TOMOYO Linux を使いこなす</a></h3>
+
+<p>上記手順で解説した内容で、 TOMOYO Linux の基本的なアクセス制御を体験できました。 TOMOYO Linux にはさまざまな機能があります。さらに TOMOYO Linux を使いこなしたいという方は、このページの先頭にあるリンクを辿ってください。</p>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="centos5-live.html.en">English page</a>.</p>
+<p class="counter"><!--#include virtual="/cgi-bin/counter.pl" --></p>
+<p class="timestamp">Last modified: $Date: 2011-04-09 09:29:17 +0100 (Sat, 09 Apr 2011) $</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+</div>
+
+</body>
+</html>

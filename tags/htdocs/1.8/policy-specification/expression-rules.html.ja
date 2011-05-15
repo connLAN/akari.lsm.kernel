@@ -512,7 +512,7 @@ $ cat /proc/filesystems
 
 <div id="footer">
 <p class="language">Go to <a href="expression-rules.html.en">English page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-03-23 04:40:27 +0000 (Wed, 23 Mar 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

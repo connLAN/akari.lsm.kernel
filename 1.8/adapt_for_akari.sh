@@ -8,6 +8,8 @@ for i in $@; do
 	sed -i -e 's/<title>TOMOYO Linux 1.8.x :/<title>AKARI :/g' ${i}
 	sed -i -e 's/tomoyotitle.png/akarititle.png/g' ${i}
 	sed -i -e 's/akarititle.png" width="320"/akarititle.png" width="174"/g' ${i}
+	sed -i -e 's/title="TOMOYO Linux Home Page"/title="AKARI Home Page"/g' ${i}
+	sed -i -e 's/title="About TOMOYO Linux"/title="About AKARI"/g' ${i}
 	sed -i -e '/tomoyo-changelogs/d' ${i}
 	sed -i -e '/tomoyo-download/d' ${i}
 done

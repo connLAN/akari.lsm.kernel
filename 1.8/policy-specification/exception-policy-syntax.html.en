@@ -15,8 +15,8 @@
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../../about.html.en" title="About TOMOYO Linux">About</a></li>
+<li id="tomoyo-home"><a href="../../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../../links.html.en" title="Links">Links</a></li>

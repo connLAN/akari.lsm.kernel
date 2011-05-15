@@ -289,7 +289,7 @@ ccs-loadpolicy -s &lt; /etc/ccs/stat.conf
 
 <div id="footer">
 <p class="language">Go to <a href="chapter-5.html.en">English page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-05-14 13:16:29 +0100 (Sat, 14 May 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

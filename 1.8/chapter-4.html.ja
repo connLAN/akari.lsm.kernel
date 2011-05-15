@@ -398,7 +398,7 @@ destination     /var/log/tomoyo/reject_003.log
 
 <div id="footer">
 <p class="language">Go to <a href="chapter-4.html.en">English page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-03-27 06:23:40 +0100 (Sun, 27 Mar 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux 1.8.x : How to use the policy editor</title>
+<title>AKARI : How to use the policy editor</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="../index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="../about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="../download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="../changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
@@ -243,7 +241,7 @@ To continue searching in a backward direction, press the "b" key.</p>
 
 <p>An example operation in the "Domain Transition Editor" screen:</p>
 
-<a href="editpolicy/add-domain-list.png"><img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into List" width="720" height="400"></a>
+<img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into List" width="720" height="400">
 
 <h3><a name="select">Select an entry</a></h3>
 
@@ -259,7 +257,7 @@ To continue searching in a backward direction, press the "b" key.</p>
 
 <p>To delete an entry, move the cursor to the entry you wish to delete and press the "d" key. This can also be done by selecting all of the entries you wish to delete.</p>
 
-<a href="editpolicy/delete.png"><img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400"></a>
+<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400">
 
 <br><br>
 
@@ -276,7 +274,7 @@ To continue searching in a backward direction, press the "b" key.</p>
 <p>This means the domain is unreachable due to either <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> or <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directives.<br>
 Any domains marked with a "!" can be safely deleted, unless they are referenced by either <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directive or auto_domain_transition= condition.</p>
 
-<a href="editpolicy/unreachable.png"><img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400"></a>
+<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400">
 
 <h4>Domains with the "*" mark</h4>
 
@@ -289,7 +287,7 @@ If this domain does not have this mark and this domain is not specified by neith
 
 <p>This means that multiple programs might belong to this domain due to the <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directive.</p>
 
-<a href="editpolicy/keep_domain.png"><img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400"></a>
+<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400">
 
 <h4>Domains with "( -&gt; n )"</h4>
 
@@ -301,7 +299,7 @@ If this domain does not have this mark and this domain is not specified by neith
 
 <p>This means that the domain is not a real domain. This occurs when the <a href="exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive has been set, but the destination domain has not been created yet.</p>
 
-<a href="editpolicy/initialize_domain-nodest.png"><img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400"></a>
+<img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400">
 
 <h4>Domains inside brackets</h4>
 
@@ -314,7 +312,7 @@ You don't need to create parent domains if processes directly transit to descend
 
 <p>The <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive involves using the "Exception Policy Editor" and "Domain Transition Editor" screens. First, switch to the "Exception Policy Editor" screen, press "a" to add an entry and then type out the string you wish to add:</p>
 
-<a href="editpolicy/adding-initialize_domain.png"><img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400"></a>
+<img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400">
 
 <p>Switch to the "Domain Transition Editor" screen. Domains which execute the program you specified using the directive will have "( -&gt; Not Found )" as the domain for the program does not exist yet.<br>
 Also, domains which became unreachable due to the directive are now marked with the "!" symbol:</p>
@@ -323,7 +321,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <p>To correct this, create the missing domain by pressing the "a" key and entering the new domain:</p>
 
-<a href="editpolicy/adding-initialize_domain-target.png"><img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400"></a>
+<img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400">
 
 <p>Now the  "( -&gt; Not Found )" part has changed to "( -&gt; n )":</p>
 
@@ -331,7 +329,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <p>This is the domain corresponding to the entry above:</p>
 
-<a href="editpolicy/added-initialize_domain-target.png"><img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400"></a>
+<img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400">
 
 <p>Now the "/usr/sbin/sendmail" domain is initialized into a new domain. However, the above examples show that it is initialized from a daemon script. You may not want to initialize into a new domain when it is not invoked as a daemon. The <a href="policy-specification/exception-policy-syntax.html.en#no_initialize_domain">no_initialize_domain</a> directive is useful in this situation. Switch to the "Exception Policy Editor" screen and add a new entry, such as "no_initialize_domain /usr/sbin/sendmail from /bin/mail". Now the /usr/sbin/sendmail will no longer initialized into the new domain if it is executed from /bin/mail domain:</p>
 
@@ -341,7 +339,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <p>The <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directive involves using the "Exception Policy Editor" and "Domain Transition Editor" screens. First, switch to the "Exception Policy Editor" screen and add an entry such as "keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash". Return to the "Domain Transition Editor" screen and the domain that you have specified the directive for will appear with a "#" symbol. Descendent domains will appear with the "!" symbol:</p>
 
-<a href="editpolicy/after-keep_domain-1.png"><img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400"></a>
+<img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400">
 
 <p>Now all executions in the chosen domain will not undergo a domain transition. To force a domain transition for a particular application, the <a href="specification/exception-policy-syntax.html.en#no_keep_domain">no_keep_domain</a> directive can be used. Switch to the "Exception Policy Editor" screen and add an entry such as "no_keep_domain /usr/bin/man from /bin/bash". Return to the "Domain Transition Editor" screen and the "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man" domain and its descendents are no longer marked with a "!":</p>
 
@@ -349,7 +347,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <p>It is possible to prevent domain transitions again from "/usr/bin/man" by adding "keep_domain any from /usr/bin/man" in the "Exception Policy Editor" screen. Return to the "Domain Transition Editor" screen:</p>
 
-<a href="editpolicy/after-no_keep_domain.png"><img src="editpolicy/after-keep_domain-2.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400"></a>
+<img src="editpolicy/after-keep_domain-2.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400">
 
 <h2><a name="redundant">Remove redundant entries</a></h2>
 
@@ -392,7 +390,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <div id="footer">
 <p class="language">Go to <a href="tool-editpolicy.html.ja">Japanese page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-03-14 12:20:09 +0000 (Mon, 14 Mar 2011) $</p>
+<p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

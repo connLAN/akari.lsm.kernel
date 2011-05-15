@@ -108,8 +108,8 @@
 <li><a href="domain-policy-syntax.html.en#file_chroot">file chroot</a></li>
 <li><a href="domain-policy-syntax.html.en#file_pivot_root">file pivot_root</a></li>
 <li><a href="domain-policy-syntax.html.en#misc_env">misc env</a></li>
-<li><a href="domain-policy-syntax.html.en#capability">capability</a></li>
-<li><a href="domain-policy-syntax.html.en#ipc_signal">ipc_signal</a></li>
+<!--<li><a href="domain-policy-syntax.html.en#capability">capability</a></li>-->
+<!--<li><a href="domain-policy-syntax.html.en#ipc_signal">ipc_signal</a></li>-->
 <li><a href="domain-policy-syntax.html.en#network_inet">network inet</a></li>
 <li><a href="domain-policy-syntax.html.en#network_unix">network unix</a></li>
 <li><a href="domain-policy-syntax.html.en#use_group">use_group</a></li>

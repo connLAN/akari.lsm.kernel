@@ -454,6 +454,7 @@ file pivot_root proc:/ proc:/ccs/
 misc env LD_PRELOAD
 </pre>
 
+<!--
 <h3><a name="capability">capability</a></h3>
 
 <p>This directive allows the domain to make use of the specified non-POSIX Capability.</p>
@@ -514,7 +515,9 @@ misc env LD_PRELOAD
 <pre>
 capability SYS_REBOOT
 </pre>
+-->
 
+<!--
 <h3><a name="ipc_signal">ipc signal</a></h3>
 
 <p>This directive allows the domain to use the inter-process communication signal number specified and the target domain specified.</p>
@@ -526,6 +529,7 @@ capability SYS_REBOOT
 <pre>
 ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 </pre>
+-->
 
 <h3><a name="network_inet">network inet</a></h3>
 
@@ -562,10 +566,12 @@ ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 <td><p>Bind UDP sockets to specified local IP address and port</p></td>
 </tr>
 <tr>
+<!--
 <td><p>network inet dgram recv $ADDRESS $PORT</p></td>
 <td><p>Receive UDP packets from specified remote IP address and port</p></td>
 </tr>
 <tr>
+-->
 <td><p>network inet dgram send $ADDRESS $PORT</p></td>
 <td><p>Send UDP packets to specified remote IP address and port</p></td>
 </tr>
@@ -573,10 +579,12 @@ ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 <td><p>network inet raw bind $ADDRESS $PROTOCOL</p></td>
 <td><p>Bind IP sockets for specified protocol to specified local IP address</p></td>
 </tr>
+<!--
 <tr>
 <td><p>network inet raw recv $ADDRESS $PROTOCOL</p></td>
 <td><p>Receive IP packets for specified protocol from specified remote IP address</p></td>
 </tr>
+-->
 <tr>
 <td><p>network inet raw send $ADDRESS $PROTOCOL</p></td>
 <td><p>Send IP packets for specified protocol to specified remote IP address</p></td>
@@ -627,10 +635,12 @@ network inet stream connect 202.221.179.21 80
 <td><p>network unix dgram bind $ADDRESS</p></td>
 <td><p>Bind datagram sockets to specified address</p></td>
 </tr>
+<!--
 <tr>
 <td><p>network unix dgram recv $ADDRESS</p></td>
 <td><p>Receive datagrams from specified address</p></td>
 </tr>
+-->
 <tr>
 <td><p>network unix dgram send $ADDRESS</p></td>
 <td><p>Send datagrams to specified address</p></td>

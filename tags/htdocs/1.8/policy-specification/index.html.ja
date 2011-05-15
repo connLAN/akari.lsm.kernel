@@ -110,8 +110,8 @@
 <li><a href="domain-policy-syntax.html.ja#file_chroot">file chroot</a></li>
 <li><a href="domain-policy-syntax.html.ja#file_pivot_root">file pivot_root</a></li>
 <li><a href="domain-policy-syntax.html.ja#misc_env">misc env</a></li>
-<li><a href="domain-policy-syntax.html.ja#capability">capability</a></li>
-<li><a href="domain-policy-syntax.html.ja#ipc_signal">ipc_signal</a></li>
+<!--<li><a href="domain-policy-syntax.html.ja#capability">capability</a></li>-->
+<!--<li><a href="domain-policy-syntax.html.ja#ipc_signal">ipc_signal</a></li>-->
 <li><a href="domain-policy-syntax.html.ja#network_inet">network inet</a></li>
 <li><a href="domain-policy-syntax.html.ja#network_unix">network unix</a></li>
 <li><a href="domain-policy-syntax.html.ja#use_group">use_group</a></li>

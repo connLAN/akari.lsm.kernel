@@ -10,7 +10,7 @@
 <body>
 
 <div id="titlebar">
-<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="320" height="40" border="0" align="left"></a>
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
@@ -97,13 +97,13 @@
 <p><strong>Chapter 7: <a class="black" href="chapter-7.html.en">How do I enforce policy?</a></strong></p>
 <ul>
 <li>7.1. <a href="chapter-7.html.en#7.1">Enabling enforcing mode</a></li>
-<li>7.2. <a href="chapter-7.html.en#7.2">Enabling enforcing mode for all domains</a></li>
+<li>7.2. <a href="chapter-7.html.en#7.2">Notification daemon</a></li>
 <li>7.3. <a href="chapter-7.html.en#7.3">Handling policy violations in real-time</a><br>
   <ul class="nested">
     <li>7.3.1. <a href="chapter-7.html.en#7.3.1">Example usage of "ccs-queryd"</a></li>
     <li>7.3.2. <a href="chapter-7.html.en#7.3.2">Example output from "ccs-queryd"</a></li>
   </ul></li>
-<li>7.4. <a href="chapter-7.html.en#7.4">Notification daemon</a></li>
+<li>7.4. <a href="chapter-7.html.en#7.4">Enabling enforcing mode for all domains</a></li>
 <li>7.5. <a href="chapter-7.html.en#7.5">Beyond the core topics</a></li>
 </ul>
 
@@ -173,13 +173,6 @@
 <p><strong>Appendix A: <a class="black" href="man-pages/index.html.en">The userspace tools</a></strong></p>
 <p><strong>Appendix B: <a class="black" href="policy-specification/index.html.en">Policy specification</a></strong></p>
 <p><strong>Appendix C: <a class="black" href="tool-editpolicy.html.en">How to use the policy editor</a></strong></p>
-<p><strong>Appendix D: <a class="black" href="android-arm.html.en">AKARI on Android</a></strong></p>
-<p><strong>Appendix E: <a class="black" href="meego-x86.html.en">AKARI on MeeGo 1.1</a></strong></p>
-<p><strong>Appendix F: <a class="black" href="cat760-sh.html.en">AKARI on CAT760</a></strong></p>
-<p><strong>Appendix G: <a class="black" href="ssh-split-administrative-tasks.html.en">Restricting administrative operations in SSH</a></strong></p>
-<p><strong>Appendix H: <a class="black" href="ssh-protection-using-environment.html.en">Protecting SSH against brute force attacks</a></strong></p>
-<p><strong>Appendix I: <a class="black" href="sftp-protection-using-environment-variable.html.en">Protecting SFTP service</a></strong></p>
-<p><strong>Appendix J: <a class="black" href="ssh-recording-cmdline.html.en">Recording command-line for SSH sessions</a></strong></p>
 
 </div><!-- regular-content -->
 
@@ -187,7 +180,8 @@
 
 <div id="footer">
 <p class="language">Go to <a href="index-long.html.ja">Japanese page</a>.</p>
-<p class="timestamp">Last modified: $Date: 2011-05-14 06:37:57 +0100 (Sat, 14 May 2011) $</p>
+<p class="counter"><!--#include virtual="/cgi-bin/counter.pl" --></p>
+<p class="timestamp">Last modified: $Date: 2011-05-15 09:21:30 +0100 (Sun, 15 May 2011) $</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>

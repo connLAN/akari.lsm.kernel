@@ -4,21 +4,19 @@
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta http-equiv="content-style-type" content="text/css">
 <link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
-<title>TOMOYO Linux : FAQ</title>
+<title>AKARI : FAQ</title>
 </head>
 
 <body>
 
 <div id="titlebar">
-<a href="index.html.en"><img src="media/tomoyotitle.png" alt="tomoyotitle.png" width="320" height="40" border="0" align="left"></a>
+<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
 <ul id="navbarlist">
-<li id="tomoyo-home"><a href="index.html.en" title="TOMOYO Linux Home Page">Home</a></li>
-<li id="tomoyo-about"><a href="about.html.en" title="About TOMOYO Linux">About</a></li>
-<li id="tomoyo-download"><a href="download.html.en" title="Get TOMOYO Linux">Download</a></li>
-<li id="tomoyo-changelogs"><a href="changelogs.html.en" title="TOMOYO Linux ChangeLogs">ChangeLogs</a></li>
+<li id="tomoyo-home"><a href="index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="about.html.en" title="About AKARI">About</a></li>
 <li id="tomoyo-documentation"><a href="documentation.html.en" title="Official Documentation">Documentation</a></li>
 <li id="tomoyo-support"><a href="support.html.en" title="Support information">Support</a></li>
 <li id="tomoyo-links"><a href="links.html.en" title="Links">Links</a></li>
@@ -36,8 +34,8 @@
 
 <h3><a name="general">General questions</a></h3>
 
-<p><strong>Q1: What is TOMOYO Linux?</strong></p>
-<p>A1: A Linux kernel that can both automatically and interactively generate policies for Mandatory Access Control.</p>
+<p><strong>Q1: What is AKARI?</strong></p>
+<p>A1: A Linux kernel module that can both automatically and interactively generate policies for Mandatory Access Control.</p>
 <p><strong>Q2: Who are the target users?</strong></p>
 <p>A2: Administrators that do not have the time and energy for more complex server security management.</p>
 <p><strong>Q3: How much extra memory is consumed?</strong></p>
@@ -45,21 +43,19 @@
 <p><strong>Q4: How large is the performance loss?</strong></p>
 <p>A4: Not formally tested, but it should be negligible for the regular user.</p>
 <p><strong>Q5: Which kernel versions are supported?</strong></p>
-<p>A5: Linux kernel 2.4.30 and later are supported from the 2.4 tree, and Linux kernel 2.6.11 and later are supported from the 2.6 tree. These are available from <a href="http://www.kernel.org/">http://www.kernel.org/</a>.</p>
-<p><strong>Q6: Is it possible to support patched kernels from distributors?</strong></p>
-<p>A6: Yes, if you manually inserts hooks.</p>
-<p><strong>Q7: What is TOMOYO Linux licensed under?</strong></p>
-<p>A7: TOMOYO Linux is licensed under the GNU General Public License (GPL).</p>
-<p><strong>Q8: Does TOMOYO Linux have any usage other than for Mandatory Access Control?</strong></p>
-<p>A8: Yes, you can use it as a system analysis tool or to create custom filesystem images with minimum files.</p>
+<p>A5: Linux kernel 2.6.0 and later are supported. These are available from <a href="http://www.kernel.org/">http://www.kernel.org/</a>.</p>
+<p><strong>Q6: What is AKARI licensed under?</strong></p>
+<p>A6: AKARI is licensed under the GNU General Public License (GPL).</p>
+<p><strong>Q7: Does AKARI have any usage other than for Mandatory Access Control?</strong></p>
+<p>A7: Yes, you can use it as a system analysis tool or to create custom filesystem images with minimum files.</p>
 
 <h3><a name="management">Policy management</a></h3>
 <p><strong>Q1: Is the policy syntax easy?</strong></p>
 <p>A1: Yes, the syntax has been designed to be easily managed.</p>
 <p><strong>Q2: What is a domain?</strong></p>
-<p>A2: The domain in TOMOYO Linux is a history of process execution determined by the sequence in which they are executed.</p>
+<p>A2: The domain in AKARI is a history of process execution determined by the sequence in which they are executed.</p>
 <p><strong>Q3: What is a profile?</strong></p>
-<p>A3: The profile in TOMOYO Linux is a configuration that defines what level and type of MAC is used for a particular domain.</p>
+<p>A3: The profile in AKARI is a configuration that defines what level and type of MAC is used for a particular domain.</p>
 <p><strong>Q4: Can I update policies dynamically?</strong></p>
 <p>A4: Yes.</p>
 <p><strong>Q5: Do I need to restart processes after updating policies?</strong></p>
@@ -73,25 +69,25 @@
 <p><strong>Q9: What is "Learning mode"?</strong></p>
 <p>A9: A mode in which access permissions are appended automatically in order to determine safe behaviours and resources that are required by a program for normal operation.</p>
 <p><strong>Q10: Are there problems appending access permissions automatically?</strong></p>
-<p>A10: There should be no problems, as TOMOYO Linux uses absolute pathnames and fine-grained domain divisions.</p>
+<p>A10: There should be no problems, as AKARI uses absolute pathnames and fine-grained domain divisions.</p>
 <p><strong>Q11: Can I update packages while the Mandatory Access Control is enabled?</strong></p>
-<p>A11: Yes, by assigning different profiles to domains, or by using tools provided with TOMOYO Linux (e.g. /usr/sbin/ccs-queryd).</p>
+<p>A11: Yes, by assigning different profiles to domains, or by using tools provided with AKARI (e.g. /usr/sbin/ccs-queryd).</p>
 <p><strong>Q12: Can I protect only daemon processes like SELinux's Targeted Policy?</strong></p>
 <p>A12: Yes, by assigning different profiles to domains.</p>
 
 <h3><a name="implementation">Implementation</a></h3>
-<p><strong>Q1: What is the security model of TOMOYO Linux?</strong></p>
+<p><strong>Q1: What is the security model of AKARI?</strong></p>
 <p>A1: Domain and Type Enforcement (DTE) only.</p>
 <p><strong>Q2: Are there concepts of users and roles?</strong></p>
 <p>A2: No, but it is possible to delegate a part of administration tasks.</p>
 <p><strong>Q3: Do userland applications need to be patched?</strong></p>
 <p>A3: No.</p>
-<p><strong>Q4: Can TOMOYO Linux protect sshd from exploit codes?</strong></p>
+<p><strong>Q4: Can AKARI protect sshd from exploit codes?</strong></p>
 <p>A4: No, but it is possible to countermeasure illegal logins by enforcing additional authentication.</p>
-<p><strong>Q5: Which division is TOMOYO Linux categorized in TCSEC?</strong></p>
+<p><strong>Q5: Which division is AKARI categorized in TCSEC?</strong></p>
 <p>A5: Unknown.</p>
-<p><strong>Q6: What security labels does TOMOYO Linux use?</strong></p>
-<p>A6: TOMOYO Linux uses absolute pathnames as security labels.</p>
+<p><strong>Q6: What security labels does AKARI use?</strong></p>
+<p>A6: AKARI uses absolute pathnames as security labels.</p>
 <p><strong>Q7: Can I use wildcards for pathnames?</strong></p>
 <p>A7: Yes.</p>
 <p><strong>Q8: Is multi-level security (MLS) supported?</strong></p>
@@ -101,9 +97,7 @@
 <p><strong>Q10: Are the correctness of security labels guaranteed?</strong></p>
 <p>A10: Since pathnames are used as security labels, the correctness of security labels is guaranteed unless the directory entry get corrupted.</p>
 <p><strong>Q11: Are resources other than files protected?</strong></p>
-<p>A11: Yes, TOMOYO Linux supports many resources (e.g. network ports, signal transmissions, capabilities, environment variables). See <a href="http://tomoyo.sourceforge.jp/comparison.html.en">TOMOYO Linux functionality comparison table</a> for a list of all the resources that can be restricted.</p>
-<p><strong>Q12: Is there a loadable kernel module version?</strong></p>
-<p>A12: Yes. Although there are preconditions and limitations, a loadable kernel module version is available. See <a href="http://akari.sourceforge.jp/comparison.html.en">AKARI / TOMOYO functionality comparison table</a> for more information.</p>
+<p>A11: Yes, AKARI supports many resources (e.g. network ports, signal transmissions, capabilities, environment variables). See <a href="comparison.html.en">AKARI/TOMOYO functionality comparison table</a> for a list of all the resources that can be restricted.</p>
 
 </div><!-- regular-content -->
 
@@ -111,7 +105,6 @@
 
 <div id="footer">
 <p class="language">Go to <a href="faq.html.ja">Japanese page</a>.</p>
-<p class="counter"><!--#include virtual="/cgi-bin/counter.pl" --></p>
 <p class="timestamp">Last modified: $Date: 2011-03-20 11:15:44 +0000 (Sun, 20 Mar 2011) $</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
 <p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>

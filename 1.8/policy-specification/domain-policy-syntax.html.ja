@@ -456,6 +456,7 @@ file pivot_root proc:/ proc:/ccs/
 misc env LD_PRELOAD
 </pre>
 
+<!--
 <h3><a name="capability">capability</a></h3>
 
 <p>このディレクティブは、（ POSIX ではない）ケイパビリティを使用することを許可します。</p>
@@ -516,7 +517,9 @@ misc env LD_PRELOAD
 <pre>
 capability SYS_REBOOT
 </pre>
+-->
 
+<!--
 <h3><a name="ipc_signal">ipc signal</a></h3>
 
 <p>このディレクティブは、指定されたドメインに対して指定された番号のシグナルを送信することを許可します。</p>
@@ -528,6 +531,7 @@ capability SYS_REBOOT
 <pre>
 ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 </pre>
+-->
 
 <h3><a name="network_inet">network inet</a></h3>
 
@@ -563,10 +567,12 @@ ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 <td><p>network inet dgram bind $ADDRESS $PORT</p></td>
 <td><p>ＵＤＰソケットを指定されたアドレスおよびポート番号にバインドすることを許可します。</p></td>
 </tr>
+<!--
 <tr>
 <td><p>network inet dgram recv $ADDRESS $PORT</p></td>
 <td><p>ＵＤＰソケットが指定されたアドレスおよびポート番号からのデータを受信することを許可します。</p></td>
 </tr>
+-->
 <tr>
 <td><p>network inet dgram send $ADDRESS $PORT</p></td>
 <td><p>ＵＤＰソケットが指定されたアドレスおよびポート番号へデータを送信することを許可します。</p></td>
@@ -575,10 +581,12 @@ ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 <td><p>network inet raw bind $ADDRESS $PROTOCOL</p></td>
 <td><p>指定されたプロトコル番号のＩＰソケットを指定されたアドレスにバインドすることを許可します。</p></td>
 </tr>
+<!--
 <tr>
 <td><p>network inet raw recv $ADDRESS $PROTOCOL</p></td>
 <td><p>指定されたプロトコル番号のＩＰソケットが指定されたアドレスからのデータを受信することを許可します。</p></td>
 </tr>
+-->
 <tr>
 <td><p>network inet raw send $ADDRESS $PROTOCOL</p></td>
 <td><p>指定されたプロトコル番号のＩＰソケットが指定されたアドレスへデータを送信することを許可します。</p></td>
@@ -629,10 +637,12 @@ network inet stream connect 202.221.179.21 80
 <td><p>network unix dgram bind $ADDRESS</p></td>
 <td><p>DATAGRAM ソケットを指定されたアドレスにバインドすることを許可します。</p></td>
 </tr>
+<!--
 <tr>
 <td><p>network unix dgram recv $ADDRESS</p></td>
 <td><p>DATAGRAM ソケットが指定されたアドレスからのデータを受信することを許可します。</p></td>
 </tr>
+-->
 <tr>
 <td><p>network unix dgram send $ADDRESS</p></td>
 <td><p>DATAGRAM ソケットが指定されたアドレスへデータを送信することを許可します。</p></td>

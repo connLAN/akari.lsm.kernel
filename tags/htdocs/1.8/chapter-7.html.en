@@ -330,7 +330,6 @@ file unlink /var/lib/pgsql/data/base/\$/pg_internal.init
 file write /var/lib/pgsql/data/global/pg_auth.\$
 file write /var/lib/pgsql/data/global/pg_database.\$
 network inet dgram send 127.0.0.1 1024-65535
-network inet dgram recv 127.0.0.1 1024-65535
 
 
 #2010/12/30 00:22:26# profile=3 mode=enforcing granted=no (global-pid=11937) task={ pid=11937 ppid=1 uid=26 gid=26 euid=26 egid=26 suid=26 sgid=26 fsuid=26 fsgid=26 type!=execute_handler } path1={ uid=0 gid=0 ino=690602 major=253 minor=0 perm=0644 type=file } path1.parent={ uid=0 gid=0 ino=690114 perm=0755 }

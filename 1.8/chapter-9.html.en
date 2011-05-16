@@ -287,6 +287,7 @@
 <th><p>Name</p></th>
 <th><p>Functionality to specify operation mode for</p></th>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::capability::use_kernel_module</p></td>
 <td><p>Use of the create_module(2), init_module(2) and delete_module(2) syscalls</p></td>
@@ -327,6 +328,7 @@
 <td><p>CONFIG::capability::SYS_VHANGUP</p></td>
 <td><p>Use of vhangup(2) syscall</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::file::execute</p></td>
 <td><p>Program execution and domain transition</p></td>
@@ -423,10 +425,12 @@
 <td><p>CONFIG::network::inet_dgram_send</p></td>
 <td><p>UDP socket remote address restriction for outgoing packets</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::inet_dgram_recv</p></td>
 <td><p>UDP socket remote address restriction for incoming packets</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::inet_stream_bind</p></td>
 <td><p>TCP socket bind() operation</p></td>
@@ -451,10 +455,12 @@
 <td><p>CONFIG::network::inet_raw_send</p></td>
 <td><p>RAW socket remote address restriction for outgoing packets</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::inet_raw_recv</p></td>
 <td><p>RAW socket remote address restriction for incoming packets</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::unix_dgram_bind</p></td>
 <td><p>UNIX domain datagram socket local address restriction</p></td>
@@ -463,10 +469,12 @@
 <td><p>CONFIG::network::unix_dgram_send</p></td>
 <td><p>UNIX domain datagram socket remote address restriction for outgoing packets</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::unix_dgram_recv</p></td>
 <td><p>UNIX domain datagram socket remote address restriction for incoming packets</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::unix_stream_bind</p></td>
 <td><p>UNIX domain stream socket bind() operation</p></td>
@@ -503,10 +511,12 @@
 <td><p>CONFIG::misc::env</p></td>
 <td><p>Environment variable names</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::ipc::signal</p></td>
 <td><p>Use of signal transmission requests</p></td>
 </tr>
+-->
 </table>
 </div>
 

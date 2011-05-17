@@ -79,19 +79,19 @@ TOMOYO Linux 1.8 で提供されている機能の一部は提供されていま
 
 <h3>AKARI のドキュメント</h3>
 <ul>
-<li><a href="http://akari.sourceforge.jp/1.8/index.html.ja">AKARI ドキュメント</a></li>
+<li><a href="1.0/index.html.ja">AKARI ドキュメント</a></li>
 </ul>
 
 <h3>２系のドキュメント</h3>
 <ul>
-<li><a href="2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 以降用）</li>
-<li><a href="2.2/index.html.ja">2.2.x ドキュメント</a>（ Linux 2.6.30 ～ 2.6.35 用）</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 以降用）</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.2/index.html.ja">2.2.x ドキュメント</a>（ Linux 2.6.30 ～ 2.6.35 用）</li>
 </ul>
 
 <h3>１系のドキュメント</h3>
 <ul>
-<li><a href="1.8/index.html.ja">1.8.x ドキュメント</a>（最新版）</li>
-<li><a href="1.7/index.html.ja">1.7.x ドキュメント</a>（安定版）</li>
+<li><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">1.8.x ドキュメント</a>（最新版）</li>
+<li><a href="http://tomoyo.sourceforge.jp/1.7/index.html.ja">1.7.x ドキュメント</a>（安定版）</li>
 </ul>
 
 </div><!-- regular-content -->

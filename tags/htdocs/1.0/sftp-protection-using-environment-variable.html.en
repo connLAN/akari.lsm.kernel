@@ -84,15 +84,15 @@ AcceptEnv sftp_type
 SendEnv sftp_type
 </pre>
 
-<h3>Step 4: Install and initialize TOMOYO Linux</h3>
+<h3>Step 4: Install and initialize AKARI</h3>
 
-<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+<p><a href="chapter-3.html.en">Install AKARI</a> and run below commandline in order to initialize AKARI.</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+<p>Then, please do below operations before you reboot using AKARI kernel.</p>
 
 <p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /bin/sftp-shell is executed.</p>
 
@@ -130,7 +130,7 @@ file truncate @SFTP_FILES
 
 <h3>Step 5: Learning and operation</h3>
 
-<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+<p>Now, you are ready to start operation. Please reboot using AKARI kernel.</p>
 
 <p>Change access control mode to learning mode by assigning profile 1.</p>
 

@@ -166,15 +166,15 @@ sleep 5
 exit 1
 </pre>
 
-<h3>Step 2: Install and initialize TOMOYO Linux</h3>
+<h3>Step 2: Install and initialize AKARI</h3>
 
-<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+<p><a href="chapter-3.html.en">Install AKARI</a> and run below commandline in order to initialize AKARI.</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+<p>Then, please do below operations before you reboot using AKARI kernel.</p>
 
 <p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /usr/sbin/sshd is executed.</p>
 
@@ -191,7 +191,7 @@ task auto_execute_handler /bin/sshd_login
 
 <h3>Step 3: Learning and operation</h3>
 
-<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+<p>Now, you are ready to start operation. Please reboot using AKARI kernel.</p>
 
 <p>Access the SSH server. Confirm that a prompt is shown by /bin/sshd_login after passing existing SSH authentication. Logout the SSH session by pressing Ctrl-C. Now, the domain for /bin/sshd_login was created as "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login".</p>
 
@@ -252,7 +252,7 @@ task auto_execute_handler /bin/sshd_login
 
 <p>We divide roles in the following way. We insert 3 programs ( /bin/webadmin-auth /bin/mailadmin-auth /bin/securityadmin-auth ) between /usr/sbin/sshd and login shell for SSH session. As a result, we get 3 domains with different parent domain ("&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/webadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/mailadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/securityadmin-auth /bin/bash" ). We assign these 3 domains to 3 roles ("Web server administrator", "Mail server administrator", "Security administrator") by granting only necessary operations for each domain. Since these programs are just for example, we used simple shell scripts. When you use at real systems, please use appropriate programs with appropriate authentication functionality.</p>
 
-<p>TOMOYO Linux's execute_handler functionality intercepts program execution requests from /usr/sbin/sshd and passes the program execution requests to /bin/sshd_login . Then, /bin/sshd_login shows a prompt for selecting role and receives response from the user.</p>
+<p>AKARI's execute_handler functionality intercepts program execution requests from /usr/sbin/sshd and passes the program execution requests to /bin/sshd_login . Then, /bin/sshd_login shows a prompt for selecting role and receives response from the user.</p>
 
 <p>The role selection is applied after SSH authentication. Thus, operations without shell execution (e.g. TCP port forwarding) are permitted. If you want to restrict operations without shell execution, you need to develop policy for SSH server process and apply enforcing mode to the SSH server processes.</p>
 

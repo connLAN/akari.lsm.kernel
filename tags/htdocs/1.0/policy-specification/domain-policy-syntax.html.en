@@ -430,7 +430,7 @@ file chroot /var/empty/sshd/
 
 <p>This directive allows the domain to use the first specified pathname as a new / directory and bring the old / directory to the second specified pathname.</p>
 
-<p>This functionality is generally used for only once for switching the / directory from initrd/initramfs to the hard drive, which generally occurs before TOMOYO Linux has been activated. It is therefore unlikely that you will need this directive.</p>
+<p>This functionality is generally used for only once for switching the / directory from initrd/initramfs to the hard drive, which generally occurs before AKARI has been activated. It is therefore unlikely that you will need this directive.</p>
 
 <p>This example allows the domain to use "/proc/" as a new / directory and bring the old / directory to "/proc/ccs/" directory:</p>
 
@@ -750,7 +750,7 @@ task auto_domain_transition &lt;kernel&gt; //non-root-session task.uid!=0
 
 <p>This directive indicates that a process within this domain was not able to undergo a domain transition following an execute request.</p>
 
-<p>This problem occurs, in order to avoid access denials by TOMOYO unless enforcing mode is used, due to TOMOYO accepting program execution requests unless enforcing mode even if domain transition has failed. The cause of this problem is either the name of the domain being too long, or the kernel being unable to allocate memory. To fix this problem, either suppress domain transitions or increase the memory quota which TOMOYO can use.</p>
+<p>This problem occurs, in order to avoid access denials by AKARI unless enforcing mode is used, due to AKARI accepting program execution requests unless enforcing mode even if domain transition has failed. The cause of this problem is either the name of the domain being too long, or the kernel being unable to allocate memory. To fix this problem, either suppress domain transitions or increase the memory quota which AKARI can use.</p>
 
 </div><!-- documentation -->
 

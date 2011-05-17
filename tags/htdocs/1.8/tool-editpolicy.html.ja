@@ -241,7 +241,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>Domain Transition Editor 画面における操作例：</p>
 
-<a href="editpolicy/add-domain-list.png"><img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into List" width="720" height="400"></a>
+<img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into List" width="720" height="400">
 
 <h3><a name="select">エントリを選択する</a></h3>
 
@@ -257,7 +257,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>エントリを削除するには、削除したいエントリの行へとカーソルを移動させて d キーを押します。削除したいエントリを全て選択してから行うこともできます。</p>
 
-<a href="editpolicy/delete.png"><img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400"></a>
+<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400">
 
 <br><br>
 
@@ -274,7 +274,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 <p><a href="policy-specification/exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> または <a href="policy-specification/exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブが指定されていることにより、このドメインへ到達することができないことを示しています。<br>
 ! マークが付いているドメインは、 <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> ディレクティブまたは <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> ディレクティブまたは auto_domain_transition= 条件で参照されていない限り、削除して大丈夫です。</p>
 
-<a href="editpolicy/unreachable.png"><img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400"></a>
+<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400">
 
 <h4>* マークが表示されているドメインについて</h4>
 
@@ -287,7 +287,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p><a href="policy-specification/exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブにより、複数のプログラムがこのドメインで動作する可能性があることを示しています。</p>
 
-<a href="editpolicy/keep_domain.png"><img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400"></a>
+<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400">
 
 <h4>( -&gt; n ) という表示があるドメインについて</h4>
 
@@ -299,7 +299,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>このドメインは実際のドメインではありません。 <a href="policy-specification/exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> ディレクティブに指定されているものの、遷移先のドメインが定義されていないことを示しています。</p>
 
-<a href="editpolicy/initialize_domain-nodest.png"><img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400"></a>
+<img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400">
 
 <h4>ドメイン名が ( ) で囲まれたドメインについて</h4>
 
@@ -312,7 +312,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p><a href="policy-specification/exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> ディレクティブは Exception Policy Editor および Domain Transition Editor 画面に関連します。まず、 Exception Policy Editor 画面に切り替えて、 a キーを押してエントリを追加します：</p>
 
-<a href="editpolicy/adding-initialize_domain.png"><img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400"></a>
+<img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400">
 
 <p>Domain Transition Editor 画面に切り替えてください。ディレクティブで指定されたプログラムのためのドメインが定義されていないので、ディレクティブで指定されたプログラムを実行しているドメインに ( -&gt; Not Found ) という表示がされている筈です。
 また、ディレクティブにより到達不可能になったドメインには ! マークが表示されます：</p>
@@ -321,7 +321,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>これを修正するために、 a キーを押してからドメイン名を入力することにより、ドメインを作成します：</p>
 
-<a href="editpolicy/adding-initialize_domain-target.png"><img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400"></a>
+<img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400">
 
 <p>すると、 ( -&gt; Not Found ) という部分が ( -&gt; n )" に変化しました：</p>
 
@@ -329,7 +329,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>これが、上のエントリに対応するドメインです：</p>
 
-<a href="editpolicy/added-initialize_domain-target.png"><img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400"></a>
+<img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400">
 
 <p>/usr/sbin/sendmail が新しいドメインで動作するようになりました。しかし、上記の例ではデーモンとして動作させるための初期化スクリプトから新しいドメインへと遷移することを示しています。デーモンとして実行しない場合には、新しいドメインへと遷移させたくないと思うかもしれません。その場合、 <a href="policy-specification/exception-policy-syntax.html.ja#no_initialize_domain">no_initialize_domain</a> ディレクティブを使用することができます。 Exception Policy Editor 画面に切り替えて、 no_initialize_domain /usr/sbin/sendmail from /bin/mail のようなエントリを追加してください。すると、 /bin/mail ドメインから /usr/sbin/sendmail が実行された場合には新しいドメインへと遷移しないようになります：</p>
 
@@ -339,7 +339,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p><a href="policy-specification/exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブは Exception Policy Editor および Domain Transition Editor 画面に関連します。まず、 Exception Policy Editor 画面に切り替えて、 a キーを押して keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash のようなエントリを追加します。 Domain Transition Editor 画面に戻ると、ディレクティブで指定したドメインに # マークが、ディレクティブで指定したドメインの子孫ドメインには ! マークが表示されます：</p>
 
-<a href="editpolicy/after-keep_domain-1.png"><img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400"></a>
+<img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400">
 
 <p>指定されたドメインではプログラムを実行してもドメイン遷移が行われないようになりました。特定のアプリケーションが実行された場合にドメイン遷移を再開させるには、 <a href="specification/exception-policy-syntax.html.ja#no_keep_domain">no_keep_domain</a> ディレクティブを指定することができます。 Exception Policy Editor 画面に切り替えて、 no_keep_domain /usr/bin/man from /bin/bash のようなエントリを追加してください。 Domain Transition Editor 画面に戻ると、 &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man ドメイン以下から ! マークが消えたことを確認できます：</p>
 
@@ -347,7 +347,7 @@ Statistics 画面では、選択されたエントリのクォータを設定し
 
 <p>Exception Policy Editor 画面で keep_domain any from /usr/bin/man のように指定することにより、 /usr/bin/man から先のドメイン遷移を行わないようにすることもできます。 Domain Transition Editor 画面で確認してください：</p>
 
-<a href="editpolicy/after-no_keep_domain.png"><img src="editpolicy/after-keep_domain-2.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400"></a>
+<img src="editpolicy/after-keep_domain-2.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400">
 
 <h2><a name="redundant">冗長なエントリを削除する</a></h2>
 

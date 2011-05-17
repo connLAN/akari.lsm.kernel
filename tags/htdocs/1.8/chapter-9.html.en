@@ -80,6 +80,7 @@
 <tr>
 <td><p>--module_name="$name"</p></td>
 <td><p>ccsecurity</p></td>
+<td><p>Specify akari in order to use AKARI.</p></td>
 </tr>
 <tr>
 <td><p>--grant_log="$bool"</p></td>

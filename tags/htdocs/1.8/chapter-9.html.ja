@@ -80,7 +80,7 @@
 <tr>
 <td><p>--module_name="$name"</p></td>
 <td><p>ccsecurity</p></td>
-<td><p>TOMOYO Linux がローダブルカーネルモジュールとしてコンパイルされた場合（ CONFIG_CCSECURITY_LKM=y ）に /sbin/ccs-init から実行される /etc/ccs/ccs-load-module を作成時に指定するモジュールの名前を指定します。</p></td>
+<td><p>AKARI を利用するために、 akari を指定してください。</p></td>
 </tr>
 <tr>
 <td><p>--grant_log="$bool"</p></td>
@@ -110,7 +110,7 @@
 </table>
 </div>
 
-<p>もし --file-only-profile オプションを指定せずに <code>/usr/lib/ccs/init_policy</code> を実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
+<p>もし --file-only-profile オプションを指定せずに <code>/usr/lib/ccs/init_policy --module_name=akari</code> を実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
 
 <pre>
 0-COMMENT=-----Disabled Mode-----
@@ -127,7 +127,7 @@
 3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
 </pre>
 
-<p>もし <code>/usr/lib/ccs/init_policy --file-only-profile</code> のように実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
+<p>もし <code>/usr/lib/ccs/init_policy --file-only-profile --module_name=akari</code> のように実行した場合、 /etc/ccs/profile.conf の CONFIG 行は以下のようになります：</p>
 
 <pre>
 0-COMMENT=-----Disabled Mode-----

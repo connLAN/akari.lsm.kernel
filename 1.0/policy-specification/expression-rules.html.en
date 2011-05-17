@@ -38,7 +38,7 @@
 
 <h3><a name="word">Word expression rules</a></h3>
 
-<p>Pathnames may contain not only regular characters but also spaces, carriage returns and multibyte characters. Such pathnames can be managed by TOMOYO Linux using octal expressions. Information from the table below can be used to represent special characters.</p>
+<p>Pathnames may contain not only regular characters but also spaces, carriage returns and multibyte characters. Such pathnames can be managed by AKARI using octal expressions. Information from the table below can be used to represent special characters.</p>
 
 <p>The first row indicates the lower 4 bits and the first column indicates the higher 4 bits.</p>
 

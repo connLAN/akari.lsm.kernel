@@ -84,15 +84,15 @@ AcceptEnv sftp_type
 SendEnv sftp_type
 </pre>
 
-<h3>ステップ４： TOMOYO Linux のインストールと初期化</h3>
+<h3>ステップ４： AKARI のインストールと初期化</h3>
 
-<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+<p><a href="chapter-3.html.ja">AKARI をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+<p>その後、 AKARI カーネルで再起動する前に以下の操作を行ってください。</p>
 
 <p>/bin/sftp-shell が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
 
@@ -130,7 +130,7 @@ file truncate @SFTP_FILES
 
 <h3>ステップ５：学習と運用</h3>
 
-<p>以上で準備は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+<p>以上で準備は完了です。 AKARI カーネルで再起動してください。</p>
 
 <p>学習モードに切り替えます。</p>
 

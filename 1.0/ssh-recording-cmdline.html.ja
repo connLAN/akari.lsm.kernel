@@ -153,15 +153,15 @@ int main(int raw_argc, char *raw_argv[])
 }
 </pre>
 
-<h3>ステップ２： TOMOYO Linux のインストールと初期化</h3>
+<h3>ステップ２： AKARI のインストールと初期化</h3>
 
-<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+<p><a href="chapter-3.html.ja">AKARI をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+<p>その後、 AKARI カーネルで再起動する前に以下の操作を行ってください。</p>
 
 <p>/usr/sbin/sshd が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
 
@@ -184,7 +184,7 @@ task auto_execute_handler /bin/record_cmdline
 
 <h3>ステップ３：運用</h3>
 
-<p>以上で設定は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+<p>以上で設定は完了です。 AKARI カーネルで再起動してください。</p>
 
 <p>SSH ログインして、適当に操作を行ってください。コンソールからログインして、以下のコマンドを実行すると、コマンドラインが記録されていることを確認することができます。</p>
 
@@ -194,7 +194,7 @@ task auto_execute_handler /bin/record_cmdline
 
 <h3>説明</h3>
 
-<p>TOMOYO Linux の execute_handler 機能が /usr/sbin/sshd から起動された /bin/bash からのプログラムの実行要求を横取りして、 /bin/record_cmdline に渡しています。 /bin/record_cmdline がプログラムの実行要求に渡されたパラメータを記録してから、要求されたプログラムを実行します。</p>
+<p>AKARI の execute_handler 機能が /usr/sbin/sshd から起動された /bin/bash からのプログラムの実行要求を横取りして、 /bin/record_cmdline に渡しています。 /bin/record_cmdline がプログラムの実行要求に渡されたパラメータを記録してから、要求されたプログラムを実行します。</p>
 
 <h3>応用</h3>
 

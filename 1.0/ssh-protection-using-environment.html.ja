@@ -131,15 +131,15 @@ AcceptEnv CERBERUS
 SendEnv CERBERUS
 </pre>
 
-<h3>ステップ３： TOMOYO Linux のインストールと初期化</h3>
+<h3>ステップ３： AKARI のインストールと初期化</h3>
 
-<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+<p><a href="chapter-3.html.ja">AKARI をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+<p>その後、 AKARI カーネルで再起動する前に以下の操作を行ってください。</p>
 
 <p>/usr/sbin/sshd が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
 
@@ -156,7 +156,7 @@ task auto_execute_handler /bin/env_chk
 
 <h3>ステップ４：運用</h3>
 
-<p>以上で設定は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+<p>以上で設定は完了です。 AKARI カーネルで再起動してください。</p>
 
 <p>クライアント側から sftp でサーバ側にアクセスし、すぐに切断されることを確認してください。</p>
 
@@ -166,7 +166,7 @@ task auto_execute_handler /bin/env_chk
 
 <h3>説明</h3>
 
-<p>TOMOYO Linux の execute_handler 機能が /usr/sbin/sshd からのプログラムの実行要求を横取りして、 /bin/env_chk に渡しています。 /bin/env_chk がプログラムの実行要求に渡されたパラメータの検査を行い、適切であると判断した場合には要求されたプログラムを実行します。</p>
+<p>AKARI の execute_handler 機能が /usr/sbin/sshd からのプログラムの実行要求を横取りして、 /bin/env_chk に渡しています。 /bin/env_chk がプログラムの実行要求に渡されたパラメータの検査を行い、適切であると判断した場合には要求されたプログラムを実行します。</p>
 
 <p>システムのユーザ認証を通過後なので、シェルの実行要求を伴わないＳＳＨの機能は許可されています。ポートフォワーディングの制限やシェルセッションの制限なども行いたい場合は、通常通り学習モードで動作を学習させて、強制モードで動作を制限してやる必要があります。</p>
 

@@ -166,15 +166,15 @@ sleep 5
 exit 1
 </pre>
 
-<h3>ステップ２： TOMOYO Linux のインストールと初期化</h3>
+<h3>ステップ２： AKARI のインストールと初期化</h3>
 
-<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+<p><a href="chapter-3.html.ja">AKARI をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+<p>その後、 AKARI カーネルで再起動する前に以下の操作を行ってください。</p>
 
 <p>/usr/sbin/sshd が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
 
@@ -191,7 +191,7 @@ task auto_execute_handler /bin/sshd_login
 
 <h3>ステップ３：学習と運用</h3>
 
-<p>以上で設定は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+<p>以上で設定は完了です。 AKARI カーネルで再起動してください。</p>
 
 <p>クライアント側から ssh でサーバ側にアクセスしてください。ログイン認証後に /bin/sshd_login によるプロンプトが表示されることを確認したら、 Ctrl-C を押してログアウトしてください。これで、 /bin/sshd_login のためのドメインである &lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login が作成されました。</p>
 
@@ -252,7 +252,7 @@ task auto_execute_handler /bin/sshd_login
 
 <p>/bin/webadmin-auth /bin/mailadmin-auth /bin/securityadmin-auth という３つのプログラムを /usr/sbin/sshd とログインシェルとの間に挿入してやることにより、親ドメインが異なる３つのドメイン（ "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/webadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/mailadmin-auth /bin/bash", "&lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/securityadmin-auth /bin/bash" ）を作成し、それぞれに必要なアクセス許可だけを与えるという形で権限を分割しています。このプログラムはサンプルなのでシェルスクリプトで済ませていますが、実際に使用する場合にはちゃんとしたユーザ認証を行うプログラムを作成してください。</p>
 
-<p>TOMOYO Linux の execute_handler 機能が /usr/sbin/sshd からのプログラムの実行要求を横取りして、 /bin/sshd_login に渡しています。 /bin/sshd_login がロールを選択させるためのプロンプトを表示して、ユーザからの応答を受け取ります。</p>
+<p>AKARI の execute_handler 機能が /usr/sbin/sshd からのプログラムの実行要求を横取りして、 /bin/sshd_login に渡しています。 /bin/sshd_login がロールを選択させるためのプロンプトを表示して、ユーザからの応答を受け取ります。</p>
 
 <p>システムのユーザ認証を通過後なので、シェルの実行要求を伴わないＳＳＨの機能は許可されています。ポートフォワーディングの制限なども行いたい場合は、通常通り学習モードで動作を学習させて、強制モードで動作を制限してやる必要があります。</p>
 

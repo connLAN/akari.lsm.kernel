@@ -131,15 +131,15 @@ AcceptEnv CERBERUS
 SendEnv CERBERUS
 </pre>
 
-<h3>Step 3: Install and initialize TOMOYO Linux</h3>
+<h3>Step 3: Install and initialize AKARI</h3>
 
-<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+<p><a href="chapter-3.html.en">Install AKARI</a> and run below commandline in order to initialize AKARI.</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+<p>Then, please do below operations before you reboot using AKARI kernel.</p>
 
 <p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /usr/sbin/sshd is executed.</p>
 
@@ -156,7 +156,7 @@ task auto_execute_handler /bin/env_chk
 
 <h3>Step 4: Operation</h3>
 
-<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+<p>Now, you are ready to start operation. Please reboot using AKARI kernel.</p>
 
 <p>Access the SSH server using sftp program, and verify that the connection is closed immediately after the SSH authentication.</p>
 
@@ -166,7 +166,7 @@ task auto_execute_handler /bin/env_chk
 
 <h3>Explanation</h3>
 
-<p>TOMOYO Linux's execute_handler functionality intercepts program execution requests from /usr/sbin/sshd and passes the program execution requests to /bin/env_chk . Then, /bin/env_chk validates parameters and execute the requested program only when appropriate parameters are provided.</p>
+<p>AKARI's execute_handler functionality intercepts program execution requests from /usr/sbin/sshd and passes the program execution requests to /bin/env_chk . Then, /bin/env_chk validates parameters and execute the requested program only when appropriate parameters are provided.</p>
 
 <p>This checking is applied after SSH authentication. Thus, operations without shell execution (e.g. TCP port forwarding) and operations after SSH login shell programs are permitted. If you want to restrict operations without shell execution or operations after SSH login shell, you need to develop policy for SSH server process and SSH login shells and apply enforcing mode.</p>
 

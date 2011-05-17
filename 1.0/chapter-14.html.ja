@@ -140,7 +140,7 @@ task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /static-
 task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /default
 </pre>
 
-<p>TOMOYO Linux は SELinux と同時に使用することができますが， SELinux のデフォルトの設定では <a href="policy-specification/proc-interface.html.ja#self_domain">/proc/ccs/self_domain</a> への書き込みが拒否されてしまいます． SELinux が有効になっている場合， Apache に対して /proc/ccs/self_domain への書き込みを認めるようにしてください． SELinux の設定を変更する手順はディストリビューションやバージョンにより異なります．以下の例は CentOS 5.6 では使えますが，それより古いバージョンでは使えないことがあります：</p>
+<p>AKARI は SELinux と同時に使用することができますが， SELinux のデフォルトの設定では <a href="policy-specification/proc-interface.html.ja#self_domain">/proc/ccs/self_domain</a> への書き込みが拒否されてしまいます． SELinux が有効になっている場合， Apache に対して /proc/ccs/self_domain への書き込みを認めるようにしてください． SELinux の設定を変更する手順はディストリビューションやバージョンにより異なります．以下の例は CentOS 5.6 では使えますが，それより古いバージョンでは使えないことがあります：</p>
 
 <pre class="command">
 # cd /etc/selinux/

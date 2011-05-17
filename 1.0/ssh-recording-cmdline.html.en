@@ -153,15 +153,15 @@ int main(int raw_argc, char *raw_argv[])
 }
 </pre>
 
-<h3>Step 2: Install and initialize TOMOYO Linux</h3>
+<h3>Step 2: Install and initialize AKARI</h3>
 
-<p><a href="chapter-3.html.en">Install TOMOYO Linux</a> and run below commandline in order to initialize TOMOYO Linux.</p>
+<p><a href="chapter-3.html.en">Install AKARI</a> and run below commandline in order to initialize AKARI.</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
-<p>Then, please do below operations before you reboot using TOMOYO Linux kernel.</p>
+<p>Then, please do below operations before you reboot using AKARI kernel.</p>
 
 <p>Append below line to /etc/ccs/exception_policy.conf in order to initialize domain transition when /usr/sbin/sshd is executed.</p>
 
@@ -184,7 +184,7 @@ task auto_execute_handler /bin/record_cmdline
 
 <h3>Step 3: Operation</h3>
 
-<p>Now, you are ready to start operation. Please reboot using TOMOYO Linux kernel.</p>
+<p>Now, you are ready to start operation. Please reboot using AKARI kernel.</p>
 
 <p>Login via SSH and do some operations. You can confirm that commandline parameters are recorded by doing below commandline.</p>
 
@@ -194,7 +194,7 @@ task auto_execute_handler /bin/record_cmdline
 
 <h3>Explanation</h3>
 
-<p>TOMOYO Linux's execute_handler functionality intercepts program execution requests from login shell which in executed by SSH server and passes the program execution requests to /bin/record_cmdline . Then, /bin/record_cmdline records parameters passed to program execution requests and actually executes the requested programs.</p>
+<p>AKARI's execute_handler functionality intercepts program execution requests from login shell which in executed by SSH server and passes the program execution requests to /bin/record_cmdline . Then, /bin/record_cmdline records parameters passed to program execution requests and actually executes the requested programs.</p>
 
 <h3>Application idea</h3>
 

@@ -238,18 +238,22 @@
 <td><p>CONFIG</p></td>
 <td><p>All operations</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::capability</p></td>
 <td><p>Non-POSIX Capabilities only</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::file</p></td>
 <td><p>File related operations only</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::ipc</p></td>
 <td><p>Inter-process communications only</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::misc</p></td>
 <td><p>Other miscellaneous parameters only</p></td>

@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI : 環境変数を用いてダウンロード専用ＳＦＴＰとアップロードも可能なＳＦＴＰを単一アカウントで実現する</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="sftp-protection-using-environment-variable.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>環境変数を用いてダウンロード専用ＳＦＴＰとアップロードも可能なＳＦＴＰを単一アカウントで実現する</h2>
+
+<h3>概要</h3>
+
+<p>ＳＳＨクライアントから提供された環境変数の内容に応じて、ダウンロード専用のＳＦＴＰサービスとアップロードも可能なＳＦＴＰサービスの２種類を単一のアカウントで使い分け、また、環境変数が提供されなかった場合にはシェルの実行を許可しないようにする手順について紹介します。</p>
+
+<h3>ステップ１：アカウントの作成</h3>
+
+<p>このページでは、ＳＦＴＰ用アカウントのユーザ名を sftp とします。</p>
+
+<p>ＳＦＴＰ用アカウントのログインシェルを /bin/sftp-shell とします。</p>
+
+<p>ＳＦＴＰ用のコンテンツを置くディレクトリを /var/sftp/ とします。</p>
+
+<p>ＳＦＴＰサーバのパス名を /usr/libexec/openssh/sftp-server とします。</p>
+
+<pre class="command">
+# useradd -s /bin/sftp-shell -d /var/sftp sftp
+# passwd sftp
+</pre>
+
+<h3>ステップ２：使用するプログラムの作成</h3>
+
+<p>以下の内容を /bin/sftp-shell として保存し、実行許可を与えます。</p>
+
+<pre>
+#! /bin/sh
+[ "$sftp_type" == "ro-sftp" ] &amp;&amp; exec /bin/ro-sftp
+[ "$sftp_type" == "rw-sftp" ] &amp;&amp; exec /bin/rw-sftp
+exit 1
+</pre>
+
+<p>以下の内容を /bin/rw-sftp および /bin/ro-sftp として保存し、実行許可を与えます。（ /bin/rw-sftp と /bin/ro-sftp の内容は同一です。）</p>
+
+<pre>
+#! /bin/sh
+umask 0022
+exec /usr/libexec/openssh/sftp-server
+</pre>
+
+<h3>ステップ３：環境変数を渡すための設定</h3>
+
+<p>サーバ側の /etc/ssh/sshd_config の末尾に環境変数名を指定します。</p>
+
+<pre>
+AcceptEnv sftp_type
+</pre>
+
+<p>クライアント側の /etc/ssh/ssh_config の末尾に環境変数名を指定します。</p>
+
+<pre>
+SendEnv sftp_type
+</pre>
+
+<h3>ステップ４： TOMOYO Linux のインストールと初期化</h3>
+
+<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy
+</pre>
+
+<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+
+<p>/bin/sftp-shell が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+initialize_domain /bin/sftp-shell from any
+</pre>
+
+<p>ＳＦＴＰコンテンツ用ディレクトリ以下をまとめて指定できるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+path_group SFTP_DIRS /var/sftp/\{\*\}/
+path_group SFTP_FILES /var/sftp/\{\*\}/\*
+path_group SFTP_FILES /var/sftp/\*
+</pre>
+
+<p>ＳＦＴＰコンテンツの参照と更新ができるようにするために、 /etc/ccs/domain_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+&lt;kernel&gt; /bin/sftp-shell
+
+&lt;kernel&gt; /bin/sftp-shell /bin/ro-sftp /usr/libexec/openssh/sftp-server
+file read @SFTP_FILES
+
+&lt;kernel&gt; /bin/sftp-shell /bin/rw-sftp /usr/libexec/openssh/sftp-server
+file read @SFTP_FILES
+file write @SFTP_FILES
+file create @SFTP_FILES 0644
+file unlink @SFTP_FILES
+file mkdir @SFTP_DIRS 0755
+file rmdir @SFTP_DIRS
+file rename @SFTP_FILES @SFTP_FILES
+file rename @SFTP_DIRS @SFTP_DIRS
+file truncate @SFTP_FILES
+</pre>
+
+<h3>ステップ５：学習と運用</h3>
+
+<p>以上で準備は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+
+<p>学習モードに切り替えます。</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 1 '&lt;kernel&gt; /bin/sftp-shell'
+</pre>
+
+<p>環境変数 sftp_type に ro-sftp を設定して、クライアントから sftp でアクセスしてください。このページでは、サーバのホスト名を server とします。</p>
+
+<pre class="command">
+$ export sftp_type="ro-sftp"
+$ sftp sftp@server
+</pre>
+
+<p>この時点では、プロセスには &lt;kernel&gt; /bin/sftp-shell /bin/ro-sftp /usr/libexec/openssh/sftp-server ドメインが割り当てられています。このドメインから適当に操作を行います。ただし、書込み操作は行わないでください。</p>
+
+<p>環境変数 sftp_type に rw-sftp を設定して、クライアントから sftp でアクセスしてください。</p>
+
+<pre class="command">
+$ export sftp_type="rw-sftp"
+$ sftp sftp@server
+</pre>
+
+<p>この時点では、プロセスには &lt;kernel&gt; /bin/sftp-shell /bin/rw-sftp /usr/libexec/openssh/sftp-server ドメインが割り当てられています。このドメインから適当に操作を行います。書込み操作も行ってください。</p>
+
+<p>強制モードに切り替えます。</p>
+
+<pre class="command">
+# /usr/sbin/ccs-setprofile -r 3 '&lt;kernel&gt; /bin/sftp-shell'
+</pre>
+
+<p>ポリシーを保存します。</p>
+
+<pre class="command">
+# /usr/sbin/ccs-savepolicy
+</pre>
+
+<h3>説明</h3>
+
+<p>親ドメインが異なる２つの sftp-server 用のドメインを作成し、片方にだけ書き込み許可を与えています。このプログラムはサンプルなので判りやすいキーワードを利用していますが、実際に使用する場合にはパスワードの代わりとなるので推測されないキーワードを利用してください。</p>
+
+<h3>応用</h3>
+
+<p>環境変数 SSH_CLIENT の内容に基づいて特定のＩＰアドレスやポート番号から接続してきたクライアントにはアップロードを許可し、それ以外のクライアントにはダウンロードのみ許可するという使い方もできます。</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="sftp-protection-using-environment-variable.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

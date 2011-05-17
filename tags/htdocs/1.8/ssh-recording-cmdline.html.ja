@@ -1,0 +1,238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI : SSH セッションのコマンドラインを記録する</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="ssh-recording-cmdline.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>SSH セッションのコマンドラインを記録する</h2>
+
+<h3>概要</h3>
+
+<p>このページでは、ＳＳＨのログインセッションで行われた操作内容を記録する手順について紹介します。</p>
+
+<h3>ステップ１：ソースコードのコンパイル</h3>
+
+<p>以下のソースコードをコンパイルします。このページでは、コンパイルされたプログラムの名前を /bin/record_cmdline とします。また、ＳＳＨサーバのパス名を /usr/sbin/sshd とします。また、ログインシェルのパス名を /bin/bash とします。</p>
+
+<pre>
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;syslog.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;sys/file.h&gt;
+#include &lt;fcntl.h&gt;
+
+static void encode(char *buffer, const char *string)
+{
+	while (1) {
+		const unsigned char c = *(const unsigned char *) string++;
+		if (!c)
+			break;
+		else if (c == '\\') {
+			*buffer++ = '\\';
+			*buffer++ = '\\';
+		} else if (c &gt; 32 &amp;&amp; c &lt; 127)
+			*buffer++ = c;
+		else {
+			*buffer++ = '\\';
+			*buffer++ = '0' + (c &gt;&gt; 6);
+			*buffer++ = '0' + ((c &gt;&gt; 3) &amp; 7);
+			*buffer++ = '0' + (c &amp; 7);
+		}
+	}
+}
+
+int main(int raw_argc, char *raw_argv[])
+{
+	int i;
+	int argc;
+	int envc;
+	char *filename;
+	char **argv;
+	char **envp;
+	{ /* Check that I'm an execute handler process.  */
+		int fd = open("/proc/ccs/.execute_handler", O_RDONLY);
+		close(fd);
+		if (fd == EOF) {
+			fprintf(stderr, "FATAL: I'm not execute_handler.\n");
+			return 1;
+		}
+	}
+	if (raw_argc &lt; 7)
+		return 1;
+	filename = raw_argv[4];
+	argc = atoi(raw_argv[5]);
+	envc = atoi(raw_argv[6]);
+	if (raw_argc != argc + envc + 7)
+		return 1;
+	for (i = 5; i &lt; argc + 5; i++)
+		raw_argv[i] = raw_argv[i + 2];
+	raw_argv[argc + 5] = NULL;
+	for (i = argc + 6; i &lt; argc + envc + 6; i++)
+		raw_argv[i] = raw_argv[i + 1];
+	raw_argv[argc + envc + 6] = NULL;
+	argv = raw_argv + 5;
+	envp = raw_argv + argc + 6;
+
+	{ /* Record parameters including argv[] and envp[]. */
+		/* Get exlusive lock for serializing syslog(). */
+		const int fd = open("/proc/self/exe", O_RDONLY);
+		if (fd == EOF || flock(fd, LOCK_EX) == EOF)
+			return 1;
+		openlog(raw_argv[0], LOG_NDELAY, LOG_USER);
+                syslog(LOG_INFO, "Domain = %s\n", raw_argv[1]);
+                syslog(LOG_INFO, "Caller Program = %s\n", raw_argv[2]);
+                syslog(LOG_INFO, "Process Status = %s\n", raw_argv[3]);
+                syslog(LOG_INFO, "Requested Program = %s\n", filename);
+                syslog(LOG_INFO, "argc=%d\n", argc);
+                syslog(LOG_INFO, "envc=%d\n", envc);
+		for (i = 0; i &lt; argc; i++) {
+			int max_len = strlen(argv[i]) * 4 + 128;
+			int len;
+			char *buffer = calloc(max_len, 1);
+			if (!buffer)
+				return 1;
+			len = snprintf(buffer, 100, "argv[%d] = \"", i);
+			encode(buffer + len, argv[i]);
+			len = strlen(buffer);
+			snprintf(buffer + len, max_len - len - 1, "\"");
+			syslog(LOG_INFO, "%s\n", buffer);
+			free(buffer);
+		}
+		for (i = 0; i &lt; envc; i++) {
+			int max_len = strlen(envp[i]) * 4 + 128;
+			int len;
+			char *buffer = calloc(max_len, 1);
+			if (!buffer)
+				return 1;
+			len = snprintf(buffer, 100, "envp[%d] = \"", i);
+			encode(buffer + len, envp[i]);
+			len = strlen(buffer);
+			snprintf(buffer + len, max_len - len - 1, "\"");
+			syslog(LOG_INFO, "%s\n", buffer);
+			free(buffer);
+		}
+		closelog();
+		/* Release exclusive lock. */
+		close(fd);
+	}
+
+	/* Execute requested program. */
+	execve(filename, argv, envp);
+	fprintf(stderr, "ERROR: Can't execute %s .\n", filename);
+	return 1;
+}
+</pre>
+
+<h3>ステップ２： TOMOYO Linux のインストールと初期化</h3>
+
+<p><a href="chapter-3.html.ja">TOMOYO Linux をインストール</a>してから、以下のコマンドを実行して初期設定を行ってください。</p>
+
+<pre class="command">
+# /usr/lib/ccs/init_policy
+</pre>
+
+<p>その後、 TOMOYO Linux カーネルで再起動する前に以下の操作を行ってください。</p>
+
+<p>/usr/sbin/sshd が実行された場合にはドメイン遷移が初期化されるようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+initialize_domain /usr/sbin/sshd from any
+</pre>
+
+<p>ＳＳＨサーバから起動されたログインシェル以降はドメイン遷移を行わないようにするために、 /etc/ccs/exception_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
+</pre>
+
+<p>ＳＳＨサーバから起動されたログインシェルからのプログラムの実行要求が /bin/record_cmdline に渡されるようにするために、 /etc/ccs/domain_policy.conf に以下の内容を追加します。</p>
+
+<pre>
+&lt;kernel&gt; /usr/sbin/sshd /bin/bash
+task auto_execute_handler /bin/record_cmdline
+</pre>
+
+<h3>ステップ３：運用</h3>
+
+<p>以上で設定は完了です。 TOMOYO Linux カーネルで再起動してください。</p>
+
+<p>SSH ログインして、適当に操作を行ってください。コンソールからログインして、以下のコマンドを実行すると、コマンドラインが記録されていることを確認することができます。</p>
+
+<pre class="command">
+# grep record_cmdline /var/log/messages
+</pre>
+
+<h3>説明</h3>
+
+<p>TOMOYO Linux の execute_handler 機能が /usr/sbin/sshd から起動された /bin/bash からのプログラムの実行要求を横取りして、 /bin/record_cmdline に渡しています。 /bin/record_cmdline がプログラムの実行要求に渡されたパラメータを記録してから、要求されたプログラムを実行します。</p>
+
+<h3>応用</h3>
+
+<p>プログラム実行時のパラメータが /bin/record_cmdline に渡されるので、その内容に基づいてプログラムの実行を許可するかどうか判断するように /bin/record_cmdline をカスタマイズできます。</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="ssh-recording-cmdline.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

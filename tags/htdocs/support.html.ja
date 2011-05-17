@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI サポート</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-support">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="support.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h3>ドキュメント</h3>
+
+<p>AKARI に関するドキュメントが豊富に提供されています。<a href="documentation.html.ja">ドキュメント</a>ページを参照してください。</p>
+
+<h3>メーリングリスト</h3>
+
+<p>リリース告知メールを受け取りたい場合や質問を送りたい場合には、以下のメーリングリストのどちらかをご利用ください。</p>
+<ul>
+<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users">TOMOYO Users （日本語）</a></li>
+<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users-en">TOMOYO Users （英語）</a></li>
+</ul>
+
+<h3>連絡先</h3>
+
+<p>もし、公開のメーリングリストを使いたくない場合には、以下の宛先にメールを送信してください。</p>
+<ul>
+<li><a href="mailto:haradats@gmail.com">Project Manager</a></li>
+</ul>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="support.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI ホーム</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-home">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="index.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="main">
+
+<div id="tomoyopenguin">
+<img src="media/tomoyopenguin.png" alt="tomoyopenguin.png" width="115" height="150">
+</div>
+
+<div id="introduction">
+<h3>システムを解析および保護するためのセキュリティモジュール</h3>
+
+<p>AKARI は Linux 向けの強制アクセス制御（ MAC ）の実装で、システムのセキュリティを高める用途は勿論、システムの解析を行う用途でも使えるツールです。AKARI は２００３年に始まった <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a> をベースとして作成された、 Linux カーネルモジュールです。</p>
+
+<p>AKARI はシステムの振る舞いに注目します。プロセスは何かの目的を達成するために生成されます。 AKARI は（出入国審査官のように）それぞれのプロセスに対して目的を達成するのに必要な振る舞いや資源について報告させることができます。また、保護モードを有効にすることにより、（運用監視人のように）システム管理者により承認された振る舞いと資源へのアクセスのみを許可することもできます。</p>
+
+<p>AKARI には以下のような特徴があります。</p>
+<ul>
+<li>システムの解析</li>
+<li>強制アクセス制御によるシステムのセキュリティ強化</li>
+<li>自動ポリシー生成</li>
+<li>簡単な構文</li>
+<li>使いやすさ</li>
+<li>とても少ない依存性</li>
+<li>既存プログラムの修正が不要</li>
+</ul>
+
+<p>もっと詳しい情報については<a href="about.html.ja">詳細</a>を参照してください。</p>
+
+</div>
+
+</div> <!-- main -->
+
+<div id="news">
+
+<h3>News</h3>
+
+<hr>
+
+<p class="timestamp">２０１１年５月１７日</p>
+<h4>ウェブサイトがリニューアルされました。</h4>
+<p class="article">AKARI のウェブサイトが大きくリニューアルされました。気に入っていただけると嬉しいです。お気づきの点がありましたら、<a href="mailto:tomoyo-users@lists.sourceforge.jp">メーリングリスト</a>宛にお知らせください。</p>
+
+<br>
+
+<p class="timestamp">２０１１年５月１１日</p>
+<h4>AKARI 1.0.14 がリリースされました。</h4>
+<p class="article">AKARI と ccs-tools の新しいパッケージがリリースされました。</p>
+
+<br>
+
+<p class="timestamp">２０１１年５月５日</p>
+<h4>AKARI 1.0.13 がリリースされました。</h4>
+<p class="article">AKARI の新しいパッケージがリリースされました。</p>
+
+<br>
+
+<p class="timestamp">２０１１年４月１１日</p>
+<h4>AKARI 1.0.12 がリリースされました。</h4>
+<p class="article">AKARI の新しいパッケージがリリースされました。</p>
+
+<br>
+
+<p class="timestamp">２０１１年４月１日</p>
+<h4>AKARI 1.0.11 がリリースされました。</h4>
+<p class="article">AKARI と ccs-tools の新しいパッケージがリリースされました。</p>
+
+</div><!-- news -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="index.html.en">English page</a>.</p>
+<p class="counter"><!--#include virtual="/cgi-bin/counter.pl" --></p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

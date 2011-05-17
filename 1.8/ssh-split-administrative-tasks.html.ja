@@ -295,7 +295,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/sshd_login /bin/security
 <p class="language">Go to <a href="ssh-split-administrative-tasks.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
 </div>
 
 </body>

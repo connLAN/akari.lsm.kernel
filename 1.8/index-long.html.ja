@@ -30,9 +30,9 @@
 
 <div id="regular-content">
 
-<h2>TOMOYO Linux 1.8.x : 導入ガイド</h2>
+<h2>AKARI : 導入ガイド</h2>
 
-<p>TOMOYO Linux 1.8.x 導入ガイドへようこそ。<a href="chapter-1.html.ja">早速始めましょう！</a></p>
+<p>AKARI 導入ガイドへようこそ。<a href="chapter-1.html.ja">早速始めましょう！</a></p>
 
 <h3><a name="core" href="index.html.ja#core">基本編</a></h3>
 
@@ -41,30 +41,27 @@
 <li>1.1. <a href="chapter-1.html.ja#1.1">このガイドについて</a></li>
 <li>1.2. <a href="chapter-1.html.ja#1.2">表記に関して</a></li>
 </ul>
-<p><strong>Chapter 2: <a class="black" href="chapter-2.html.ja">なぜ TOMOYO Linux が必要なのですか？</a></strong></p>
+<p><strong>Chapter 2: <a class="black" href="chapter-2.html.ja">なぜ AKARI が必要なのですか？</a></strong></p>
 <ul>
-<li>2.1. <a href="chapter-2.html.ja#2.1">TOMOYO Linux とは何ですか？</a></li>
+<li>2.1. <a href="chapter-2.html.ja#2.1">AKARI とは何ですか？</a></li>
 <li>2.2. <a href="chapter-2.html.ja#2.2">強制アクセス制御とは何ですか？</a></li>
-<li>2.3. <a href="chapter-2.html.ja#2.3">TOMOYO Linux は何の役に立ちますか？</a></li>
+<li>2.3. <a href="chapter-2.html.ja#2.3">AKARI は何の役に立ちますか？</a></li>
 </ul>
-<p><strong>Chapter 3: <a class="black" href="chapter-3.html.ja">どうすれば TOMOYO Linux をインストールできますか？</a></strong></p>
+<p><strong>Chapter 3: <a class="black" href="chapter-3.html.ja">どうすれば AKARI をインストールできますか？</a></strong></p>
 <ul>
-<li>3.1. <a href="chapter-3.html.ja#3.1">私の使っているディストリビューション用のバイナリパッケージはありますか？</a></li>
-<li>3.2. <a href="chapter-3.html.ja#3.2">バイナリパッケージからのインストール</a></li>
-<li>3.3. <a href="chapter-3.html.ja#3.3">ソースからのインストール</a><br>
+<li>3.1. <a href="chapter-3.html.ja#3.1">依存するパッケージのインストール</a></li>
+<li>3.2. <a href="chapter-3.html.ja#3.2">カーネルモジュールのインストール</a></li>
   <ul class="nested">
-    <li>3.3.1. <a href="chapter-3.html.ja#3.3.1">依存するパッケージのインストール</a></li>
-    <li>3.3.2. <a href="chapter-3.html.ja#3.3.2">カーネルのダウンロードとパッチの適用</a></li>
-    <li>3.3.3. <a href="chapter-3.html.ja#3.3.3">カーネルコンパイルオプションの設定</a></li>
-    <li>3.3.4. <a href="chapter-3.html.ja#3.3.4">カーネルのコンパイルおよびインストール</a></li>
-    <li>3.3.5. <a href="chapter-3.html.ja#3.3.5">管理ツールのインストール</a></li>
+    <li>3.2.1. <a href="chapter-3.html.ja#3.2.1">カーネルモジュール開発パッケージの入手</a></li>
+    <li>3.2.2. <a href="chapter-3.html.ja#3.2.2">AKARI カーネルモジュールのコンパイルとインストール</a></li>
   </ul></li>
+<li>3.3. <a href="chapter-3.html.ja#3.3">管理ツールのインストール</a></li>
 <li>3.4. <a href="chapter-3.html.ja#3.4">設定の初期化</a></li>
 <li>3.5. <a href="chapter-3.html.ja#3.5">ブートローダの設定</a></li>
 <li>3.6. <a href="chapter-3.html.ja#3.6">システムの再起動</a></li>
-<li>3.7. <a href="chapter-3.html.ja#3.7">どのようにすれば TOMOYO Linux を無効化またはアンインストールできますか？</a></li>
+<li>3.7. <a href="chapter-3.html.ja#3.7">どのようにすれば AKARI を無効化またはアンインストールできますか？</a></li>
 </ul>
-<p><strong>Chapter 4: <a class="black" href="chapter-4.html.ja">TOMOYO Linux はどのように動きますか？</a></strong></p>
+<p><strong>Chapter 4: <a class="black" href="chapter-4.html.ja">AKARI はどのように動きますか？</a></strong></p>
 <ul>
 <li>4.1. <a href="chapter-4.html.ja#4.1">ドメインを理解する</a></li>
 <li>4.2. <a href="chapter-4.html.ja#4.2">ポリシーエディタを用いてドメインを確認する</a></li>
@@ -100,13 +97,13 @@
 <p><strong>Chapter 7: <a class="black" href="chapter-7.html.ja">ポリシーの適用はどのように行いますか？</a></strong></p>
 <ul>
 <li>7.1. <a href="chapter-7.html.ja#7.1">強制モードを有効にする</a></li>
-<li>7.2. <a href="chapter-7.html.ja#7.2">全てのドメインに対して強制モードを有効にする</a></li>
+<li>7.2. <a href="chapter-7.html.ja#7.2">通知デーモン</a></li>
 <li>7.3. <a href="chapter-7.html.ja#7.3">ポリシー違反を対話的に処理する</a><br>
   <ul class="nested">
     <li>7.3.1. <a href="chapter-7.html.ja#7.3.1">ccs-queryd の操作例</a></li>
     <li>7.3.2. <a href="chapter-7.html.ja#7.3.2">ccs-queryd の出力例</a></li>
   </ul></li>
-<li>7.4. <a href="chapter-7.html.ja#7.4">通知デーモン</a></li>
+<li>7.4. <a href="chapter-7.html.ja#7.4">全てのドメインに対して強制モードを有効にする</a></li>
 <li>7.5. <a href="chapter-7.html.ja#7.5">おわりに</a></li>
 </ul>
 
@@ -176,13 +173,10 @@
 <p><strong>Appendix A: <a class="black" href="man-pages/index.html.ja">管理ツール</a></strong></p>
 <p><strong>Appendix B: <a class="black" href="policy-specification/index.html.ja">ポリシー仕様</a></strong></p>
 <p><strong>Appendix C: <a class="black" href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a></strong></p>
-<p><strong>Appendix D: <a class="black" href="android-arm.html.ja">TOMOYO Linux on Android</a></strong></p>
-<p><strong>Appendix E: <a class="black" href="meego-x86.html.ja">TOMOYO Linux on MeeGo 1.1</a></strong></p>
-<p><strong>Appendix F: <a class="black" href="cat760-sh.html.ja">TOMOYO Linux on CAT760</a></strong></p>
-<p><strong>Appendix G: <a class="black" href="ssh-split-administrative-tasks.html.ja">SSH サービスでシステム管理者の操作を制限する</a></strong></p>
-<p><strong>Appendix H: <a class="black" href="ssh-protection-using-environment.html.ja">環境変数を用いた SSH サービスのブルートフォース対策</a></strong></p>
-<p><strong>Appendix I: <a class="black" href="sftp-protection-using-environment-variable.html.ja">環境変数を用いてダウンロード専用ＳＦＴＰとアップロードも可能なＳＦＴＰを単一アカウントで実現する</a></strong></p>
-<p><strong>Appendix J: <a class="black" href="ssh-recording-cmdline.html.ja">SSH セッションのコマンドラインを記録する</a></strong></p>
+<p><strong>Appendix D: <a class="black" href="ssh-split-administrative-tasks.html.ja">SSH サービスでシステム管理者の操作を制限する</a></strong></p>
+<p><strong>Appendix E: <a class="black" href="ssh-protection-using-environment.html.ja">環境変数を用いた SSH サービスのブルートフォース対策</a></strong></p>
+<p><strong>Appendix F: <a class="black" href="sftp-protection-using-environment-variable.html.ja">環境変数を用いてダウンロード専用ＳＦＴＰとアップロードも可能なＳＦＴＰを単一アカウントで実現する</a></strong></p>
+<p><strong>Appendix G: <a class="black" href="ssh-recording-cmdline.html.ja">SSH セッションのコマンドラインを記録する</a></strong></p>
 
 </div><!-- regular-content -->
 

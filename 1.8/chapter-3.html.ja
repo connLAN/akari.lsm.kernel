@@ -34,327 +34,90 @@
 <p><a href="chapter-2.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-4.html.ja">&lt;次&gt;</a></p>
 </div>
 
-<h2>Chapter 3: どうすれば TOMOYO Linux をインストールできますか？</h2>
+<h2>Chapter 3: どうすれば AKARI をインストールできますか？</h2>
 
-<h3><a name="3.1">3.1. 私の使っているディストリビューション用のバイナリパッケージはありますか？</a></h3>
+<h3><a name="3.1">3.1. 依存するパッケージのインストール</a></h3>
 
-<p>TOMOYO Linux を使うには、ディストリビュータが配布しているカーネルパッケージとは別のカーネルをインストールする必要があります。インストールする方法は２通りあります。バイナリパッケージをインストールする方法と、ソースに対してパッチを当ててコンパイルする方法です。もし、利用しているディストリビューションが以下の何れかである場合、コンパイルをする必要無しに簡単にバイナリパッケージをインストールすることができます。</p>
-
-<p>以下のディストリビューションに関してバイナリパッケージが提供されています：</p>
+<p>カーネルモジュールおよびツールをコンパイルするためには以下のパッケージが必要になります。</p>
 
 <ul>
-<li>Fedora 11/12/13/14</li>
-<li>CentOS 3.9/4.9/5.6</li>
-<li>RHEL 6</li>
-<li>Debian Etch/Lenny/Squeeze</li>
-<li>OpenSUSE 11.0/11.1/11.2/11.3/11.4</li>
-<li>Asianux 2.0/3.0</li>
-<li>Ubuntu 6.06/8.04/8.10/9.04/9.10/10.04/10.10/11.04</li>
-<li>Vine Linux 4.2/5.2</li>
+<li><b>wget</b>：ファイルをダウンロードするために必要です。</li>
+<li><b>gcc</b>：コンパイルを行うために必要です。</li>
+<li><b>make</b>： Makefile を利用するために必要です。</li>
+<li><b>ncurses</b>：ツールのユーザインタフェースを利用するために必要です。</li>
 </ul>
 
-<p>もし、上記の何れかのディストリビューションを使用しているのであれば、<a href="chapter-3.html.ja#3.2">3.2. バイナリパッケージからのインストール</a>へと進んでください。そうではない場合には、カーネルをコンパイルする必要がありますので、<a href="chapter-3.html.ja#3.3">3.3. ソースからのインストール</a>へと進んでください。</p>
-
-<h3><a name="3.2">3.2. バイナリパッケージからのインストール</a></h3>
-
-<p>RPM 形式のパッケージを使用しているディストリビューションの場合、以下のようにして GPG 鍵をインポートしてください：</p>
-
-<pre class="command">
-# wget http://I-love.SAKURA.ne.jp/kumaneko-key
-# rpm --import kumaneko-key
-</pre>
-
-<p>DEB 形式のパッケージを使用しているディストリビューションの場合、以下のようにして GPG 鍵をインポートしてください：</p>
-
-<pre class="command">
-# wget http://I-love.SAKURA.ne.jp/kumaneko-key
-# apt-key add kumaneko-key
-</pre>
-
-<p>プロジェクトで配布しているバイナリパッケージは <a href="http://sourceforge.jp/projects/tomoyo/releases/?package_id=12016" target="_blank">SourceForge のページ</a>から手動でダウンロードすることも可能です。カーネルパッケージと管理ツールパッケージが必要です。レポジトリを使うと簡単にダウンロードできます。レポジトリを使う場合には以下のコマンドを実行してください：</p>
-
-<p><strong>Fedora 14 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Fedora14/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>Fedora 13 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Fedora13/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>Fedora 12 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Fedora12/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>Fedora 11 (686-PAE flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Fedora11/ccs.repo
-# yum install ccs-kernel-PAE ccs-tools
-</pre>
-
-<p><strong>RHEL 6 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/RHEL6/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>CentOS 5.6 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/CentOS5/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>CentOS 4.9 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/CentOS4/ccs.repo
-# yum install ccs-kernel-smp ccs-tools
-</pre>
-
-<p><strong>CentOS 3.9 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O - http://tomoyo.sourceforge.jp/repos-1.8/CentOS3/ccs.repo &gt;&gt; /etc/yum.conf
-# yum install ccs-kernel-smp ccs-tools
-</pre>
-
-<p><strong>Asianux 3.0 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Asianux3/ccs.repo
-# yum install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>Asianux 2.0 (686 flavour)</strong></p>
-<pre class="command">
-# wget -O /etc/yum.repos.d/ccs.repo http://tomoyo.sourceforge.jp/repos-1.8/Asianux2/ccs.repo
-# yum install ccs-kernel-smp ccs-tools
-</pre>
-
-<p><strong>Vine Linux 5.2 (686 flavour)</strong></p>
-<pre class="command">
-# echo "repomd http://tomoyo.sourceforge.jp/repos-1.8/VineLinux5/ ./" &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>Vine Linux 4.2 (686 flavour)</strong></p>
-<pre class="command">
-# echo "repomd http://tomoyo.sourceforge.jp/repos-1.8/VineLinux4/ ./" &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install ccs-kernel ccs-tools
-</pre>
-
-<p><strong>OpenSUSE 11.4 (default flavour)</strong></p>
-<pre class="command">
-# zypper addrepo --type=YUM http://tomoyo.sourceforge.jp/repos-1.8/SUSE11.4/ ccs
-# zypper install ccs-kernel-default ccs-tools
-</pre>
-
-<p><strong>OpenSUSE 11.3 (default flavour)</strong></p>
-<pre class="command">
-# zypper addrepo --type=YUM http://tomoyo.sourceforge.jp/repos-1.8/SUSE11.3/ ccs
-# zypper install ccs-kernel-default ccs-tools
-</pre>
-
-<p><strong>OpenSUSE 11.2 (default flavour)</strong></p>
-<pre class="command">
-# zypper addrepo --type=YUM http://tomoyo.sourceforge.jp/repos-1.8/SUSE11.2/ ccs
-# zypper install ccs-kernel-default ccs-tools
-</pre>
-
-<p><strong>OpenSUSE 11.1 (default flavour)</strong></p>
-<pre class="command">
-# zypper addrepo --type=YUM http://tomoyo.sourceforge.jp/repos-1.8/SUSE11.1/ ccs
-# zypper install ccs-kernel-default ccs-tools
-</pre>
-
-<p><strong>OpenSUSE 11.0 (default flavour)</strong></p>
-<pre class="command">
-# zypper addrepo --type=YUM http://tomoyo.sourceforge.jp/repos-1.8/SUSE11.0/ ccs
-# zypper install ccs-kernel-default ccs-tools
-</pre>
-
-<p><strong>Debian Squeeze (686 flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/DebianSqueeze/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-image-2.6-686-ccs ccs-tools
-</pre>
-
-<p><strong>Debian Lenny (686 flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/DebianLenny/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-image-2.6-686-ccs ccs-tools
-</pre>
-
-<p><strong>Debian Etch (686 flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/DebianEtch/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-image-2.6-686-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 11.04 (generic-pae flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu11.04/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-generic-pae-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 10.10 (generic-pae flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu10.10/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-generic-pae-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 10.04 (generic-pae flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu10.04/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-generic-pae-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 9.10 (generic flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu9.10/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 9.04 (generic flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu9.04/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 8.10 (generic flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu8.10/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 8.04 (generic flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu8.04/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-ccs ccs-tools
-</pre>
-
-<p><strong>Ubuntu 6.06 (686 flavour)</strong></p>
-<pre class="command">
-# echo 'deb http://tomoyo.sourceforge.jp/repos-1.8/Ubuntu6.06/ ./' &gt;&gt; /etc/apt/sources.list
-# apt-get update
-# apt-get install linux-686-ccs ccs-tools
-</pre>
-
-<p><a href="chapter-3.html.ja#3.4">3.4. 設定の初期化</a>へと進んでください。</p>
-
-<h3><a name="3.3">3.3. ソースからのインストール</a></h3>
-
-<p>あなたが利用しているディストリビューション向けのバイナリパッケージが提供されていない場合、自分でカーネルをコンパイルする必要があります。</p>
-
-<p>ただし、カーネルのコンパイルをせずに TOMOYO Linux の機能の主要部分を使いたい場合には、 AKARI というカーネルモジュールを利用することができます。このモジュールは TOMOYO 2.x よりも豊富な機能を提供していますが、 TOMOYO 1.x の機能の一部は使えません。「カーネルがどのようなコンパイルオプションでコンパイルされたか」と「ＣＰＵアーキテクチャ」に依存するという制限がありますが、カーネル 2.6.0 以降の全てのバージョンに対応しており、簡単に利用できます。 <a href="http://akari.sourceforge.jp/comparison.html.ja">機能比較表</a>で AKARI と TOMOYO 1.x と TOMOYO 2.x の違いについて詳細に説明されています。もし、 AKARI を使うのであれば、 <a href="http://akari.sourceforge.jp/">AKARI のウェブサイト</a>へと移動してください。</p>
-
-<h4><a name="3.3.1">3.3.1. 依存するパッケージのインストール</a></h4>
-
-<p>カーネルと管理ツールをコンパイルするために以下のパッケージが必要になります：</p>
-<ul>
-<li><strong>wget</strong> ：ソースコードをダウンロードするのに必要です。</li>
-<li><strong>patch</strong> ：カーネルにパッチを当てるのに必要です。</li>
-<li><strong>gcc</strong> ：カーネルおよび管理ツールをコンパイルするのに必要です。</li>
-<li><strong>make</strong> ：カーネルおよび管理ツールをコンパイルするのに必要です。</li>
-<li><strong>ncurses-devel</strong> または <strong>libncurses-dev</strong> ：管理ツールをコンパイルするのに必要です。</li>
-</ul>
-
-<p>これらのパッケージは以下のコマンドを実行することでインストールできます：</p>
+<p>これらのパッケージは以下のコマンドを実行することによりインストールできます：</p>
 
 <p><strong>RedHat 系の場合</strong></p>
 <pre class="command">
-# yum -y install wget patch gcc make ncurses-devel
+# yum -y install wget gcc make ncurses-devel
 </pre>
+
 <p><strong>Debian 系の場合</strong></p>
 <pre class="command">
-# apt-get -y install wget patch gcc make libncurses-dev
+# apt-get -y install wget gcc make libncurses-dev
 </pre>
+
 <p><strong>SUSE 系の場合</strong></p>
 <pre class="command">
-# yast -i wget patch gcc make ncurses-devel
+# yast -i wget gcc make ncurses-devel
 </pre>
 
-<h4><a name="3.3.2">3.3.2. カーネルのダウンロードとパッチの適用</a></h4>
+<h3><a name="3.2">3.2. カーネルモジュールのインストール</a></h3>
 
-<p>カーネルのソースコードを <a href="http://www.kernel.org/pub/linux/kernel/v2.4/">linux-2.4</a> または <a href="http://www.kernel.org/pub/linux/kernel/v2.6/">linux-2.6</a> からダウンロードしてください。<br>
-linux-2.4 についてはカーネル 2.4.30 以降に対応しています。<br>
-linux-2.6 についてはカーネル 2.6.11.12 以降に対応しています。</p>
+<h4><a name="3.2.1">3.2.1. カーネルモジュール開発パッケージの入手</a></h4>
 
-<p>カーネルのソースを展開して、そのディレクトリに移動してください。<br>
-以下の操作において、例えばカーネル 2.6.38.6 を使う場合、 2.$PATCHLEVEL.$SUBLEVEL.diff を 2.6.38.diff に置き換えてください：</p>
+<p>カーネルの開発用パッケージをインストールして、そのディレクトリに移動してください：</p>
+
+<p><strong>RedHat 系の場合</strong></p>
+<pre class="command">
+# VERSION=$(uname -r)
+# yum -y install kernel-devel-${VERSION}
+# cd /usr/src/kernels/${VERSION}*/
+</pre>
+
+<p><strong>Debian 系の場合</strong></p>
+<pre class="command">
+# VERSION=$(uname -r)
+# apt-get -y install linux-headers-${VERSION}
+# cd /usr/src/linux-headers-${VERSION}/
+</pre>
+
+<p><strong>SUSE 系の場合</strong></p>
+<pre class="command">
+# VERSION=$(uname -r)
+# yast -i kernel-devel
+# cd /lib/modules/${VERSION}/build/
+</pre>
+
+<h4><a name="3.2.2">3.2.2. AKARI カーネルモジュールのコンパイルとインストール</a></h4>
+
+<p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください：</p>
 
 <pre class="command">
-$ wget -O ccs-patch-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz'
-$ wget -O ccs-patch-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49684/ccs-patch-1.8.1-20110511.tar.gz.asc'
-$ gpg ccs-patch-1.8.1-20110511.tar.gz.asc
-$ tar -zxf ccs-patch-1.8.1-20110511.tar.gz
-$ patch -sp1 &lt; patches/ccs-patch-2.$PATCHLEVEL.$SUBLEVEL.diff
+# wget -O akari-1.0.14-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz'
+# wget -O akari-1.0.14-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz.asc'
+# gpg akari-1.0.14-20110511.tar.gz.asc
+# tar -zxf akari-1.0.14-20110511.tar.gz
+# make SUBDIRS=$PWD/akari modules
+# make SUBDIRS=$PWD/akari modules_install
+# depmod ${VERSION}
 </pre>
 
-<h4><a name="3.3.3">3.3.3. カーネルコンパイルオプションの設定</a></h4>
+<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
 
-<pre class="command">
-$ make -s menuconfig
+<pre class="output">
+This module supports only 2.6.0 and later kernels.
+You must choose CONFIG_SECURITY=y for building this module.
+You must choose CONFIG_KALLSYMS=y for building this module.
+You must choose CONFIG_PROC_FS=y for building this module.
+You must choose CONFIG_MODULES=y for building this module.
 </pre>
 
-<p>Security options 画面に表示される以下の項目を選択してください：</p>
+<p>もし、ご利用のカーネルでサポートされている機能や構文について知りたい場合には <a href="../comparison.html.ja">AKARI / TOMOYO 機能比較表</a> を参照してください。</p>
 
-<ul>
-<li>[*] CCSecurity support</li>
-<li>[ ] &nbsp;&nbsp;Compile as loadable kernel module</li>
-<li>[ ] &nbsp;&nbsp;Disable by default</li>
-<li>[ ] &nbsp;&nbsp;Do not modify 'struct task_struct' in order to keep KABI</li>
-<li>(2048) Default maximal count for learning mode</li>
-<li>(1024)&nbsp;&nbsp;Default maximal count for audit log</li>
-<li>[ ] &nbsp;&nbsp;Use built-in policy</li>
-<li>[ ] &nbsp;&nbsp;&nbsp;&nbsp;Activate immediately after loading built-in policy.</li>
-<li>[ ] &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Omit calling policy loader when /sbin/init starts.</li>
-<li>(/sbin/modprobe /sbin/hotplug) Built-in domain initializer programs</li>
-<li>(/sbin/ccs-init) Default policy loader</li>
-<li>(/sbin/ccs-start) Alternative activation trigger</li>
-</ul>
-
-<p><em>Compile as loadable kernel module</em> オプションは（組込みシステムなど） vmlinux のファイルサイズに制限がある場合に便利です。</p>
-
-<p><em>Disable by default</em> オプションを選択した場合、カーネルのコマンドラインで ccsecurity=on という指定を行った場合だけ有効化されます。選択しなかった場合、カーネルのコマンドラインで ccsecurity=off という指定を行った場合だけ無効化されます。</p>
-
-<p><em>Do not modify 'struct task_struct' in order to keep KABI</em> オプションはカーネル 2.6 でのみ選択可能です。このオプションを選択した場合、 TOMOYO が利用する変数をタスク構造体の外部で管理することにより、タスク構造体に変更を加えることにより生じる Kernel Application Binary Interface (KABI) の変化を回避することができます。ディストリビュータのカーネルに対して適用する際に Kernel ABI の変化を避けたい場合に選択してください。ただし、カーネルモジュールに対して TOMOYO の機能を呼び出すために ccsecurity_operations 構造体へのアクセスを認める（エクスポートする）必要があるため、カーネルパッケージを作成するスクリプトが警告を出力することは避けられない点については了承ください。</p>
-
-<p><em>Use built-in policy</em> オプションを選択した場合、カーネル内にポリシーを埋め込むことが可能になります。（ポリシーを変更するためにはカーネルの再コンパイルが必要になります。）これは、 <em>Built-in domain initializer programs</em> オプションのスーパーセットです。</p>
-
-<p><em>Activate immediately after loading built-in policy.</em> オプションは、 <em>Use built-in policy</em> オプションを選択した場合にのみ選択できます。このオプションを選択した場合、 initrd/initramfs の開始前から TOMOYO のアクセス制御が有効になります。このオプションを選択した場合、 <em>Default policy loader</em> オプションで指定されたポリシーローダを実行する必要性は消滅します。しかし、カーネル内に埋め込まれたポリシーとは別にポリシーローダからも追加でポリシーを読み込ませたい場合に対処できるようにするため、ポリシーローダは実行されます。</p>
-
-<p><em>Omit calling policy loader when /sbin/init starts.</em> オプションは、 <em>Activate immediately after loading built-in policy.</em> オプションを選択した場合にのみ選択できます。このオプションを指定すると、 <em>Default policy loader</em> オプションで指定されたポリシーローダを実行しなくなります。このオプションは、（組込みシステムなど）ポリシーローダを実行することが困難な場合に便利です。</p>
-
-<h4><a name="3.3.4">3.3.4. カーネルのコンパイルおよびインストール</a></h4>
-
-<p>カーネルコンパイルオプションの変更が終わったら、以下のコマンドを実行してカーネルをコンパイルしてください：</p>
-
-<pre class="command">
-$ make -s dep
-$ make -s
-$ make -s modules
-$ su
-# make -s modules_install install
-</pre>
-
-<p>必要であれば initrd/initramfs を作成してください。</p>
-
-<h4><a name="3.3.5">3.3.5. 管理ツールのインストール</a></h4>
+<h3><a name="3.3">3.3. 管理ツールのインストール</a></h3>
 
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
 
@@ -369,10 +132,6 @@ $ su
 # make -s install
 </pre>
 
-<br>
-
-<p><a href="chapter-3.html.ja#3.4">3.4. 設定の初期化</a>へと進んでください。</p>
-
 <h3><a name="3.4">3.4. 設定の初期化</a></h3>
 
 <p>管理ツールを実行するときに便利なように、管理ツールのインストールされているディレクトリ（ /usr/sbin ）を環境変数 PATH に追加したいと思うかもしれません。 <code>/bin/bash</code> を使用している場合、以下の行を ~/.bashrc に追加してください：</p>
@@ -381,26 +140,26 @@ $ su
 export PATH=$PATH:/usr/sbin
 </pre>
 
-<p>TOMOYO Linux を使うためには、初期設定の手順を行う必要があります。この手順により、ポリシーを保存するディレクトリが作成されます。全てのポリシーファイルは <strong>/etc/ccs/ ディレクトリに保存されます</strong>。</p>
+<p>AKARI を使うためには、初期設定の手順を行う必要があります。この手順により、ポリシーを保存するディレクトリが作成されます。全てのポリシーファイルは <strong>/etc/ccs/ ディレクトリに保存されます</strong>。</p>
 
 <p>初期設定を行うには２つのコマンドのどちらかを使用します。どの機能について解析および制限を行いたいかによりどちらのコマンドを使用するかが決まります。</p>
 
-<p>ファイルの読み書きやプログラムの実行のように<strong>ファイルに関する機能だけを制限</strong>したいと思うユーザもいることでしょう。これは、ポリシーをシンプルにしたいユーザや TOMOYO Linux が提供する全部の機能を必要とはしないユーザに適しています。ファイルに関する機能だけを制限する場合、このガイドで説明されている例えばネットワークに関する機能などの無関係な部分を無視することができます。ファイルに関する機能だけを使う場合、以下のコマンドを実行してください：</p>
+<p>ファイルの読み書きやプログラムの実行のように<strong>ファイルに関する機能だけを制限</strong>したいと思うユーザもいることでしょう。これは、ポリシーをシンプルにしたいユーザや AKARI が提供する全部の機能を必要とはしないユーザに適しています。ファイルに関する機能だけを制限する場合、このガイドで説明されている例えばネットワークに関する機能などの無関係な部分を無視することができます。ファイルに関する機能だけを使う場合、以下のコマンドを実行してください：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --file-only-profile
+# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
 </pre>
 
-<p><strong>TOMOYO Linux が提供する全部の機能</strong>を使ってファイルやネットワークやケイパビリティや環境変数やシグナルの送信といった操作を解析したり制限したいと思うユーザもいることでしょう。これは、可能な限りシステムのセキュリティを高めたいと考えているユーザに適しています。このガイドでは全部の機能を使うことを想定して作成されています。全部の機能を使う場合、以下のコマンドを実行してください：</p>
+<p><strong>AKARI が提供する全部の機能</strong>を使ってファイルやネットワークやケイパビリティや環境変数やシグナルの送信といった操作を解析したり制限したいと思うユーザもいることでしょう。これは、可能な限りシステムのセキュリティを高めたいと考えているユーザに適しています。このガイドでは全部の機能を使うことを想定して作成されています。全部の機能を使う場合、以下のコマンドを実行してください：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 
 <p>上記のコマンドを実行することで、以下のような出力が表示される筈です：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy
+# /usr/lib/ccs/init_policy --module_name=akari
 </pre>
 <pre class="output">
 Creating policy directory... OK
@@ -419,23 +178,65 @@ Creating configuration file for ccs-notifyd ... OK
 
 <h3><a name="3.5">3.5. ブートローダの設定</a></h3>
 
-<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、コンパイルされたカーネル用のエントリを追加してください。カーネルのコンパイル時に <em>Disable by default</em> オプションを指定した場合には、 ccsecurity=on というパラメータをカーネルに対するコマンドラインオプションに指定することを忘れないでください。 TOMOYO Linux カーネルで起動するための方法については、ディストリビューションやブートローダのドキュメントを参照してください。</p>
+<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します。</p>
+
+<p>変更前：</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15)
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
+
+<p>変更後：</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15) with AKARI
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
+
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを /sbin/init が無効化してしまうためです。</p>
+
+<p>変更前：</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15)
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
+
+<p>変更後：</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15) with AKARI
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
 
 <h3><a name="3.6">3.6. システムの再起動</a></h3>
 
-<p>ここまでで準備は完了です。（お疲れさまでした。）それでは、新しくインストールされたカーネルを使用してみましょう。システムを再起動し、 GRUB の画面（あるいは使用している他のブートローダの画面）で TOMOYO Linux カーネルを選択してください：</p>
+<p>ここまでで準備は完了です。（お疲れさまでした。）それでは、新しくインストールされたカーネルを使用してみましょう。システムを再起動し、 GRUB の画面（あるいは使用している他のブートローダの画面）で AKARI カーネルを選択してください。</p>
 
-<img src="media/fig-1-12.png" alt="fig-1-12.png" width="500" height="375">
+<p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
 
-<p>正常にインストールが完了し、ブートローダの設定が適切に行われていれば、正常にカーネルがロードされ、 TOMOYO Linux が有効になる筈です：</p>
+<pre class="output">
+&amp;security_ops=c07cf204
+vfsmount_lock=c0702980
+AKARI: 1.0.14   2011/05/11
+Access Keeping And Regulating Instrument registered.
+Calling /sbin/ccs-init to load policy. Please wait.
+CCSecurity: 1.8.1+   2011/05/11
+Mandatory Access Control activated.
+</pre>
 
-<img src="media/fig-1-13.png" alt="fig-1-13.png" width="675" height="375">
+<p>AKARI モジュールを登録する処理は環境依存であるため、問題が起こる場合があります。もし問題が発生した場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
 
-<h3><a name="3.7">3.7. どのようにすれば TOMOYO Linux を無効化またはアンインストールできますか？</a></h3>
+<p>カーネルコンパイル時の設定や起動時のオプションによっては、上記のメッセージが表示されないかもしれません。その場合、 /proc/ccs/ ディレクトリをチェックしてください。もし、 /proc/ccs/ ディレクトリが作成されていた場合、 AKARI モジュールは正常に登録されています。</p>
 
-<p>もし、このガイドに従って操作している間またはそれ以降にシステムが起動しなくなってしまった場合、ポリシーの設定が不適切である場合を含めて TOMOYO Linux に原因があるかもしれません。その場合、 ccsecurity=off というパラメータをカーネルに対するコマンドラインオプションに指定することにより、 TOMOYO Linux が無効な状態でカーネルがロードされます。</p>
+<h3><a name="3.7">3.7. どのようにすれば AKARI を無効化またはアンインストールできますか？</a></h3>
 
-<p>幸いなことに、 TOMOYO Linux はカーネル以外には既存のプログラムやライブラリなどに対する修正を必要としません。そのため、 TOMOYO Linux のアンインストールはとても簡単です。（ <code>rpm</code> や <code>apt</code> などの）パッケージマネージャを用いてインストールされたカーネルおよび管理ツールをアンインストールするだけです。ディストリビューションから配布されているカーネルで再起動して、ブートローダから TOMOYO Linux カーネル用のエントリを削除してください。</p>
+<p>もし、このガイドに従って操作している間またはそれ以降にシステムが起動しなくなってしまった場合、ポリシーの設定が不適切である場合を含めて AKARI に原因があるかもしれません。その場合、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションから削除することにより、 AKARI が無効な状態でカーネルがロードされます。</p>
 
 </div><!-- documentation -->
 
@@ -457,12 +258,12 @@ Creating configuration file for ccs-notifyd ... OK
 </tr>
 <tr>
 <td class="docs-previous-description">
-<p>Chapter 2: なぜ TOMOYO Linux が必要なのですか？</p>
+<p>Chapter 2: なぜ AKARI が必要なのですか？</p>
 </td>
 <td class="docs-home">
 </td>
 <td class="docs-next-description">
-<p>Chapter 4: TOMOYO Linux はどのように動きますか？</p>
+<p>Chapter 4: AKARI はどのように動きますか？</p>
 </td>
 </tr>
 </table>

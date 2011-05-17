@@ -239,18 +239,22 @@
 <td><p>CONFIG</p></td>
 <td><p>全ての機能</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::capability</p></td>
 <td><p>非 POSIX ケイパビリティのみ</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::file</p></td>
 <td><p>ファイルに関する操作のみ</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::ipc</p></td>
 <td><p>プロセス間通信に関する操作のみ</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::misc</p></td>
 <td><p>その他の操作のみ</p></td>
@@ -288,6 +292,7 @@
 <th><p>名前</p></th>
 <th><p>アクセス制御モードが設定される範囲</p></th>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::capability::use_kernel_module</p></td>
 <td><p>create_module(2) init_module(2) delete_module(2) の使用</p></td>
@@ -328,6 +333,7 @@
 <td><p>CONFIG::capability::SYS_VHANGUP</p></td>
 <td><p>vhangup(2) の使用</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::file::execute</p></td>
 <td><p>プログラムの実行およびドメイン遷移</p></td>
@@ -424,10 +430,12 @@
 <td><p>CONFIG::network::inet_dgram_send</p></td>
 <td><p>UDP ソケットが送信時に使用するリモートアドレス</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::inet_dgram_recv</p></td>
 <td><p>UDP ソケットが受信時に使用するリモートアドレス</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::inet_stream_bind</p></td>
 <td><p>TCP ソケットの bind() 操作</p></td>
@@ -452,10 +460,12 @@
 <td><p>CONFIG::network::inet_raw_send</p></td>
 <td><p>RAW ソケットが送信時に使用するリモートアドレス</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::inet_raw_recv</p></td>
 <td><p>RAW ソケットが受信時に使用するリモートアドレス</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::unix_dgram_bind</p></td>
 <td><p>同一ホスト内でのデータグラムソケットが使用するローカルアドレス</p></td>
@@ -464,10 +474,12 @@
 <td><p>CONFIG::network::unix_dgram_send</p></td>
 <td><p>同一ホスト内でのデータグラムソケットが送信してよいリモートアドレス</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::network::unix_dgram_recv</p></td>
 <td><p>同一ホスト内でのデータグラムソケットが受信してよいリモートアドレス</p></td>
 </tr>
+-->
 <tr>
 <td><p>CONFIG::network::unix_stream_bind</p></td>
 <td><p>同一ホスト内でのストリームソケットが使用するローカルアドレス</p></td>
@@ -504,10 +516,12 @@
 <td><p>CONFIG::misc::env</p></td>
 <td><p>プログラム実行時の環境変数名</p></td>
 </tr>
+<!--
 <tr>
 <td><p>CONFIG::ipc::signal</p></td>
 <td><p>シグナルの送信</p></td>
 </tr>
+-->
 </table>
 </div>
 

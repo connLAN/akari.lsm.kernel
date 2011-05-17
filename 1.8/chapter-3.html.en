@@ -105,9 +105,9 @@
 # depmod ${VERSION}
 </pre>
 
-<p>If you encountered one of errors listed below, you cannot use AKARI for your kernel. You may instead wish to try <a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO Linux</a>. For other errors, please send an email to our <a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users-en">Mailing List</a>.</p>
+<p>If you encountered one of errors listed below, you cannot use AKARI for your kernel. You may instead wish to try <a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO Linux</a>. For other errors, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
 
-<pre>
+<pre class="output">
 This module supports only 2.6.0 and later kernels.
 You must choose CONFIG_SECURITY=y for building this module.
 You must choose CONFIG_KALLSYMS=y for building this module.
@@ -196,11 +196,43 @@ kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
 initrd /boot/initrd-2.6.18-238.5.1.e15.img
 </pre>
 
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because /sbin/init unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
+
+<p>Before:</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15)
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
+
+<p>After:</p>
+<pre>
+title CentOS (2.6.18-238.5.1.e15) with AKARI
+root (hd0,0)
+kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
+initrd /boot/initrd-2.6.18-238.5.1.e15.img
+</pre>
+
 <h3><a name="3.6">3.6. Rebooting your system</a></h3>
 
 <p>Now you have finished all preparation. You can't wait any more? Now it's time to make use of your newly installed kernel. Reboot your system and choose the entry with AKARI kernel at the GRUB screen, or at whatever other bootloader you have installed.</p>
 
-<p>If everything was installed properly and the bootloader was correctly configured, the kernel should boot as normal and AKARI should be activated.</p>
+<p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
+
+<pre class="output">
+&amp;security_ops=c07cf204
+vfsmount_lock=c0702980
+AKARI: 1.0.14   2011/05/11
+Access Keeping And Regulating Instrument registered.
+Calling /sbin/ccs-init to load policy. Please wait.
+CCSecurity: 1.8.1+   2011/05/11
+Mandatory Access Control activated.
+</pre>
+
+<p>Since registering AKARI module depends on your environment, you might encounter problems. In that case, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
+
+<p>You may not be able to find these messages depending on kernel configuration and kernel boot parameters. In that case, you can check for /proc/ccs/ directory. If /proc/ccs/ directory exists, AKARI module was successfully registered.</p>
 
 <h3><a name="3.7">3.7. How can I disable/uninstall AKARI?</a></h3>
 

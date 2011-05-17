@@ -30,16 +30,16 @@
 
 <div id="regular-content">
 
-<h2>TOMOYO Linux 1.8.x : 導入ガイド</h2>
+<h2>AKARI : 導入ガイド</h2>
 
-<p>TOMOYO Linux 1.8.x 導入ガイドへようこそ。<a href="chapter-1.html.ja">早速始めましょう！</a></p>
+<p>AKARI 導入ガイドへようこそ。<a href="chapter-1.html.ja">早速始めましょう！</a></p>
 
 <h3><a name="core" href="index-long.html.ja#core">基本編</a></h3>
 
 <p><strong>Chapter 1: <a class="black" href="chapter-1.html.ja">はじめに</a></strong></p>
-<p><strong>Chapter 2: <a class="black" href="chapter-2.html.ja">なぜ TOMOYO Linux が必要なのですか？</a></strong></p>
-<p><strong>Chapter 3: <a class="black" href="chapter-3.html.ja">どうすれば TOMOYO Linux をインストールできますか？</a></strong></p>
-<p><strong>Chapter 4: <a class="black" href="chapter-4.html.ja">TOMOYO Linux はどのように動きますか？</a></strong></p>
+<p><strong>Chapter 2: <a class="black" href="chapter-2.html.ja">なぜ AKARI が必要なのですか？</a></strong></p>
+<p><strong>Chapter 3: <a class="black" href="chapter-3.html.ja">どうすれば AKARI をインストールできますか？</a></strong></p>
+<p><strong>Chapter 4: <a class="black" href="chapter-4.html.ja">AKARI はどのように動きますか？</a></strong></p>
 <p><strong>Chapter 5: <a class="black" href="chapter-5.html.ja">ドメインの管理はどのように行いますか？</a></strong></p>
 <p><strong>Chapter 6: <a class="black" href="chapter-6.html.ja">ポリシーはどのように作成しますか？</a></strong></p>
 <p><strong>Chapter 7: <a class="black" href="chapter-7.html.ja">ポリシーの適用はどのように行いますか？</a></strong></p>
@@ -59,7 +59,7 @@
 <p><strong>Appendix A: <a class="black" href="man-pages/index.html.ja">管理ツール</a></strong></p>
 <p><strong>Appendix B: <a class="black" href="policy-specification/index.html.ja">ポリシー仕様</a></strong></p>
 <p><strong>Appendix C: <a class="black" href="tool-editpolicy.html.ja">ポリシーエディタの使い方</a></strong></p>
-<p><strong>Appendix D-J: <a class="black" href="index-long.html.ja#appendix">その他のトピック</a></strong></p>
+<p><strong>Appendix D-G: <a class="black" href="index-long.html.ja#appendix">その他のトピック</a></strong></p>
 
 </div><!-- regular-content -->
 

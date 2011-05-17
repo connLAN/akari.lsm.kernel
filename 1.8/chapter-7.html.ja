@@ -103,9 +103,91 @@ file read /bin/cat
 
 <p><object data="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1" type="application/x-shockwave-flash" width="425" height="344"><param name="movie" value="http://www.youtube.com/v/I8fF5mueWTw&amp;hl=en_US&amp;fs=1"><param name="allowFullScreen" value="true"><param name="allowscriptaccess" value="always"></object></p>
 
-<h3><a name="7.2">7.2. 全てのドメインに対して強制モードを有効にする</a></h3>
+<h3><a name="7.2">7.2. 通知デーモン</a></h3>
 
-<p>これまでに紹介してきた概念を理解しツールを使いこなせるようになれば、システム全体をアクセス制御の対象とするようなポリシーを作成することができることでしょう。全てのドメインを「強制モード」で運用すれば、システムの侵害へとつながるような弱点を減らすのに有効です。 Apache を制限する例で示した手順は、そのまま全てのドメインを制限するために使うことができます。</p>
+<p>ポリシー違反の発生を通知するために <code>ccs-notifyd</code> というデーモンプログラムが提供されています。 /etc/rc.local 等から /usr/sbin/ccs-notifyd を起動するようにしてください。</p>
+
+<p>通知方法は /etc/ccs/tools/notifyd.conf に記録されています。以下に初期設定を示します：</p>
+
+<pre>
+# This file contains configuration used by ccs-notifyd command.
+
+# ccs-notifyd is a daemon that notifies the occurrence of policy violation
+# in enforcing mode.
+#
+# time_to_wait is grace time in second before rejecting the request that
+# caused policy violation in enforcing mode. For example, if you specify
+# 30, you will be given 30 seconds for starting ccs-queryd command and
+# responding to the policy violation event.
+# If you specify non 0 value, you need to register ccs-notifyd command to
+# /proc/ccs/manager as well as ccs-queryd command, for ccs-notifyd needs to
+# behave as if ccs-queryd command is running.
+# Also, you should avoid specifying too large value (e.g. 3600) because
+# the request will remain pending for that period if you can't respond.
+#
+# action_to_take is a command line you want to use for notification.
+# The command specified by this parameter must read the policy violation
+# notifycation from standard input. For example, mail, curl and xmessage
+# commands can read from standard input.
+# This parameter is passed to execve(). Thus, please use a wrapper program
+# if you need shell processing (e.g. wildcard expansion, environment
+# variables).
+#
+# minimal_interval is grace time in second before re-notifying the next
+# occurrence of policy violation. You can specify 60 to limit notifycation
+# to once per a minute, 3600 to limit notifycation to once per an hour.
+# You can specify 0 to unlimit, but notifying of every policy violation
+# events (e.g. sending a mail) might annoy you because policy violation
+# can occur in clusters if once occurred.
+
+# Please use TOMOYO Linux's escape rule (e.g. '\040' rather than '\ ' for
+# representing a ' ' in a word).
+
+# Examples:
+#
+# time_to_wait 180
+# action_to_take mail admin@example.com
+#
+#    Wait for 180 seconds before rejecting the request.
+#    The occurrence is notified by sending mail to admin@example.com
+#    (if SMTP service is available).
+#
+# time_to_wait 0
+# action_to_take curl --data-binary @- https://your.server/path_to_cgi
+#
+#    Reject the request immediately.
+#    The occurrence is notified by executing curl command.
+#
+time_to_wait 0
+action_to_take mail -s Notification\040from\040ccs-notifyd root@localhost
+minimal_interval 60
+</pre>
+
+<p>action_to_take 行を変更して <code>ccs-notifyd</code> を実行してください。</p>
+
+<p>ポリシー違反が発生すると以下のようなメールが届くはずです。このメールの内容は、ヘッダにシリアルナンバーが付与されている点を除いてアクセスログと同一内容です：</p>
+
+<pre class="command">
+# mail
+</pre>
+
+<pre class="output">
+Mail version 8.1 6/6/93.  Type ? for help.
+"/var/spool/mail/root": 1 messages 1 new
+&gt;N  1 root@localhost.local  Sun Dec 26 01:08  18/1211 "Notification from ccs-notifyd"
+&amp;
+Message 1:
+From root@localhost.localdomain  Sun Dec 26 01:08:35 2010
+Date: Sun, 26 Dec 2010 01:08:35 +0900
+From: root &lt;root@localhost.localdomain&gt;
+To: root@localhost.localdomain
+Subject: Notification from ccs-notifyd
+
+Q0-0
+#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }
+&lt;kernel&gt; /usr/sbin/httpd /bin/sh
+file execute /bin/cat
+</pre>
 
 <h3><a name="7.3">7.3. ポリシー違反を対話的に処理する</a></h3>
 
@@ -282,91 +364,9 @@ Enter new entry&gt; file append /var/lib/pgsql/data/pg_log/postgresql-\*
 Added 'file append /var/lib/pgsql/data/pg_log/postgresql-\*.log'.
 </pre>
 
-<h3><a name="7.4">7.4. 通知デーモン</a></h3>
+<h3><a name="7.4">7.4. 全てのドメインに対して強制モードを有効にする</a></h3>
 
-<p>ポリシー違反の発生を通知するために <code>ccs-notifyd</code> というデーモンプログラムが提供されています。 /etc/rc.local 等から /usr/sbin/ccs-notifyd を起動するようにしてください。</p>
-
-<p>通知方法は /etc/ccs/tools/notifyd.conf に記録されています。以下に初期設定を示します：</p>
-
-<pre>
-# This file contains configuration used by ccs-notifyd command.
-
-# ccs-notifyd is a daemon that notifies the occurrence of policy violation
-# in enforcing mode.
-#
-# time_to_wait is grace time in second before rejecting the request that
-# caused policy violation in enforcing mode. For example, if you specify
-# 30, you will be given 30 seconds for starting ccs-queryd command and
-# responding to the policy violation event.
-# If you specify non 0 value, you need to register ccs-notifyd command to
-# /proc/ccs/manager as well as ccs-queryd command, for ccs-notifyd needs to
-# behave as if ccs-queryd command is running.
-# Also, you should avoid specifying too large value (e.g. 3600) because
-# the request will remain pending for that period if you can't respond.
-#
-# action_to_take is a command line you want to use for notification.
-# The command specified by this parameter must read the policy violation
-# notifycation from standard input. For example, mail, curl and xmessage
-# commands can read from standard input.
-# This parameter is passed to execve(). Thus, please use a wrapper program
-# if you need shell processing (e.g. wildcard expansion, environment
-# variables).
-#
-# minimal_interval is grace time in second before re-notifying the next
-# occurrence of policy violation. You can specify 60 to limit notifycation
-# to once per a minute, 3600 to limit notifycation to once per an hour.
-# You can specify 0 to unlimit, but notifying of every policy violation
-# events (e.g. sending a mail) might annoy you because policy violation
-# can occur in clusters if once occurred.
-
-# Please use TOMOYO Linux's escape rule (e.g. '\040' rather than '\ ' for
-# representing a ' ' in a word).
-
-# Examples:
-#
-# time_to_wait 180
-# action_to_take mail admin@example.com
-#
-#    Wait for 180 seconds before rejecting the request.
-#    The occurrence is notified by sending mail to admin@example.com
-#    (if SMTP service is available).
-#
-# time_to_wait 0
-# action_to_take curl --data-binary @- https://your.server/path_to_cgi
-#
-#    Reject the request immediately.
-#    The occurrence is notified by executing curl command.
-#
-time_to_wait 0
-action_to_take mail -s Notification\040from\040ccs-notifyd root@localhost
-minimal_interval 60
-</pre>
-
-<p>action_to_take 行を変更して <code>ccs-notifyd</code> を実行してください。</p>
-
-<p>ポリシー違反が発生すると以下のようなメールが届くはずです。このメールの内容は、ヘッダにシリアルナンバーが付与されている点を除いてアクセスログと同一内容です：</p>
-
-<pre class="command">
-# mail
-</pre>
-
-<pre class="output">
-Mail version 8.1 6/6/93.  Type ? for help.
-"/var/spool/mail/root": 1 messages 1 new
-&gt;N  1 root@localhost.local  Sun Dec 26 01:08  18/1211 "Notification from ccs-notifyd"
-&amp;
-Message 1:
-From root@localhost.localdomain  Sun Dec 26 01:08:35 2010
-Date: Sun, 26 Dec 2010 01:08:35 +0900
-From: root &lt;root@localhost.localdomain&gt;
-To: root@localhost.localdomain
-Subject: Notification from ccs-notifyd
-
-Q0-0
-#2010/12/25 16:08:35# profile=3 mode=enforcing granted=no (global-pid=3628) task={ pid=3628 ppid=3627 uid=48 gid=48 euid=48 egid=48 suid=48 sgid=48 fsuid=48 fsgid=48 type!=execute_handler } path1={ uid=0 gid=0 ino=688153 major=8 minor=1 perm=0755 type=file } path1.parent={ uid=0 gid=0 ino=688129 perm=0755 } exec={ realpath="/bin/cat" argc=2 envc=7 argv[]={ "cat" "/etc/passwd" } envp[]={ "TERM=vt100" "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "_=/bin/cat" "PWD=/usr/share/horde/admin" "LANG=en_US.UTF-8" "SHLVL=3" "LANGUAGE=en_US.UTF-8" } }
-&lt;kernel&gt; /usr/sbin/httpd /bin/sh
-file execute /bin/cat
-</pre>
+<p>これまでに紹介してきた概念を理解しツールを使いこなせるようになれば、システム全体をアクセス制御の対象とするようなポリシーを作成することができることでしょう。全てのドメインを「強制モード」で運用すれば、システムの侵害へとつながるような弱点を減らすのに有効です。 Apache を制限する例で示した手順は、そのまま全てのドメインを制限するために使うことができます。</p>
 
 <h3><a name="7.5">7.5. おわりに</a></h3>
 

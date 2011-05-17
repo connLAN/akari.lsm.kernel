@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI リンク</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-links">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="links.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h3>Official</h3>
+<ul>
+<li><a href="http://sourceforge.jp/projects/akari/">AKARI プロジェクトページ</a></li>
+<li><a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux ホームページ</a></li>
+<li><a href="http://sourceforge.jp/projects/tomoyo/">TOMOYO Linux プロジェクトページ</a></li>
+<li><a href="faq.html.ja">FAQ</a></li>
+</ul>
+
+<h3>その他</h3>
+<ul>
+<li><a href="https://wiki.archlinux.org/index.php/TOMOYO_Linux">Arch Linux ユーザによる TOMOYO Linux の説明ページ</a></li>
+<li><a href="http://elinux.org/TomoyoLinux">eLinux wiki (TOMOYO Linux for embedded purposes)</a></li>
+<li><a href="http://www.kernel.org/">The Linux Kernel Archives</a></li>
+<li><a href="http://lkml.org/">The linux-kernel mailing list (LKML)</a></li>
+<li><a href="http://kernelnewbies.org/">Linux Kernel Newbies</a></li>
+<li><a href="http://lwn.net/">Linux Weekly News</a></li>
+</ul>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="links.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

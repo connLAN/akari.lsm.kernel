@@ -1,20 +1,41 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="ja-JP">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
 <title>AKARI / TOMOYO 機能比較表</title>
-<link rel="stylesheet" href="http://akari.sourceforge.jp/akari.css" media="all" type="text/css">
 </head>
-<body>
-<p style="text-align:right;"><a href="comparison.html.en">English Page</a></p>
-<p style="text-align:right;">Last modified: $Date$</p>
 
-<h1>AKARI / TOMOYO 機能比較表</h1>
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="comparison.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>AKARI / TOMOYO 機能比較表</h2>
 
 <p>AKARI は TOMOYO Linux 1.8 をベースに作成されているため、 AKARI は TOMOYO Linux 1.8 と同様の機能と構文をサポートしています。このページでは両者の違いについて説明します。</p>
 
-<table summary="comparison" border="1">
+<div class="simple-table-wrap">
+<table>
 <tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
 <tr><td>利点</td><td>全ての機能と構文をサポートします。</td><td>カーネルパッケージの置き換えが不要です。</td><td>メインラインカーネルに含まれています。<br>カーネルコンパイル時に組み込まれていれば、カーネルパッケージの置き換えが不要です。</td></tr>
 <tr><td>欠点</td><td>カーネルパッケージの置き換えが必要になります。</td><td>サポートされている機能と構文がカーネルのバージョンおよびカーネルコンパイル時の設定オプションに依存します。</td><td>サポートされている機能と構文がカーネルのバージョンに依存します。</td>
@@ -46,10 +67,12 @@
 カーネル 2.6.36 以降が必要です。<br>
 </td></tr>
 </table>
+</div>
 
 <p>機能および構文に関する詳細な違いについて以下に示します。</p>
 
-<table summary="comparison" border="1">
+<div class="simple-table-wrap">
+<table>
 <tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
 <tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-/2.6.11-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
 <tr><td>種別</td><td>内容</td><td colspan=8></td></tr>
@@ -154,6 +177,7 @@
 <tr><td></td><td>使いたい機能だけを有効にすることを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>設定を初期化するときの所要時間を短縮</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 </table>
+</div>
 
 <ul>
 <li><a name="note1">*1</a>: CONFIG_SECURITY_PATH=y の状態で作成されている場合に限ります。.</li>
@@ -162,8 +186,16 @@
 <li><a name="note4">*4</a>: パーミッションのチェックは accept() されたソケットが初めて使われるタイミングで行われます。</li>
 </ul>
 
-<hr>
+</div><!-- regular-content -->
 
-<p><a href="index.html.ja">目次へ戻る</a></p>
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="comparison.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
 </body>
 </html>

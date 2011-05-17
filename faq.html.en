@@ -30,7 +30,7 @@
 
 <div id="regular-content">
 
-<h2>TOMOYO Linux : FAQ</h2>
+<h2>AKARI : FAQ</h2>
 
 <h3><a name="general">General questions</a></h3>
 
@@ -97,7 +97,7 @@
 <p><strong>Q10: Are the correctness of security labels guaranteed?</strong></p>
 <p>A10: Since pathnames are used as security labels, the correctness of security labels is guaranteed unless the directory entry get corrupted.</p>
 <p><strong>Q11: Are resources other than files protected?</strong></p>
-<p>A11: Yes, AKARI supports many resources (e.g. network ports, signal transmissions, capabilities, environment variables). See <a href="comparison.html.en">AKARI/TOMOYO functionality comparison table</a> for a list of all the resources that can be restricted.</p>
+<p>A11: Yes, AKARI supports many resources (e.g. network ports, environment variables). See <a href="comparison.html.en">AKARI/TOMOYO functionality comparison table</a> for a list of all the resources that can be restricted.</p>
 
 </div><!-- regular-content -->
 

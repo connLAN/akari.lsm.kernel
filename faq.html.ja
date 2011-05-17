@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI : FAQ</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="index.html.ja"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="faq.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="regular-content">
+
+<h2>AKARI : FAQ</h2>
+
+<h3><a name="general">全般</a></h3>
+
+<p><strong>Q1: AKARI とは何ですか？</strong></p>
+<p>A1: 強制アクセス制御に必要なアクセス許可を自動的かつ対話的に生成できるLinuxカーネルモジュールです。</p>
+<p><strong>Q2: どのようなユーザを想定していますか？</strong></p>
+<p>A2: サーバのセキュリティ管理に労力を割けない管理者向けです。</p>
+<p><strong>Q3: どれくらいのメモリを消費しますか？</strong></p>
+<p>A3: 固定分（カーネル内のコードとデータ）が約１００ＫＢ、変動分（アクセス許可）が数百ＫＢ程度です。</p>
+<p><strong>Q4: パフォーマンスの低下はどれくらいですか？</strong></p>
+<p>A4: 正式なパフォーマンス測定を行ったことはありませんが、ユーザが認識しない程度だと考えています。</p>
+<p><strong>Q5: 対応しているカーネルのバージョンは？</strong></p>
+<p>A5: カーネル 2.6.0 以降に対応しています。これらのカーネルは <a href="http://www.kernel.org/">http://www.kernel.org/</a> からダウンロード可能です。</p>
+<p><strong>Q6: AKARI のライセンスは何ですか？</strong></p>
+<p>A6: AKARI はＧＰＬです。</p>
+<p><strong>Q7: 強制アクセス制御以外の用途はありますか？</strong></p>
+<p>A7: システムの解析や必要最低限のファイルだけを含んだカスタムのファイルシステムイメージの作成にも使えます。</p>
+
+<h3><a name="management">ポリシー管理</a></h3>
+<p><strong>Q1: ポリシーの構文は理解しやすいですか？</strong></p>
+<p>A1: はい。簡単に使えるように設計されています。</p>
+<p><strong>Q2: ドメインとは何ですか？</strong></p>
+<p>A2: AKARI におけるドメインとは、そのプロセスがどのように実行されたかというプログラム実行履歴です。</p>
+<p><strong>Q3: プロファイルとは何ですか？</strong></p>
+<p>A3: AKARI におけるプロファイルとは、ドメインに対する強制アクセス制御の有効・無効や制御する項目を定義したものです。</p>
+<p><strong>Q4: ポリシーを動的に変更できますか？</strong></p>
+<p>A4: はい。</p>
+<p><strong>Q5: ポリシーを更新したらプロセスを再起動させる必要がありますか？</strong></p>
+<p>A5: いいえ。ドメインを削除して再作成しない限りプロセスを再起動させる必要はありません。</p>
+<p><strong>Q6: ドメインを削除することにより、削除されたドメインを参照しているプロセスがクラッシュすることはありませんか？</strong></p>
+<p>A6: いいえ。プロセスが残っている間はドメインは残っているので大丈夫です。</p>
+<p><strong>Q7: 不正にポリシーを変更されないために、どのような対策を行っていますか？</strong></p>
+<p>A7: ポリシーを変更できるプログラムのパス名またはドメインを制限します。</p>
+<p><strong>Q8: ポリシーの編集はどのように行うのですか？</strong></p>
+<p>A8: ＣＵＩのエディタが付属しています。その他に、任意のテキストエディタを使用できます。</p>
+<p><strong>Q9: 学習モードとは何ですか？</strong></p>
+<p>A9: 通常の操作を行うのに必要になる振る舞いや資源に対するアクセス許可を自動的にポリシーに追加していくモードです。</p>
+<p><strong>Q10: 自動的に追加してしまっても問題ないのですか？</strong></p>
+<p>A10: 絶対パス名による指定と詳細なドメイン分割により、問題ありません。</p>
+<p><strong>Q11: 強制アクセス制御を有効にしたままで、ソフトウェアのアップデートはできますか？</strong></p>
+<p>A11: はい。ドメイン単位でプロファイルを切り替えることで実現できます。 /usr/bin/ccs-queryd などのツールを用いて強制モードのまま対話的にポリシーを修正していくこともできます。</p>
+<p><strong>Q12: SELinux の Targeted Policy みたいにデーモンプログラムだけを保護することは可能ですか？</strong></p>
+<p>A12: はい。ドメイン単位でプロファイルを切り替えることで実現できます。</p>
+
+<h3><a name="implementation">実装</a></h3>
+<p><strong>Q1: AKARI のセキュリティモデルは何ですか？</strong></p>
+<p>A1: DTE （ Domain and Type Enforcement ）のみです。</p>
+<p><strong>Q2: ユーザやロールの概念はありますか？</strong></p>
+<p>A2: ありません。ただし、管理者業務の一部委託は可能です。</p>
+<p><strong>Q3: ユーザランドアプリケーションの修正は必要ですか？</strong></p>
+<p>A3: 不要です。</p>
+<p><strong>Q4: sshd のシェルコード対策はできないんですね？</strong></p>
+<p>A4: できません。ただし、追加認証により不正ログイン対策が可能です。</p>
+<p><strong>Q5: TCSEC ではどのランクに相当しますか？</strong></p>
+<p>A5: 判りません。</p>
+<p><strong>Q6: セキュリティラベルは使用していないのですか？</strong></p>
+<p>A6: セキュリティラベルとして、ファイルの絶対パス名を使用しています。</p>
+<p><strong>Q7: パス名のワイルドカード指定はできますか？</strong></p>
+<p>A7: はい。</p>
+<p><strong>Q8: MLS （ multi-level security ）は使えないのですか？</strong></p>
+<p>A8: 対応していません。情報の機密度に応じて保存場所を変更してください。</p>
+<p><strong>Q9: LIDS （ Linux Intrustion Detection System ）のステートフル ACL に相当する機能はありますか？</strong></p>
+<p>A9: ありません。</p>
+<p><strong>Q10: セキュリティラベルの正しさは保証されますか？</strong></p>
+<p>A10: パス名をセキュリティラベルとして使用するので、ディレクトリエントリが壊れない限り、セキュリティラベルの正しさは保証されています。</p>
+<p><strong>Q11: ファイル以外の資源は保護できますか？</strong></p>
+<p>A11: ネットワークのポートや環境変数等に対応しています。保護可能な資源については<a href="comparison.html.ja">AKARI / TOMOYO 機能比較表</a>を参照してください。</p>
+
+</div><!-- regular-content -->
+
+</div><!-- content -->
+
+<div id="footer">
+<p class="language">Go to <a href="faq.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=1973" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

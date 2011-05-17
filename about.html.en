@@ -36,7 +36,7 @@
 
 <p>AKARI focuses on the behaviour of a system. Every process is created to achieve a purpose, and like an immigration officer, AKARI allows each process to declare behaviours and resources needed to achieve their purpose. When protection is enabled, AKARI acts like an operation watchdog, restricting each process to only the behaviours and resources allowed by the administrator.</p>
 
-<h3><a name="what">What can TOMOYO Linux be used for?</a></h3>
+<h3><a name="what">What can AKARI be used for?</a></h3>
 
 <p>In a normal operating system (OS), every application is unmonitored and it is difficult to determine what is happening in a system:</p>
 <p><img src="media/disabled.png" alt="disabled.png" width="500" height="350"></p>

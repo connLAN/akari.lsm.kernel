@@ -437,7 +437,7 @@ struct ccs_policy_namespace *ccs_assign_namespace(const char *domainname)
 	mutex_unlock(&ccs_policy_lock);
 out:
 	kfree(entry);
-	return entry;
+	return ptr;
 }
 
 /**

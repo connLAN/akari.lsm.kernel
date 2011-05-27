@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -109,15 +109,17 @@ void ccs_memory_free(const void *ptr, size_t size)
 /**
  * ccs_get_group - Allocate memory for "struct ccs_path_group"/"struct ccs_number_group"/"struct ccs_address_group".
  *
- * @group_name: The name of address group.
- * @idx:        Index number.
+ * @param: Pointer to "struct ccs_acl_param".
+ * @idx:   Index number.
  *
  * Returns pointer to "struct ccs_group" on success, NULL otherwise.
  */
-struct ccs_group *ccs_get_group(const char *group_name, const u8 idx)
+struct ccs_group *ccs_get_group(struct ccs_acl_param *param, const u8 idx)
 {
 	struct ccs_group e = { };
 	struct ccs_group *group = NULL;
+	struct list_head *list;
+	const char *group_name = ccs_read_token(param);
 	bool found = false;
 	if (!ccs_correct_word(group_name) || idx >= CCS_MAX_GROUP)
 		return NULL;
@@ -126,7 +128,8 @@ struct ccs_group *ccs_get_group(const char *group_name, const u8 idx)
 		return NULL;
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
-	list_for_each_entry(group, &ccs_group_list[idx], head.list) {
+	list = &param->ns->group_list[idx];
+	list_for_each_entry(group, list, head.list) {
 		if (e.group_name != group->group_name)
 			continue;
 		atomic_inc(&group->head.users);
@@ -138,8 +141,7 @@ struct ccs_group *ccs_get_group(const char *group_name, const u8 idx)
 		if (entry) {
 			INIT_LIST_HEAD(&entry->member_list);
 			atomic_set(&entry->head.users, 1);
-			list_add_tail_rcu(&entry->head.list,
-					  &ccs_group_list[idx]);
+			list_add_tail_rcu(&entry->head.list, list);
 			group = entry;
 			found = true;
 		}
@@ -402,6 +404,9 @@ static void __ccs_free_task_security(const struct task_struct *task)
 
 #endif
 
+/* Initial namespace.*/
+struct ccs_policy_namespace ccs_kernel_namespace;
+
 /**
  * ccs_mm_init - Initialize mm related code.
  *
@@ -412,10 +417,9 @@ void __init ccs_mm_init(void)
 	int idx;
 	for (idx = 0; idx < CCS_MAX_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_name_list[idx]);
-	for (idx = 0; idx < CCS_MAX_ACL_GROUPS; idx++) {
-		INIT_LIST_HEAD(&ccs_acl_group[idx].acl_info_list[0]);
-		INIT_LIST_HEAD(&ccs_acl_group[idx].acl_info_list[1]);
-	}
+	ccs_kernel_namespace.name = "<kernel>";
+	ccs_init_policy_namespace(&ccs_kernel_namespace);
+	ccs_kernel_domain.ns = &ccs_kernel_namespace;
 	INIT_LIST_HEAD(&ccs_kernel_domain.acl_info_list[0]);
 	INIT_LIST_HEAD(&ccs_kernel_domain.acl_info_list[1]);
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
@@ -427,27 +431,28 @@ void __init ccs_mm_init(void)
 	ccsecurity_ops.alloc_task_security = __ccs_alloc_task_security;
 	ccsecurity_ops.free_task_security = __ccs_free_task_security;
 #endif
-	ccs_kernel_domain.domainname = ccs_get_name(CCS_ROOT_NAME);
+	ccs_kernel_domain.domainname = ccs_get_name("<kernel>");
 	list_add_tail_rcu(&ccs_kernel_domain.list, &ccs_domain_list);
-	idx = ccs_read_lock();
-	if (ccs_find_domain(CCS_ROOT_NAME) != &ccs_kernel_domain)
-		panic("Can't register ccs_kernel_domain");
 #ifdef CONFIG_CCSECURITY_BUILTIN_INITIALIZERS
+	idx = ccs_read_lock();
 	{
 		/* Load built-in policy. */
+		struct ccs_acl_param param = { };
 		static char ccs_builtin_initializers[] __initdata
 			= CONFIG_CCSECURITY_BUILTIN_INITIALIZERS;
 		char *cp = ccs_builtin_initializers;
 		ccs_normalize_line(cp);
+		param.ns = &ccs_kernel_namespace;
 		while (cp && *cp) {
 			char *cp2 = strchr(cp, ' ');
 			if (cp2)
 				*cp2++ = '\0';
-			ccs_write_transition_control(cp, false,
+			param.data = cp;
+			ccs_write_transition_control(&param,
 				     CCS_TRANSITION_CONTROL_INITIALIZE);
 			cp = cp2;
 		}
 	}
-#endif
 	ccs_read_unlock(idx);
+#endif
 }

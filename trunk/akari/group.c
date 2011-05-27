@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -55,80 +55,54 @@ static bool ccs_same_address_group(const struct ccs_acl_head *a,
 							  head);
 	const struct ccs_address_group *p2 = container_of(b, typeof(*p2),
 							  head);
-	return p1->is_ipv6 == p2->is_ipv6 &&
-		p1->min.ipv4 == p2->min.ipv4 && p1->min.ipv6 == p2->min.ipv6 &&
-		p1->max.ipv4 == p2->max.ipv4 && p1->max.ipv6 == p2->max.ipv6;
+	return ccs_same_ipaddr_union(&p1->address, &p2->address);
 }
 
 /**
  * ccs_write_group - Write "struct ccs_path_group"/"struct ccs_number_group"/"struct ccs_address_group" list.
  *
- * @data:      String to parse.
- * @is_delete: True if it is a delete request.
- * @type:      Type of this group.
+ * @param: Pointer to "struct ccs_acl_param".
+ * @type:  Type of this group.
  *
  * Returns 0 on success, negative value otherwise.
  */
-int ccs_write_group(char *data, const bool is_delete, const u8 type)
+int ccs_write_group(struct ccs_acl_param *param, const u8 type)
 {
-	struct ccs_group *group;
-	struct list_head *member;
-	char *w[2];
+	struct ccs_group *group = ccs_get_group(param, type);
 	int error = -EINVAL;
-	if (!ccs_tokenize(data, w, sizeof(w)) || !w[1][0])
-		return -EINVAL;
-	group = ccs_get_group(w[0], type);
 	if (!group)
 		return -ENOMEM;
-	member = &group->member_list;
+	param->list = &group->member_list;
 	if (type == CCS_PATH_GROUP) {
 		struct ccs_path_group e = { };
-		e.member_name = ccs_get_name(w[1]);
+		e.member_name = ccs_get_name(ccs_read_token(param));
 		if (!e.member_name) {
 			error = -ENOMEM;
 			goto out;
 		}
-		error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-					  member, ccs_same_path_group);
+		error = ccs_update_policy(&e.head, sizeof(e), param,
+					  ccs_same_path_group);
 		ccs_put_name(e.member_name);
 	} else if (type == CCS_NUMBER_GROUP) {
 		struct ccs_number_group e = { };
-		if (w[1][0] == '@' || !ccs_parse_number_union(w[1], &e.number)
-		    || e.number.values[0] > e.number.values[1])
+		if (param->data[0] == '@' ||
+		    !ccs_parse_number_union(param, &e.number))
 			goto out;
-		error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-					  member, ccs_same_number_group);
+		error = ccs_update_policy(&e.head, sizeof(e), param,
+					  ccs_same_number_group);
 		/*
-		 * ccs_put_number_union() is not needed because w[1][0] != '@'.
+		 * ccs_put_number_union() is not needed because
+		 * param->data[0] != '@'.
 		 */
 	} else {
 		struct ccs_address_group e = { };
-		u16 min_address[8];
-		u16 max_address[8];
-		switch (ccs_parse_ip_address(w[1], min_address, max_address)) {
-		case CCS_IP_ADDRESS_TYPE_IPv6:
-			e.is_ipv6 = true;
-			e.min.ipv6 = ccs_get_ipv6_address((struct in6_addr *)
-							  min_address);
-			e.max.ipv6 = ccs_get_ipv6_address((struct in6_addr *)
-							  max_address);
-			if (!e.min.ipv6 || !e.max.ipv6)
-				goto out_address;
-			break;
-		case CCS_IP_ADDRESS_TYPE_IPv4:
-			e.min.ipv4 = ntohl(*(u32 *) min_address);
-			e.max.ipv4 = ntohl(*(u32 *) max_address);
-			break;
-		default:
-			goto out_address;
-		}
-		error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-					  member, ccs_same_address_group);
-out_address:
-		if (e.is_ipv6) {
-			ccs_put_ipv6_address(e.min.ipv6);
-			ccs_put_ipv6_address(e.max.ipv6);
-		}
+		if (param->data[0] == '@' ||
+		    !ccs_parse_ipaddr_union(param, &e.address))
+			goto out;
+		error = ccs_update_policy(&e.head, sizeof(e), param,
+					  ccs_same_address_group);
+		ccs_put_ipv6_address(e.address.ipv6.min);
+		ccs_put_ipv6_address(e.address.ipv6.max);
 	}
 out:
 	ccs_put_group(group);
@@ -211,16 +185,19 @@ bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
 				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
-		if (member->is_ipv6) {
+		if (member->address.ipv6.min) {
 			if (is_ipv6 &&
-			    memcmp(member->min.ipv6, address, 16) <= 0 &&
-			    memcmp(address, member->max.ipv6, 16) <= 0) {
+			    memcmp(member->address.ipv6.min, address, 16)
+			    <= 0 &&
+			    memcmp(address, member->address.ipv6.max, 16)
+			    <= 0) {
 				matched = true;
 				break;
 			}
 		} else {
 			if (!is_ipv6 &&
-			    member->min.ipv4 <= ip && ip <= member->max.ipv4) {
+			    member->address.ipv4.min <= ip &&
+			    ip <= member->address.ipv4.max) {
 				matched = true;
 				break;
 			}

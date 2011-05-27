@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -487,13 +487,6 @@ enum ccs_group_id {
 	CCS_MAX_GROUP
 };
 
-/* Index numbers for type of IP address. */
-enum ccs_ip_address_type {
-	CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP,
-	CCS_IP_ADDRESS_TYPE_IPv4,
-	CCS_IP_ADDRESS_TYPE_IPv6,
-};
-
 /* Index numbers for category of functionality. */
 enum ccs_mac_category_index {
 	CCS_MAC_CATEGORY_FILE,
@@ -723,6 +716,8 @@ enum ccs_special_mount {
 /* Index numbers for domain transition control keywords. */
 enum ccs_transition_type {
 	/* Do not change this order, */
+	CCS_TRANSITION_CONTROL_NO_NAMESPACE,
+	CCS_TRANSITION_CONTROL_NAMESPACE,
 	CCS_TRANSITION_CONTROL_NO_INITIALIZE,
 	CCS_TRANSITION_CONTROL_INITIALIZE,
 	CCS_TRANSITION_CONTROL_NO_KEEP,
@@ -753,10 +748,6 @@ enum ccs_value_type {
  * Therefore, we don't need SOCK_MAX.
  */
 #define CCS_SOCK_MAX 6
-
-/* A domain definition starts with <kernel>. */
-#define CCS_ROOT_NAME                         "<kernel>"
-#define CCS_ROOT_NAME_LEN                     (sizeof(CCS_ROOT_NAME) - 1)
 
 /* Size of temporary buffer for execve() operation. */
 #define CCS_EXEC_TMPSIZE     4096
@@ -849,6 +840,24 @@ struct ccs_number_union {
 	u8 is_group;
 };
 
+/* Structure for holding an IP address. */
+struct ccs_ipaddr_union {
+	struct {
+		/* Start of IPv4 address range. Host endian. */
+		u32 min;
+		/* End of IPv4 address range. Host endian.   */
+		u32 max;
+	} ipv4;
+	struct {
+		/* Start of IPv6 address range. Big endian.  */
+		const struct in6_addr *min;
+		/* End of IPv6 address range. Big endian.    */
+		const struct in6_addr *max;
+	} ipv6;
+	/* Pointer to address group. */
+	struct ccs_group *group;
+};
+
 /* Structure for "path_group"/"number_group"/"address_group" directive. */
 struct ccs_group {
 	struct ccs_shared_acl_head head;
@@ -876,11 +885,8 @@ struct ccs_number_group {
 /* Structure for "address_group" directive. */
 struct ccs_address_group {
 	struct ccs_acl_head head;
-	bool is_ipv6; /* True if IPv6 address, false if IPv4 address. */
-	union {
-		u32 ipv4;                    /* Host byte order    */
-		const struct in6_addr *ipv6; /* Network byte order */
-	} min, max;
+	/* Structure for holding an IP address. */
+	struct ccs_ipaddr_union address;
 };
 
 /* Subset of "struct stat". Used by conditional ACL and audit logs. */
@@ -960,6 +966,7 @@ struct ccs_condition {
 };
 
 struct ccs_execve;
+struct ccs_policy_namespace;
 
 /* Structure for request info. */
 struct ccs_request_info {
@@ -1053,10 +1060,8 @@ struct ccs_request_info {
 			const struct ccs_path_info *domainname;
 		} task;
 	} param;
-	u8 param_type; /* One of values in "enum ccs_acl_entry_type_index". */
-	bool granted; /* True if granted, false otherwise. */
-	/* True if current thread should not be carried sleep penalty. */
-	bool dont_sleep_on_enforce_error;
+	/* For holding namespace used for this request. */
+	struct ccs_policy_namespace *ns;
 	/*
 	 * For updating current->ccs_domain_info at ccs_update_task_domain().
 	 * Initialized to NULL at ccs_init_request_info().
@@ -1064,6 +1069,10 @@ struct ccs_request_info {
 	 * granted. Re-initialized to NULL at ccs_update_task_domain().
 	 */
 	struct ccs_acl_info *matched_acl;
+	u8 param_type; /* One of values in "enum ccs_acl_entry_type_index". */
+	bool granted; /* True if granted, false otherwise. */
+	/* True if current thread should not be carried sleep penalty. */
+	bool dont_sleep_on_enforce_error;
 	/*
 	 * For counting number of retries made for this request.
 	 * This counter is incremented whenever ccs_supervisor() returned
@@ -1121,6 +1130,8 @@ struct ccs_domain_info {
 	struct list_head acl_info_list[2];
 	/* Name of this domain. Never NULL.          */
 	const struct ccs_path_info *domainname;
+	/* Namespace for this domain. Never NULL. */
+	struct ccs_policy_namespace *ns;
 	u8 profile;        /* Profile number to use. */
 	u8 group;          /* Group number to use.   */
 	bool is_deleted;   /* Delete flag.           */
@@ -1128,7 +1139,8 @@ struct ccs_domain_info {
 };
 
 /*
- * Structure for "initialize_domain"/"no_initialize_domain" and
+ * Structure for "move_namespace"/"no_move_namespace" and
+ * "initialize_domain"/"no_initialize_domain" and
  * "keep_domain"/"no_keep_domain" keyword.
  */
 struct ccs_transition_control {
@@ -1149,8 +1161,7 @@ struct ccs_aggregator {
 /* Structure for "deny_autobind" keyword. */
 struct ccs_reserved {
 	struct ccs_acl_head head;
-	u16 min_port;                /* Start of port number range.          */
-	u16 max_port;                /* End of port number range.            */
+	struct ccs_number_union port;
 };
 
 /* Structure for policy manager. */
@@ -1163,7 +1174,7 @@ struct ccs_manager {
 
 /* Structure for argv[]. */
 struct ccs_argv {
-	unsigned int index;
+	unsigned long index;
 	const struct ccs_path_info *value;
 	bool is_not;
 };
@@ -1274,7 +1285,7 @@ struct ccs_capability_acl {
 /* Structure for "ipc signal" directive. */
 struct ccs_signal_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_SIGNAL_ACL */
-	u16 sig;
+	struct ccs_number_union sig;
 	/* Pointer to destination pattern. */
 	const struct ccs_path_info *domainname;
 };
@@ -1290,32 +1301,7 @@ struct ccs_inet_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_INET_ACL */
 	u8 protocol;
 	u8 perm; /* Bitmask of values in "enum ccs_network_acl_index" */
-	/*
-	 * address_type takes one of the following constants.
-	 *   CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP
-	 *                if @address points to "address_group" directive.
-	 *   CCS_IP_ADDRESS_TYPE_IPv4
-	 *                if @address points to an IPv4 address.
-	 *   CCS_IP_ADDRESS_TYPE_IPv6
-	 *                if @address points to an IPv6 address.
-	 */
-	u8 address_type;
-	union {
-		struct {
-			/* Start of IPv4 address range. Host endian. */
-			u32 min;
-			/* End of IPv4 address range. Host endian.   */
-			u32 max;
-		} ipv4;
-		struct {
-			/* Start of IPv6 address range. Big endian.  */
-			const struct in6_addr *min;
-			/* End of IPv6 address range. Big endian.    */
-			const struct in6_addr *max;
-		} ipv6;
-		/* Pointer to address group. */
-		struct ccs_group *group;
-	} address;
+	struct ccs_ipaddr_union address;
 	struct ccs_number_union port;
 };
 
@@ -1336,8 +1322,13 @@ struct ccs_name {
 
 /* Structure for holding a line from /proc/ccs/ interface. */
 struct ccs_acl_param {
+	/* Unprocessed data. */
 	char *data;
-	struct ccs_domain_info *domain;
+	/* Pointer to "struct list_head" or "struct list_head[2]" */
+	struct list_head *list;
+	/* Namespace to use. */
+	struct ccs_policy_namespace *ns;
+	/* True if it is a delete request. */
 	bool is_delete;
 };
 
@@ -1351,6 +1342,7 @@ struct ccs_io_buffer {
 	char __user *read_user_buf;
 	size_t read_user_buf_avail;
 	struct {
+		struct list_head *ns;
 		struct list_head *domain;
 		struct list_head *group;
 		struct list_head *acl;
@@ -1370,8 +1362,10 @@ struct ccs_io_buffer {
 		const char *w[CCS_MAX_IO_READ_QUEUE];
 	} r;
 	struct {
+		struct ccs_policy_namespace *ns;
 		struct ccs_domain_info *domain;
 		size_t avail;
+		bool is_delete;
 	} w;
 	/* Buffer for reading.                  */
 	char *read_buf;
@@ -1381,6 +1375,8 @@ struct ccs_io_buffer {
 	char *write_buf;
 	/* Size of write buffer.                */
 	size_t writebuf_size;
+	/* Namespace as of open(). */
+	struct ccs_policy_namespace *original_ns;
 	/* Type of interface. */
 	enum ccs_proc_interface_index type;
 	/* Users counter protected by ccs_io_buffer_list_lock. */
@@ -1405,6 +1401,24 @@ struct ccs_time {
 	u8 hour;
 	u8 min;
 	u8 sec;
+};
+
+/* Structure for policy namespace. */
+struct ccs_policy_namespace {
+	/* Profile table. Memory is allocated as needed. */
+	struct ccs_profile *profile_ptr[CCS_MAX_PROFILES];
+	/* List of "struct ccs_group". */
+	struct list_head group_list[CCS_MAX_GROUP];
+	/* List of policy. */
+	struct list_head policy_list[CCS_MAX_POLICY];
+	/* The global ACL referred by "use_group" keyword. */
+	struct list_head acl_group[CCS_MAX_ACL_GROUPS][2];
+	/* List for connecting to ccs_namespace_list list. */
+	struct list_head namespace_list;
+	/* Profile version. Currently only 20100903 is defined. */
+	unsigned int profile_version;
+	/* Name of this namespace (e.g. "<kernel>", "</usr/sbin/httpd>" ). */
+	const char *name;
 };
 
 /* Prototype definition for "struct ccsecurity_operations". */
@@ -1436,21 +1450,24 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 bool ccs_memory_ok(const void *ptr, const unsigned int size);
 bool ccs_number_matches_group(const unsigned long min, const unsigned long max,
 			      const struct ccs_group *group);
-bool ccs_parse_name_union(const char *filename, struct ccs_name_union *ptr);
-bool ccs_parse_number_union(char *data, struct ccs_number_union *num);
+bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
+			    struct ccs_ipaddr_union *ptr);
+bool ccs_parse_name_union(struct ccs_acl_param *param,
+			  struct ccs_name_union *ptr);
+bool ccs_parse_number_union(struct ccs_acl_param *param,
+			    struct ccs_number_union *ptr);
 bool ccs_path_matches_pattern(const struct ccs_path_info *filename,
 			      const struct ccs_path_info *pattern);
 bool ccs_permstr(const char *string, const char *keyword);
 bool ccs_str_starts(char **src, const char *find);
-bool ccs_tokenize(char *buffer, char *w[], size_t size);
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
 char *ccs_init_log(struct ccs_request_info *r, int len, const char *fmt,
 		   va_list args);
 char *ccs_read_token(struct ccs_acl_param *param);
 char *ccs_realpath_from_path(struct path *path);
-const char *ccs_yesno(const unsigned int value);
 const char *ccs_get_exe(void);
+const char *ccs_yesno(const unsigned int value);
 const struct ccs_path_info *ccs_compare_name_union
 (const struct ccs_path_info *name, const struct ccs_name_union *ptr);
 const struct ccs_path_info *ccs_get_domainname(struct ccs_acl_param *param);
@@ -1463,7 +1480,7 @@ int ccs_env_perm(struct ccs_request_info *r, const char *env);
 int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
 int ccs_open_control(const u8 type, struct file *file);
-int ccs_parse_ip_address(char *address, u16 *min, u16 *max);
+int ccs_parse_ip_address(struct ccs_acl_param *param, u16 *min, u16 *max);
 int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 			const struct ccs_path_info *filename);
 int ccs_poll_control(struct file *file, poll_table *wait);
@@ -1479,30 +1496,29 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 					       struct ccs_acl_info *,
 					       const bool));
 int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
-		      bool is_delete, struct list_head *list,
+		      struct ccs_acl_param *param,
 		      bool (*check_duplicate) (const struct ccs_acl_head *,
 					       const struct ccs_acl_head *));
-int ccs_write_aggregator(char *data, const bool is_delete);
+int ccs_write_aggregator(struct ccs_acl_param *param);
 int ccs_write_capability(struct ccs_acl_param *param);
 int ccs_write_file(struct ccs_acl_param *param);
-int ccs_write_group(char *data, const bool is_delete, const u8 type);
+int ccs_write_group(struct ccs_acl_param *param, const u8 type);
 int ccs_write_inet_network(struct ccs_acl_param *param);
 int ccs_write_ipc(struct ccs_acl_param *param);
 int ccs_write_misc(struct ccs_acl_param *param);
-int ccs_write_reserved_port(char *data, const bool is_delete);
-int ccs_write_transition_control(char *data, const bool is_delete,
-				 const u8 type);
+int ccs_write_reserved_port(struct ccs_acl_param *param);
+int ccs_write_transition_control(struct ccs_acl_param *param, const u8 type);
 int ccs_write_unix_network(struct ccs_acl_param *param);
 ssize_t ccs_read_control(struct file *file, char __user *buffer,
 			 const size_t buffer_len);
 ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 			  const size_t buffer_len);
-struct ccs_condition *ccs_get_condition(char *condition);
+struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param);
 struct ccs_domain_info *ccs_assign_domain(const char *domainname,
-					  const u8 profile, const u8 group,
 					  const bool transit);
 struct ccs_domain_info *ccs_find_domain(const char *domainname);
-struct ccs_group *ccs_get_group(const char *group_name, const u8 idx);
+struct ccs_group *ccs_get_group(struct ccs_acl_param *param, const u8 idx);
+struct ccs_policy_namespace *ccs_assign_namespace(const char *domainname);
 struct ccs_profile *ccs_profile(const u8 profile);
 u8 ccs_get_config(const u8 profile, const u8 index);
 u8 ccs_parse_ulong(unsigned long *result, char **str);
@@ -1514,14 +1530,12 @@ void ccs_convert_time(time_t time, struct ccs_time *p);
 void ccs_del_condition(struct list_head *element);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 void ccs_get_attributes(struct ccs_obj_info *obj);
+void ccs_init_policy_namespace(struct ccs_policy_namespace *ns);
 void ccs_memory_free(const void *ptr, size_t size);
 void ccs_normalize_line(unsigned char *buffer);
 void ccs_notify_gc(struct ccs_io_buffer *head, const bool is_register);
-void ccs_print_ipv4(char *buffer, const int buffer_len, const u32 min_ip,
-		    const u32 max_ip);
-void ccs_print_ipv6(char *buffer, const int buffer_len,
-		    const struct in6_addr *min_ip,
-		    const struct in6_addr *max_ip);
+void ccs_print_ip(char *buf, const unsigned int size,
+		  const struct ccs_ipaddr_union *ptr);
 void ccs_print_ulong(char *buffer, const int buffer_len,
 		     const unsigned long value, const u8 type);
 void ccs_put_name_union(struct ccs_name_union *ptr);
@@ -1554,12 +1568,12 @@ extern const u8 ccs_index2category[CCS_MAX_MAC_INDEX];
 extern const u8 ccs_pn2mac[CCS_MAX_PATH_NUMBER_OPERATION];
 extern const u8 ccs_pnnn2mac[CCS_MAX_MKDEV_OPERATION];
 extern const u8 ccs_pp2mac[CCS_MAX_PATH2_OPERATION];
-extern struct ccs_domain_info ccs_acl_group[CCS_MAX_ACL_GROUPS];
 extern struct ccs_domain_info ccs_kernel_domain;
+extern struct ccs_policy_namespace ccs_kernel_namespace;
 extern struct list_head ccs_domain_list;
-extern struct list_head ccs_group_list[CCS_MAX_GROUP];
+extern struct list_head ccs_manager_list;
 extern struct list_head ccs_name_list[CCS_MAX_HASH];
-extern struct list_head ccs_policy_list[CCS_MAX_POLICY];
+extern struct list_head ccs_namespace_list;
 extern struct list_head ccs_shared_list[CCS_MAX_LIST];
 extern struct mutex ccs_policy_lock;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
@@ -1615,6 +1629,22 @@ static inline bool ccs_same_number_union(const struct ccs_number_union *a,
 		a->value_type[0] == b->value_type[0] &&
 		a->value_type[1] == b->value_type[1] &&
 		a->is_group == b->is_group;
+}
+
+/**
+ * ccs_same_ipaddr_union - Check for duplicated "struct ccs_ipaddr_union" entry.
+ *
+ * @a: Pointer to "struct ccs_ipaddr_union".
+ * @b: Pointer to "struct ccs_ipaddr_union".
+ *
+ * Returns true if @a == @b, false otherwise.
+ */
+static inline bool ccs_same_ipaddr_union(const struct ccs_ipaddr_union *a,
+					 const struct ccs_ipaddr_union *b)
+{
+	return a->ipv4.min == b->ipv4.min && a->ipv4.max == b->ipv4.max &&
+		a->ipv6.min == b->ipv6.min && a->ipv6.max == b->ipv6.max &&
+		a->group == b->group;
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
@@ -2082,8 +2112,8 @@ static inline struct ccs_domain_info *ccs_task_domain(struct task_struct *task)
  * Returns pointer to "struct ccs_domain_info" for current thread.
  *
  * If current thread does not belong to a domain (which is true for initial
- * init_task in order to hide ccs_kernel_domain from this module), current
- * thread enters into ccs_kernel_domain.
+ * init_task in order to hide ccs_kernel_domain from this module),
+ * current thread enters into ccs_kernel_domain.
  */
 static inline struct ccs_domain_info *ccs_current_domain(void)
 {
@@ -2116,5 +2146,10 @@ static inline u32 ccs_current_flags(void)
 }
 
 #endif
+
+static inline struct ccs_policy_namespace *ccs_current_namespace(void)
+{
+	return ccs_current_domain()->ns;
+}
 
 #endif

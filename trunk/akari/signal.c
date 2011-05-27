@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -39,7 +39,7 @@ static bool ccs_check_signal_acl(struct ccs_request_info *r,
 {
 	const struct ccs_signal_acl *acl =
 		container_of(ptr, typeof(*acl), head);
-	if (acl->sig == r->param.signal.sig) {
+	if (ccs_compare_number_union(r->param.signal.sig, &acl->sig)) {
 		const int len = acl->domainname->total_len;
 		if (!strncmp(acl->domainname->name,
 			     r->param.signal.dest_pattern, len)) {
@@ -158,38 +158,12 @@ static bool ccs_same_signal_acl(const struct ccs_acl_info *a,
 {
 	const struct ccs_signal_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_signal_acl *p2 = container_of(b, typeof(*p2), head);
-	return p1->sig == p2->sig && p1->domainname == p2->domainname;
+	return ccs_same_number_union(&p1->sig, &p2->sig) &&
+		p1->domainname == p2->domainname;
 }
 
 /**
- * ccs_write_signal - Write "struct ccs_signal_acl" list.
- *
- * @param: Pointer to "struct ccs_acl_param".
- *
- * Returns 0 on success, negative value otherwise.
- *
- * Caller holds ccs_read_lock().
- */
-static int ccs_write_signal(struct ccs_acl_param *param)
-{
-	struct ccs_signal_acl e = { .head.type = CCS_TYPE_SIGNAL_ACL };
-	int error;
-	int sig;
-	if (sscanf(ccs_read_token(param), "%d", &sig) != 1)
-		return -EINVAL;
-	e.sig = sig;
-	e.domainname = ccs_get_domainname(param);
-	if (!e.domainname)
-		error = -EINVAL;
-	else
-		error = ccs_update_domain(&e.head, sizeof(e), param,
-					  ccs_same_signal_acl, NULL);
-	ccs_put_name(e.domainname);
-	return error;
-}
-
-/**
- * ccs_write_ipc - Update ipc related list.
+ * ccs_write_ipc - Update "struct ccs_signal_acl" list.
  *
  * @param: Pointer to "struct ccs_acl_param".
  *
@@ -197,9 +171,19 @@ static int ccs_write_signal(struct ccs_acl_param *param)
  */
 int ccs_write_ipc(struct ccs_acl_param *param)
 {
-	if (ccs_str_starts(&param->data, "signal "))
-		return ccs_write_signal(param);
-	return -EINVAL;
+	struct ccs_signal_acl e = { .head.type = CCS_TYPE_SIGNAL_ACL };
+	int error;
+	if (!ccs_parse_number_union(param, &e.sig))
+		return -EINVAL;
+	e.domainname = ccs_get_domainname(param);
+	if (!e.domainname)
+		error = -EINVAL;
+	else
+		error = ccs_update_domain(&e.head, sizeof(e), param,
+					  ccs_same_signal_acl, NULL);
+	ccs_put_name(e.domainname);
+	ccs_put_number_union(&e.sig);
+	return error;
 }
 
 /**

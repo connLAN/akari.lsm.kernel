@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1+   2011/05/11
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -78,13 +78,6 @@ do {									\
 #define list_for_each_cookie(pos, head)					\
 	for (pos = pos ? pos : srcu_dereference((head)->next, &ccs_ss); \
 	     pos != (head); pos = srcu_dereference(pos->next, &ccs_ss))
-
-
-/* Profile version. Currently only 20100903 is defined. */
-static unsigned int ccs_profile_version;
-
-/* Profile table. Memory is allocated as needed. */
-static struct ccs_profile *ccs_profile_ptr[CCS_MAX_PROFILES];
 
 /* String table for operation mode. */
 const char * const ccs_mode[CCS_CONFIG_MAX_MODE] = {
@@ -430,26 +423,73 @@ static void ccs_set_slash(struct ccs_io_buffer *head)
 	ccs_set_string(head, "/");
 }
 
+/* List of namespaces. */
+LIST_HEAD(ccs_namespace_list);
+/* True if namespace other than ccs_kernel_namespace is defined. */
+static bool ccs_namespace_enabled;
+
+/**
+ * ccs_init_policy_namespace - Initialize namespace.
+ *
+ * @ns: Pointer to "struct ccs_policy_namespace".
+ *
+ * Returns nothing.
+ */
+void ccs_init_policy_namespace(struct ccs_policy_namespace *ns)
+{
+	unsigned int idx;
+	for (idx = 0; idx < CCS_MAX_ACL_GROUPS; idx++) {
+		INIT_LIST_HEAD(&ns->acl_group[idx][0]);
+		INIT_LIST_HEAD(&ns->acl_group[idx][1]);
+	}
+	for (idx = 0; idx < CCS_MAX_GROUP; idx++)
+		INIT_LIST_HEAD(&ns->group_list[idx]);
+	for (idx = 0; idx < CCS_MAX_POLICY; idx++)
+		INIT_LIST_HEAD(&ns->policy_list[idx]);
+	ns->profile_version = 20100903;
+	ccs_namespace_enabled = !list_empty(&ccs_namespace_list);
+	list_add_tail_rcu(&ns->namespace_list, &ccs_namespace_list);
+}
+
+/**
+ * ccs_print_namespace - Print namespace header.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
+static void ccs_print_namespace(struct ccs_io_buffer *head)
+{
+	if (!ccs_namespace_enabled)
+		return;
+	ccs_set_string(head,
+		       container_of(head->r.ns, struct ccs_policy_namespace,
+				    namespace_list)->name);
+	ccs_set_space(head);
+}
+
 /**
  * ccs_assign_profile - Create a new profile.
  *
+ * @ns:      Pointer to "struct ccs_policy_namespace".
  * @profile: Profile number to create.
  *
  * Returns pointer to "struct ccs_profile" on success, NULL otherwise.
  */
-static struct ccs_profile *ccs_assign_profile(const unsigned int profile)
+static struct ccs_profile *ccs_assign_profile(struct ccs_policy_namespace *ns,
+					      const unsigned int profile)
 {
 	struct ccs_profile *ptr;
 	struct ccs_profile *entry;
 	if (profile >= CCS_MAX_PROFILES)
 		return NULL;
-	ptr = ccs_profile_ptr[profile];
+	ptr = ns->profile_ptr[profile];
 	if (ptr)
 		return ptr;
 	entry = kzalloc(sizeof(*entry), CCS_GFP_FLAGS);
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
-	ptr = ccs_profile_ptr[profile];
+	ptr = ns->profile_ptr[profile];
 	if (!ptr && ccs_memory_ok(entry, sizeof(*entry))) {
 		ptr = entry;
 		ptr->default_config = CCS_CONFIG_DISABLED |
@@ -461,7 +501,7 @@ static struct ccs_profile *ccs_assign_profile(const unsigned int profile)
 		ptr->pref[CCS_PREF_MAX_LEARNING_ENTRY] =
 			CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY;
 		mb(); /* Avoid out-of-order execution. */
-		ccs_profile_ptr[profile] = ptr;
+		ns->profile_ptr[profile] = ptr;
 		entry = NULL;
 	}
 	mutex_unlock(&ccs_policy_lock);
@@ -480,27 +520,28 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
+	printk(KERN_INFO "CCSecurity: 1.8.2-pre   2011/05/22\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
-		if (ccs_profile_ptr[profile])
+		const struct ccs_policy_namespace *ns = domain->ns;
+		if (ns->profile_version != 20100903)
+			printk(KERN_ERR
+			       "Profile version %u is not supported.\n",
+			       ns->profile_version);
+		else if (!ns->profile_ptr[profile])
+			printk(KERN_ERR
+			       "Profile %u (used by '%s') is not defined.\n",
+			       profile, domain->domainname->name);
+		else
 			continue;
-		printk(KERN_ERR "Profile %u must be defined before using it.\n",
-		       profile);
+		printk(KERN_ERR
+		       "Userland tools for TOMOYO 1.8 must be installed and "
+		       "policy must be initialized.\n");
 		printk(KERN_ERR "Please see http://tomoyo.sourceforge.jp/1.8/ "
 		       "for more information.\n");
-		panic("Profile %u (used by '%s') not defined.\n",
-		      profile, domain->domainname->name);
+		panic("STOP!");
 	}
 	ccs_read_unlock(idx);
-	if (ccs_profile_version != 20100903) {
-		printk(KERN_ERR "Userland tools must be installed for "
-		       "TOMOYO 1.8, and policy must be initialized.\n");
-		printk(KERN_ERR "Please see http://tomoyo.sourceforge.jp/1.8/ "
-		       "for more information.\n");
-		panic("Profile version %u is not supported.\n",
-		      ccs_profile_version);
-	}
-	printk(KERN_INFO "CCSecurity: 1.8.1+   2011/05/11\n");
 	printk(KERN_INFO "Mandatory Access Control activated.\n");
 }
 
@@ -514,7 +555,8 @@ static void ccs_check_profile(void)
 struct ccs_profile *ccs_profile(const u8 profile)
 {
 	static struct ccs_profile ccs_null_profile;
-	struct ccs_profile *ptr = ccs_profile_ptr[profile];
+	struct ccs_profile *ptr = ccs_current_namespace()->
+		profile_ptr[profile];
 	if (!ptr)
 		ptr = &ccs_null_profile;
 	return ptr;
@@ -648,13 +690,14 @@ static int ccs_write_profile(struct ccs_io_buffer *head)
 	unsigned int i;
 	char *cp;
 	struct ccs_profile *profile;
-	if (sscanf(data, "PROFILE_VERSION=%u", &ccs_profile_version) == 1)
+	if (sscanf(data, "PROFILE_VERSION=%u", &head->w.ns->profile_version)
+	    == 1)
 		return 0;
 	i = simple_strtoul(data, &cp, 10);
 	if (*cp != '-')
 		return -EINVAL;
 	data = cp + 1;
-	profile = ccs_assign_profile(i);
+	profile = ccs_assign_profile(head->w.ns, i);
 	if (!profile)
 		return -EINVAL;
 	cp = strchr(data, '=');
@@ -711,31 +754,39 @@ static void ccs_print_config(struct ccs_io_buffer *head, const u8 config)
 static void ccs_read_profile(struct ccs_io_buffer *head)
 {
 	u8 index;
+	struct ccs_policy_namespace *ns = container_of(head->r.ns, typeof(*ns),
+						       namespace_list);
 	const struct ccs_profile *profile;
+	if (head->r.eof)
+		return;
 next:
 	index = head->r.index;
-	profile = ccs_profile_ptr[index];
+	profile = ns->profile_ptr[index];
 	switch (head->r.step) {
 	case 0:
+		ccs_print_namespace(head);
 		ccs_io_printf(head, "PROFILE_VERSION=%u\n", 20100903);
 		head->r.step++;
 		break;
 	case 1:
-		for ( ; head->r.index < CCS_MAX_PROFILES;
-		      head->r.index++)
-			if (ccs_profile_ptr[head->r.index])
+		for ( ; head->r.index < CCS_MAX_PROFILES; head->r.index++)
+			if (ns->profile_ptr[head->r.index])
 				break;
-		if (head->r.index == CCS_MAX_PROFILES)
+		if (head->r.index == CCS_MAX_PROFILES) {
+			head->r.eof = true;
 			return;
+		}
 		head->r.step++;
 		break;
 	case 2:
 		{
 			u8 i;
 			const struct ccs_path_info *comment = profile->comment;
+			ccs_print_namespace(head);
 			ccs_io_printf(head, "%u-COMMENT=", index);
 			ccs_set_string(head, comment ? comment->name : "");
 			ccs_set_lf(head);
+			ccs_print_namespace(head);
 			ccs_io_printf(head, "%u-PREFERENCE={ ", index);
 			for (i = 0; i < CCS_MAX_PREF; i++)
 				ccs_io_printf(head, "%s=%u ",
@@ -747,6 +798,7 @@ next:
 		break;
 	case 3:
 		{
+			ccs_print_namespace(head);
 			ccs_io_printf(head, "%u-%s", index, "CONFIG");
 			ccs_print_config(head, profile->default_config);
 			head->r.bit = 0;
@@ -760,6 +812,7 @@ next:
 			const u8 config = profile->config[i];
 			if (config == CCS_CONFIG_USE_DEFAULT)
 				continue;
+			ccs_print_namespace(head);
 			if (i < CCS_MAX_MAC_INDEX)
 				ccs_io_printf(head, "%u-CONFIG::%s::%s", index,
 					      ccs_category_keywords
@@ -806,9 +859,15 @@ static bool ccs_same_manager(const struct ccs_acl_head *a,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_update_manager_entry(const char *manager, const bool is_delete)
+static inline int ccs_update_manager_entry(const char *manager,
+					   const bool is_delete)
 {
 	struct ccs_manager e = { };
+	struct ccs_acl_param param = {
+		/* .ns = &ccs_kernel_namespace, */
+		.is_delete = is_delete,
+		.list = &ccs_kernel_namespace.policy_list[CCS_ID_MANAGER],
+	};
 	int error = is_delete ? -ENOENT : -ENOMEM;
 	if (ccs_domain_def(manager)) {
 		if (!ccs_correct_domain(manager))
@@ -819,12 +878,11 @@ static int ccs_update_manager_entry(const char *manager, const bool is_delete)
 			return -EINVAL;
 	}
 	e.manager = ccs_get_name(manager);
-	if (!e.manager)
-		return error;
-	error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-				  &ccs_policy_list[CCS_ID_MANAGER],
-				  ccs_same_manager);
-	ccs_put_name(e.manager);
+	if (e.manager) {
+		error = ccs_update_policy(&e.head, sizeof(e), &param,
+					  ccs_same_manager);
+		ccs_put_name(e.manager);
+	}
 	return error;
 }
 
@@ -837,13 +895,12 @@ static int ccs_update_manager_entry(const char *manager, const bool is_delete)
  */
 static int ccs_write_manager(struct ccs_io_buffer *head)
 {
-	char *data = head->write_buf;
-	bool is_delete = ccs_str_starts(&data, "delete ");
+	const char *data = head->write_buf;
 	if (!strcmp(data, "manage_by_non_root")) {
-		ccs_manage_by_non_root = !is_delete;
+		ccs_manage_by_non_root = !head->w.is_delete;
 		return 0;
 	}
-	return ccs_update_manager_entry(data, is_delete);
+	return ccs_update_manager_entry(data, head->w.is_delete);
 }
 
 /**
@@ -859,7 +916,8 @@ static void ccs_read_manager(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	list_for_each_cookie(head->r.acl, &ccs_policy_list[CCS_ID_MANAGER]) {
+	list_for_each_cookie(head->r.acl, &ccs_kernel_namespace.
+			     policy_list[CCS_ID_MANAGER]) {
 		struct ccs_manager *ptr =
 			list_entry(head->r.acl, typeof(*ptr), head.list);
 		if (ptr->head.is_deleted)
@@ -895,8 +953,9 @@ static bool ccs_manager(void)
 	if (!ccs_manage_by_non_root && (current_uid() || current_euid()))
 		return false;
 	exe = ccs_get_exe();
-	list_for_each_entry_srcu(ptr, &ccs_policy_list[CCS_ID_MANAGER],
-				 head.list, &ccs_ss) {
+	list_for_each_entry_srcu(ptr, &ccs_kernel_namespace.
+				 policy_list[CCS_ID_MANAGER], head.list,
+				 &ccs_ss) {
 		if (ptr->head.is_deleted)
 			continue;
 		if (ptr->is_domain) {
@@ -925,7 +984,7 @@ static bool ccs_manager(void)
 }
 
 /**
- * ccs_select_one - Parse select command.
+ * ccs_select_domain - Parse select command.
  *
  * @head: Pointer to "struct ccs_io_buffer".
  * @data: String to parse.
@@ -934,15 +993,14 @@ static bool ccs_manager(void)
  *
  * Caller holds ccs_read_lock().
  */
-static bool ccs_select_one(struct ccs_io_buffer *head, const char *data)
+static bool ccs_select_domain(struct ccs_io_buffer *head, const char *data)
 {
 	unsigned int pid;
 	struct ccs_domain_info *domain = NULL;
 	bool global_pid = false;
-	if (!strcmp(data, "transition_only")) {
-		head->r.print_transition_related_only = true;
-		return true;
-	}
+	if (strncmp(data, "select ", 7))
+		return false;
+	data += 7;
 	if (sscanf(data, "pid=%u", &pid) == 1 ||
 	    (global_pid = true, sscanf(data, "global-pid=%u", &pid) == 1)) {
 		struct task_struct *p;
@@ -960,7 +1018,7 @@ static bool ccs_select_one(struct ccs_io_buffer *head, const char *data)
 			domain = ccs_task_domain(p);
 		ccs_tasklist_unlock();
 	} else if (!strncmp(data, "domain=", 7)) {
-		if (ccs_domain_def(data + 7))
+		if (*(data + 7) == '<')
 			domain = ccs_find_domain(data + 7);
 	} else
 		return false;
@@ -1068,20 +1126,23 @@ static int ccs_write_task(struct ccs_acl_param *param)
 /**
  * ccs_write_domain2 - Write domain policy.
  *
+ * @ns:        Pointer to "struct ccs_policy_namespace".
+ * @list:      Pointer to "struct list_head [2]".
  * @data:      Policy to be interpreted.
- * @domain:    Pointer to "struct ccs_domain_info".
  * @is_delete: True if it is a delete request.
  *
  * Returns 0 on success, negative value otherwise.
  *
  * Caller holds ccs_read_lock().
  */
-static int ccs_write_domain2(char *data, struct ccs_domain_info *domain,
+static int ccs_write_domain2(struct ccs_policy_namespace *ns,
+			     struct list_head list[2], char *data,
 			     const bool is_delete)
 {
 	struct ccs_acl_param param = {
+		.ns = ns,
+		.list = list,
 		.data = data,
-		.domain = domain,
 		.is_delete = is_delete,
 	};
 	static const struct {
@@ -1093,7 +1154,7 @@ static int ccs_write_domain2(char *data, struct ccs_domain_info *domain,
 		{ "network unix ", ccs_write_unix_network },
 		{ "misc ", ccs_write_misc },
 		{ "capability ", ccs_write_capability },
-		{ "ipc ", ccs_write_ipc },
+		{ "ipc signal ", ccs_write_ipc },
 		{ "task ", ccs_write_task },
 	};
 	u8 i;
@@ -1153,36 +1214,28 @@ const char * const ccs_dif[CCS_MAX_DOMAIN_INFO_FLAGS] = {
 static int ccs_write_domain(struct ccs_io_buffer *head)
 {
 	char *data = head->write_buf;
+	struct ccs_policy_namespace *ns;
 	struct ccs_domain_info *domain = head->w.domain;
-	bool is_delete = false;
-	bool is_select = false;
+	const bool is_delete = head->w.is_delete;
+	const bool is_select = !is_delete && ccs_str_starts(&data, "select ");
 	unsigned int profile;
-	if (ccs_str_starts(&data, "delete "))
-		is_delete = true;
-	else if (ccs_str_starts(&data, "select "))
-		is_select = true;
-	if (is_select && ccs_select_one(head, data))
-		return -EAGAIN;
-	/* Don't allow updating policies by non manager programs. */
-	if (!ccs_manager())
-		return -EPERM;
-	if (ccs_domain_def(data)) {
+	if (*data == '<') {
 		domain = NULL;
 		if (is_delete)
 			ccs_delete_domain(data);
 		else if (is_select)
 			domain = ccs_find_domain(data);
 		else
-			domain = ccs_assign_domain(data, 0, 0, false);
+			domain = ccs_assign_domain(data, false);
 		head->w.domain = domain;
 		return 0;
 	}
 	if (!domain)
 		return -EINVAL;
-
+	ns = domain->ns;
 	if (sscanf(data, "use_profile %u\n", &profile) == 1
 	    && profile < CCS_MAX_PROFILES) {
-		if (!ccs_policy_loaded || ccs_profile_ptr[(u8) profile])
+		if (!ccs_policy_loaded || ns->profile_ptr[(u8) profile])
 			if (!is_delete)
 				domain->profile = (u8) profile;
 		return 0;
@@ -1200,7 +1253,7 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 		domain->flags[profile] = !is_delete;
 		return 0;
 	}
-	return ccs_write_domain2(data, domain, is_delete);
+	return ccs_write_domain2(ns, domain->acl_info_list, data, is_delete);
 }
 
 /**
@@ -1214,34 +1267,47 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 static void ccs_print_name_union(struct ccs_io_buffer *head,
 				 const struct ccs_name_union *ptr)
 {
-	const bool cond = head->r.print_cond_part;
-	if (!cond)
-		ccs_set_space(head);
+	ccs_set_space(head);
 	if (ptr->is_group) {
 		ccs_set_string(head, "@");
 		ccs_set_string(head, ptr->group->group_name->name);
 	} else {
-		if (cond)
-			ccs_set_string(head, "\"");
 		ccs_set_string(head, ptr->filename->name);
-		if (cond)
-			ccs_set_string(head, "\"");
 	}
 }
 
 /**
- * ccs_print_number_union - Print a ccs_number_union.
+ * ccs_print_name_union_quoted - Print a ccs_name_union with a quote.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ * @ptr:  Pointer to "struct ccs_name_union".
+ *
+ * Returns nothing.
+ */
+static void ccs_print_name_union_quoted(struct ccs_io_buffer *head,
+					const struct ccs_name_union *ptr)
+{
+	if (ptr->is_group) {
+		ccs_set_string(head, "@");
+		ccs_set_string(head, ptr->group->group_name->name);
+	} else {
+		ccs_set_string(head, "\"");
+		ccs_set_string(head, ptr->filename->name);
+		ccs_set_string(head, "\"");
+	}
+}
+
+/**
+ * ccs_print_number_union_nospace - Print a ccs_number_union without a space.
  *
  * @head: Pointer to "struct ccs_io_buffer".
  * @ptr:  Pointer to "struct ccs_number_union".
  *
  * Returns nothing.
  */
-static void ccs_print_number_union(struct ccs_io_buffer *head,
-				   const struct ccs_number_union *ptr)
+static void ccs_print_number_union_nospace(struct ccs_io_buffer *head,
+					   const struct ccs_number_union *ptr)
 {
-	if (!head->r.print_cond_part)
-		ccs_set_space(head);
 	if (ptr->is_group) {
 		ccs_set_string(head, "@");
 		ccs_set_string(head, ptr->group->group_name->name);
@@ -1276,6 +1342,21 @@ static void ccs_print_number_union(struct ccs_io_buffer *head,
 		}
 		ccs_io_printf(head, "%s", buffer);
 	}
+}
+
+/**
+ * ccs_print_number_union - Print a ccs_number_union.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ * @ptr:  Pointer to "struct ccs_number_union".
+ *
+ * Returns nothing.
+ */
+static void ccs_print_number_union(struct ccs_io_buffer *head,
+				   const struct ccs_number_union *ptr)
+{
+	ccs_set_space(head);
+	ccs_print_number_union_nospace(head, ptr);
 }
 
 /**
@@ -1345,19 +1426,19 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 				switch (left) {
 				case CCS_ARGV_ENTRY:
 					ccs_io_printf(head,
-						      "exec.argv[%u]%s\"%s\"",
+						      "exec.argv[%lu]%s=\"",
 						      argv->index,
-						      argv->is_not ?
-						      "!=" : "=",
-						      argv->value->name);
+						      argv->is_not ? "!" : "");
+					ccs_set_string(head,
+						       argv->value->name);
+					ccs_set_string(head, "\"");
 					argv++;
 					continue;
 				case CCS_ENVP_ENTRY:
-					ccs_io_printf(head,
-						      "exec.envp[\"%s\"]%s",
-						      envp->name->name,
-						      envp->is_not ?
-						      "!=" : "=");
+					ccs_set_string(head, "exec.envp[\"");
+					ccs_set_string(head, envp->name->name);
+					ccs_io_printf(head, "\"]%s=",
+						      envp->is_not ? "!" : "");
 					if (envp->value) {
 						ccs_set_string(head, "\"");
 						ccs_set_string(head, envp->
@@ -1369,8 +1450,8 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 					envp++;
 					continue;
 				case CCS_NUMBER_UNION:
-					ccs_print_number_union(head,
-							       numbers_p++);
+					ccs_print_number_union_nospace
+						(head, numbers_p++);
 					break;
 				default:
 					ccs_set_string(head,
@@ -1380,11 +1461,12 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 				ccs_set_string(head, match ? "=" : "!=");
 				switch (right) {
 				case CCS_NAME_UNION:
-					ccs_print_name_union(head, names_p++);
+					ccs_print_name_union_quoted
+						(head, names_p++);
 					break;
 				case CCS_NUMBER_UNION:
-					ccs_print_number_union(head,
-							       numbers_p++);
+					ccs_print_number_union_nospace
+						(head, numbers_p++);
 					break;
 				default:
 					ccs_set_string(head,
@@ -1406,8 +1488,11 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 				      ccs_yesno(cond->grant_log ==
 						CCS_GRANTLOG_YES));
 		if (cond->transit) {
-			ccs_set_string(head, " auto_domain_transition=\"");
-			ccs_set_string(head, cond->transit->name);
+			const char *name = cond->transit->name;
+			ccs_set_string(head, *name == '<' ?
+				       " auto_namespace_transition=\"" :
+				       " auto_domain_transition=\"");
+			ccs_set_string(head, name);
 			ccs_set_string(head, "\"");
 		}
 		ccs_set_lf(head);
@@ -1426,8 +1511,10 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
  */
 static void ccs_set_group(struct ccs_io_buffer *head, const char *category)
 {
-	if (head->type == CCS_EXCEPTIONPOLICY)
+	if (head->type == CCS_EXCEPTIONPOLICY) {
+		ccs_print_namespace(head);
 		ccs_io_printf(head, "acl_group %u ", head->r.acl_group_index);
+	}
 	ccs_set_string(head, category);
 }
 
@@ -1588,23 +1675,14 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 		if (first)
 			return true;
 		ccs_set_space(head);
-		switch (ptr->address_type) {
-			char buf[128];
-		case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
+		if (ptr->address.group) {
 			ccs_set_string(head, "@");
 			ccs_set_string(head,
 				       ptr->address.group->group_name->name);
-			break;
-		case CCS_IP_ADDRESS_TYPE_IPv4:
-			ccs_print_ipv4(buf, sizeof(buf), ptr->address.ipv4.min,
-				       ptr->address.ipv4.max);
+		} else {
+			char buf[128];
+			ccs_print_ip(buf, sizeof(buf), &ptr->address);
 			ccs_io_printf(head, "%s", buf);
-			break;
-		case CCS_IP_ADDRESS_TYPE_IPv6:
-			ccs_print_ipv6(buf, sizeof(buf), ptr->address.ipv6.min,
-				       ptr->address.ipv6.max);
-			ccs_io_printf(head, "%s", buf);
-			break;
 		}
 		ccs_print_number_union(head, &ptr->port);
 	} else if (acl_type == CCS_TYPE_UNIX_ACL) {
@@ -1632,7 +1710,8 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 		struct ccs_signal_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
 		ccs_set_group(head, "ipc signal ");
-		ccs_io_printf(head, "%u ", ptr->sig);
+		ccs_print_number_union_nospace(head, &ptr->sig);
+		ccs_set_space(head);
 		ccs_set_string(head, ptr->domainname->name);
 	} else if (acl_type == CCS_TYPE_MOUNT_ACL) {
 		struct ccs_mount_acl *ptr =
@@ -1661,19 +1740,17 @@ print_cond_part:
 /**
  * ccs_read_domain2 - Read domain policy.
  *
- * @head:   Pointer to "struct ccs_io_buffer".
- * @domain: Pointer to "struct ccs_domain_info".
- * @index:  Index number.
+ * @head: Pointer to "struct ccs_io_buffer".
+ * @list: Pointer to "struct list_head".
  *
  * Returns true on success, false otherwise.
  *
  * Caller holds ccs_read_lock().
  */
 static bool ccs_read_domain2(struct ccs_io_buffer *head,
-			     struct ccs_domain_info *domain,
-			     const u8 index)
+			     struct list_head *list)
 {
-	list_for_each_cookie(head->r.acl, &domain->acl_info_list[index]) {
+	list_for_each_cookie(head->r.acl, list) {
 		struct ccs_acl_info *ptr =
 			list_entry(head->r.acl, typeof(*ptr), list);
 		if (!ccs_print_entry(head, ptr))
@@ -1718,12 +1795,12 @@ static void ccs_read_domain(struct ccs_io_buffer *head)
 			ccs_set_lf(head);
 			/* fall through */
 		case 1:
-			if (!ccs_read_domain2(head, domain, 0))
+			if (!ccs_read_domain2(head, &domain->acl_info_list[0]))
 				return;
 			head->r.step++;
 			/* fall through */
 		case 2:
-			if (!ccs_read_domain2(head, domain, 1))
+			if (!ccs_read_domain2(head, &domain->acl_info_list[1]))
 				return;
 			head->r.step++;
 			if (!ccs_set_lf(head))
@@ -1766,7 +1843,8 @@ static int ccs_write_domain_profile(struct ccs_io_buffer *head)
 	if (profile >= CCS_MAX_PROFILES)
 		return -EINVAL;
 	domain = ccs_find_domain(cp + 1);
-	if (domain && (!ccs_policy_loaded || ccs_profile_ptr[(u8) profile]))
+	if (domain && (!ccs_policy_loaded ||
+		       head->w.ns->profile_ptr[(u8) profile]))
 		domain->profile = (u8) profile;
 	return 0;
 }
@@ -1881,6 +1959,9 @@ static void ccs_read_pid(struct ccs_io_buffer *head)
 
 /* String table for domain transition control keywords. */
 static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
+	[CCS_TRANSITION_CONTROL_NAMESPACE]     = "move_namespace ",
+	[CCS_TRANSITION_CONTROL_NO_NAMESPACE]  = "no_move_namespace ",
+	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
 	[CCS_TRANSITION_CONTROL_NO_INITIALIZE] = "no_initialize_domain ",
 	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
 	[CCS_TRANSITION_CONTROL_NO_KEEP]       = "no_keep_domain ",
@@ -1903,44 +1984,31 @@ static const char * const ccs_group_name[CCS_MAX_GROUP] = {
  */
 static int ccs_write_exception(struct ccs_io_buffer *head)
 {
-	char *data = head->write_buf;
-	const bool is_delete = ccs_str_starts(&data, "delete ");
-	u8 i;
-	static const struct {
-		const char *keyword;
-		int (*write) (char *, const bool);
-	} ccs_callback[2] = {
-		{ "aggregator ",    ccs_write_aggregator },
-		{ "deny_autobind ", ccs_write_reserved_port },
+	const bool is_delete = head->w.is_delete;
+	struct ccs_acl_param param = {
+		.ns = head->w.ns,
+		.is_delete = is_delete,
+		.data = head->write_buf,
 	};
-	if (!is_delete && ccs_str_starts(&data, "select ") &&
-	    !strcmp(data, "transition_only")) {
-		head->r.print_transition_related_only = true;
-		return -EAGAIN;
-	}
-	/* Don't allow updating policies by non manager programs. */
-	if (!ccs_manager())
-		return -EPERM;
-	for (i = 0; i < 2; i++)
-		if (ccs_str_starts(&data, ccs_callback[i].keyword))
-			return ccs_callback[i].write(data, is_delete);
+	u8 i;
+	if (ccs_str_starts(&param.data, "aggregator "))
+		return ccs_write_aggregator(&param);
+	if (ccs_str_starts(&param.data, "deny_autobind "))
+		return ccs_write_reserved_port(&param);
 	for (i = 0; i < CCS_MAX_TRANSITION_TYPE; i++)
-		if (ccs_str_starts(&data, ccs_transition_type[i]))
-			return ccs_write_transition_control(data, is_delete,
-							    i);
+		if (ccs_str_starts(&param.data, ccs_transition_type[i]))
+			return ccs_write_transition_control(&param, i);
 	for (i = 0; i < CCS_MAX_GROUP; i++)
-		if (ccs_str_starts(&data, ccs_group_name[i]))
-			return ccs_write_group(data, is_delete, i);
-	if (ccs_str_starts(&data, "acl_group ")) {
+		if (ccs_str_starts(&param.data, ccs_group_name[i]))
+			return ccs_write_group(&param, i);
+	if (ccs_str_starts(&param.data, "acl_group ")) {
 		unsigned int group;
-		if (sscanf(data, "%u", &group) == 1 &&
-		    group < CCS_MAX_ACL_GROUPS) {
-			data = strchr(data, ' ');
-			if (data)
-				return ccs_write_domain2(data + 1,
-							 &ccs_acl_group[group],
-							 is_delete);
-		}
+		char *data;
+		group = simple_strtoul(param.data, &data, 10);
+		if (group < CCS_MAX_ACL_GROUPS && *data++ == ' ')
+			return ccs_write_domain2(head->w.ns,
+						 head->w.ns->acl_group[group],
+						 data, is_delete);
 	}
 	return -EINVAL;
 }
@@ -1957,7 +2025,10 @@ static int ccs_write_exception(struct ccs_io_buffer *head)
  */
 static bool ccs_read_group(struct ccs_io_buffer *head, const int idx)
 {
-	list_for_each_cookie(head->r.group, &ccs_group_list[idx]) {
+	struct ccs_policy_namespace *ns = container_of(head->r.ns, typeof(*ns),
+						       namespace_list);
+	struct list_head *list = &ns->group_list[idx];
+	list_for_each_cookie(head->r.group, list) {
 		struct ccs_group *group =
 			list_entry(head->r.group, typeof(*group), head.list);
 		list_for_each_cookie(head->r.acl, &group->member_list) {
@@ -1967,6 +2038,7 @@ static bool ccs_read_group(struct ccs_io_buffer *head, const int idx)
 				continue;
 			if (!ccs_flush(head))
 				return false;
+			ccs_print_namespace(head);
 			ccs_set_string(head, ccs_group_name[idx]);
 			ccs_set_string(head, group->group_name->name);
 			if (idx == CCS_PATH_GROUP) {
@@ -1983,14 +2055,8 @@ static bool ccs_read_group(struct ccs_io_buffer *head, const int idx)
 				struct ccs_address_group *member =
 					container_of(ptr, typeof(*member),
 						     head);
-				if (member->is_ipv6)
-					ccs_print_ipv6(buffer, sizeof(buffer),
-						       member->min.ipv6,
-						       member->max.ipv6);
-				else
-					ccs_print_ipv4(buffer, sizeof(buffer),
-						       member->min.ipv4,
-						       member->max.ipv4);
+				ccs_print_ip(buffer, sizeof(buffer),
+					     &member->address);
 				ccs_io_printf(head, " %s", buffer);
 			}
 			ccs_set_lf(head);
@@ -2013,7 +2079,10 @@ static bool ccs_read_group(struct ccs_io_buffer *head, const int idx)
  */
 static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
 {
-	list_for_each_cookie(head->r.acl, &ccs_policy_list[idx]) {
+	struct ccs_policy_namespace *ns = container_of(head->r.ns, typeof(*ns),
+						       namespace_list);
+	struct list_head *list = &ns->policy_list[idx];
+	list_for_each_cookie(head->r.acl, list) {
 		struct ccs_acl_head *acl =
 			container_of(head->r.acl, typeof(*acl), list);
 		if (acl->is_deleted)
@@ -2028,6 +2097,7 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
 			{
 				struct ccs_transition_control *ptr =
 					container_of(acl, typeof(*ptr), head);
+				ccs_print_namespace(head);
 				ccs_set_string(head,
 					       ccs_transition_type[ptr->type]);
 				ccs_set_string(head, ptr->program ?
@@ -2041,6 +2111,7 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
 			{
 				struct ccs_aggregator *ptr =
 					container_of(acl, typeof(*ptr), head);
+				ccs_print_namespace(head);
 				ccs_set_string(head, "aggregator ");
 				ccs_set_string(head, ptr->original_name->name);
 				ccs_set_space(head);
@@ -2052,12 +2123,10 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
 			{
 				struct ccs_reserved *ptr =
 					container_of(acl, typeof(*ptr), head);
-				const u16 min_port = ptr->min_port;
-				const u16 max_port = ptr->max_port;
+				ccs_print_namespace(head);
 				ccs_set_string(head, "deny_autobind ");
-				ccs_io_printf(head, "%u", min_port);
-				if (min_port != max_port)
-					ccs_io_printf(head, "-%u", max_port);
+				ccs_print_number_union_nospace(head,
+							       &ptr->port);
 			}
 			break;
 		default:
@@ -2080,6 +2149,8 @@ static bool ccs_read_policy(struct ccs_io_buffer *head, const int idx)
  */
 static void ccs_read_exception(struct ccs_io_buffer *head)
 {
+	struct ccs_policy_namespace *ns = container_of(head->r.ns, typeof(*ns),
+						       namespace_list);
 	if (head->r.eof)
 		return;
 	while (head->r.step < CCS_MAX_POLICY &&
@@ -2096,9 +2167,9 @@ static void ccs_read_exception(struct ccs_io_buffer *head)
 	       + CCS_MAX_ACL_GROUPS * 2) {
 		head->r.acl_group_index = (head->r.step - CCS_MAX_POLICY
 					   - CCS_MAX_GROUP) / 2;
-		if (!ccs_read_domain2(head,
-				      &ccs_acl_group[head->r.acl_group_index],
-				      head->r.step & 1))
+		if (!ccs_read_domain2(head, &ns->acl_group
+				      [head->r.acl_group_index]
+				      [head->r.step & 1]))
 			return;
 		head->r.step++;
 	}
@@ -2201,8 +2272,12 @@ static void ccs_add_entry(char *header)
 	if (symlink)
 		ccs_addprintf(buffer, len, "%s", symlink);
 	ccs_normalize_line(buffer);
-	if (!ccs_write_domain2(buffer, ccs_current_domain(), false))
-		ccs_update_stat(CCS_STAT_POLICY_UPDATES);
+	{
+		struct ccs_domain_info *domain = ccs_current_domain();
+		if (!ccs_write_domain2(domain->ns, domain->acl_info_list,
+				       buffer, false))
+			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
+	}
 	kfree(buffer);
 }
 
@@ -2463,7 +2538,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	ccs_set_string(head, "1.8.1");
+	ccs_set_string(head, "1.8.2-pre");
 	head->r.eof = true;
 }
 
@@ -2477,9 +2552,9 @@ static const char * const ccs_policy_headers[CCS_MAX_POLICY_STAT] = {
 
 /* String table for /proc/ccs/stat interface. */
 static const char * const ccs_memory_headers[CCS_MAX_MEMORY_STAT] = {
-	[CCS_MEMORY_POLICY] = "policy:",
-	[CCS_MEMORY_AUDIT]  = "audit log:",
-	[CCS_MEMORY_QUERY]  = "query message:",
+	[CCS_MEMORY_POLICY]     = "policy:",
+	[CCS_MEMORY_AUDIT]      = "audit log:",
+	[CCS_MEMORY_QUERY]      = "query message:",
 };
 
 /* Timestamp counter for last updated. */
@@ -2560,7 +2635,8 @@ static int ccs_write_stat(struct ccs_io_buffer *head)
 	if (ccs_str_starts(&data, "Memory used by "))
 		for (i = 0; i < CCS_MAX_MEMORY_STAT; i++)
 			if (ccs_str_starts(&data, ccs_memory_headers[i]))
-				sscanf(data, "%u", &ccs_memory_quota[i]);
+				ccs_memory_quota[i] =
+					simple_strtoul(data, NULL, 10);
 	return 0;
 }
 
@@ -2577,6 +2653,7 @@ int ccs_open_control(const u8 type, struct file *file)
 	struct ccs_io_buffer *head = kzalloc(sizeof(*head), CCS_GFP_FLAGS);
 	if (!head)
 		return -ENOMEM;
+	head->original_ns = ccs_current_namespace();
 	mutex_init(&head->io_sem);
 	head->type = type;
 	switch (type) {
@@ -2695,6 +2772,44 @@ int ccs_poll_control(struct file *file, poll_table *wait)
 }
 
 /**
+ * ccs_move_namespace_cursor - Print namespace delimiter if needed.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns nothing.
+ */
+static inline void ccs_move_namespace_cursor(struct ccs_io_buffer *head)
+{
+	struct list_head *ns;
+	if (head->type != CCS_EXCEPTIONPOLICY && head->type != CCS_PROFILE)
+		return;
+	/*
+	 * If this is the first read, or reading previous namespace finished
+	 * and has more namespaces to read, update the namespace cursor.
+	 */
+	ns = head->r.ns;
+	if (!ns || (head->r.eof && ns->next != &ccs_namespace_list)) {
+		/* Clearing is OK because ccs_flush() returned true. */
+		memset(&head->r, 0, sizeof(head->r));
+		head->r.ns = ns ? ns->next : ccs_namespace_list.next;
+	}
+}
+
+/**
+ * ccs_has_more_namespace - Check for unread namespaces.
+ *
+ * @head: Pointer to "struct ccs_io_buffer".
+ *
+ * Returns true if we have more entries to print, false otherwise.
+ */
+static inline bool ccs_has_more_namespace(struct ccs_io_buffer *head)
+{
+	return (head->type == CCS_EXCEPTIONPOLICY ||
+		head->type == CCS_PROFILE) && head->r.eof &&
+		head->r.ns->next != &ccs_namespace_list;
+}
+
+/**
  * ccs_read_control - read() for /proc/ccs/ interface.
  *
  * @file:       Pointer to "struct file".
@@ -2720,8 +2835,10 @@ ssize_t ccs_read_control(struct file *file, char __user *buffer,
 	idx = ccs_read_lock();
 	if (ccs_flush(head))
 		/* Call the policy handler. */
-		head->read(head);
-	ccs_flush(head);
+		do {
+			ccs_move_namespace_cursor(head);
+			head->read(head);
+		} while (ccs_flush(head) && ccs_has_more_namespace(head));
 	ccs_read_unlock(idx);
 	len = head->read_user_buf - buffer;
 	mutex_unlock(&head->io_sem);
@@ -2752,13 +2869,6 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 	if (mutex_lock_interruptible(&head->io_sem))
 		return -EINTR;
 	idx = ccs_read_lock();
-	/* Don't allow updating policies by non manager programs. */
-	if (head->write != ccs_write_pid && head->write != ccs_write_domain &&
-	    head->write != ccs_write_exception && !ccs_manager()) {
-		ccs_read_unlock(idx);
-		mutex_unlock(&head->io_sem);
-		return -EPERM;
-	}
 	/* Read a line and dispatch it to the policy handler. */
 	while (avail_len > 0) {
 		char c;
@@ -2787,15 +2897,68 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 		cp0[head->w.avail - 1] = '\0';
 		head->w.avail = 0;
 		ccs_normalize_line(cp0);
+		if (!strcmp(cp0, "reset")) {
+			head->w.ns = head->original_ns;
+			head->w.domain = NULL;
+			memset(&head->r, 0, sizeof(head->r));
+			continue;
+		}
+		/* Don't allow updating policies by non manager programs. */
+		switch (head->type) {
+		case CCS_PROCESS_STATUS:
+			/* This does not write anything. */
+			break;
+		case CCS_DOMAINPOLICY:
+			if (ccs_select_domain(head, cp0))
+				continue;
+			/* fall through */
+		case CCS_EXCEPTIONPOLICY:
+			if (!strcmp(cp0, "select transition_only")) {
+				head->r.print_transition_related_only = true;
+				continue;
+			}
+			/* fall through */
+		default:
+			if (!ccs_manager()) {
+				error = -EPERM;
+				goto out;
+			}
+		}
+		/* Delete request? */
+		head->w.is_delete = !strncmp(cp0, "delete ", 7);
+		if (head->w.is_delete)
+			memmove(cp0, cp0 + 7, strlen(cp0 + 7) + 1);
+		/* Selecting namespace to update. */
+		if (head->type == CCS_EXCEPTIONPOLICY ||
+		    head->type == CCS_PROFILE) {
+			if (*cp0 == '<') {
+				char *cp = strchr(cp0, ' ');
+				if (cp) {
+					*cp++ = '\0';
+					head->w.ns = ccs_assign_namespace(cp0);
+					memmove(cp0, cp, strlen(cp) + 1);
+				} else
+					head->w.ns = NULL;
+			} else
+				head->w.ns = head->original_ns;
+			/* Don't allow updating if namespace is invalid. */
+			if (!head->w.ns) {
+				error = -ENOENT;
+				goto out;
+			}
+		}
 		{
+			/* Do the update. */
 			const int ret = head->write(head);
 			if (ret == -EPERM) {
 				error = -EPERM;
 				break;
 			}
+			/* Do not update statistics if not updated. */
 			if (ret)
 				continue;
 		}
+		/* Update statistics. */
 		switch (head->type) {
 		case CCS_DOMAINPOLICY:
 		case CCS_EXCEPTIONPOLICY:
@@ -2809,6 +2972,7 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 			break;
 		}
 	}
+out:
 	ccs_read_unlock(idx);
 	mutex_unlock(&head->io_sem);
 	return error;

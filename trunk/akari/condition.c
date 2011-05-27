@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -125,10 +125,8 @@ static bool ccs_scan_bprm(struct ccs_execve *ee,
 		pos += PAGE_SIZE - offset;
 		while (offset < PAGE_SIZE) {
 			/* Read. */
-			struct ccs_path_info arg;
 			const char *kaddr = dump->data;
 			const unsigned char c = kaddr[offset++];
-			arg.name = arg_ptr;
 			if (c && arg_len < CCS_EXEC_TMPSIZE - 10) {
 				if (c == '\\') {
 					arg_ptr[arg_len++] = '\\';
@@ -256,19 +254,10 @@ static bool ccs_scan_exec_realpath(struct file *file,
  */
 static const struct ccs_path_info *ccs_get_dqword(char *start)
 {
-	char *cp;
-	if (*start++ != '"')
+	char *cp = start + strlen(start) - 1;
+	if (cp == start || *start++ != '"' || *cp != '"')
 		return NULL;
-	cp = start;
-	while (1) {
-		const char c = *cp++;
-		if (!c)
-			return NULL;
-		if (c != '"' || *cp)
-			continue;
-		*(cp - 1) = '\0';
-		break;
-	}
+	*cp = '\0';
 	if (*start && !ccs_correct_word(start))
 		return NULL;
 	return ccs_get_name(start);
@@ -277,16 +266,17 @@ static const struct ccs_path_info *ccs_get_dqword(char *start)
 /**
  * ccs_parse_name_union_quoted - Parse a quoted word.
  *
- * @filename: A line containing a quoted word.
- * @ptr:      Pointer to "struct ccs_name_union".
+ * @param: Pointer to "struct ccs_acl_param".
+ * @ptr:   Pointer to "struct ccs_name_union".
  *
  * Returns true on success, false otherwise.
  */
-static bool ccs_parse_name_union_quoted(char *filename,
+static bool ccs_parse_name_union_quoted(struct ccs_acl_param *param,
 					struct ccs_name_union *ptr)
 {
+	char *filename = param->data;
 	if (*filename == '@')
-		return ccs_parse_name_union(filename, ptr);
+		return ccs_parse_name_union(param, ptr);
 	ptr->is_group = false;
 	ptr->filename = ccs_get_dqword(filename);
 	return ptr->filename != NULL;
@@ -295,89 +285,53 @@ static bool ccs_parse_name_union_quoted(char *filename,
 /**
  * ccs_parse_argv - Parse an argv[] condition part.
  *
- * @start: String to parse.
+ * @left:  Lefthand value.
+ * @right: Righthand value.
  * @argv:  Pointer to "struct ccs_argv".
  *
  * Returns true on success, false otherwise.
  */
-static bool ccs_parse_argv(char *start, struct ccs_argv *argv)
+static bool ccs_parse_argv(char *left, char *right, struct ccs_argv *argv)
 {
-	unsigned long index;
-	const struct ccs_path_info *value;
-	bool is_not;
-	char c;
-	if (ccs_parse_ulong(&index, &start) != CCS_VALUE_TYPE_DECIMAL)
-		goto out;
-	if (*start++ != ']')
-		goto out;
-	c = *start++;
-	if (c == '=')
-		is_not = false;
-	else if (c == '!' && *start++ == '=')
-		is_not = true;
-	else
-		goto out;
-	value = ccs_get_dqword(start);
-	if (!value)
-		goto out;
-	argv->index = index;
-	argv->is_not = is_not;
-	argv->value = value;
-	return true;
-out:
-	return false;
+	if (ccs_parse_ulong(&argv->index, &left) != CCS_VALUE_TYPE_DECIMAL ||
+	    *left++ != ']' || *left)
+		return false;
+	argv->value = ccs_get_dqword(right);
+	return argv->value != NULL;
 }
 
 /**
  * ccs_parse_envp - Parse an envp[] condition part.
  *
- * @start: String to parse.
+ * @left:  Lefthand value.
+ * @right: Righthand value.
  * @envp:  Pointer to "struct ccs_envp".
  *
  * Returns true on success, false otherwise.
  */
-static bool ccs_parse_envp(char *start, struct ccs_envp *envp)
+static bool ccs_parse_envp(char *left, char *right, struct ccs_envp *envp)
 {
 	const struct ccs_path_info *name;
 	const struct ccs_path_info *value;
-	bool is_not;
-	char *cp = start;
-	/*
-	 * Since environment variable names don't
-	 * contain '=', I can treat '"]=' and '"]!='
-	 * sequences as delimiters.
-	 */
-	while (1) {
-		if (!strncmp(start, "\"]=", 3)) {
-			is_not = false;
-			*start = '\0';
-			start += 3;
-			break;
-		} else if (!strncmp(start, "\"]!=", 4)) {
-			is_not = true;
-			*start = '\0';
-			start += 4;
-			break;
-		} else if (!*start++) {
-			goto out;
-		}
-	}
-	if (!ccs_correct_word(cp))
+	char *cp = left + strlen(left) - 1;
+	if (*cp-- != ']' || *cp != '"')
 		goto out;
-	name = ccs_get_name(cp);
+	*cp = '\0';
+	if (!ccs_correct_word(left))
+		goto out;
+	name = ccs_get_name(left);
 	if (!name)
 		goto out;
-	if (!strcmp(start, "NULL")) {
+	if (!strcmp(right, "NULL")) {
 		value = NULL;
 	} else {
-		value = ccs_get_dqword(start);
+		value = ccs_get_dqword(right);
 		if (!value) {
 			ccs_put_name(name);
 			goto out;
 		}
 	}
 	envp->name = name;
-	envp->is_not = is_not;
 	envp->value = value;
 	return true;
 out:
@@ -482,13 +436,12 @@ out:
 /**
  * ccs_get_condition - Parse condition part.
  *
- * @condition: Pointer to string to parse.
+ * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns pointer to "struct ccs_condition" on success, NULL otherwise.
  */
-struct ccs_condition *ccs_get_condition(char *condition)
+struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param)
 {
-	char *start;
 	struct ccs_condition *entry = NULL;
 	struct ccs_condition_element *condp = NULL;
 	struct ccs_number_union *numbers_p = NULL;
@@ -496,135 +449,166 @@ struct ccs_condition *ccs_get_condition(char *condition)
 	struct ccs_argv *argv = NULL;
 	struct ccs_envp *envp = NULL;
 	struct ccs_condition e = { };
-	bool dry_run = true;
-	char *end_of_string = condition + strlen(condition);
+	char * const start_of_string = param->data;
+	char * const end_of_string = start_of_string + strlen(start_of_string);
+	char *pos;
 rerun:
-	start = condition;
+	pos = start_of_string;
 	while (1) {
 		u8 left = -1;
 		u8 right = -1;
-		char *word = start;
+		char *left_word = pos;
 		char *cp;
-		char *eq;
-		bool is_not = false;
-		if (!*word)
+		char *right_word;
+		bool is_not;
+		if (!*left_word)
 			break;
-		cp = strchr(start, ' ');
+		/*
+		 * Since left-hand condition does not allow use of "path_group"
+		 * or "number_group" and environment variable's names do not
+		 * accept '=', it is guaranteed that the original line consists
+		 * of one or more repetition of $left$operator$right blocks
+		 * where "$left is free from '=' and ' '" and "$operator is
+		 * either '=' or '!='" and "$right is free from ' '".
+		 * Therefore, we can reconstruct the original line at the end
+		 * of dry run even if we overwrite $operator with '\0'.
+		 */
+		cp = strchr(pos, ' ');
 		if (cp) {
-			*cp = '\0';
-			start = cp + 1;
+			*cp = '\0'; /* Will restore later. */
+			pos = cp + 1;
 		} else {
-			start = "";
+			pos = "";
 		}
-		dprintk(KERN_WARNING "%u: <%s>\n", __LINE__, word);
-		if (!strncmp(word, "grant_log=", 10)) {
-			if (!dry_run) {
-				word += 10;
-				if (entry->grant_log != CCS_GRANTLOG_AUTO)
+		right_word = strchr(left_word, '=');
+		if (!right_word || right_word == left_word)
+			goto out;
+		is_not = *(right_word - 1) == '!';
+		if (is_not)
+			*(right_word++ - 1) = '\0'; /* Will restore later. */
+		else
+			*right_word++ = '\0'; /* Will restore later. */
+		dprintk(KERN_WARNING "%u: <%s>%s=<%s>\n", __LINE__, left_word,
+			is_not ? "!" : "", right_word);
+		if (!strcmp(left_word, "grant_log")) {
+			if (entry) {
+				if (is_not ||
+				    entry->grant_log != CCS_GRANTLOG_AUTO)
 					goto out;
-				else if (!strcmp(word, "yes"))
+				else if (!strcmp(right_word, "yes"))
 					entry->grant_log = CCS_GRANTLOG_YES;
-				else if (!strcmp(word, "no"))
+				else if (!strcmp(right_word, "no"))
 					entry->grant_log = CCS_GRANTLOG_NO;
 				else
 					goto out;
 			}
 			continue;
-		} else if (!strncmp(word, "auto_domain_transition=", 23)) {
-			if (!dry_run) {
-				word += 23;
-				if (entry->transit)
+		}
+		if (!strcmp(left_word, "auto_domain_transition")) {
+			if (entry) {
+				if (is_not || entry->transit)
 					goto out;
-				entry->transit = ccs_get_dqword(word);
+				entry->transit = ccs_get_dqword(right_word);
 				if (!entry->transit ||
 				    entry->transit->name[0] != '/')
 					goto out;
 			}
 			continue;
 		}
-		if (!strncmp(word, "exec.argv[", 10)) {
-			if (dry_run) {
+		if (!strcmp(left_word, "auto_namespace_transition")) {
+			if (entry) {
+				if (is_not || entry->transit)
+					goto out;
+				entry->transit = ccs_get_dqword(right_word);
+				if (!entry->transit ||
+				    !ccs_domain_def(entry->transit->name))
+					goto out;
+			}
+			continue;
+		}
+		if (!strncmp(left_word, "exec.argv[", 10)) {
+			if (!argv) {
 				e.argc++;
 				e.condc++;
 			} else {
 				e.argc--;
 				e.condc--;
 				left = CCS_ARGV_ENTRY;
-				if (!ccs_parse_argv(word + 10, argv++))
+				argv->is_not = is_not;
+				if (!ccs_parse_argv(left_word + 10,
+						    right_word, argv++))
 					goto out;
+				
 			}
 			goto store_value;
-		} else if (!strncmp(word, "exec.envp[\"", 11)) {
-			if (dry_run) {
+		}
+		if (!strncmp(left_word, "exec.envp[\"", 11)) {
+			if (!envp) {
 				e.envc++;
 				e.condc++;
 			} else {
 				e.envc--;
 				e.condc--;
 				left = CCS_ENVP_ENTRY;
-				if (!ccs_parse_envp(word + 11, envp++))
+				envp->is_not = is_not;
+				if (!ccs_parse_envp(left_word + 11,
+						    right_word, envp++))
 					goto out;
 			}
 			goto store_value;
 		}
-		eq = strchr(word, '=');
-		if (!eq)
-			goto out;
-		if (eq > word && *(eq - 1) == '!') {
-			is_not = true;
-			eq--;
-		}
-		*eq = '\0';
-		left = ccs_condition_type(word);
-		dprintk(KERN_WARNING "%u: <%s> left=%u\n", __LINE__, word,
+		left = ccs_condition_type(left_word);
+		dprintk(KERN_WARNING "%u: <%s> left=%u\n", __LINE__, left_word,
 			left);
 		if (left == CCS_MAX_CONDITION_KEYWORD) {
-			if (dry_run) {
+			if (!numbers_p) {
 				e.numbers_count++;
 			} else {
 				e.numbers_count--;
 				left = CCS_NUMBER_UNION;
-				if (!ccs_parse_number_union(word, numbers_p))
+				param->data = left_word;
+				if (*left_word == '@' ||
+				    !ccs_parse_number_union(param,
+							    numbers_p++))
 					goto out;
-				if (numbers_p->is_group)
-					goto out;
-				numbers_p++;
 			}
 		}
-		*eq = is_not ? '!' : '=';
-		word = eq + 1;
-		if (is_not)
-			word++;
-		if (dry_run)
+		if (!condp)
 			e.condc++;
 		else
 			e.condc--;
 		if (left == CCS_EXEC_REALPATH || left == CCS_SYMLINK_TARGET) {
-			if (dry_run) {
+			if (!names_p) {
 				e.names_count++;
 			} else {
 				e.names_count--;
 				right = CCS_NAME_UNION;
-				if (!ccs_parse_name_union_quoted(word,
+				param->data = right_word;
+				if (!ccs_parse_name_union_quoted(param,
 								 names_p++))
 					goto out;
 			}
 			goto store_value;
 		}
-		right = ccs_condition_type(word);
+		right = ccs_condition_type(right_word);
 		if (right == CCS_MAX_CONDITION_KEYWORD) {
-			if (dry_run) {
+			if (!numbers_p) {
 				e.numbers_count++;
 			} else {
 				e.numbers_count--;
 				right = CCS_NUMBER_UNION;
-				if (!ccs_parse_number_union(word, numbers_p++))
+				param->data = right_word;
+				if (!ccs_parse_number_union(param,
+							    numbers_p++))
 					goto out;
 			}
 		}
 store_value:
-		if (dry_run)
+		if (!condp) {
+			dprintk(KERN_WARNING "%u: dry_run left=%u right=%u "
+				"match=%u\n", __LINE__, left, right, !is_not);
 			continue;
+		}
 		condp->left = left;
 		condp->right = right;
 		condp->equals = !is_not;
@@ -636,7 +620,7 @@ store_value:
 	dprintk(KERN_INFO "%u: cond=%u numbers=%u names=%u ac=%u ec=%u\n",
 		__LINE__, e.condc, e.numbers_count, e.names_count, e.argc,
 		e.envc);
-	if (!dry_run) {
+	if (entry) {
 		BUG_ON(e.names_count | e.numbers_count | e.argc | e.envc |
 		       e.condc);
 		return ccs_commit_condition(entry);
@@ -656,10 +640,20 @@ store_value:
 	names_p = (struct ccs_name_union *) (numbers_p + e.numbers_count);
 	argv = (struct ccs_argv *) (names_p + e.names_count);
 	envp = (struct ccs_envp *) (argv + e.argc);
-	for (start = condition; start < end_of_string; start++)
-		if (!*start)
-			*start = ' ';
-	dry_run = false;
+	{
+		bool flag = false;
+		for (pos = start_of_string; pos < end_of_string; pos++) {
+			if (*pos)
+				continue;
+			if (flag) /* Restore " ". */
+				*pos = ' ';
+			else if (*(pos + 1) == '=') /* Restore "!=". */
+				*pos = '!';
+			else /* Restore "=". */
+				*pos = '=';
+			flag = !flag;
+		}
+	}
 	goto rerun;
 out:
 	dprintk(KERN_WARNING "%u: %s failed\n", __LINE__, __func__);

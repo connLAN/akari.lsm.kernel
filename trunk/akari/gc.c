@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -418,15 +418,9 @@ static void ccs_del_acl(struct list_head *element)
 		{
 			struct ccs_inet_acl *entry =
 				container_of(acl, typeof(*entry), head);
-			switch (entry->address_type) {
-			case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
-				ccs_put_group(entry->address.group);
-				break;
-			case CCS_IP_ADDRESS_TYPE_IPv6:
-				ccs_put_ipv6_address(entry->address.ipv6.min);
-				ccs_put_ipv6_address(entry->address.ipv6.max);
-				break;
-			}
+			ccs_put_group(entry->address.group);
+			ccs_put_ipv6_address(entry->address.ipv6.min);
+			ccs_put_ipv6_address(entry->address.ipv6.max);
 			ccs_put_number_union(&entry->port);
 		}
 		break;
@@ -543,10 +537,8 @@ static inline void ccs_del_address_group(struct list_head *element)
 {
 	struct ccs_address_group *member =
 		container_of(element, typeof(*member), head.list);
-	if (member->is_ipv6) {
-		ccs_put_ipv6_address(member->min.ipv6);
-		ccs_put_ipv6_address(member->max.ipv6);
-	}
+	ccs_put_ipv6_address(member->address.ipv6.min);
+	ccs_put_ipv6_address(member->address.ipv6.max);
 }
 
 /**
@@ -746,16 +738,16 @@ static bool ccs_collect_member(const enum ccs_policy_id id,
 /**
  * ccs_collect_acl - Delete elements in "struct ccs_domain_info".
  *
- * @domain: Pointer to "struct ccs_domain_info".
+ * @list: Pointer to "struct list_head[2]".
  *
  * Returns true if some elements are deleted, false otherwise.
  */
-static bool ccs_collect_acl(struct ccs_domain_info *domain)
+static bool ccs_collect_acl(struct list_head *list)
 {
 	struct ccs_acl_info *acl;
 	u8 i;
 	for (i = 0; i < 2; i++) {
-		list_for_each_entry(acl, &domain->acl_info_list[i], list) {
+		list_for_each_entry(acl, &list[i], list) {
 			if (!acl->is_deleted)
 				continue;
 			if (!ccs_add_to_gc(CCS_ID_ACL, &acl->list))
@@ -774,20 +766,15 @@ static void ccs_collect_entry(void)
 {
 	int i;
 	enum ccs_policy_id id;
+	struct ccs_policy_namespace *ns;
 	int idx;
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		return;
 	idx = ccs_read_lock();
-	for (id = 0; id < CCS_MAX_POLICY; id++)
-		if (!ccs_collect_member(id, &ccs_policy_list[id]))
-			goto unlock;
-	for (i = 0; i < CCS_MAX_ACL_GROUPS; i++)
-		if (!ccs_collect_acl(&ccs_acl_group[i]))
-			goto unlock;
 	{
 		struct ccs_domain_info *domain;
 		list_for_each_entry(domain, &ccs_domain_list, list) {
-			if (!ccs_collect_acl(domain))
+			if (!ccs_collect_acl(domain->acl_info_list))
 				goto unlock;
 			if (!domain->is_deleted ||
 			    ccs_domain_used_by_task(domain))
@@ -796,28 +783,39 @@ static void ccs_collect_entry(void)
 				goto unlock;
 		}
 	}
-	for (i = 0; i < CCS_MAX_GROUP; i++) {
-		struct list_head *list = &ccs_group_list[i];
-		struct ccs_group *group;
-		switch (i) {
-		case 0:
-			id = CCS_ID_PATH_GROUP;
-			break;
-		case 1:
-			id = CCS_ID_NUMBER_GROUP;
-			break;
-		default:
-			id = CCS_ID_ADDRESS_GROUP;
-			break;
-		}
-		list_for_each_entry(group, list, head.list) {
-			if (!ccs_collect_member(id, &group->member_list))
+	list_for_each_entry_srcu(ns, &ccs_namespace_list, namespace_list,
+				 &ccs_ss) {
+		for (id = 0; id < CCS_MAX_POLICY; id++)
+			if (!ccs_collect_member(id, &ns->policy_list[id]))
 				goto unlock;
-			if (!list_empty(&group->member_list) ||
-			    atomic_read(&group->head.users))
-				continue;
-			if (!ccs_add_to_gc(CCS_ID_GROUP, &group->head.list))
+		for (i = 0; i < CCS_MAX_ACL_GROUPS; i++)
+			if (!ccs_collect_acl(ns->acl_group[i]))
 				goto unlock;
+		for (i = 0; i < CCS_MAX_GROUP; i++) {
+			struct list_head *list = &ns->group_list[i];
+			struct ccs_group *group;
+			switch (i) {
+			case 0:
+				id = CCS_ID_PATH_GROUP;
+				break;
+			case 1:
+				id = CCS_ID_NUMBER_GROUP;
+				break;
+			default:
+				id = CCS_ID_ADDRESS_GROUP;
+				break;
+			}
+			list_for_each_entry(group, list, head.list) {
+				if (!ccs_collect_member(id,
+							&group->member_list))
+					goto unlock;
+				if (!list_empty(&group->member_list) ||
+				    atomic_read(&group->head.users))
+					continue;
+				if (!ccs_add_to_gc(CCS_ID_GROUP,
+						   &group->head.list))
+					goto unlock;
+			}
 		}
 	}
 	for (i = 0; i < CCS_MAX_LIST + CCS_MAX_HASH; i++) {

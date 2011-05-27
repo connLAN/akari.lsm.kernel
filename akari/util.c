@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1+   2011/05/11
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -247,20 +247,24 @@ void ccs_print_ulong(char *buffer, const int buffer_len,
 /**
  * ccs_parse_name_union - Parse a ccs_name_union.
  *
- * @filename: Name or name group.
- * @ptr:      Pointer to "struct ccs_name_union".
+ * @param: Pointer to "struct ccs_acl_param".
+ * @ptr:   Pointer to "struct ccs_name_union".
  *
  * Returns true on success, false otherwise.
  */
-bool ccs_parse_name_union(const char *filename, struct ccs_name_union *ptr)
+bool ccs_parse_name_union(struct ccs_acl_param *param,
+			  struct ccs_name_union *ptr)
 {
-	if (!ccs_correct_word(filename))
-		return false;
-	if (filename[0] == '@') {
-		ptr->group = ccs_get_group(filename + 1, CCS_PATH_GROUP);
+	char *filename;
+	if (param->data[0] == '@') {
+		param->data++;
+		ptr->group = ccs_get_group(param, CCS_PATH_GROUP);
 		ptr->is_group = true;
 		return ptr->group != NULL;
 	}
+	filename = ccs_read_token(param);
+	if (!ccs_correct_word(filename))
+		return false;
 	ptr->filename = ccs_get_name(filename);
 	ptr->is_group = false;
 	return ptr->filename != NULL;
@@ -269,25 +273,25 @@ bool ccs_parse_name_union(const char *filename, struct ccs_name_union *ptr)
 /**
  * ccs_parse_number_union - Parse a ccs_number_union.
  *
- * @data: Number or number range or number group.
- * @ptr:  Pointer to "struct ccs_number_union".
+ * @param: Pointer to "struct ccs_acl_param".
+ * @ptr:   Pointer to "struct ccs_number_union".
  *
  * Returns true on success, false otherwise.
  */
-bool ccs_parse_number_union(char *data, struct ccs_number_union *ptr)
+bool ccs_parse_number_union(struct ccs_acl_param *param,
+			    struct ccs_number_union *ptr)
 {
+	char *data;
 	u8 type;
 	unsigned long v;
 	memset(ptr, 0, sizeof(*ptr));
-	if (!data[0])
-		return false;
-	if (data[0] == '@') {
-		if (!ccs_correct_word(data))
-			return false;
-		ptr->group = ccs_get_group(data + 1, CCS_NUMBER_GROUP);
+	if (param->data[0] == '@') {
+		param->data++;
+		ptr->group = ccs_get_group(param, CCS_NUMBER_GROUP);
 		ptr->is_group = true;
 		return ptr->group != NULL;
 	}
+	data = ccs_read_token(param);
 	type = ccs_parse_ulong(&v, &data);
 	if (type == CCS_VALUE_TYPE_INVALID)
 		return false;
@@ -301,7 +305,7 @@ bool ccs_parse_number_union(char *data, struct ccs_number_union *ptr)
 	if (*data++ != '-')
 		return false;
 	type = ccs_parse_ulong(&v, &data);
-	if (type == CCS_VALUE_TYPE_INVALID || *data)
+	if (type == CCS_VALUE_TYPE_INVALID || *data || ptr->values[0] > v)
 		return false;
 	ptr->values[1] = v;
 	ptr->value_type[1] = type;
@@ -426,33 +430,6 @@ void ccs_normalize_line(unsigned char *buffer)
 }
 
 /**
- * ccs_tokenize - Tokenize string.
- *
- * @buffer: The line to tokenize.
- * @w:      Pointer to "char *".
- * @size:   Sizeof @w.
- *
- * Returns true on success, false otherwise.
- */
-bool ccs_tokenize(char *buffer, char *w[], size_t size)
-{
-	int count = size / sizeof(char *);
-	int i;
-	for (i = 0; i < count; i++)
-		w[i] = "";
-	for (i = 0; i < count; i++) {
-		char *cp = strchr(buffer, ' ');
-		if (cp)
-			*cp = '\0';
-		w[i] = buffer;
-		if (!cp)
-			break;
-		buffer = cp + 1;
-	}
-	return i < count || !*buffer;
-}
-
-/**
  * ccs_correct_word2 - Check whether the given string follows the naming rules.
  *
  * @string: The byte sequence to check. Not '\0'-terminated.
@@ -562,26 +539,21 @@ bool ccs_correct_path(const char *filename)
  */
 bool ccs_correct_domain(const unsigned char *domainname)
 {
-	if (!domainname || strncmp(domainname, CCS_ROOT_NAME,
-				   CCS_ROOT_NAME_LEN))
-		goto out;
-	domainname += CCS_ROOT_NAME_LEN;
-	if (!*domainname)
+	if (!domainname || !ccs_domain_def(domainname))
+		return false;
+	domainname = strchr(domainname, ' ');
+	if (!domainname++)
 		return true;
-	if (*domainname++ != ' ')
-		goto out;
 	while (1) {
 		const unsigned char *cp = strchr(domainname, ' ');
 		if (!cp)
 			break;
 		if (*domainname != '/' ||
 		    !ccs_correct_word2(domainname, cp - domainname))
-			goto out;
+			return false;
 		domainname = cp + 1;
 	}
 	return ccs_correct_path(domainname);
-out:
-	return false;
 }
 
 /**
@@ -593,7 +565,18 @@ out:
  */
 bool ccs_domain_def(const unsigned char *buffer)
 {
-	return !strncmp(buffer, CCS_ROOT_NAME, CCS_ROOT_NAME_LEN);
+	const unsigned char *cp;
+	int len;
+	if (*buffer != '<')
+		return false;
+	cp = strchr(buffer, ' ');
+	if (!cp)
+		len = strlen(buffer);
+	else
+		len = cp - buffer;
+	if (buffer[len - 1] != '>' || !ccs_correct_word2(buffer + 1, len - 2))
+		return false;
+	return true;
 }
 
 /**
@@ -1025,9 +1008,9 @@ int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 	u8 i;
 	const char *buf;
 	for (i = 0; i < 255; i++) {
-		struct ccs_domain_info *domain = ccs_current_domain();
-		const u8 profile = domain->profile;
+		const u8 profile = ccs_current_domain()->profile;
 		memset(r, 0, sizeof(*r));
+		r->ns = ccs_current_namespace();
 		r->profile = profile;
 		r->type = index;
 		r->mode = ccs_get_mode(profile, index);
@@ -1037,7 +1020,7 @@ int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 			return r->mode;
 		buf = container_of(r->matched_acl, typeof(struct ccs_task_acl),
 				   head)->domainname->name;
-		if (!ccs_assign_domain(buf, profile, domain->group, true))
+		if (!ccs_assign_domain(buf, true))
 			break;
 	}
 	ccs_transition_failed(buf);

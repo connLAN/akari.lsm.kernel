@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1+   2011/04/11
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -88,7 +88,7 @@ void ccs_put_name_union(struct ccs_name_union *ptr)
 }
 
 /**
- * ccs_put_name_union - Drop reference on "struct ccs_number_union".
+ * ccs_put_number_union - Drop reference on "struct ccs_number_union".
  *
  * @ptr: Pointer to "struct ccs_number_union".
  *
@@ -393,7 +393,7 @@ static int ccs_update_path_acl(const u16 perm, struct ccs_acl_param *param)
 		.perm = perm
 	};
 	int error;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.name))
+	if (!ccs_parse_name_union(param, &e.name))
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,
@@ -462,10 +462,10 @@ static int ccs_update_mkdev_acl(const u8 perm, struct ccs_acl_param *param)
 		.perm = perm
 	};
 	int error;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.name) ||
-	    !ccs_parse_number_union(ccs_read_token(param), &e.mode) ||
-	    !ccs_parse_number_union(ccs_read_token(param), &e.major) ||
-	    !ccs_parse_number_union(ccs_read_token(param), &e.minor))
+	if (!ccs_parse_name_union(param, &e.name) ||
+	    !ccs_parse_number_union(param, &e.mode) ||
+	    !ccs_parse_number_union(param, &e.major) ||
+	    !ccs_parse_number_union(param, &e.minor))
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,
@@ -535,8 +535,8 @@ static int ccs_update_path2_acl(const u8 perm, struct ccs_acl_param *param)
 		.perm = perm
 	};
 	int error;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.name1) ||
-	    !ccs_parse_name_union(ccs_read_token(param), &e.name2))
+	if (!ccs_parse_name_union(param, &e.name1) ||
+	    !ccs_parse_name_union(param, &e.name2))
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,
@@ -579,10 +579,10 @@ static int ccs_update_mount_acl(struct ccs_acl_param *param)
 {
 	struct ccs_mount_acl e = { .head.type = CCS_TYPE_MOUNT_ACL };
 	int error;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.dev_name) ||
-	    !ccs_parse_name_union(ccs_read_token(param), &e.dir_name) ||
-	    !ccs_parse_name_union(ccs_read_token(param), &e.fs_type) ||
-	    !ccs_parse_number_union(ccs_read_token(param), &e.flags))
+	if (!ccs_parse_name_union(param, &e.dev_name) ||
+	    !ccs_parse_name_union(param, &e.dir_name) ||
+	    !ccs_parse_name_union(param, &e.fs_type) ||
+	    !ccs_parse_number_union(param, &e.flags))
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,
@@ -1001,8 +1001,8 @@ static int ccs_update_path_number_acl(const u8 perm,
 		.perm = perm
 	};
 	int error;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.name) ||
-	    !ccs_parse_number_union(ccs_read_token(param), &e.number))
+	if (!ccs_parse_name_union(param, &e.name) ||
+	    !ccs_parse_number_union(param, &e.number))
 		error = -EINVAL;
 	else
 		error = ccs_update_domain(&e.head, sizeof(e), param,

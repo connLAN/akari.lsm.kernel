@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -334,8 +334,8 @@ void ccs_transition_failed(const char *domainname)
  */
 static void ccs_update_task_domain(struct ccs_request_info *r)
 {
-	const struct ccs_domain_info *domain;
 	char *buf;
+	const char *cp;
 	const struct ccs_acl_info *acl = r->matched_acl;
 	r->matched_acl = NULL;
 	if (!acl || !acl->cond || !acl->cond->transit)
@@ -348,10 +348,13 @@ static void ccs_update_task_domain(struct ccs_request_info *r)
 		if (fatal_signal_pending(current))
 			return;
 	}
-	domain = ccs_current_domain();
-	snprintf(buf, CCS_EXEC_TMPSIZE - 1, "%s %s", domain->domainname->name,
-		 acl->cond->transit->name);
-	if (!ccs_assign_domain(buf, r->profile, domain->group, true))
+	cp = acl->cond->transit->name;
+	if (*cp == '/')
+		snprintf(buf, CCS_EXEC_TMPSIZE - 1, "%s %s",
+			 ccs_current_domain()->domainname->name, cp);
+	else
+		strncpy(buf, cp, CCS_EXEC_TMPSIZE - 1);
+	if (!ccs_assign_domain(buf, true))
 		ccs_transition_failed(buf);
 	kfree(buf);
 }

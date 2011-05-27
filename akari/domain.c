@@ -3,19 +3,10 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1+   2011/05/05
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
-
-/*
- * The global domains referred by "use_group" keyword.
- *
- * Although "use_group" needs only "struct list_head acl_info_list[2]",
- * we define structure for "use_group" as "struct ccs_domain_info" in order to
- * use common code.
- */
-struct ccs_domain_info ccs_acl_group[CCS_MAX_ACL_GROUPS];
 
 /* The initial domain. */
 struct ccs_domain_info ccs_kernel_domain;
@@ -23,10 +14,6 @@ struct ccs_domain_info ccs_kernel_domain;
 /* The list for "struct ccs_domain_info". */
 LIST_HEAD(ccs_domain_list);
 
-/* List of policy. */
-struct list_head ccs_policy_list[CCS_MAX_POLICY];
-/* List of "struct ccs_group". */
-struct list_head ccs_group_list[CCS_MAX_GROUP];
 /* List of "struct ccs_condition" and "struct ccs_ipv6addr". */
 struct list_head ccs_shared_list[CCS_MAX_LIST];
 
@@ -35,8 +22,7 @@ struct list_head ccs_shared_list[CCS_MAX_LIST];
  *
  * @new_entry:       Pointer to "struct ccs_acl_info".
  * @size:            Size of @new_entry in bytes.
- * @is_delete:       True if it is a delete request.
- * @list:            Pointer to "struct list_head".
+ * @param:           Pointer to "struct ccs_acl_param".
  * @check_duplicate: Callback function to find duplicated entry.
  *
  * Returns 0 on success, negative value otherwise.
@@ -44,22 +30,23 @@ struct list_head ccs_shared_list[CCS_MAX_LIST];
  * Caller holds ccs_read_lock().
  */
 int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
-		      bool is_delete, struct list_head *list,
+		      struct ccs_acl_param *param,
 		      bool (*check_duplicate) (const struct ccs_acl_head *,
 					       const struct ccs_acl_head *))
 {
-	int error = is_delete ? -ENOENT : -ENOMEM;
+	int error = param->is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_head *entry;
+	struct list_head *list = param->list;
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		return -ENOMEM;
 	list_for_each_entry_srcu(entry, list, list, &ccs_ss) {
 		if (!check_duplicate(entry, new_entry))
 			continue;
-		entry->is_deleted = is_delete;
+		entry->is_deleted = param->is_delete;
 		error = 0;
 		break;
 	}
-	if (error && !is_delete) {
+	if (error && !param->is_delete) {
 		entry = ccs_commit_ok(new_entry, size);
 		if (entry) {
 			list_add_tail_rcu(&entry->list, list);
@@ -105,23 +92,22 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 					       struct ccs_acl_info *,
 					       const bool))
 {
-	struct ccs_domain_info * const domain = param->domain;
 	const bool is_delete = param->is_delete;
 	int error = is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_info *entry;
 	const u8 type = new_entry->type;
-	const u8 i = type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
-		type == CCS_TYPE_DENIED_EXECUTE_HANDLER ||
-		type == CCS_TYPE_AUTO_TASK_ACL;
+	struct list_head * const list = &param->list
+		[type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
+		 type == CCS_TYPE_DENIED_EXECUTE_HANDLER ||
+		 type == CCS_TYPE_AUTO_TASK_ACL];
 	if (param->data[0]) {
-		new_entry->cond = ccs_get_condition(param->data);
+		new_entry->cond = ccs_get_condition(param);
 		if (!new_entry->cond)
 			return -EINVAL;
 	}
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
-	list_for_each_entry_srcu(entry, &domain->acl_info_list[i], list,
-				 &ccs_ss) {
+	list_for_each_entry_srcu(entry, list, list, &ccs_ss) {
 		if (!ccs_same_acl_head(entry, new_entry) ||
 		    !check_duplicate(entry, new_entry))
 			continue;
@@ -136,8 +122,7 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 	if (error && !is_delete) {
 		entry = ccs_commit_ok(new_entry, size);
 		if (entry) {
-			list_add_tail_rcu(&entry->list,
-					  &domain->acl_info_list[i]);
+			list_add_tail_rcu(&entry->list, list);
 			error = 0;
 		}
 	}
@@ -166,9 +151,9 @@ void ccs_check_acl(struct ccs_request_info *r,
 	struct ccs_acl_info *ptr;
 	bool retried = false;
 	const u8 i = !check_entry;
+	const struct list_head *list = &domain->acl_info_list[i];
 retry:
-	list_for_each_entry_srcu(ptr, &domain->acl_info_list[i], list,
-				 &ccs_ss) {
+	list_for_each_entry_srcu(ptr, list, list, &ccs_ss) {
 		if (ptr->is_deleted)
 			continue;
 		if (ptr->type != r->param_type)
@@ -183,7 +168,7 @@ retry:
 	}
 	if (!retried) {
 		retried = true;
-		domain = &ccs_acl_group[domain->group];
+		list = &r->ns->acl_group[domain->group][i];
 		goto retry;
 	}
 	r->granted = false;
@@ -210,22 +195,27 @@ static bool ccs_same_transition_control(const struct ccs_acl_head *a,
 }
 
 /**
- * ccs_update_transition_control_entry - Update "struct ccs_transition_control" list.
+ * ccs_write_transition_control - Write "struct ccs_transition_control" list.
  *
- * @domainname: The name of domain. Maybe NULL.
- * @program:    The name of program. Maybe NULL.
- * @type:       Type of transition.
- * @is_delete:  True if it is a delete request.
+ * @param: Pointer to "struct ccs_acl_param".
+ * @type:  Type of this entry.
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_update_transition_control_entry(const char *domainname,
-					       const char *program,
-					       const u8 type,
-					       const bool is_delete)
+int ccs_write_transition_control(struct ccs_acl_param *param, const u8 type)
 {
 	struct ccs_transition_control e = { .type = type };
-	int error = is_delete ? -ENOENT : -ENOMEM;
+	int error = param->is_delete ? -ENOENT : -ENOMEM;
+	char *program = param->data;
+	char *domainname = strstr(program, " from ");
+	if (domainname) {
+		*domainname = '\0';
+		domainname += 6;
+	} else if (type == CCS_TRANSITION_CONTROL_NO_KEEP ||
+		   type == CCS_TRANSITION_CONTROL_KEEP) {
+		domainname = program;
+		program = NULL;
+	}
 	if (program && strcmp(program, "any")) {
 		if (!ccs_correct_path(program))
 			return -EINVAL;
@@ -243,38 +233,13 @@ static int ccs_update_transition_control_entry(const char *domainname,
 		if (!e.domainname)
 			goto out;
 	}
-	error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-				  &ccs_policy_list[CCS_ID_TRANSITION_CONTROL],
+	param->list = &param->ns->policy_list[CCS_ID_TRANSITION_CONTROL];
+	error = ccs_update_policy(&e.head, sizeof(e), param,
 				  ccs_same_transition_control);
 out:
 	ccs_put_name(e.domainname);
 	ccs_put_name(e.program);
 	return error;
-}
-
-/**
- * ccs_write_transition_control - Write "struct ccs_transition_control" list.
- *
- * @data:      String to parse.
- * @is_delete: True if it is a delete request.
- * @type:      Type of this entry.
- *
- * Returns 0 on success, negative value otherwise.
- */
-int ccs_write_transition_control(char *data, const bool is_delete,
-				 const u8 type)
-{
-	char *domainname = strstr(data, " from ");
-	if (domainname) {
-		*domainname = '\0';
-		domainname += 6;
-	} else if (type == CCS_TRANSITION_CONTROL_NO_KEEP ||
-		   type == CCS_TRANSITION_CONTROL_KEEP) {
-		domainname = data;
-		data = NULL;
-	}
-	return ccs_update_transition_control_entry(domainname, data, type,
-						   is_delete);
 }
 
 /**
@@ -295,6 +260,7 @@ static const char *ccs_last_word(const char *name)
 /**
  * ccs_transition_type - Get domain transition type.
  *
+ * @ns:         Pointer to "struct ccs_policy_namespace".
  * @domainname: The name of domain.
  * @program:    The name of program.
  *
@@ -304,17 +270,18 @@ static const char *ccs_last_word(const char *name)
  *
  * Caller holds ccs_read_lock().
  */
-static u8 ccs_transition_type(const struct ccs_path_info *domainname,
+static u8 ccs_transition_type(const struct ccs_policy_namespace *ns,
+			      const struct ccs_path_info *domainname,
 			      const struct ccs_path_info *program)
 {
 	const struct ccs_transition_control *ptr;
 	const char *last_name = ccs_last_word(domainname->name);
 	u8 type;
 	for (type = 0; type < CCS_MAX_TRANSITION_TYPE; type++) {
+		const struct list_head *list;
 next:
-		list_for_each_entry_srcu(ptr, &ccs_policy_list
-					 [CCS_ID_TRANSITION_CONTROL],
-					 head.list, &ccs_ss) {
+		list = &ns->policy_list[CCS_ID_TRANSITION_CONTROL];
+		list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
 			if (ptr->head.is_deleted || ptr->type != type)
 				continue;
 			if (ptr->domainname) {
@@ -333,6 +300,14 @@ next:
 			}
 			if (ptr->program && ccs_pathcmp(ptr->program, program))
 				continue;
+			if (type == CCS_TRANSITION_CONTROL_NO_NAMESPACE) {
+				/*
+				 * Do not check for move_namespace if
+				 * no_move_namespace matched.
+				 */
+				type = CCS_TRANSITION_CONTROL_NO_INITIALIZE;
+				goto next;
+			}
 			if (type == CCS_TRANSITION_CONTROL_NO_INITIALIZE) {
 				/*
 				 * Do not check for initialize_domain if
@@ -366,20 +341,18 @@ static bool ccs_same_aggregator(const struct ccs_acl_head *a,
 }
 
 /**
- * ccs_update_aggregator_entry - Update "struct ccs_aggregator" list.
+ * ccs_write_aggregator - Write "struct ccs_aggregator" list.
  *
- * @original_name:   The original program's name.
- * @aggregated_name: The aggregated program's name.
- * @is_delete:       True if it is a delete request.
+ * @param: Pointer to "struct ccs_acl_param".
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_update_aggregator_entry(const char *original_name,
-				       const char *aggregated_name,
-				       const bool is_delete)
+int ccs_write_aggregator(struct ccs_acl_param *param)
 {
 	struct ccs_aggregator e = { };
-	int error = is_delete ? -ENOENT : -ENOMEM;
+	int error = param->is_delete ? -ENOENT : -ENOMEM;
+	const char *original_name = ccs_read_token(param);
+	const char *aggregated_name = ccs_read_token(param);
 	if (!ccs_correct_word(original_name) ||
 	    !ccs_correct_path(aggregated_name))
 		return -EINVAL;
@@ -388,8 +361,8 @@ static int ccs_update_aggregator_entry(const char *original_name,
 	if (!e.original_name || !e.aggregated_name ||
 	    e.aggregated_name->is_patterned) /* No patterns allowed. */
 		goto out;
-	error = ccs_update_policy(&e.head, sizeof(e), is_delete,
-				  &ccs_policy_list[CCS_ID_AGGREGATOR],
+	param->list = &param->ns->policy_list[CCS_ID_AGGREGATOR];
+	error = ccs_update_policy(&e.head, sizeof(e), param,
 				  ccs_same_aggregator);
 out:
 	ccs_put_name(e.original_name);
@@ -397,30 +370,95 @@ out:
 	return error;
 }
 
-/**
- * ccs_write_aggregator - Write "struct ccs_aggregator" list.
- *
- * @data:      String to parse.
- * @is_delete: True if it is a delete request.
- *
- * Returns 0 on success, negative value otherwise.
- */
-int ccs_write_aggregator(char *data, const bool is_delete)
-{
-	char *w[2];
-	if (!ccs_tokenize(data, w, sizeof(w)) || !w[1][0])
-		return -EINVAL;
-	return ccs_update_aggregator_entry(w[0], w[1], is_delete);
-}
-
 /* Domain create handler. */
 
 /**
- * ccs_assign_domain - Create a domain.
+ * ccs_find_namespace - Find specified namespace.
+ *
+ * @name: Name of namespace to find.
+ * @len:  Length of @name.
+ *
+ * Returns pointer to "struct ccs_policy_namespace" if found, NULL otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
+static struct ccs_policy_namespace *ccs_find_namespace(const char *name,
+						       const unsigned int len)
+{
+	struct ccs_policy_namespace *ns;
+	list_for_each_entry_srcu(ns, &ccs_namespace_list, namespace_list,
+				 &ccs_ss) {
+		if (strncmp(name, ns->name, len) ||
+		    (name[len] && name[len] != ' '))
+			continue;
+		return ns;
+	}
+	return NULL;
+}
+
+
+/**
+ * ccs_assign_namespace - Create a new namespace.
+ *
+ * @domainname: Name of namespace to create.
+ *
+ * Returns pointer to "struct ccs_policy_namespace" on success, NULL otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
+struct ccs_policy_namespace *ccs_assign_namespace(const char *domainname)
+{
+	struct ccs_policy_namespace *ptr;
+	struct ccs_policy_namespace *entry;
+	const char *cp = domainname;
+	unsigned int len = 0;
+	while (*cp && *cp++ != ' ')
+		len++;
+	ptr = ccs_find_namespace(domainname, len);
+	if (ptr)
+		return ptr;
+	if (len >= CCS_EXEC_TMPSIZE - 10 || !ccs_domain_def(domainname))
+		return NULL;
+	entry = kzalloc(sizeof(*entry) + len + 1, CCS_GFP_FLAGS);
+	if (!entry)
+		return NULL;
+	if (mutex_lock_interruptible(&ccs_policy_lock))
+		goto out;
+	ptr = ccs_find_namespace(domainname, len);
+	if (!ptr && ccs_memory_ok(entry, sizeof(*entry) + len + 1)) {
+		char *name = (char *) (entry + 1);
+		ptr = entry;
+		memmove(name, domainname, len);
+		name[len] = '\0';
+		entry->name = name;
+		ccs_init_policy_namespace(entry);
+		entry = NULL;
+	}
+	mutex_unlock(&ccs_policy_lock);
+out:
+	kfree(entry);
+	return entry;
+}
+
+/**
+ * ccs_namespace_jump - Check for namespace jump.
+ *
+ * @domainname: Name of domain.
+ *
+ * Returns true if namespace differs, false otherwise.
+ */
+static bool ccs_namespace_jump(const char *domainname)
+{
+	const char *namespace = ccs_current_namespace()->name;
+	const int len = strlen(namespace);
+	return strncmp(domainname, namespace, len) ||
+		(domainname[len] && domainname[len] != ' ');
+}
+
+/**
+ * ccs_assign_domain - Create a domain or a namespace.
  *
  * @domainname: The name of domain.
- * @profile:    Profile number to assign if the domain was newly created.
- * @group:      Group number to assign if the domain was newly created.
  * @transit:    True if transit to domain found or created.
  *
  * Returns pointer to "struct ccs_domain_info" on success, NULL otherwise.
@@ -428,19 +466,52 @@ int ccs_write_aggregator(char *data, const bool is_delete)
  * Caller holds ccs_read_lock().
  */
 struct ccs_domain_info *ccs_assign_domain(const char *domainname,
-					  const u8 profile, const u8 group,
 					  const bool transit)
 {
+	struct ccs_security *security = ccs_current_security();
 	struct ccs_domain_info e = { };
 	struct ccs_domain_info *entry = ccs_find_domain(domainname);
 	bool created = false;
-	if (entry)
-		goto out;
+	if (entry) {
+		if (transit) {
+			/*
+			 * Since namespace is created at runtime, profiles may
+			 * not be created by the moment the process transits to
+			 * that domain. Do not perform domain transition if
+			 * profile for that domain is not yet created.
+			 */
+			if (!entry->ns->profile_ptr[entry->profile])
+				return NULL;
+			security->ccs_domain_info = entry;
+		}
+		return entry;
+	}
+	/* Requested domain does not exist. */
+	/* Don't create requested domain if domainname is invalid. */
 	if (strlen(domainname) >= CCS_EXEC_TMPSIZE - 10 ||
 	    !ccs_correct_domain(domainname))
 		return NULL;
-	e.profile = profile;
-	e.group = group;
+	/*
+	 * Since definition of profiles and acl_groups may differ across
+	 * namespaces, do not inherit "use_profile" and "use_group" settings
+	 * by automatically creating requested domain upon domain transition.
+	 */
+	if (transit && ccs_namespace_jump(domainname))
+		return NULL;
+	e.ns = ccs_assign_namespace(domainname);
+	if (!e.ns)
+		return NULL;
+	/*
+	 * "use_profile" and "use_group" settings for automatically created
+	 * domains are inherited from current domain. These are 0 for manually
+	 * created domains.
+	 */
+	if (transit) {
+		const struct ccs_domain_info *domain =
+			security->ccs_domain_info;
+		e.profile = domain->profile;
+		e.group = domain->group;
+	}
 	e.domainname = ccs_get_name(domainname);
 	if (!e.domainname)
 		return NULL;
@@ -460,13 +531,13 @@ struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 out:
 	ccs_put_name(e.domainname);
 	if (entry && transit) {
-		ccs_current_security()->ccs_domain_info = entry;
+		security->ccs_domain_info = entry;
 		if (created) {
 			struct ccs_request_info r;
 			ccs_init_request_info(&r, CCS_MAC_FILE_EXECUTE);
 			r.granted = false;
-			ccs_write_log(&r, "use_profile %u\n", profile);
-			ccs_write_log(&r, "use_group %u\n", group);
+			ccs_write_log(&r, "use_profile %u\n", entry->profile);
+			ccs_write_log(&r, "use_group %u\n", entry->group);
 			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
 		}
 	}
@@ -493,6 +564,7 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 	struct ccs_path_info rn = { }; /* real name */
 	int retval;
 	bool need_kfree = false;
+	bool reject_on_transition_failure = false;
 retry:
 	r->matched_acl = NULL;
 	if (need_kfree) {
@@ -519,10 +591,10 @@ retry:
 		}
 	} else {
 		struct ccs_aggregator *ptr;
+		struct list_head *list =
+			&r->ns->policy_list[CCS_ID_AGGREGATOR];
 		/* Check 'aggregator' directive. */
-		list_for_each_entry_srcu(ptr,
-					 &ccs_policy_list[CCS_ID_AGGREGATOR],
-					 head.list, &ccs_ss) {
+		list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
 			if (ptr->head.is_deleted ||
 			    !ccs_path_matches_pattern(&rn, ptr->original_name))
 				continue;
@@ -555,10 +627,19 @@ retry:
 	}
 
 	/* Calculate domain to transit to. */
-	switch (ccs_transition_type(old_domain->domainname, &rn)) {
+	switch (ccs_transition_type(r->ns, old_domain->domainname, &rn)) {
+	case CCS_TRANSITION_CONTROL_NAMESPACE:
+		/* Transit to the root of specified namespace. */
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>", rn.name);
+		/*
+		 * Make do_execve() fail if domain transition across namespaces
+		 * has failed.
+		 */
+		reject_on_transition_failure = true;
+		break;
 	case CCS_TRANSITION_CONTROL_INITIALIZE:
-		/* Transit to the child of ccs_kernel_domain domain. */
-		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, CCS_ROOT_NAME " " "%s",
+		/* Transit to the child of current namespace's root. */
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s", r->ns->name,
 			 rn.name);
 		break;
 	case CCS_TRANSITION_CONTROL_KEEP:
@@ -598,11 +679,11 @@ retry:
 	 * enforcing mode.
 	 */
 	if (!domain)
-		domain = ccs_assign_domain(ee->tmp, r->profile,
-					   old_domain->group, true);
+		domain = ccs_assign_domain(ee->tmp, true);
 	if (domain)
 		retval = 0;
-	else if (r->mode == CCS_CONFIG_ENFORCING)
+	else if (r->mode == CCS_CONFIG_ENFORCING ||
+		 reject_on_transition_failure)
 		retval = -ENOMEM;
 	else {
 		retval = 0;

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -50,18 +50,19 @@ const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
 };
 
 /**
- * ccs_parse_ip_address - Parse an IP address.
+ * ccs_parse_ipaddr_union - Parse an IP address.
  *
- * @address: String to parse.
- * @min:     Pointer to store min address.
- * @max:     Pointer to store max address.
+ * @param: Pointer to "struct ccs_acl_param".
+ * @ptr:   Pointer to "struct ccs_ipaddr_union".
  *
- * Returns CCS_IP_ADDRESS_TYPE_IPv6 if @address is an IPv6,
- * CCS_IP_ADDRESS_TYPE_IPv4 if @address is an IPv4,
- * CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP otherwise.
+ * Returns true on success, false otherwise.
  */
-int ccs_parse_ip_address(char *address, u16 *min, u16 *max)
+bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
+			    struct ccs_ipaddr_union *ptr)
 {
+	u16 min[8];
+	u16 max[8];
+	char *address = ccs_read_token(param);
 	int count = sscanf(address, "%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx"
 			   "-%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx",
 			   &min[0], &min[1], &min[2], &min[3],
@@ -70,29 +71,40 @@ int ccs_parse_ip_address(char *address, u16 *min, u16 *max)
 			   &max[4], &max[5], &max[6], &max[7]);
 	if (count == 8 || count == 16) {
 		u8 i;
+		const struct in6_addr *ip[2];
 		if (count == 8)
 			memmove(max, min, sizeof(u16) * 8);
 		for (i = 0; i < 8; i++) {
 			min[i] = htons(min[i]);
 			max[i] = htons(max[i]);
 		}
-		return CCS_IP_ADDRESS_TYPE_IPv6;
+		ip[0] = ccs_get_ipv6_address((struct in6_addr *) min);
+		ip[1] = ccs_get_ipv6_address((struct in6_addr *) max);
+		if (!ip[0] || !ip[1]) {
+			ccs_put_ipv6_address(ip[0]);
+			ccs_put_ipv6_address(ip[1]);
+			return false;
+		}
+		ptr->ipv6.min = ip[0];
+		ptr->ipv6.max = ip[1];
+		return true;
 	}
 	count = sscanf(address, "%hu.%hu.%hu.%hu-%hu.%hu.%hu.%hu",
 		       &min[0], &min[1], &min[2], &min[3],
 		       &max[0], &max[1], &max[2], &max[3]);
 	if (count == 4 || count == 8) {
-		u32 ip = htonl((((u8) min[0]) << 24) + (((u8) min[1]) << 16)
-			       + (((u8) min[2]) << 8) + (u8) min[3]);
-		memmove(min, &ip, sizeof(ip));
-		if (count == 8)
-			ip = htonl((((u8) max[0]) << 24)
-				   + (((u8) max[1]) << 16)
-				   + (((u8) max[2]) << 8) + (u8) max[3]);
-		memmove(max, &ip, sizeof(ip));
-		return CCS_IP_ADDRESS_TYPE_IPv4;
+		/* use host byte order to allow u32 comparison.*/
+		ptr->ipv4.min = (((u8) min[0]) << 24) + (((u8) min[1]) << 16)
+			+ (((u8) min[2]) << 8) + (u8) min[3];
+		if (count == 4)
+			ptr->ipv4.max = ptr->ipv4.min;
+		else
+			ptr->ipv4.max =
+				(((u8) max[0]) << 24) + (((u8) max[1]) << 16)
+				+ (((u8) max[2]) << 8) + (u8) max[3];
+		return true;
 	}
-	return CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP;
+	return false;
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
@@ -123,8 +135,8 @@ int ccs_parse_ip_address(char *address, u16 *min, u16 *max)
  *
  * Returns nothing.
  */
-void ccs_print_ipv4(char *buffer, const int buffer_len,
-		    const u32 min_ip, const u32 max_ip)
+static void ccs_print_ipv4(char *buffer, const unsigned int buffer_len,
+			   const u32 min_ip, const u32 max_ip)
 {
 	memset(buffer, 0, buffer_len);
 	snprintf(buffer, buffer_len - 1, "%u.%u.%u.%u%c%u.%u.%u.%u",
@@ -152,15 +164,33 @@ void ccs_print_ipv4(char *buffer, const int buffer_len,
  *
  * Returns nothing.
  */
-void ccs_print_ipv6(char *buffer, const int buffer_len,
-		    const struct in6_addr *min_ip,
-		    const struct in6_addr *max_ip)
+static void ccs_print_ipv6(char *buffer, const unsigned int buffer_len,
+			   const struct in6_addr *min_ip,
+			   const struct in6_addr *max_ip)
 {
 	memset(buffer, 0, buffer_len);
 	snprintf(buffer, buffer_len - 1,
 		 "%x:%x:%x:%x:%x:%x:%x:%x%c%x:%x:%x:%x:%x:%x:%x:%x",
 		 NIP6(*min_ip), min_ip == max_ip ? '\0' : '-',
 		 NIP6(*max_ip));
+}
+
+/**
+ * ccs_print_ip - Print an IP address.
+ *
+ * @buf:  Buffer to write to.
+ * @size: Size of @buf.
+ * @ptr:  Pointer to "struct ipaddr_union".
+ *
+ * Returns nothing.
+ */
+void ccs_print_ip(char *buf, const unsigned int size,
+		  const struct ccs_ipaddr_union *ptr)
+{
+	if (ptr->ipv6.min)
+		ccs_print_ipv6(buf, size, ptr->ipv6.min, ptr->ipv6.max);
+	else
+		ccs_print_ipv4(buf, size, ptr->ipv4.min, ptr->ipv4.max);
 }
 
 /*
@@ -224,12 +254,7 @@ static bool ccs_same_inet_acl(const struct ccs_acl_info *a,
 	const struct ccs_inet_acl *p1 = container_of(a, typeof(*p1), head);
 	const struct ccs_inet_acl *p2 = container_of(b, typeof(*p2), head);
 	return p1->protocol == p2->protocol &&
-		p1->address_type == p2->address_type &&
-		p1->address.ipv4.min == p2->address.ipv4.min &&
-		p1->address.ipv6.min == p2->address.ipv6.min &&
-		p1->address.ipv4.max == p2->address.ipv4.max &&
-		p1->address.ipv6.max == p2->address.ipv6.max &&
-		p1->address.group == p2->address.group &&
+		ccs_same_ipaddr_union(&p1->address, &p2->address) &&
 		ccs_same_number_union(&p1->port, &p2->port);
 }
 
@@ -308,13 +333,10 @@ static bool ccs_merge_unix_acl(struct ccs_acl_info *a, struct ccs_acl_info *b,
 int ccs_write_inet_network(struct ccs_acl_param *param)
 {
 	struct ccs_inet_acl e = { .head.type = CCS_TYPE_INET_ACL };
-	u16 min_address[8];
-	u16 max_address[8];
 	int error = -EINVAL;
 	u8 type;
 	const char *protocol = ccs_read_token(param);
 	const char *operation = ccs_read_token(param);
-	char *address = ccs_read_token(param);
 	for (e.protocol = 0; e.protocol < CCS_SOCK_MAX; e.protocol++)
 		if (!strcmp(protocol, ccs_proto_keyword[e.protocol]))
 			break;
@@ -323,43 +345,24 @@ int ccs_write_inet_network(struct ccs_acl_param *param)
 			e.perm |= 1 << type;
 	if (e.protocol == CCS_SOCK_MAX || !e.perm)
 		return -EINVAL;
-	switch (ccs_parse_ip_address(address, min_address, max_address)) {
-	case CCS_IP_ADDRESS_TYPE_IPv6:
-		e.address_type = CCS_IP_ADDRESS_TYPE_IPv6;
-		e.address.ipv6.min = ccs_get_ipv6_address((struct in6_addr *)
-							    min_address);
-		e.address.ipv6.max = ccs_get_ipv6_address((struct in6_addr *)
-							    max_address);
-		if (!e.address.ipv6.min || !e.address.ipv6.max)
-			goto out;
-		break;
-	case CCS_IP_ADDRESS_TYPE_IPv4:
-		e.address_type = CCS_IP_ADDRESS_TYPE_IPv4;
-		/* use host byte order to allow u32 comparison.*/
-		e.address.ipv4.min = ntohl(*(u32 *) min_address);
-		e.address.ipv4.max = ntohl(*(u32 *) max_address);
-		break;
-	default:
-		if (address[0] != '@')
-			return -EINVAL;
-		e.address_type = CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP;
-		e.address.group = ccs_get_group(address + 1,
-						CCS_ADDRESS_GROUP);
+	if (param->data[0] == '@') {
+		param->data++;
+		e.address.group = ccs_get_group(param, CCS_ADDRESS_GROUP);
 		if (!e.address.group)
 			return -ENOMEM;
-		break;
+	} else {
+		if (!ccs_parse_ipaddr_union(param, &e.address))
+			goto out;
 	}
-	if (!ccs_parse_number_union(ccs_read_token(param), &e.port))
+	if (!ccs_parse_number_union(param, &e.port) ||
+	    e.port.values[1] > 65535)
 		goto out;
 	error = ccs_update_domain(&e.head, sizeof(e), param, ccs_same_inet_acl,
 				  ccs_merge_inet_acl);
 out:
-	if (e.address_type == CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP)
-		ccs_put_group(e.address.group);
-	else if (e.address_type == CCS_IP_ADDRESS_TYPE_IPv6) {
-		ccs_put_ipv6_address(e.address.ipv6.min);
-		ccs_put_ipv6_address(e.address.ipv6.max);
-	}
+	ccs_put_group(e.address.group);
+	ccs_put_ipv6_address(e.address.ipv6.min);
+	ccs_put_ipv6_address(e.address.ipv6.max);
 	ccs_put_number_union(&e.port);
 	return error;
 }
@@ -386,7 +389,7 @@ int ccs_write_unix_network(struct ccs_acl_param *param)
 			e.perm |= 1 << type;
 	if (e.protocol == CCS_SOCK_MAX || !e.perm)
 		return -EINVAL;
-	if (!ccs_parse_name_union(ccs_read_token(param), &e.name))
+	if (!ccs_parse_name_union(param, &e.name))
 		return -EINVAL;
 	error = ccs_update_domain(&e.head, sizeof(e), param, ccs_same_unix_acl,
 				  ccs_merge_unix_acl);
@@ -478,30 +481,23 @@ static bool ccs_check_inet_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr)
 {
 	const struct ccs_inet_acl *acl = container_of(ptr, typeof(*acl), head);
-	bool ret;
 	if (!(acl->perm & (1 << r->param.inet_network.operation)) ||
 	    !ccs_compare_number_union(r->param.inet_network.port, &acl->port))
 		return false;
-	switch (acl->address_type) {
-	case CCS_IP_ADDRESS_TYPE_ADDRESS_GROUP:
-		ret = ccs_address_matches_group(r->param.inet_network.is_ipv6,
-						r->param.inet_network.address,
-						acl->address.group);
-		break;
-	case CCS_IP_ADDRESS_TYPE_IPv4:
-		ret = !r->param.inet_network.is_ipv6 &&
-			acl->address.ipv4.min <= r->param.inet_network.ip &&
-			r->param.inet_network.ip <= acl->address.ipv4.max;
-		break;
-	default:
-		ret = r->param.inet_network.is_ipv6 &&
+	if (acl->address.group)
+		return ccs_address_matches_group(r->param.inet_network.is_ipv6,
+						 r->param.inet_network.address,
+						 acl->address.group);
+	else if (acl->address.ipv6.min)
+		return r->param.inet_network.is_ipv6 &&
 			memcmp(acl->address.ipv6.min,
 			       r->param.inet_network.address, 16) <= 0 &&
 			memcmp(r->param.inet_network.address,
 			       acl->address.ipv6.max, 16) <= 0;
-		break;
-	}
-	return ret;
+	else
+		return !r->param.inet_network.is_ipv6 &&
+			acl->address.ipv4.min <= r->param.inet_network.ip &&
+			r->param.inet_network.ip <= acl->address.ipv4.max;
 }
 
 /**

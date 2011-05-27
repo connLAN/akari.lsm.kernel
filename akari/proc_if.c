@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/04/01
+ * Version: 1.8.2-pre   2011/05/22
  */
 
 #include "internal.h"
@@ -65,9 +65,7 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 		if (!r.granted)
 			error = -EPERM;
 		else
-			error = ccs_assign_domain(data, r.profile,
-						  ccs_current_domain()->group,
-						  true) ? 0 : -ENOENT;
+			error = ccs_assign_domain(data, true) ? 0 : -ENOENT;
 		ccs_read_unlock(idx);
 	} else
 		error = -EINVAL;
@@ -338,10 +336,6 @@ static void __init ccs_proc_init(void)
 static int __init ccs_init_module(void)
 {
 	int i;
-	for (i = 0; i < CCS_MAX_POLICY; i++)
-		INIT_LIST_HEAD(&ccs_policy_list[i]);
-	for (i = 0; i < CCS_MAX_GROUP; i++)
-		INIT_LIST_HEAD(&ccs_group_list[i]);
 	for (i = 0; i < CCS_MAX_LIST; i++)
 		INIT_LIST_HEAD(&ccs_shared_list[i]);
 	if (ccsecurity_ops.disabled)
@@ -353,7 +347,6 @@ static int __init ccs_init_module(void)
 	if (init_srcu_struct(&ccs_ss))
 		panic("Out of memory.");
 #endif
-	ccs_proc_init();
 	ccs_mm_init();
 	ccs_capability_init();
 	ccs_file_init();
@@ -362,6 +355,7 @@ static int __init ccs_init_module(void)
 	ccs_mount_init();
 	ccs_policy_io_init();
 	ccs_domain_init();
+	ccs_proc_init();
 #ifdef CONFIG_CCSECURITY_USE_BUILTIN_POLICY
 	ccs_load_builtin_policy();
 #endif

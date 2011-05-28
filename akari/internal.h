@@ -2147,6 +2147,11 @@ static inline u32 ccs_current_flags(void)
 
 #endif
 
+/**
+ * ccs_current_namespace - Get "struct ccs_policy_namespace" for current thread.
+ *
+ * Returns pointer to "struct ccs_policy_namespace" for current thread.
+ */
 static inline struct ccs_policy_namespace *ccs_current_namespace(void)
 {
 	return ccs_current_domain()->ns;

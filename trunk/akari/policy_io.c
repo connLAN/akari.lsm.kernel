@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2-pre   2011/05/22
+ * Version: 1.8.2-pre   2011/06/01
  */
 
 #include "internal.h"
@@ -520,7 +520,7 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	printk(KERN_INFO "CCSecurity: 1.8.2-pre   2011/05/22\n");
+	printk(KERN_INFO "CCSecurity: 1.8.2-pre   2011/06/01\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
 		const struct ccs_policy_namespace *ns = domain->ns;
@@ -1959,9 +1959,8 @@ static void ccs_read_pid(struct ccs_io_buffer *head)
 
 /* String table for domain transition control keywords. */
 static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
-	[CCS_TRANSITION_CONTROL_NAMESPACE]     = "move_namespace ",
 	[CCS_TRANSITION_CONTROL_NO_NAMESPACE]  = "no_move_namespace ",
-	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
+	[CCS_TRANSITION_CONTROL_NAMESPACE]     = "move_namespace ",
 	[CCS_TRANSITION_CONTROL_NO_INITIALIZE] = "no_initialize_domain ",
 	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
 	[CCS_TRANSITION_CONTROL_NO_KEEP]       = "no_keep_domain ",

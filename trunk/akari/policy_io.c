@@ -2652,7 +2652,6 @@ int ccs_open_control(const u8 type, struct file *file)
 	struct ccs_io_buffer *head = kzalloc(sizeof(*head), CCS_GFP_FLAGS);
 	if (!head)
 		return -ENOMEM;
-	head->original_ns = ccs_current_namespace();
 	mutex_init(&head->io_sem);
 	head->type = type;
 	switch (type) {
@@ -2897,7 +2896,7 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 		head->w.avail = 0;
 		ccs_normalize_line(cp0);
 		if (!strcmp(cp0, "reset")) {
-			head->w.ns = head->original_ns;
+			head->w.ns = &ccs_kernel_namespace;
 			head->w.domain = NULL;
 			memset(&head->r, 0, sizeof(head->r));
 			continue;
@@ -2939,7 +2938,7 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 				} else
 					head->w.ns = NULL;
 			} else
-				head->w.ns = head->original_ns;
+				head->w.ns = &ccs_kernel_namespace;
 			/* Don't allow updating if namespace is invalid. */
 			if (!head->w.ns) {
 				error = -ENOENT;

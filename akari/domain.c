@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2-pre   2011/05/22
+ * Version: 1.8.2-pre   2011/06/01
  */
 
 #include "internal.h"
@@ -258,68 +258,102 @@ static const char *ccs_last_word(const char *name)
 }
 
 /**
- * ccs_transition_type - Get domain transition type.
+ * ccs_scan_transition - Try to find specific domain transition type.
  *
- * @ns:         Pointer to "struct ccs_policy_namespace".
- * @domainname: The name of domain.
- * @program:    The name of program.
+ * @list:       Pointer to "struct list_head".
+ * @domainname: The name of current domain.
+ * @program:    The name of requested program.
+ * @last:       The last component of @domainname.
+ * @type:       One of values in "enum ccs_transition_type".
  *
- * Returns CCS_TRANSITION_CONTROL_INITIALIZE if executing @program
- * reinitializes domain transition, CCS_TRANSITION_CONTROL_KEEP if executing
- * @program suppresses domain transition, others otherwise.
+ * Returns true if found one, false otherwise.
  *
  * Caller holds ccs_read_lock().
  */
-static u8 ccs_transition_type(const struct ccs_policy_namespace *ns,
-			      const struct ccs_path_info *domainname,
-			      const struct ccs_path_info *program)
+static inline bool ccs_scan_transition(const struct list_head *list,
+				       const struct ccs_path_info *domainname,
+				       const struct ccs_path_info *program,
+				       const char *last_name,
+				       const enum ccs_transition_type type)
 {
 	const struct ccs_transition_control *ptr;
-	const char *last_name = ccs_last_word(domainname->name);
-	u8 type;
-	for (type = 0; type < CCS_MAX_TRANSITION_TYPE; type++) {
-		const struct list_head *list;
-next:
-		list = &ns->policy_list[CCS_ID_TRANSITION_CONTROL];
-		list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
-			if (ptr->head.is_deleted || ptr->type != type)
-				continue;
-			if (ptr->domainname) {
-				if (!ptr->is_last_name) {
-					if (ptr->domainname != domainname)
-						continue;
-				} else {
-					/*
-					 * Use direct strcmp() since this is
-					 * unlikely used.
-					 */
-					if (strcmp(ptr->domainname->name,
-						   last_name))
-						continue;
-				}
-			}
-			if (ptr->program && ccs_pathcmp(ptr->program, program))
-				continue;
-			if (type == CCS_TRANSITION_CONTROL_NO_NAMESPACE) {
+	list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
+		if (ptr->head.is_deleted || ptr->type != type)
+			continue;
+		if (ptr->domainname) {
+			if (!ptr->is_last_name) {
+				if (ptr->domainname != domainname)
+					continue;
+			} else {
 				/*
-				 * Do not check for move_namespace if
-				 * no_move_namespace matched.
+				 * Use direct strcmp() since this is
+				 * unlikely used.
 				 */
-				type = CCS_TRANSITION_CONTROL_NO_INITIALIZE;
-				goto next;
+				if (strcmp(ptr->domainname->name, last_name))
+					continue;
 			}
-			if (type == CCS_TRANSITION_CONTROL_NO_INITIALIZE) {
-				/*
-				 * Do not check for initialize_domain if
-				 * no_initialize_domain matched.
-				 */
-				type = CCS_TRANSITION_CONTROL_NO_KEEP;
-				goto next;
-			}
-			goto done;
 		}
+		if (ptr->program && ccs_pathcmp(ptr->program, program))
+			continue;
+		return true;
 	}
-done:
+	return false;
+}
+
+/**
+ * ccs_transition_type - Get domain transition type.
+ *
+ * @ns:         Pointer to "struct ccs_policy_namespace".
+ * @domainname: The name of current domain.
+ * @program:    The name of requested program.
+ *
+ * Returns CCS_TRANSITION_CONTROL_NAMESPACE if executing @program causes domain
+ * transition across namespaces, CCS_TRANSITION_CONTROL_INITIALIZE if executing
+ * @program reinitializes domain transition within that namespace,
+ * CCS_TRANSITION_CONTROL_KEEP if executing @program stays at @domainname ,
+ * others otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
+static enum ccs_transition_type ccs_transition_type
+(const struct ccs_policy_namespace *ns, const struct ccs_path_info *domainname,
+ const struct ccs_path_info *program)
+{
+	const char *last_name = ccs_last_word(domainname->name);
+	const struct list_head *tmp = ccs_namespace_list.next;
+	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_NAMESPACE;
+	while (type < CCS_MAX_TRANSITION_TYPE) {
+		const struct list_head * const list =
+			type != CCS_TRANSITION_CONTROL_NAMESPACE ?
+			&ns->policy_list[CCS_ID_TRANSITION_CONTROL] :
+			&container_of(tmp, typeof(*ns), namespace_list)
+			->policy_list[CCS_ID_TRANSITION_CONTROL];
+		if (!ccs_scan_transition(list, domainname, program, last_name,
+					 type)) {
+			/*
+			 * Check for move_namespace in all namespaces unless
+			 * no_move_namespace in current namespace matched.
+			 */
+			if (type == CCS_TRANSITION_CONTROL_NAMESPACE &&
+			    tmp->next != &ccs_namespace_list) {
+				tmp = tmp->next;
+				continue;
+			}
+			type++;
+			continue;
+		}
+		if (type != CCS_TRANSITION_CONTROL_NO_NAMESPACE &&
+		    type != CCS_TRANSITION_CONTROL_NO_INITIALIZE)
+			break;
+		/*
+		 * Do not check for move_namespace in all namespaces if
+		 * no_move_namespace in current namespace matched.
+		 * Do not check for initialize_domain in current namespace if
+		 * no_initialize_domain in current namespace matched.
+		 */
+		type++;
+		type++;
+	}
 	return type;
 }
 
@@ -682,8 +716,11 @@ retry:
 		domain = ccs_assign_domain(ee->tmp, true);
 	if (domain)
 		retval = 0;
-	else if (r->mode == CCS_CONFIG_ENFORCING ||
-		 reject_on_transition_failure)
+	else if (reject_on_transition_failure) {
+		printk(KERN_WARNING
+		       "ERROR: Domain '%s' not ready.\n", ee->tmp);
+		retval = -ENOMEM;
+	} else if (r->mode == CCS_CONFIG_ENFORCING)
 		retval = -ENOMEM;
 	else {
 		retval = 0;

@@ -1375,8 +1375,6 @@ struct ccs_io_buffer {
 	char *write_buf;
 	/* Size of write buffer.                */
 	size_t writebuf_size;
-	/* Namespace as of open(). */
-	struct ccs_policy_namespace *original_ns;
 	/* Type of interface. */
 	enum ccs_proc_interface_index type;
 	/* Users counter protected by ccs_io_buffer_list_lock. */

@@ -320,25 +320,12 @@ static enum ccs_transition_type ccs_transition_type
  const struct ccs_path_info *program)
 {
 	const char *last_name = ccs_last_word(domainname->name);
-	const struct list_head *tmp = ccs_namespace_list.next;
 	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_NAMESPACE;
 	while (type < CCS_MAX_TRANSITION_TYPE) {
 		const struct list_head * const list =
-			type != CCS_TRANSITION_CONTROL_NAMESPACE ?
-			&ns->policy_list[CCS_ID_TRANSITION_CONTROL] :
-			&container_of(tmp, typeof(*ns), namespace_list)
-			->policy_list[CCS_ID_TRANSITION_CONTROL];
+			&ns->policy_list[CCS_ID_TRANSITION_CONTROL];
 		if (!ccs_scan_transition(list, domainname, program, last_name,
 					 type)) {
-			/*
-			 * Check for move_namespace in all namespaces unless
-			 * no_move_namespace in current namespace matched.
-			 */
-			if (type == CCS_TRANSITION_CONTROL_NAMESPACE &&
-			    tmp->next != &ccs_namespace_list) {
-				tmp = tmp->next;
-				continue;
-			}
 			type++;
 			continue;
 		}
@@ -346,7 +333,7 @@ static enum ccs_transition_type ccs_transition_type
 		    type != CCS_TRANSITION_CONTROL_NO_INITIALIZE)
 			break;
 		/*
-		 * Do not check for move_namespace in all namespaces if
+		 * Do not check for move_namespace in current namespaces if
 		 * no_move_namespace in current namespace matched.
 		 * Do not check for initialize_domain in current namespace if
 		 * no_initialize_domain in current namespace matched.

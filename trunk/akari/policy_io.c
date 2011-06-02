@@ -1489,9 +1489,7 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 						CCS_GRANTLOG_YES));
 		if (cond->transit) {
 			const char *name = cond->transit->name;
-			ccs_set_string(head, *name == '<' ?
-				       " auto_namespace_transition=\"" :
-				       " auto_domain_transition=\"");
+			ccs_set_string(head, " auto_domain_transition=\"");
 			ccs_set_string(head, name);
 			ccs_set_string(head, "\"");
 		}
@@ -1959,8 +1957,8 @@ static void ccs_read_pid(struct ccs_io_buffer *head)
 
 /* String table for domain transition control keywords. */
 static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
-	[CCS_TRANSITION_CONTROL_NO_NAMESPACE]  = "no_move_namespace ",
-	[CCS_TRANSITION_CONTROL_NAMESPACE]     = "move_namespace ",
+	[CCS_TRANSITION_CONTROL_NO_TRANSIT]    = "no_transit_namespace ",
+	[CCS_TRANSITION_CONTROL_TRANSIT]       = "transit_namespace ",
 	[CCS_TRANSITION_CONTROL_NO_INITIALIZE] = "no_initialize_domain ",
 	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
 	[CCS_TRANSITION_CONTROL_NO_KEEP]       = "no_keep_domain ",
@@ -2770,13 +2768,13 @@ int ccs_poll_control(struct file *file, poll_table *wait)
 }
 
 /**
- * ccs_move_namespace_cursor - Print namespace delimiter if needed.
+ * ccs_set_namespace_cursor - Set namespace to read.
  *
  * @head: Pointer to "struct ccs_io_buffer".
  *
  * Returns nothing.
  */
-static inline void ccs_move_namespace_cursor(struct ccs_io_buffer *head)
+static inline void ccs_set_namespace_cursor(struct ccs_io_buffer *head)
 {
 	struct list_head *ns;
 	if (head->type != CCS_EXCEPTIONPOLICY && head->type != CCS_PROFILE)
@@ -2834,7 +2832,7 @@ ssize_t ccs_read_control(struct file *file, char __user *buffer,
 	if (ccs_flush(head))
 		/* Call the policy handler. */
 		do {
-			ccs_move_namespace_cursor(head);
+			ccs_set_namespace_cursor(head);
 			head->read(head);
 		} while (ccs_flush(head) && ccs_has_more_namespace(head));
 	ccs_read_unlock(idx);

@@ -307,7 +307,7 @@ static inline bool ccs_scan_transition(const struct list_head *list,
  * @domainname: The name of current domain.
  * @program:    The name of requested program.
  *
- * Returns CCS_TRANSITION_CONTROL_NAMESPACE if executing @program causes domain
+ * Returns CCS_TRANSITION_CONTROL_TRANSIT if executing @program causes domain
  * transition across namespaces, CCS_TRANSITION_CONTROL_INITIALIZE if executing
  * @program reinitializes domain transition within that namespace,
  * CCS_TRANSITION_CONTROL_KEEP if executing @program stays at @domainname ,
@@ -320,7 +320,7 @@ static enum ccs_transition_type ccs_transition_type
  const struct ccs_path_info *program)
 {
 	const char *last_name = ccs_last_word(domainname->name);
-	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_NAMESPACE;
+	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_TRANSIT;
 	while (type < CCS_MAX_TRANSITION_TYPE) {
 		const struct list_head * const list =
 			&ns->policy_list[CCS_ID_TRANSITION_CONTROL];
@@ -329,12 +329,12 @@ static enum ccs_transition_type ccs_transition_type
 			type++;
 			continue;
 		}
-		if (type != CCS_TRANSITION_CONTROL_NO_NAMESPACE &&
+		if (type != CCS_TRANSITION_CONTROL_NO_TRANSIT &&
 		    type != CCS_TRANSITION_CONTROL_NO_INITIALIZE)
 			break;
 		/*
-		 * Do not check for move_namespace in current namespaces if
-		 * no_move_namespace in current namespace matched.
+		 * Do not check for transit_namespace in current namespaces if
+		 * no_transit_namespace in current namespace matched.
 		 * Do not check for initialize_domain in current namespace if
 		 * no_initialize_domain in current namespace matched.
 		 */
@@ -649,7 +649,7 @@ retry:
 
 	/* Calculate domain to transit to. */
 	switch (ccs_transition_type(r->ns, old_domain->domainname, &rn)) {
-	case CCS_TRANSITION_CONTROL_NAMESPACE:
+	case CCS_TRANSITION_CONTROL_TRANSIT:
 		/* Transit to the root of specified namespace. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>", rn.name);
 		/*

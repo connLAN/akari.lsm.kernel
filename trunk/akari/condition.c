@@ -510,18 +510,8 @@ rerun:
 					goto out;
 				entry->transit = ccs_get_dqword(right_word);
 				if (!entry->transit ||
-				    entry->transit->name[0] != '/')
-					goto out;
-			}
-			continue;
-		}
-		if (!strcmp(left_word, "auto_namespace_transition")) {
-			if (entry) {
-				if (is_not || entry->transit)
-					goto out;
-				entry->transit = ccs_get_dqword(right_word);
-				if (!entry->transit ||
-				    !ccs_domain_def(entry->transit->name))
+				    (entry->transit->name[0] != '/' &&
+				     !ccs_domain_def(entry->transit->name)))
 					goto out;
 			}
 			continue;

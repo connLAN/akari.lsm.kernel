@@ -10,9 +10,8 @@ $(obj)/policy/profile.conf:
 	@touch $@
 
 $(obj)/policy/exception_policy.conf:
-	@echo Creating a default policy/exception_policy.conf
-	@echo initialize_domain /sbin/modprobe from any >> $@
-	@echo initialize_domain /sbin/hotplug from any >> $@
+	@echo Creating an empty policy/exception_policy.conf
+	@touch $@
 
 $(obj)/policy/domain_policy.conf:
 	@echo Creating an empty policy/domain_policy.conf

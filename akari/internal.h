@@ -340,9 +340,8 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 #define CONFIG_CCSECURITY
 #define CONFIG_CCSECURITY_MAX_AUDIT_LOG    1024
 #define CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY 2048
-#define CONFIG_CCSECURITY_DEFAULT_LOADER "/sbin/ccs-init"
-#define CONFIG_CCSECURITY_ALTERNATIVE_TRIGGER "/sbin/ccs-start"
-#define CONFIG_CCSECURITY_BUILTIN_INITIALIZERS ""
+#define CONFIG_CCSECURITY_POLICY_LOADER "/sbin/ccs-init"
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/sbin/ccs-start"
 #endif
 #ifndef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 #define CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
@@ -716,8 +715,8 @@ enum ccs_special_mount {
 /* Index numbers for domain transition control keywords. */
 enum ccs_transition_type {
 	/* Do not change this order, */
-	CCS_TRANSITION_CONTROL_NO_TRANSIT,
-	CCS_TRANSITION_CONTROL_TRANSIT,
+	CCS_TRANSITION_CONTROL_NO_RESET,
+	CCS_TRANSITION_CONTROL_RESET,
 	CCS_TRANSITION_CONTROL_NO_INITIALIZE,
 	CCS_TRANSITION_CONTROL_INITIALIZE,
 	CCS_TRANSITION_CONTROL_NO_KEEP,
@@ -1139,9 +1138,8 @@ struct ccs_domain_info {
 };
 
 /*
- * Structure for "transit_namespace"/"no_transit_namespace" and
- * "initialize_domain"/"no_initialize_domain" and
- * "keep_domain"/"no_keep_domain" keyword.
+ * Structure for "reset_domain"/"no_reset_domain"/"initialize_domain"/
+ * "no_initialize_domain"/"keep_domain"/"no_keep_domain" keyword.
  */
 struct ccs_transition_control {
 	struct ccs_acl_head head;
@@ -1424,6 +1422,7 @@ struct ccs_policy_namespace {
 void __init ccs_capability_init(void);
 void __init ccs_domain_init(void);
 void __init ccs_file_init(void);
+void __init ccs_load_builtin_policy(void);
 void __init ccs_mm_init(void);
 void __init ccs_mount_init(void);
 void __init ccs_network_init(void);
@@ -1473,7 +1472,7 @@ const struct ccs_path_info *ccs_get_name(const char *name);
 const struct ccs_path_info *ccs_path_matches_group
 (const struct ccs_path_info *pathname, const struct ccs_group *group);
 const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr);
-int ccs_close_control(struct file *file);
+int ccs_close_control(struct ccs_io_buffer *head);
 int ccs_env_perm(struct ccs_request_info *r, const char *env);
 int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
@@ -1507,10 +1506,10 @@ int ccs_write_misc(struct ccs_acl_param *param);
 int ccs_write_reserved_port(struct ccs_acl_param *param);
 int ccs_write_transition_control(struct ccs_acl_param *param, const u8 type);
 int ccs_write_unix_network(struct ccs_acl_param *param);
-ssize_t ccs_read_control(struct file *file, char __user *buffer,
+ssize_t ccs_read_control(struct ccs_io_buffer *head, char __user *buffer,
 			 const size_t buffer_len);
-ssize_t ccs_write_control(struct file *file, const char __user *buffer,
-			  const size_t buffer_len);
+ssize_t ccs_write_control(struct ccs_io_buffer *head,
+			  const char __user *buffer, const size_t buffer_len);
 struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param);
 struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 					  const bool transit);
@@ -1546,9 +1545,6 @@ void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 	__attribute__ ((format(printf, 2, 3)));
 void ccs_write_log2(struct ccs_request_info *r, int len, const char *fmt,
 		    va_list args);
-#ifdef CONFIG_CCSECURITY_USE_BUILTIN_POLICY
-void __init ccs_load_builtin_policy(void);
-#endif
 
 /* Variable definition for internal use. */
 

@@ -1957,8 +1957,8 @@ static void ccs_read_pid(struct ccs_io_buffer *head)
 
 /* String table for domain transition control keywords. */
 static const char * const ccs_transition_type[CCS_MAX_TRANSITION_TYPE] = {
-	[CCS_TRANSITION_CONTROL_NO_TRANSIT]    = "no_transit_namespace ",
-	[CCS_TRANSITION_CONTROL_TRANSIT]       = "transit_namespace ",
+	[CCS_TRANSITION_CONTROL_NO_RESET]      = "no_reset_domain ",
+	[CCS_TRANSITION_CONTROL_RESET]         = "reset_domain ",
 	[CCS_TRANSITION_CONTROL_NO_INITIALIZE] = "no_initialize_domain ",
 	[CCS_TRANSITION_CONTROL_INITIALIZE]    = "initialize_domain ",
 	[CCS_TRANSITION_CONTROL_NO_KEEP]       = "no_keep_domain ",
@@ -2808,17 +2808,16 @@ static inline bool ccs_has_more_namespace(struct ccs_io_buffer *head)
 /**
  * ccs_read_control - read() for /proc/ccs/ interface.
  *
- * @file:       Pointer to "struct file".
+ * @head:       Pointer to "struct ccs_io_buffer".
  * @buffer:     Poiner to buffer to write to.
  * @buffer_len: Size of @buffer.
  *
  * Returns bytes read on success, negative value otherwise.
  */
-ssize_t ccs_read_control(struct file *file, char __user *buffer,
+ssize_t ccs_read_control(struct ccs_io_buffer *head, char __user *buffer,
 			 const size_t buffer_len)
 {
 	int len;
-	struct ccs_io_buffer *head = file->private_data;
 	int idx;
 	if (!head->read)
 		return -ENOSYS;
@@ -2842,18 +2841,54 @@ ssize_t ccs_read_control(struct file *file, char __user *buffer,
 }
 
 /**
+ * ccs_parse_policy - Parse a policy line.
+ *
+ * @head: Poiter to "struct ccs_io_buffer".
+ * @line: Line to parse.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
+static int ccs_parse_policy(struct ccs_io_buffer *head, char *line)
+{
+	/* Delete request? */
+	head->w.is_delete = !strncmp(line, "delete ", 7);
+	if (head->w.is_delete)
+		memmove(line, line + 7, strlen(line + 7) + 1);
+	/* Selecting namespace to update. */
+	if (head->type == CCS_EXCEPTIONPOLICY || head->type == CCS_PROFILE) {
+		if (*line == '<') {
+			char *cp = strchr(line, ' ');
+			if (cp) {
+				*cp++ = '\0';
+				head->w.ns = ccs_assign_namespace(line);
+				memmove(line, cp, strlen(cp) + 1);
+			} else
+				head->w.ns = NULL;
+		} else
+			head->w.ns = &ccs_kernel_namespace;
+		/* Don't allow updating if namespace is invalid. */
+		if (!head->w.ns)
+			return -ENOENT;
+	}
+	/* Do the update. */
+	return head->write(head);
+}
+	
+
+/**
  * ccs_write_control - write() for /proc/ccs/ interface.
  *
- * @file:       Pointer to "struct file".
+ * @head:       Pointer to "struct ccs_io_buffer".
  * @buffer:     Pointer to buffer to read from.
  * @buffer_len: Size of @buffer.
  *
  * Returns @buffer_len on success, negative value otherwise.
  */
-ssize_t ccs_write_control(struct file *file, const char __user *buffer,
-			  const size_t buffer_len)
+ssize_t ccs_write_control(struct ccs_io_buffer *head,
+			  const char __user *buffer, const size_t buffer_len)
 {
-	struct ccs_io_buffer *head = file->private_data;
 	int error = buffer_len;
 	size_t avail_len = buffer_len;
 	char *cp0 = head->write_buf;
@@ -2920,51 +2955,24 @@ ssize_t ccs_write_control(struct file *file, const char __user *buffer,
 				goto out;
 			}
 		}
-		/* Delete request? */
-		head->w.is_delete = !strncmp(cp0, "delete ", 7);
-		if (head->w.is_delete)
-			memmove(cp0, cp0 + 7, strlen(cp0 + 7) + 1);
-		/* Selecting namespace to update. */
-		if (head->type == CCS_EXCEPTIONPOLICY ||
-		    head->type == CCS_PROFILE) {
-			if (*cp0 == '<') {
-				char *cp = strchr(cp0, ' ');
-				if (cp) {
-					*cp++ = '\0';
-					head->w.ns = ccs_assign_namespace(cp0);
-					memmove(cp0, cp, strlen(cp) + 1);
-				} else
-					head->w.ns = NULL;
-			} else
-				head->w.ns = &ccs_kernel_namespace;
-			/* Don't allow updating if namespace is invalid. */
-			if (!head->w.ns) {
-				error = -ENOENT;
-				goto out;
-			}
-		}
-		{
-			/* Do the update. */
-			const int ret = head->write(head);
-			if (ret == -EPERM) {
-				error = -EPERM;
+		switch (ccs_parse_policy(head, cp0)) {
+		case -EPERM:
+			error = -EPERM;
+			goto out;
+		case 0:
+			/* Update statistics. */
+			switch (head->type) {
+			case CCS_DOMAINPOLICY:
+			case CCS_EXCEPTIONPOLICY:
+			case CCS_DOMAIN_STATUS:
+			case CCS_STAT:
+			case CCS_PROFILE:
+			case CCS_MANAGER:
+				ccs_update_stat(CCS_STAT_POLICY_UPDATES);
+				break;
+			default:
 				break;
 			}
-			/* Do not update statistics if not updated. */
-			if (ret)
-				continue;
-		}
-		/* Update statistics. */
-		switch (head->type) {
-		case CCS_DOMAINPOLICY:
-		case CCS_EXCEPTIONPOLICY:
-		case CCS_DOMAIN_STATUS:
-		case CCS_STAT:
-		case CCS_PROFILE:
-		case CCS_MANAGER:
-			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
-			break;
-		default:
 			break;
 		}
 	}
@@ -2977,14 +2985,12 @@ out:
 /**
  * ccs_close_control - close() for /proc/ccs/ interface.
  *
- * @file: Pointer to "struct file".
+ * @head: Pointer to "struct ccs_io_buffer".
  *
  * Returns 0.
  */
-int ccs_close_control(struct file *file)
+int ccs_close_control(struct ccs_io_buffer *head)
 {
-	struct ccs_io_buffer *head = file->private_data;
-	file->private_data = NULL;
 	/*
 	 * If the file is /proc/ccs/query, decrement the observer counter.
 	 */
@@ -3005,7 +3011,6 @@ void __init ccs_policy_io_init(void)
 	ccsecurity_ops.check_profile = ccs_check_profile;
 }
 
-#ifdef CONFIG_CCSECURITY_USE_BUILTIN_POLICY
 /**
  * ccs_load_builtin_policy - Load built-in policy.
  *
@@ -3020,31 +3025,35 @@ void __init ccs_load_builtin_policy(void)
 	 * "ccs_builtin_stat" in the form of "static char [] __initdata".
 	 */
 #include "builtin-policy.h"
-	struct ccs_io_buffer head;
 	u8 i;
 	const int idx = ccs_read_lock();
 	for (i = 0; i < 5; i++) {
+		struct ccs_io_buffer head = { };
 		char *start = "";
-		memset(&head, 0, sizeof(head));
 		switch (i) {
 		case 0:
 			start = ccs_builtin_profile;
+			head.type = CCS_PROFILE;
 			head.write = ccs_write_profile;
 			break;
 		case 1:
 			start = ccs_builtin_exception_policy;
+			head.type = CCS_EXCEPTIONPOLICY;
 			head.write = ccs_write_exception;
 			break;
 		case 2:
 			start = ccs_builtin_domain_policy;
+			head.type = CCS_DOMAINPOLICY;
 			head.write = ccs_write_domain;
 			break;
 		case 3:
 			start = ccs_builtin_manager;
+			head.type = CCS_MANAGER;
 			head.write = ccs_write_manager;
 			break;
 		case 4:
 			start = ccs_builtin_stat;
+			head.type = CCS_STAT;
 			head.write = ccs_write_stat;
 			break;
 		}
@@ -3055,13 +3064,12 @@ void __init ccs_load_builtin_policy(void)
 			*end = '\0';
 			ccs_normalize_line(start);
 			head.write_buf = start;
-			head.write(&head);
+			ccs_parse_policy(&head, start);
 			start = end + 1;
 		}
 	}
 	ccs_read_unlock(idx);
-#ifdef CONFIG_CCSECURITY_ACTIVATE_FROM_THE_BEGINNING
+#ifdef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 	ccs_check_profile();
 #endif
 }
-#endif

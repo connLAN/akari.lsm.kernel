@@ -433,26 +433,4 @@ void __init ccs_mm_init(void)
 #endif
 	ccs_kernel_domain.domainname = ccs_get_name("<kernel>");
 	list_add_tail_rcu(&ccs_kernel_domain.list, &ccs_domain_list);
-#ifdef CONFIG_CCSECURITY_BUILTIN_INITIALIZERS
-	idx = ccs_read_lock();
-	{
-		/* Load built-in policy. */
-		struct ccs_acl_param param = { };
-		static char ccs_builtin_initializers[] __initdata
-			= CONFIG_CCSECURITY_BUILTIN_INITIALIZERS;
-		char *cp = ccs_builtin_initializers;
-		ccs_normalize_line(cp);
-		param.ns = &ccs_kernel_namespace;
-		while (cp && *cp) {
-			char *cp2 = strchr(cp, ' ');
-			if (cp2)
-				*cp2++ = '\0';
-			param.data = cp;
-			ccs_write_transition_control(&param,
-				     CCS_TRANSITION_CONTROL_INITIALIZE);
-			cp = cp2;
-		}
-	}
-	ccs_read_unlock(idx);
-#endif
 }

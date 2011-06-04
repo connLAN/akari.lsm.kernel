@@ -320,7 +320,7 @@ static enum ccs_transition_type ccs_transition_type
  const struct ccs_path_info *program)
 {
 	const char *last_name = ccs_last_word(domainname->name);
-	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_TRANSIT;
+	enum ccs_transition_type type = CCS_TRANSITION_CONTROL_NO_RESET;
 	while (type < CCS_MAX_TRANSITION_TYPE) {
 		const struct list_head * const list =
 			&ns->policy_list[CCS_ID_TRANSITION_CONTROL];
@@ -329,14 +329,13 @@ static enum ccs_transition_type ccs_transition_type
 			type++;
 			continue;
 		}
-		if (type != CCS_TRANSITION_CONTROL_NO_TRANSIT &&
+		if (type != CCS_TRANSITION_CONTROL_NO_RESET &&
 		    type != CCS_TRANSITION_CONTROL_NO_INITIALIZE)
 			break;
 		/*
-		 * Do not check for transit_namespace in current namespaces if
-		 * no_transit_namespace in current namespace matched.
-		 * Do not check for initialize_domain in current namespace if
-		 * no_initialize_domain in current namespace matched.
+		 * Do not check for reset_domain if no_reset_domain matched.
+		 * Do not check for initialize_domain if no_initialize_domain
+		 * matched.
 		 */
 		type++;
 		type++;
@@ -649,7 +648,7 @@ retry:
 
 	/* Calculate domain to transit to. */
 	switch (ccs_transition_type(r->ns, old_domain->domainname, &rn)) {
-	case CCS_TRANSITION_CONTROL_TRANSIT:
+	case CCS_TRANSITION_CONTROL_RESET:
 		/* Transit to the root of specified namespace. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>", rn.name);
 		/*

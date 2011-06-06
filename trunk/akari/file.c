@@ -318,7 +318,7 @@ static bool ccs_check_path2_acl(struct ccs_request_info *r,
 }
 
 /**
- * ccs_check_cmkdev_acl - Check permission for path number number number operation.
+ * ccs_check_mkdev_acl - Check permission for path number number number operation.
  *
  * @r:   Pointer to "struct ccs_request_info".
  * @ptr: Pointer to "struct ccs_acl_info".
@@ -553,7 +553,7 @@ static int ccs_update_path2_acl(const u8 perm, struct ccs_acl_param *param)
  * @a: Pointer to "struct ccs_acl_info".
  * @b: Pointer to "struct ccs_acl_info".
  *
- * Returns true if @a == @b except permission bits, false otherwise.
+ * Returns true if @a == @b, false otherwise.
  */
 static bool ccs_same_mount_acl(const struct ccs_acl_info *a,
 			       const struct ccs_acl_info *b)
@@ -758,7 +758,7 @@ static int ccs_new_open_permission(struct file *filp)
 #endif
 
 /**
- * ccs_path_perm - Check permission for "unlink", "rmdir", "truncate", "symlink", "getattr", "chroot" and "unmount".
+ * ccs_path_perm - Check permission for "unlink", "rmdir", "truncate", "symlink", "append", "getattr", "chroot" and "unmount".
  *
  * @operation: Type of operation.
  * @dentry:    Pointer to "struct dentry".

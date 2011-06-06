@@ -1143,10 +1143,10 @@ struct ccs_domain_info {
  */
 struct ccs_transition_control {
 	struct ccs_acl_head head;
-	u8 type; /* = one of values in "enum ccs_transition_type" */
+	u8 type; /* One of values in "enum ccs_transition_type" */
 	bool is_last_name; /* True if the domainname is ccs_last_word(). */
-	const struct ccs_path_info *domainname;
-	const struct ccs_path_info *program;
+	const struct ccs_path_info *domainname; /* Maybe NULL */
+	const struct ccs_path_info *program;    /* Maybe NULL */
 };
 
 /* Structure for "aggregator" keyword. */
@@ -1277,7 +1277,7 @@ struct ccs_env_acl {
 /* Structure for "capability" directive. */
 struct ccs_capability_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_CAPABILITY_ACL */
-	u8 operation; /* one of values in "enum ccs_capability_acl_index". */
+	u8 operation; /* One of values in "enum ccs_capability_acl_index". */
 };
 
 /* Structure for "ipc signal" directive. */

@@ -1268,7 +1268,7 @@ static void ccs_print_name_union(struct ccs_io_buffer *head,
 				 const struct ccs_name_union *ptr)
 {
 	ccs_set_space(head);
-	if (ptr->is_group) {
+	if (ptr->group) {
 		ccs_set_string(head, "@");
 		ccs_set_string(head, ptr->group->group_name->name);
 	} else {
@@ -1287,7 +1287,7 @@ static void ccs_print_name_union(struct ccs_io_buffer *head,
 static void ccs_print_name_union_quoted(struct ccs_io_buffer *head,
 					const struct ccs_name_union *ptr)
 {
-	if (ptr->is_group) {
+	if (ptr->group) {
 		ccs_set_string(head, "@");
 		ccs_set_string(head, ptr->group->group_name->name);
 	} else {
@@ -1308,7 +1308,7 @@ static void ccs_print_name_union_quoted(struct ccs_io_buffer *head,
 static void ccs_print_number_union_nospace(struct ccs_io_buffer *head,
 					   const struct ccs_number_union *ptr)
 {
-	if (ptr->is_group) {
+	if (ptr->group) {
 		ccs_set_string(head, "@");
 		ccs_set_string(head, ptr->group->group_name->name);
 	} else {
@@ -2875,7 +2875,6 @@ static int ccs_parse_policy(struct ccs_io_buffer *head, char *line)
 	/* Do the update. */
 	return head->write(head);
 }
-	
 
 /**
  * ccs_write_control - write() for /proc/ccs/ interface.

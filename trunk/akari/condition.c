@@ -277,7 +277,6 @@ static bool ccs_parse_name_union_quoted(struct ccs_acl_param *param,
 	char *filename = param->data;
 	if (*filename == '@')
 		return ccs_parse_name_union(param, ptr);
-	ptr->is_group = false;
 	ptr->filename = ccs_get_dqword(filename);
 	return ptr->filename != NULL;
 }
@@ -1026,7 +1025,7 @@ bool ccs_condition(struct ccs_request_info *r,
 		if (right == CCS_NUMBER_UNION) {
 			/* Fetch values now. */
 			const struct ccs_number_union *ptr = numbers_p++;
-			if (ptr->is_group) {
+			if (ptr->group) {
 				if (ccs_number_matches_group(min_v[0],
 							     max_v[0],
 							     ptr->group)

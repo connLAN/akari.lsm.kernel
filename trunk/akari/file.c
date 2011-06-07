@@ -79,12 +79,8 @@ const u8 ccs_pn2mac[CCS_MAX_PATH_NUMBER_OPERATION] = {
  */
 void ccs_put_name_union(struct ccs_name_union *ptr)
 {
-	if (!ptr)
-		return;
-	if (ptr->is_group)
-		ccs_put_group(ptr->group);
-	else
-		ccs_put_name(ptr->filename);
+	ccs_put_group(ptr->group);
+	ccs_put_name(ptr->filename);
 }
 
 /**
@@ -96,8 +92,7 @@ void ccs_put_name_union(struct ccs_name_union *ptr)
  */
 void ccs_put_number_union(struct ccs_number_union *ptr)
 {
-	if (ptr && ptr->is_group)
-		ccs_put_group(ptr->group);
+	ccs_put_group(ptr->group);
 }
 
 /**
@@ -111,7 +106,7 @@ void ccs_put_number_union(struct ccs_number_union *ptr)
 bool ccs_compare_number_union(const unsigned long value,
 			      const struct ccs_number_union *ptr)
 {
-	if (ptr->is_group)
+	if (ptr->group)
 		return ccs_number_matches_group(value, value, ptr->group);
 	return value >= ptr->values[0] && value <= ptr->values[1];
 }
@@ -127,7 +122,7 @@ bool ccs_compare_number_union(const unsigned long value,
 const struct ccs_path_info *ccs_compare_name_union
 (const struct ccs_path_info *name, const struct ccs_name_union *ptr)
 {
-	if (ptr->is_group)
+	if (ptr->group)
 		return ccs_path_matches_group(name, ptr->group);
 	if (ccs_path_matches_pattern(name, ptr->filename))
 		return ptr->filename;

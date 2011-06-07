@@ -259,14 +259,12 @@ bool ccs_parse_name_union(struct ccs_acl_param *param,
 	if (param->data[0] == '@') {
 		param->data++;
 		ptr->group = ccs_get_group(param, CCS_PATH_GROUP);
-		ptr->is_group = true;
 		return ptr->group != NULL;
 	}
 	filename = ccs_read_token(param);
 	if (!ccs_correct_word(filename))
 		return false;
 	ptr->filename = ccs_get_name(filename);
-	ptr->is_group = false;
 	return ptr->filename != NULL;
 }
 
@@ -288,7 +286,6 @@ bool ccs_parse_number_union(struct ccs_acl_param *param,
 	if (param->data[0] == '@') {
 		param->data++;
 		ptr->group = ccs_get_group(param, CCS_NUMBER_GROUP);
-		ptr->is_group = true;
 		return ptr->group != NULL;
 	}
 	data = ccs_read_token(param);

@@ -825,8 +825,6 @@ struct ccs_name_union {
 	/* Either @filename or @group is NULL. */
 	const struct ccs_path_info *filename;
 	struct ccs_group *group;
-	/* True if @group != NULL, false if @filename != NULL. */
-	u8 is_group;
 };
 
 /* Structure for holding a number. */
@@ -835,8 +833,6 @@ struct ccs_number_union {
 	struct ccs_group *group; /* Maybe NULL. */
 	/* One of values in "enum ccs_value_type". */
 	u8 value_type[2];
-	/* True if @group != NULL, false otherwise. */
-	u8 is_group;
 };
 
 /* Structure for holding an IP address. */
@@ -1603,8 +1599,7 @@ static inline bool ccs_pathcmp(const struct ccs_path_info *a,
 static inline bool ccs_same_name_union(const struct ccs_name_union *a,
 				       const struct ccs_name_union *b)
 {
-	return a->filename == b->filename && a->group == b->group &&
-		a->is_group == b->is_group;
+	return a->filename == b->filename && a->group == b->group;
 }
 
 /**
@@ -1618,11 +1613,9 @@ static inline bool ccs_same_name_union(const struct ccs_name_union *a,
 static inline bool ccs_same_number_union(const struct ccs_number_union *a,
 					 const struct ccs_number_union *b)
 {
-	return a->values[0] == b->values[0] && a->values[1] == b->values[1]
-		&& a->group == b->group &&
-		a->value_type[0] == b->value_type[0] &&
-		a->value_type[1] == b->value_type[1] &&
-		a->is_group == b->is_group;
+	return a->values[0] == b->values[0] && a->values[1] == b->values[1] &&
+		a->group == b->group && a->value_type[0] == b->value_type[0] &&
+		a->value_type[1] == b->value_type[1];
 }
 
 /**

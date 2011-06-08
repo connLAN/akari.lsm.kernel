@@ -1122,7 +1122,7 @@ struct ccs_execve {
 /* Structure for domain information. */
 struct ccs_domain_info {
 	struct list_head list;
-	struct list_head acl_info_list[2];
+	struct list_head acl_info_list;
 	/* Name of this domain. Never NULL.          */
 	const struct ccs_path_info *domainname;
 	/* Namespace for this domain. Never NULL. */
@@ -1316,14 +1316,10 @@ struct ccs_name {
 
 /* Structure for holding a line from /proc/ccs/ interface. */
 struct ccs_acl_param {
-	/* Unprocessed data. */
-	char *data;
-	/* Pointer to "struct list_head" or "struct list_head[2]" */
-	struct list_head *list;
-	/* Namespace to use. */
-	struct ccs_policy_namespace *ns;
-	/* True if it is a delete request. */
-	bool is_delete;
+	char *data; /* Unprocessed data. */
+	struct list_head *list; /* List to add or remove. */
+	struct ccs_policy_namespace *ns; /* Namespace to use. */
+	bool is_delete; /* True if it is a delete request. */
 };
 
 /* Structure for reading/writing policy via /proc/ccs/ interfaces. */
@@ -1404,7 +1400,7 @@ struct ccs_policy_namespace {
 	/* List of policy. */
 	struct list_head policy_list[CCS_MAX_POLICY];
 	/* The global ACL referred by "use_group" keyword. */
-	struct list_head acl_group[CCS_MAX_ACL_GROUPS][2];
+	struct list_head acl_group[CCS_MAX_ACL_GROUPS];
 	/* List for connecting to ccs_namespace_list list. */
 	struct list_head namespace_list;
 	/* Profile version. Currently only 20100903 is defined. */

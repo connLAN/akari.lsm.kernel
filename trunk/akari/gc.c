@@ -482,18 +482,14 @@ static inline void ccs_del_domain(struct list_head *element)
 		container_of(element, typeof(*domain), list);
 	struct ccs_acl_info *acl;
 	struct ccs_acl_info *tmp;
-	u8 i;
 	/*
 	 * Since this domain is referenced from none of "struct ccs_io_buffer"
 	 * ccs_gc_list, "struct task_struct", we can delete elements without
 	 * checking for is_deleted flag.
 	 */
-	for (i = 0; i < 2; i++) {
-		list_for_each_entry_safe(acl, tmp, &domain->acl_info_list[i],
-					 list) {
-			ccs_del_acl(&acl->list);
-			ccs_memory_free(acl, ccs_acl_size[acl->type]);
-		}
+	list_for_each_entry_safe(acl, tmp, &domain->acl_info_list, list) {
+		ccs_del_acl(&acl->list);
+		ccs_memory_free(acl, ccs_acl_size[acl->type]);
 	}
 	ccs_put_name(domain->domainname);
 }
@@ -738,21 +734,18 @@ static bool ccs_collect_member(const enum ccs_policy_id id,
 /**
  * ccs_collect_acl - Delete elements in "struct ccs_domain_info".
  *
- * @list: Pointer to "struct list_head[2]".
+ * @list: Pointer to "struct list_head".
  *
  * Returns true if some elements are deleted, false otherwise.
  */
 static bool ccs_collect_acl(struct list_head *list)
 {
 	struct ccs_acl_info *acl;
-	u8 i;
-	for (i = 0; i < 2; i++) {
-		list_for_each_entry(acl, &list[i], list) {
-			if (!acl->is_deleted)
-				continue;
-			if (!ccs_add_to_gc(CCS_ID_ACL, &acl->list))
-				return false;
-		}
+	list_for_each_entry(acl, list, list) {
+		if (!acl->is_deleted)
+			continue;
+		if (!ccs_add_to_gc(CCS_ID_ACL, &acl->list))
+			return false;
 	}
 	return true;
 }
@@ -774,7 +767,7 @@ static void ccs_collect_entry(void)
 	{
 		struct ccs_domain_info *domain;
 		list_for_each_entry(domain, &ccs_domain_list, list) {
-			if (!ccs_collect_acl(domain->acl_info_list))
+			if (!ccs_collect_acl(&domain->acl_info_list))
 				goto unlock;
 			if (!domain->is_deleted ||
 			    ccs_domain_used_by_task(domain))
@@ -789,7 +782,7 @@ static void ccs_collect_entry(void)
 			if (!ccs_collect_member(id, &ns->policy_list[id]))
 				goto unlock;
 		for (i = 0; i < CCS_MAX_ACL_GROUPS; i++)
-			if (!ccs_collect_acl(ns->acl_group[i]))
+			if (!ccs_collect_acl(&ns->acl_group[i]))
 				goto unlock;
 		for (i = 0; i < CCS_MAX_GROUP; i++) {
 			struct list_head *list = &ns->group_list[i];

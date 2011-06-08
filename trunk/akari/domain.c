@@ -95,11 +95,7 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 	const bool is_delete = param->is_delete;
 	int error = is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_info *entry;
-	const u8 type = new_entry->type;
-	struct list_head * const list = &param->list
-		[type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
-		 type == CCS_TYPE_DENIED_EXECUTE_HANDLER ||
-		 type == CCS_TYPE_AUTO_TASK_ACL];
+	struct list_head * const list = param->list;
 	if (param->data[0]) {
 		new_entry->cond = ccs_get_condition(param);
 		if (!new_entry->cond)
@@ -150,8 +146,7 @@ void ccs_check_acl(struct ccs_request_info *r,
 	const struct ccs_domain_info *domain = ccs_current_domain();
 	struct ccs_acl_info *ptr;
 	bool retried = false;
-	const u8 i = !check_entry;
-	const struct list_head *list = &domain->acl_info_list[i];
+	const struct list_head *list = &domain->acl_info_list;
 retry:
 	list_for_each_entry_srcu(ptr, list, list, &ccs_ss) {
 		if (ptr->is_deleted)
@@ -168,7 +163,7 @@ retry:
 	}
 	if (!retried) {
 		retried = true;
-		list = &r->ns->acl_group[domain->group][i];
+		list = &r->ns->acl_group[domain->group];
 		goto retry;
 	}
 	r->granted = false;
@@ -263,7 +258,7 @@ static const char *ccs_last_word(const char *name)
  * @list:       Pointer to "struct list_head".
  * @domainname: The name of current domain.
  * @program:    The name of requested program.
- * @last:       The last component of @domainname.
+ * @last_name:  The last component of @domainname.
  * @type:       One of values in "enum ccs_transition_type".
  *
  * Returns true if found one, false otherwise.
@@ -541,8 +536,7 @@ struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 	if (!entry) {
 		entry = ccs_commit_ok(&e, sizeof(e));
 		if (entry) {
-			INIT_LIST_HEAD(&entry->acl_info_list[0]);
-			INIT_LIST_HEAD(&entry->acl_info_list[1]);
+			INIT_LIST_HEAD(&entry->acl_info_list);
 			list_add_tail_rcu(&entry->list, &ccs_domain_list);
 			created = true;
 		}

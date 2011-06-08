@@ -438,10 +438,8 @@ static bool ccs_namespace_enabled;
 void ccs_init_policy_namespace(struct ccs_policy_namespace *ns)
 {
 	unsigned int idx;
-	for (idx = 0; idx < CCS_MAX_ACL_GROUPS; idx++) {
-		INIT_LIST_HEAD(&ns->acl_group[idx][0]);
-		INIT_LIST_HEAD(&ns->acl_group[idx][1]);
-	}
+	for (idx = 0; idx < CCS_MAX_ACL_GROUPS; idx++)
+		INIT_LIST_HEAD(&ns->acl_group[idx]);
 	for (idx = 0; idx < CCS_MAX_GROUP; idx++)
 		INIT_LIST_HEAD(&ns->group_list[idx]);
 	for (idx = 0; idx < CCS_MAX_POLICY; idx++)
@@ -1127,7 +1125,7 @@ static int ccs_write_task(struct ccs_acl_param *param)
  * ccs_write_domain2 - Write domain policy.
  *
  * @ns:        Pointer to "struct ccs_policy_namespace".
- * @list:      Pointer to "struct list_head [2]".
+ * @list:      Pointer to "struct list_head".
  * @data:      Policy to be interpreted.
  * @is_delete: True if it is a delete request.
  *
@@ -1136,7 +1134,7 @@ static int ccs_write_task(struct ccs_acl_param *param)
  * Caller holds ccs_read_lock().
  */
 static int ccs_write_domain2(struct ccs_policy_namespace *ns,
-			     struct list_head list[2], char *data,
+			     struct list_head *list, char *data,
 			     const bool is_delete)
 {
 	struct ccs_acl_param param = {
@@ -1253,7 +1251,7 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 		domain->flags[profile] = !is_delete;
 		return 0;
 	}
-	return ccs_write_domain2(ns, domain->acl_info_list, data, is_delete);
+	return ccs_write_domain2(ns, &domain->acl_info_list, data, is_delete);
 }
 
 /**
@@ -1793,18 +1791,13 @@ static void ccs_read_domain(struct ccs_io_buffer *head)
 			ccs_set_lf(head);
 			/* fall through */
 		case 1:
-			if (!ccs_read_domain2(head, &domain->acl_info_list[0]))
+			if (!ccs_read_domain2(head, &domain->acl_info_list))
 				return;
 			head->r.step++;
 			/* fall through */
 		case 2:
-			if (!ccs_read_domain2(head, &domain->acl_info_list[1]))
-				return;
-			head->r.step++;
 			if (!ccs_set_lf(head))
 				return;
-			/* fall through */
-		case 3:
 			head->r.step = 0;
 			if (head->r.print_this_domain_only)
 				goto done;
@@ -2004,7 +1997,7 @@ static int ccs_write_exception(struct ccs_io_buffer *head)
 		group = simple_strtoul(param.data, &data, 10);
 		if (group < CCS_MAX_ACL_GROUPS && *data++ == ' ')
 			return ccs_write_domain2(head->w.ns,
-						 head->w.ns->acl_group[group],
+						 &head->w.ns->acl_group[group],
 						 data, is_delete);
 	}
 	return -EINVAL;
@@ -2161,12 +2154,11 @@ static void ccs_read_exception(struct ccs_io_buffer *head)
 	if (head->r.step < CCS_MAX_POLICY + CCS_MAX_GROUP)
 		return;
 	while (head->r.step < CCS_MAX_POLICY + CCS_MAX_GROUP
-	       + CCS_MAX_ACL_GROUPS * 2) {
-		head->r.acl_group_index = (head->r.step - CCS_MAX_POLICY
-					   - CCS_MAX_GROUP) / 2;
+	       + CCS_MAX_ACL_GROUPS) {
+		head->r.acl_group_index =
+			head->r.step - CCS_MAX_POLICY - CCS_MAX_GROUP;
 		if (!ccs_read_domain2(head, &ns->acl_group
-				      [head->r.acl_group_index]
-				      [head->r.step & 1]))
+				      [head->r.acl_group_index]))
 			return;
 		head->r.step++;
 	}
@@ -2271,7 +2263,7 @@ static void ccs_add_entry(char *header)
 	ccs_normalize_line(buffer);
 	{
 		struct ccs_domain_info *domain = ccs_current_domain();
-		if (!ccs_write_domain2(domain->ns, domain->acl_info_list,
+		if (!ccs_write_domain2(domain->ns, &domain->acl_info_list,
 				       buffer, false))
 			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
 	}

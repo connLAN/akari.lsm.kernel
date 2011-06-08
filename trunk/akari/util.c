@@ -1042,8 +1042,7 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 		return false;
 	if (!domain)
 		return true;
-	list_for_each_entry_srcu(ptr, &domain->acl_info_list[0], list,
-				 &ccs_ss) {
+	list_for_each_entry_srcu(ptr, &domain->acl_info_list, list, &ccs_ss) {
 		u16 perm;
 		u8 i;
 		if (ptr->is_deleted)
@@ -1072,6 +1071,11 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 		case CCS_TYPE_UNIX_ACL:
 			perm = container_of(ptr, struct ccs_unix_acl,
 					    head)->perm;
+			break;
+		case CCS_TYPE_AUTO_EXECUTE_HANDLER:
+		case CCS_TYPE_DENIED_EXECUTE_HANDLER:
+		case CCS_TYPE_AUTO_TASK_ACL:
+			perm = 0;
 			break;
 		default:
 			perm = 1;

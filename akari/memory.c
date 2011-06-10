@@ -152,46 +152,6 @@ out:
 	return found ? group : NULL;
 }
 
-/**
- * ccs_get_ipv6_address - Keep the given IPv6 address on the RAM.
- *
- * @addr: Pointer to "struct in6_addr".
- *
- * Returns pointer to "struct in6_addr" on success, NULL otherwise.
- */
-const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr)
-{
-	struct ccs_ipv6addr *entry;
-	struct ccs_ipv6addr *ptr = NULL;
-	int error = -ENOMEM;
-	if (!addr)
-		return NULL;
-	entry = kzalloc(sizeof(*entry), CCS_GFP_FLAGS);
-	if (mutex_lock_interruptible(&ccs_policy_lock))
-		goto out;
-	list_for_each_entry(ptr, &ccs_shared_list[CCS_IPV6ADDRESS_LIST],
-			    head.list) {
-		if (memcmp(&ptr->addr, addr, sizeof(*addr)))
-			continue;
-		atomic_inc(&ptr->head.users);
-		error = 0;
-		break;
-	}
-	if (error && ccs_memory_ok(entry, sizeof(*entry))) {
-		ptr = entry;
-		ptr->addr = *addr;
-		atomic_set(&ptr->head.users, 1);
-		list_add_tail(&ptr->head.list,
-			      &ccs_shared_list[CCS_IPV6ADDRESS_LIST]);
-		entry = NULL;
-		error = 0;
-	}
-	mutex_unlock(&ccs_policy_lock);
-out:
-	kfree(entry);
-	return !error ? &ptr->addr : NULL;
-}
-
 /* The list for "struct ccs_name". */
 struct list_head ccs_name_list[CCS_MAX_HASH];
 

@@ -39,16 +39,6 @@ const char * const ccs_proto_keyword[CCS_SOCK_MAX] = {
 	[4] = " ", /* Dummy for avoiding NULL pointer dereference. */
 };
 
-/* String table for socket's operation. */
-const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
-	[CCS_NETWORK_BIND]    = "bind",
-	[CCS_NETWORK_LISTEN]  = "listen",
-	[CCS_NETWORK_CONNECT] = "connect",
-	[CCS_NETWORK_ACCEPT]  = "accept",
-	[CCS_NETWORK_SEND]    = "send",
-	[CCS_NETWORK_RECV]    = "recv",
-};
-
 /**
  * ccs_parse_ipaddr_union - Parse an IP address.
  *
@@ -60,8 +50,8 @@ const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
 bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
 			    struct ccs_ipaddr_union *ptr)
 {
-	u16 min[8];
-	u16 max[8];
+	u16 * const min = ptr->ip[0].s6_addr16;
+	u16 * const max = ptr->ip[1].s6_addr16;
 	char *address = ccs_read_token(param);
 	int count = sscanf(address, "%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx"
 			   "-%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx",
@@ -71,22 +61,13 @@ bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
 			   &max[4], &max[5], &max[6], &max[7]);
 	if (count == 8 || count == 16) {
 		u8 i;
-		const struct in6_addr *ip[2];
 		if (count == 8)
 			memmove(max, min, sizeof(u16) * 8);
 		for (i = 0; i < 8; i++) {
 			min[i] = htons(min[i]);
 			max[i] = htons(max[i]);
 		}
-		ip[0] = ccs_get_ipv6_address((struct in6_addr *) min);
-		ip[1] = ccs_get_ipv6_address((struct in6_addr *) max);
-		if (!ip[0] || !ip[1]) {
-			ccs_put_ipv6_address(ip[0]);
-			ccs_put_ipv6_address(ip[1]);
-			return false;
-		}
-		ptr->ipv6.min = ip[0];
-		ptr->ipv6.max = ip[1];
+		ptr->is_ipv6 = true;
 		return true;
 	}
 	count = sscanf(address, "%hu.%hu.%hu.%hu-%hu.%hu.%hu.%hu",
@@ -94,14 +75,16 @@ bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
 		       &max[0], &max[1], &max[2], &max[3]);
 	if (count == 4 || count == 8) {
 		/* use host byte order to allow u32 comparison.*/
-		ptr->ipv4.min = (((u8) min[0]) << 24) + (((u8) min[1]) << 16)
+		ptr->ip[0].s6_addr32[0] =
+			(((u8) min[0]) << 24) + (((u8) min[1]) << 16)
 			+ (((u8) min[2]) << 8) + (u8) min[3];
 		if (count == 4)
-			ptr->ipv4.max = ptr->ipv4.min;
+			ptr->ip[1].s6_addr32[0] = ptr->ip[0].s6_addr32[0];
 		else
-			ptr->ipv4.max =
+			ptr->ip[1].s6_addr32[0] =
 				(((u8) max[0]) << 24) + (((u8) max[1]) << 16)
 				+ (((u8) max[2]) << 8) + (u8) max[3];
+		ptr->is_ipv6 = false;
 		return true;
 	}
 	return false;
@@ -171,7 +154,7 @@ static void ccs_print_ipv6(char *buffer, const unsigned int buffer_len,
 	memset(buffer, 0, buffer_len);
 	snprintf(buffer, buffer_len - 1,
 		 "%x:%x:%x:%x:%x:%x:%x:%x%c%x:%x:%x:%x:%x:%x:%x:%x",
-		 NIP6(*min_ip), min_ip == max_ip ? '\0' : '-',
+		 NIP6(*min_ip), !memcmp(min_ip, max_ip, 16) ? '\0' : '-',
 		 NIP6(*max_ip));
 }
 
@@ -187,10 +170,11 @@ static void ccs_print_ipv6(char *buffer, const unsigned int buffer_len,
 void ccs_print_ip(char *buf, const unsigned int size,
 		  const struct ccs_ipaddr_union *ptr)
 {
-	if (ptr->ipv6.min)
-		ccs_print_ipv6(buf, size, ptr->ipv6.min, ptr->ipv6.max);
+	if (ptr->is_ipv6)
+		ccs_print_ipv6(buf, size, &ptr->ip[0], &ptr->ip[1]);
 	else
-		ccs_print_ipv4(buf, size, ptr->ipv4.min, ptr->ipv4.max);
+		ccs_print_ipv4(buf, size, ptr->ip[0].s6_addr32[0],
+			       ptr->ip[1].s6_addr32[0]);
 }
 
 /*
@@ -361,8 +345,6 @@ int ccs_write_inet_network(struct ccs_acl_param *param)
 				  ccs_merge_inet_acl);
 out:
 	ccs_put_group(e.address.group);
-	ccs_put_ipv6_address(e.address.ipv6.min);
-	ccs_put_ipv6_address(e.address.ipv6.max);
 	ccs_put_number_union(&e.port);
 	return error;
 }
@@ -488,16 +470,18 @@ static bool ccs_check_inet_acl(struct ccs_request_info *r,
 		return ccs_address_matches_group(r->param.inet_network.is_ipv6,
 						 r->param.inet_network.address,
 						 acl->address.group);
-	else if (acl->address.ipv6.min)
+	else if (acl->address.is_ipv6)
 		return r->param.inet_network.is_ipv6 &&
-			memcmp(acl->address.ipv6.min,
+			memcmp(&acl->address.ip[0],
 			       r->param.inet_network.address, 16) <= 0 &&
 			memcmp(r->param.inet_network.address,
-			       acl->address.ipv6.max, 16) <= 0;
+			       &acl->address.ip[1], 16) <= 0;
 	else
 		return !r->param.inet_network.is_ipv6 &&
-			acl->address.ipv4.min <= r->param.inet_network.ip &&
-			r->param.inet_network.ip <= acl->address.ipv4.max;
+			acl->address.ip[0].s6_addr32[0] <=
+			r->param.inet_network.ip &&
+			r->param.inet_network.ip <=
+			acl->address.ip[1].s6_addr32[0];
 }
 
 /**

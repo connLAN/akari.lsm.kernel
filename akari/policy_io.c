@@ -174,6 +174,16 @@ const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_UMOUNT]     = "unmount",
 };
 
+/* String table for socket's operation. */
+const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION] = {
+	[CCS_NETWORK_BIND]    = "bind",
+	[CCS_NETWORK_LISTEN]  = "listen",
+	[CCS_NETWORK_CONNECT] = "connect",
+	[CCS_NETWORK_ACCEPT]  = "accept",
+	[CCS_NETWORK_SEND]    = "send",
+	[CCS_NETWORK_RECV]    = "recv",
+};
+
 /* String table for categories. */
 static const char * const ccs_category_keywords[CCS_MAX_MAC_CATEGORY_INDEX] = {
 	[CCS_MAC_CATEGORY_FILE]       = "file",
@@ -319,7 +329,7 @@ static bool ccs_flush(struct ccs_io_buffer *head)
 		if (*w)
 			return false;
 		/* Add '\0' for audit logs and query. */
-		if (head->poll) {
+		if (head->type == CCS_AUDIT || head->type == CCS_QUERY) {
 			if (!head->read_user_buf_avail ||
 			    copy_to_user(head->read_user_buf, "", 1))
 				return false;
@@ -2644,81 +2654,24 @@ int ccs_open_control(const u8 type, struct file *file)
 		return -ENOMEM;
 	mutex_init(&head->io_sem);
 	head->type = type;
-	switch (type) {
-	case CCS_DOMAINPOLICY: /* /proc/ccs/domain_policy */
-		head->write = ccs_write_domain;
-		head->read = ccs_read_domain;
-		break;
-	case CCS_EXCEPTIONPOLICY: /* /proc/ccs/exception_policy */
-		head->write = ccs_write_exception;
-		head->read = ccs_read_exception;
-		break;
-	case CCS_AUDIT: /* /proc/ccs/audit */
-		head->poll = ccs_poll_log;
-		head->read = ccs_read_log;
-		break;
-	case CCS_DOMAIN_STATUS: /* /proc/ccs/.domain_status */
-		head->write = ccs_write_domain_profile;
-		head->read = ccs_read_domain_profile;
-		break;
-	case CCS_EXECUTE_HANDLER: /* /proc/ccs/.execute_handler */
+	if (type == CCS_EXECUTE_HANDLER) {
 		/* Allow execute_handler to read process's status. */
 		if (!(ccs_current_flags() & CCS_TASK_IS_EXECUTE_HANDLER)) {
 			kfree(head);
 			return -EPERM;
 		}
-		/* fall through */
-	case CCS_PROCESS_STATUS: /* /proc/ccs/.process_status */
-		head->write = ccs_write_pid;
-		head->read = ccs_read_pid;
-		break;
-	case CCS_VERSION: /* /proc/ccs/version */
-		head->read = ccs_read_version;
-		head->readbuf_size = 128;
-		break;
-	case CCS_STAT: /* /proc/ccs/stat */
-		head->write = ccs_write_stat;
-		head->read = ccs_read_stat;
-		head->readbuf_size = 1024;
-		break;
-	case CCS_PROFILE: /* /proc/ccs/profile */
-		head->write = ccs_write_profile;
-		head->read = ccs_read_profile;
-		break;
-	case CCS_QUERY: /* /proc/ccs/query */
-		head->poll = ccs_poll_query;
-		head->write = ccs_write_answer;
-		head->read = ccs_read_query;
-		break;
-	case CCS_MANAGER: /* /proc/ccs/manager */
-		head->write = ccs_write_manager;
-		head->read = ccs_read_manager;
-		break;
 	}
-	if (!(file->f_mode & FMODE_READ)) {
-		/*
-		 * No need to allocate read_buf since it is not opened
-		 * for reading.
-		 */
-		head->read = NULL;
-		head->poll = NULL;
-	} else if (!head->poll) {
+	if ((file->f_mode & FMODE_READ) && type != CCS_AUDIT &&
+	    type != CCS_QUERY) {
 		/* Don't allocate read_buf for poll() access. */
-		if (!head->readbuf_size)
-			head->readbuf_size = 4096;
+		head->readbuf_size = 4096;
 		head->read_buf = kzalloc(head->readbuf_size, CCS_GFP_FLAGS);
 		if (!head->read_buf) {
 			kfree(head);
 			return -ENOMEM;
 		}
 	}
-	if (!(file->f_mode & FMODE_WRITE)) {
-		/*
-		 * No need to allocate write_buf since it is not opened
-		 * for writing.
-		 */
-		head->write = NULL;
-	} else if (head->write) {
+	if (file->f_mode & FMODE_WRITE) {
 		head->writebuf_size = 4096;
 		head->write_buf = kzalloc(head->writebuf_size, CCS_GFP_FLAGS);
 		if (!head->write_buf) {
@@ -2754,9 +2707,14 @@ int ccs_open_control(const u8 type, struct file *file)
 int ccs_poll_control(struct file *file, poll_table *wait)
 {
 	struct ccs_io_buffer *head = file->private_data;
-	if (!head->poll)
+	switch (head->type) {
+	case CCS_AUDIT:
+		return ccs_poll_log(file, wait);
+	case CCS_QUERY:
+		return ccs_poll_query(file, wait);
+	default:
 		return -ENOSYS;
-	return head->poll(file, wait);
+	}
 }
 
 /**
@@ -2811,8 +2769,6 @@ ssize_t ccs_read_control(struct ccs_io_buffer *head, char __user *buffer,
 {
 	int len;
 	int idx;
-	if (!head->read)
-		return -ENOSYS;
 	if (!access_ok(VERIFY_WRITE, buffer, buffer_len))
 		return -EFAULT;
 	if (mutex_lock_interruptible(&head->io_sem))
@@ -2824,7 +2780,39 @@ ssize_t ccs_read_control(struct ccs_io_buffer *head, char __user *buffer,
 		/* Call the policy handler. */
 		do {
 			ccs_set_namespace_cursor(head);
-			head->read(head);
+			switch (head->type) {
+			case CCS_DOMAINPOLICY:
+				ccs_read_domain(head);
+				break;
+			case CCS_EXCEPTIONPOLICY:
+				ccs_read_exception(head);
+				break;
+			case CCS_AUDIT:
+				ccs_read_log(head);
+				break;
+			case CCS_DOMAIN_STATUS:
+				ccs_read_domain_profile(head);
+				break;
+			case CCS_EXECUTE_HANDLER:
+			case CCS_PROCESS_STATUS:
+				ccs_read_pid(head);
+				break;
+			case CCS_VERSION:
+				ccs_read_version(head);
+				break;
+			case CCS_STAT:
+				ccs_read_stat(head);
+				break;
+			case CCS_PROFILE:
+				ccs_read_profile(head);
+				break;
+			case CCS_QUERY:
+				ccs_read_query(head);
+				break;
+			case CCS_MANAGER:
+				ccs_read_manager(head);
+				break;
+			}
 		} while (ccs_flush(head) && ccs_has_more_namespace(head));
 	ccs_read_unlock(idx);
 	len = head->read_user_buf - buffer;
@@ -2865,7 +2853,27 @@ static int ccs_parse_policy(struct ccs_io_buffer *head, char *line)
 			return -ENOENT;
 	}
 	/* Do the update. */
-	return head->write(head);
+	switch (head->type) {
+	case CCS_DOMAINPOLICY:
+		return ccs_write_domain(head);
+	case CCS_EXCEPTIONPOLICY:
+		return ccs_write_exception(head);
+	case CCS_DOMAIN_STATUS:
+		return ccs_write_domain_profile(head);
+	case CCS_EXECUTE_HANDLER:
+	case CCS_PROCESS_STATUS:
+		return ccs_write_pid(head);
+	case CCS_STAT:
+		return ccs_write_stat(head);
+	case CCS_PROFILE:
+		return ccs_write_profile(head);
+	case CCS_QUERY:
+		return ccs_write_answer(head);
+	case CCS_MANAGER:
+		return ccs_write_manager(head);
+	default:
+		return -ENOSYS;
+	}
 }
 
 /**
@@ -2884,8 +2892,6 @@ ssize_t ccs_write_control(struct ccs_io_buffer *head,
 	size_t avail_len = buffer_len;
 	char *cp0 = head->write_buf;
 	int idx;
-	if (!head->write)
-		return -ENOSYS;
 	if (!access_ok(VERIFY_READ, buffer, buffer_len))
 		return -EFAULT;
 	if (mutex_lock_interruptible(&head->io_sem))
@@ -3025,27 +3031,22 @@ void __init ccs_load_builtin_policy(void)
 		case 0:
 			start = ccs_builtin_profile;
 			head.type = CCS_PROFILE;
-			head.write = ccs_write_profile;
 			break;
 		case 1:
 			start = ccs_builtin_exception_policy;
 			head.type = CCS_EXCEPTIONPOLICY;
-			head.write = ccs_write_exception;
 			break;
 		case 2:
 			start = ccs_builtin_domain_policy;
 			head.type = CCS_DOMAINPOLICY;
-			head.write = ccs_write_domain;
 			break;
 		case 3:
 			start = ccs_builtin_manager;
 			head.type = CCS_MANAGER;
-			head.write = ccs_write_manager;
 			break;
 		case 4:
 			start = ccs_builtin_stat;
 			head.type = CCS_STAT;
-			head.write = ccs_write_stat;
 			break;
 		}
 		while (1) {

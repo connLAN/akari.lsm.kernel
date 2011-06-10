@@ -652,7 +652,6 @@ enum ccs_policy_id {
 	CCS_ID_AGGREGATOR,
 	CCS_ID_TRANSITION_CONTROL,
 	CCS_ID_MANAGER,
-	CCS_ID_IPV6_ADDRESS,
 	CCS_ID_CONDITION,
 	CCS_ID_NAME,
 	CCS_ID_ACL,
@@ -696,7 +695,6 @@ enum ccs_proc_interface_index {
 /* Index numbers for shared entries. */
 enum ccs_shared_acl_id {
 	CCS_CONDITION_LIST,
-	CCS_IPV6ADDRESS_LIST,
 	CCS_MAX_LIST
 };
 
@@ -837,20 +835,14 @@ struct ccs_number_union {
 
 /* Structure for holding an IP address. */
 struct ccs_ipaddr_union {
-	struct {
-		/* Start of IPv4 address range. Host endian. */
-		u32 min;
-		/* End of IPv4 address range. Host endian.   */
-		u32 max;
-	} ipv4;
-	struct {
-		/* Start of IPv6 address range. Big endian.  */
-		const struct in6_addr *min;
-		/* End of IPv6 address range. Big endian.    */
-		const struct in6_addr *max;
-	} ipv6;
+	/*
+	 * Big endian if storing IPv6 address range.
+	 * Host endian if storing IPv4 address range.
+	 */
+	struct in6_addr ip[2];
 	/* Pointer to address group. */
 	struct ccs_group *group;
+	bool is_ipv6; /* Valid only if @group == NULL. */
 };
 
 /* Structure for "path_group"/"number_group"/"address_group" directive. */
@@ -1284,12 +1276,6 @@ struct ccs_signal_acl {
 	const struct ccs_path_info *domainname;
 };
 
-/* Structure for holding an IPv6 address. */
-struct ccs_ipv6addr {
-	struct ccs_shared_acl_head head;
-	struct in6_addr addr;
-};
-
 /* Structure for "network inet" directive. */
 struct ccs_inet_acl {
 	struct ccs_acl_info head; /* type = CCS_TYPE_INET_ACL */
@@ -1324,9 +1310,6 @@ struct ccs_acl_param {
 
 /* Structure for reading/writing policy via /proc/ccs/ interfaces. */
 struct ccs_io_buffer {
-	void (*read) (struct ccs_io_buffer *);
-	int (*write) (struct ccs_io_buffer *);
-	int (*poll) (struct file *file, poll_table *wait);
 	/* Exclusive lock for this structure.   */
 	struct mutex io_sem;
 	char __user *read_user_buf;
@@ -1463,7 +1446,6 @@ const struct ccs_path_info *ccs_get_domainname(struct ccs_acl_param *param);
 const struct ccs_path_info *ccs_get_name(const char *name);
 const struct ccs_path_info *ccs_path_matches_group
 (const struct ccs_path_info *pathname, const struct ccs_group *group);
-const struct in6_addr *ccs_get_ipv6_address(const struct in6_addr *addr);
 int ccs_close_control(struct ccs_io_buffer *head);
 int ccs_env_perm(struct ccs_request_info *r, const char *env);
 int ccs_get_path(const char *pathname, struct path *path);
@@ -1625,9 +1607,8 @@ static inline bool ccs_same_number_union(const struct ccs_number_union *a,
 static inline bool ccs_same_ipaddr_union(const struct ccs_ipaddr_union *a,
 					 const struct ccs_ipaddr_union *b)
 {
-	return a->ipv4.min == b->ipv4.min && a->ipv4.max == b->ipv4.max &&
-		a->ipv6.min == b->ipv6.min && a->ipv6.max == b->ipv6.max &&
-		a->group == b->group;
+	return !memcmp(a->ip, b->ip, sizeof(a->ip)) && a->group == b->group &&
+		a->is_ipv6 == b->is_ipv6;
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
@@ -1908,20 +1889,6 @@ static inline void ccs_put_group(struct ccs_group *group)
 {
 	if (group)
 		atomic_dec(&group->head.users);
-}
-
-/**
- * ccs_put_ipv6_address - Drop reference on "struct ccs_ipv6addr".
- *
- * @addr: Pointer to "struct in6_addr". Maybe NULL.
- *
- * Returns nothing.
- */
-static inline void ccs_put_ipv6_address(const struct in6_addr *addr)
-{
-	if (addr)
-		atomic_dec(&container_of(addr, struct ccs_ipv6addr,
-					 addr)->head.users);
 }
 
 /**

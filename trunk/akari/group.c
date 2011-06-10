@@ -101,8 +101,6 @@ int ccs_write_group(struct ccs_acl_param *param, const u8 type)
 			goto out;
 		error = ccs_update_policy(&e.head, sizeof(e), param,
 					  ccs_same_address_group);
-		ccs_put_ipv6_address(e.address.ipv6.min);
-		ccs_put_ipv6_address(e.address.ipv6.max);
 	}
 out:
 	ccs_put_group(group);
@@ -185,19 +183,17 @@ bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
 				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
-		if (member->address.ipv6.min) {
+		if (member->address.is_ipv6) {
 			if (is_ipv6 &&
-			    memcmp(member->address.ipv6.min, address, 16)
-			    <= 0 &&
-			    memcmp(address, member->address.ipv6.max, 16)
-			    <= 0) {
+			    memcmp(&member->address.ip[0], address, 16) <= 0 &&
+			    memcmp(address, &member->address.ip[1], 16) <= 0) {
 				matched = true;
 				break;
 			}
 		} else {
 			if (!is_ipv6 &&
-			    member->address.ipv4.min <= ip &&
-			    ip <= member->address.ipv4.max) {
+			    member->address.ip[0].s6_addr32[0] <= ip &&
+			    ip <= member->address.ip[1].s6_addr32[0]) {
 				matched = true;
 				break;
 			}

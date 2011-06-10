@@ -61,7 +61,6 @@ static const u8 ccs_element_size[CCS_MAX_POLICY] = {
 	[CCS_ID_AGGREGATOR] = sizeof(struct ccs_aggregator),
 	[CCS_ID_TRANSITION_CONTROL] = sizeof(struct ccs_transition_control),
 	[CCS_ID_MANAGER] = sizeof(struct ccs_manager),
-	[CCS_ID_IPV6_ADDRESS] = sizeof(struct ccs_ipv6addr),
 	/* [CCS_ID_CONDITION] = "struct ccs_condition"->size, */
 	/* [CCS_ID_NAME] = "struct ccs_name"->size, */
 	/* [CCS_ID_ACL] = ccs_acl_size["struct ccs_acl_info"->type], */
@@ -419,8 +418,6 @@ static void ccs_del_acl(struct list_head *element)
 			struct ccs_inet_acl *entry =
 				container_of(acl, typeof(*entry), head);
 			ccs_put_group(entry->address.group);
-			ccs_put_ipv6_address(entry->address.ipv6.min);
-			ccs_put_ipv6_address(entry->address.ipv6.max);
 			ccs_put_number_union(&entry->port);
 		}
 		break;
@@ -531,10 +528,7 @@ static inline void ccs_del_group(struct list_head *element)
  */
 static inline void ccs_del_address_group(struct list_head *element)
 {
-	struct ccs_address_group *member =
-		container_of(element, typeof(*member), head.list);
-	ccs_put_ipv6_address(member->address.ipv6.min);
-	ccs_put_ipv6_address(member->address.ipv6.max);
+	/* Nothing to do. */
 }
 
 /**
@@ -557,18 +551,6 @@ static inline void ccs_del_number_group(struct list_head *element)
  * Returns nothing.
  */
 static inline void ccs_del_reservedport(struct list_head *element)
-{
-	/* Nothing to do. */
-}
-
-/**
- * ccs_del_ipv6_address - Delete members in "struct ccs_ipv6addr".
- *
- * @element: Pointer to "struct list_head".
- *
- * Returns nothing.
- */
-static inline void ccs_del_ipv6_address(struct list_head *element)
 {
 	/* Nothing to do. */
 }
@@ -819,9 +801,6 @@ static void ccs_collect_entry(void)
 		case 0:
 			id = CCS_ID_CONDITION;
 			break;
-		case 1:
-			id = CCS_ID_IPV6_ADDRESS;
-			break;
 		default:
 			id = CCS_ID_NAME;
 			break;
@@ -897,9 +876,6 @@ static bool ccs_kfree_entry(void)
 			break;
 		case CCS_ID_RESERVEDPORT:
 			ccs_del_reservedport(element);
-			break;
-		case CCS_ID_IPV6_ADDRESS:
-			ccs_del_ipv6_address(element);
 			break;
 		case CCS_ID_CONDITION:
 			ccs_del_condition(element);

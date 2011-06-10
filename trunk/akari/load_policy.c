@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.1   2011/06/06
+ * Version: 1.8.2-pre   2011/06/10
  */
 
 #include <linux/version.h>
@@ -55,6 +55,26 @@ __setup("ccsecurity=", ccs_setup);
 
 #ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 
+/* Path to the policy loader. (default = CONFIG_CCSECURITY_POLICY_LOADER) */
+static const char *ccs_loader;
+
+#if 0
+/**
+ * ccs_loader_setup - Set policy loader.
+ *
+ * @str: Program to use as a policy loader (e.g. /sbin/ccs-init ).
+ *
+ * Returns 0.
+ */
+static int __init ccs_loader_setup(char *str)
+{
+	ccs_loader = str;
+	return 0;
+}
+
+__setup("CCS_loader=", ccs_loader_setup);
+#endif
+
 /**
  * ccs_policy_loader_exists - Check whether /sbin/ccs-init exists.
  *
@@ -64,15 +84,19 @@ static _Bool ccs_policy_loader_exists(void)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
 	struct path path;
-	if (kern_path(CONFIG_CCSECURITY_POLICY_LOADER,
-		      LOOKUP_FOLLOW | LOOKUP_POSITIVE, &path) == 0) {
+	if (!ccs_loader)
+		ccs_loader = CONFIG_CCSECURITY_POLICY_LOADER;
+	if (kern_path(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE,
+		      &path) == 0) {
 		path_put(&path);
 		return 1;
 	}
 #else
 	struct nameidata nd;
-	if (path_lookup(CONFIG_CCSECURITY_POLICY_LOADER,
-			LOOKUP_FOLLOW | LOOKUP_POSITIVE, &nd) == 0) {
+	if (!ccs_loader)
+		ccs_loader = CONFIG_CCSECURITY_POLICY_LOADER;
+	if (path_lookup(ccs_loader, LOOKUP_FOLLOW | LOOKUP_POSITIVE,
+			&nd) == 0) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 		path_put(&nd.path);
 #else
@@ -82,7 +106,7 @@ static _Bool ccs_policy_loader_exists(void)
 	}
 #endif
 	printk(KERN_INFO "Not activating Mandatory Access Control "
-	       "as %s does not exist.\n", CONFIG_CCSECURITY_POLICY_LOADER);
+	       "as %s does not exist.\n", ccs_loader);
 	return 0;
 }
 
@@ -100,8 +124,8 @@ static int ccs_run_loader(void *unused)
 	char *argv[2];
 	char *envp[3];
 	printk(KERN_INFO "Calling %s to load policy. Please wait.\n",
-	       CONFIG_CCSECURITY_POLICY_LOADER);
-	argv[0] = (char *) CONFIG_CCSECURITY_POLICY_LOADER;
+	       ccs_loader);
+	argv[0] = (char *) ccs_loader;
 	argv[1] = NULL;
 	envp[0] = "HOME=/";
 	envp[1] = "PATH=/sbin:/bin:/usr/sbin:/usr/bin";
@@ -109,6 +133,26 @@ static int ccs_run_loader(void *unused)
 	return exec_usermodehelper(argv[0], argv, envp);
 }
 
+#endif
+
+/* Path to the trigger. (default = CONFIG_CCSECURITY_ACTIVATION_TRIGGER) */
+static const char *ccs_trigger;
+
+#if 0
+/**
+ * ccs_trigger_setup - Set trigger for activation.
+ *
+ * @str: Program to use as an activation trigger (e.g. /sbin/init ).
+ *
+ * Returns 0.
+ */
+static int __init ccs_trigger_setup(char *str)
+{
+	ccs_trigger = str;
+	return 0;
+}
+
+__setup("CCS_trigger=", ccs_trigger_setup);
 #endif
 
 /**
@@ -128,7 +172,9 @@ void ccs_load_policy(const char *filename)
 {
 	if (ccsecurity_ops.disabled)
 		return;
-	if (strcmp(filename, CONFIG_CCSECURITY_ACTIVATION_TRIGGER))
+	if (!ccs_trigger)
+		ccs_trigger = CONFIG_CCSECURITY_ACTIVATION_TRIGGER;
+	if (strcmp(filename, ccs_trigger))
 		return;
 	if (!ccs_policy_loader_exists())
 		return;
@@ -137,8 +183,8 @@ void ccs_load_policy(const char *filename)
 		char *argv[2];
 		char *envp[3];
 		printk(KERN_INFO "Calling %s to load policy. Please wait.\n",
-		       CONFIG_CCSECURITY_POLICY_LOADER);
-		argv[0] = (char *) CONFIG_CCSECURITY_POLICY_LOADER;
+		       ccs_loader);
+		argv[0] = (char *) ccs_loader;
 		argv[1] = NULL;
 		envp[0] = "HOME=/";
 		envp[1] = "PATH=/sbin:/bin:/usr/sbin:/usr/bin";

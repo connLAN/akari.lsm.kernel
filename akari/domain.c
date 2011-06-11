@@ -495,7 +495,8 @@ struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 			 * that domain. Do not perform domain transition if
 			 * profile for that domain is not yet created.
 			 */
-			if (!entry->ns->profile_ptr[entry->profile])
+			if (ccs_policy_loaded &&
+			    !entry->ns->profile_ptr[entry->profile])
 				return NULL;
 			security->ccs_domain_info = entry;
 		}

@@ -692,12 +692,6 @@ enum ccs_proc_interface_index {
 	CCS_EXECUTE_HANDLER,
 };
 
-/* Index numbers for shared entries. */
-enum ccs_shared_acl_id {
-	CCS_CONDITION_LIST,
-	CCS_MAX_LIST
-};
-
 /* Index numbers for special mount operations. */
 enum ccs_special_mount {
 	CCS_MOUNT_BIND,            /* mount --bind /source /dest   */
@@ -1536,11 +1530,11 @@ extern const u8 ccs_pnnn2mac[CCS_MAX_MKDEV_OPERATION];
 extern const u8 ccs_pp2mac[CCS_MAX_PATH2_OPERATION];
 extern struct ccs_domain_info ccs_kernel_domain;
 extern struct ccs_policy_namespace ccs_kernel_namespace;
+extern struct list_head ccs_condition_list;
 extern struct list_head ccs_domain_list;
 extern struct list_head ccs_manager_list;
 extern struct list_head ccs_name_list[CCS_MAX_HASH];
 extern struct list_head ccs_namespace_list;
-extern struct list_head ccs_shared_list[CCS_MAX_LIST];
 extern struct mutex ccs_policy_lock;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 extern struct srcu_struct ccs_ss;

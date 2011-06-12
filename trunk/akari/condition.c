@@ -8,6 +8,9 @@
 
 #include "internal.h"
 
+/* List of "struct ccs_condition". */
+struct list_head ccs_condition_list;
+
 /**
  * ccs_argv - Check argv[] in "struct linux_binbrm".
  *
@@ -403,8 +406,8 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 		found = true;
 		goto out;
 	}
-	list_for_each_entry_srcu(ptr, &ccs_shared_list[CCS_CONDITION_LIST],
-				 head.list, &ccs_ss) {
+	list_for_each_entry_srcu(ptr, &ccs_condition_list, head.list,
+				 &ccs_ss) {
 		if (!ccs_same_condition(ptr, entry))
 			continue;
 		/* Same entry found. Share this entry. */
@@ -415,8 +418,7 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 	if (!found) {
 		if (ccs_memory_ok(entry, entry->size)) {
 			atomic_set(&entry->head.users, 1);
-			list_add_rcu(&entry->head.list,
-				     &ccs_shared_list[CCS_CONDITION_LIST]);
+			list_add_rcu(&entry->head.list, &ccs_condition_list);
 		} else {
 			found = true;
 			ptr = NULL;

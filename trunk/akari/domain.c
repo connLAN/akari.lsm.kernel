@@ -14,9 +14,6 @@ struct ccs_domain_info ccs_kernel_domain;
 /* The list for "struct ccs_domain_info". */
 LIST_HEAD(ccs_domain_list);
 
-/* List of "struct ccs_condition" and "struct ccs_ipv6addr". */
-struct list_head ccs_shared_list[CCS_MAX_LIST];
-
 /**
  * ccs_update_policy - Update an entry for exception policy.
  *

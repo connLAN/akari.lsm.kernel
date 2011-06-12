@@ -375,6 +375,7 @@ struct ccs_policy_namespace ccs_kernel_namespace;
 void __init ccs_mm_init(void)
 {
 	int idx;
+	INIT_LIST_HEAD(&ccs_condition_list);
 	for (idx = 0; idx < CCS_MAX_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_name_list[idx]);
 	ccs_kernel_namespace.name = "<kernel>";

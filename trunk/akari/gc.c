@@ -793,24 +793,18 @@ static void ccs_collect_entry(void)
 			}
 		}
 	}
-	for (i = 0; i < CCS_MAX_LIST + CCS_MAX_HASH; i++) {
-		struct list_head *list = i < CCS_MAX_LIST ?
-			&ccs_shared_list[i] : &ccs_name_list[i - CCS_MAX_LIST];
+	id = CCS_ID_CONDITION;
+	for (i = 0; i < CCS_MAX_HASH + 1; i++) {
+		struct list_head *list = !i ?
+			&ccs_condition_list : &ccs_name_list[i - 1];
 		struct ccs_shared_acl_head *ptr;
-		switch (i) {
-		case 0:
-			id = CCS_ID_CONDITION;
-			break;
-		default:
-			id = CCS_ID_NAME;
-			break;
-		}
 		list_for_each_entry(ptr, list, list) {
 			if (atomic_read(&ptr->users))
 				continue;
 			if (!ccs_add_to_gc(id, &ptr->list))
 				goto unlock;
 		}
+		id = CCS_ID_NAME;
 	}
 unlock:
 	ccs_read_unlock(idx);

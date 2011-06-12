@@ -163,7 +163,7 @@ retry:
 	}
 	if (!retried) {
 		retried = true;
-		list = &r->ns->acl_group[domain->group];
+		list = &domain->ns->acl_group[domain->group];
 		goto retry;
 	}
 	r->granted = false;

@@ -335,9 +335,6 @@ static void __init ccs_proc_init(void)
  */
 static int __init ccs_init_module(void)
 {
-	int i;
-	for (i = 0; i < CCS_MAX_LIST; i++)
-		INIT_LIST_HEAD(&ccs_shared_list[i]);
 	if (ccsecurity_ops.disabled)
 		return -EINVAL;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)

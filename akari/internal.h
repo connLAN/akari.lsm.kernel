@@ -1047,8 +1047,6 @@ struct ccs_request_info {
 			const struct ccs_path_info *domainname;
 		} task;
 	} param;
-	/* For holding namespace used for this request. */
-	struct ccs_policy_namespace *ns;
 	/*
 	 * For updating current->ccs_domain_info at ccs_update_task_domain().
 	 * Initialized to NULL at ccs_init_request_info().

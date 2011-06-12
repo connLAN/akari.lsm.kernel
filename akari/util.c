@@ -1007,7 +1007,6 @@ int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 	for (i = 0; i < 255; i++) {
 		const u8 profile = ccs_current_domain()->profile;
 		memset(r, 0, sizeof(*r));
-		r->ns = ccs_current_namespace();
 		r->profile = profile;
 		r->type = index;
 		r->mode = ccs_get_mode(profile, index);

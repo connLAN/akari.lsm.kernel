@@ -607,7 +607,7 @@ retry:
 	} else {
 		struct ccs_aggregator *ptr;
 		struct list_head *list =
-			&r->ns->policy_list[CCS_ID_AGGREGATOR];
+			&old_domain->ns->policy_list[CCS_ID_AGGREGATOR];
 		/* Check 'aggregator' directive. */
 		list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
 			if (ptr->head.is_deleted ||
@@ -642,7 +642,8 @@ retry:
 	}
 
 	/* Calculate domain to transit to. */
-	switch (ccs_transition_type(r->ns, old_domain->domainname, &rn)) {
+	switch (ccs_transition_type(old_domain->ns, old_domain->domainname,
+				    &rn)) {
 	case CCS_TRANSITION_CONTROL_RESET:
 		/* Transit to the root of specified namespace. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>", rn.name);
@@ -654,8 +655,8 @@ retry:
 		break;
 	case CCS_TRANSITION_CONTROL_INITIALIZE:
 		/* Transit to the child of current namespace's root. */
-		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s", r->ns->name,
-			 rn.name);
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
+			 old_domain->ns->name, rn.name);
 		break;
 	case CCS_TRANSITION_CONTROL_KEEP:
 		/* Keep current domain. */

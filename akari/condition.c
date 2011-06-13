@@ -9,7 +9,7 @@
 #include "internal.h"
 
 /* List of "struct ccs_condition". */
-struct list_head ccs_condition_list;
+LIST_HEAD(ccs_condition_list);
 
 /**
  * ccs_argv - Check argv[] in "struct linux_binbrm".
@@ -529,7 +529,6 @@ rerun:
 				if (!ccs_parse_argv(left_word + 10,
 						    right_word, argv++))
 					goto out;
-				
 			}
 			goto store_value;
 		}

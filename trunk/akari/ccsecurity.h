@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2-pre   2011/06/06
+ * Version: 1.8.2-rc   2011/06/14
  */
 
 #ifndef _LINUX_CCSECURITY_H
@@ -19,7 +19,6 @@ struct nameidata;
 struct path;
 struct dentry;
 struct vfsmount;
-struct inode;
 struct linux_binprm;
 struct pt_regs;
 struct file;
@@ -279,8 +278,7 @@ static inline _Bool ccs_capable(const u8 operation)
 	return func ? func(operation) : 1;
 }
 
-static inline int ccs_mknod_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_mknod_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, unsigned int mode,
 				       unsigned int dev)
 {
@@ -289,8 +287,7 @@ static inline int ccs_mknod_permission(struct inode *dir,
 	return func ? func(dentry, mnt, mode, dev) : 0;
 }
 
-static inline int ccs_mkdir_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_mkdir_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, unsigned int mode)
 {
 	int (*func) (struct dentry *, struct vfsmount *, unsigned int)
@@ -298,8 +295,7 @@ static inline int ccs_mkdir_permission(struct inode *dir,
 	return func ? func(dentry, mnt, mode) : 0;
 }
 
-static inline int ccs_rmdir_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_rmdir_permission(struct dentry *dentry,
 				       struct vfsmount *mnt)
 {
 	int (*func) (struct dentry *, struct vfsmount *)
@@ -307,8 +303,7 @@ static inline int ccs_rmdir_permission(struct inode *dir,
 	return func ? func(dentry, mnt) : 0;
 }
 
-static inline int ccs_unlink_permission(struct inode *dir,
-					struct dentry *dentry,
+static inline int ccs_unlink_permission(struct dentry *dentry,
 					struct vfsmount *mnt)
 {
 	int (*func) (struct dentry *, struct vfsmount *)
@@ -316,8 +311,7 @@ static inline int ccs_unlink_permission(struct inode *dir,
 	return func ? func(dentry, mnt) : 0;
 }
 
-static inline int ccs_symlink_permission(struct inode *dir,
-					 struct dentry *dentry,
+static inline int ccs_symlink_permission(struct dentry *dentry,
 					 struct vfsmount *mnt,
 					 const char *from)
 {
@@ -334,9 +328,7 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt) : 0;
 }
 
-static inline int ccs_rename_permission(struct inode *old_dir,
-					struct dentry *old_dentry,
-					struct inode *new_dir,
+static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
 {
@@ -346,7 +338,6 @@ static inline int ccs_rename_permission(struct inode *old_dir,
 }
 
 static inline int ccs_link_permission(struct dentry *old_dentry,
-				      struct inode *new_dir,
 				      struct dentry *new_dentry,
 				      struct vfsmount *mnt)
 {
@@ -626,37 +617,32 @@ static inline _Bool ccs_capable(const u8 operation)
 	return 1;
 }
 
-static inline int ccs_mknod_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_mknod_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, unsigned int mode,
 				       unsigned int dev)
 {
 	return 0;
 }
 
-static inline int ccs_mkdir_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_mkdir_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, unsigned int mode)
 {
 	return 0;
 }
 
-static inline int ccs_rmdir_permission(struct inode *dir,
-				       struct dentry *dentry,
+static inline int ccs_rmdir_permission(struct dentry *dentry,
 				       struct vfsmount *mnt)
 {
 	return 0;
 }
 
-static inline int ccs_unlink_permission(struct inode *dir,
-					struct dentry *dentry,
+static inline int ccs_unlink_permission(struct dentry *dentry,
 					struct vfsmount *mnt)
 {
 	return 0;
 }
 
-static inline int ccs_symlink_permission(struct inode *dir,
-					 struct dentry *dentry,
+static inline int ccs_symlink_permission(struct dentry *dentry,
 					 struct vfsmount *mnt,
 					 const char *from)
 {
@@ -669,9 +655,7 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return 0;
 }
 
-static inline int ccs_rename_permission(struct inode *old_dir,
-					struct dentry *old_dentry,
-					struct inode *new_dir,
+static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
 {
@@ -679,7 +663,6 @@ static inline int ccs_rename_permission(struct inode *old_dir,
 }
 
 static inline int ccs_link_permission(struct dentry *old_dentry,
-				      struct inode *new_dir,
 				      struct dentry *new_dentry,
 				      struct vfsmount *mnt)
 {

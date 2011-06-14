@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.14   2011/05/11
+ * Version: 1.0.15-rc   2011/06/14
  */
 
 #include "internal.h"
@@ -852,8 +852,7 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 			  unsigned int dev)
 {
-	int rc = ccs_mknod_permission(dir->dentry->d_inode, dentry, dir->mnt,
-				      mode, dev);
+	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_mknod);
@@ -871,8 +870,7 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
  */
 static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 {
-	int rc = ccs_mkdir_permission(dir->dentry->d_inode, dentry, dir->mnt,
-				      mode);
+	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_mkdir);
@@ -889,7 +887,7 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
  */
 static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
 {
-	int rc = ccs_rmdir_permission(dir->dentry->d_inode, dentry, dir->mnt);
+	int rc = ccs_rmdir_permission(dentry, dir->mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_rmdir);
@@ -906,7 +904,7 @@ static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
  */
 static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 {
-	int rc = ccs_unlink_permission(dir->dentry->d_inode, dentry, dir->mnt);
+	int rc = ccs_unlink_permission(dentry, dir->mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_unlink);
@@ -925,8 +923,7 @@ static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 			    const char *old_name)
 {
-	int rc = ccs_symlink_permission(dir->dentry->d_inode, dentry, dir->mnt,
-					old_name);
+	int rc = ccs_symlink_permission(dentry, dir->mnt, old_name);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_symlink);
@@ -946,9 +943,7 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 			   struct path *new_dir, struct dentry *new_dentry)
 {
-	int rc = ccs_rename_permission(old_dir->dentry->d_inode, old_dentry,
-				       new_dir->dentry->d_inode, new_dentry,
-				       old_dir->mnt);
+	int rc = ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_rename);
@@ -968,8 +963,7 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 			 struct dentry *new_dentry)
 {
-	int rc = ccs_link_permission(old_dentry, new_dir->dentry->d_inode,
-				     new_dentry, new_dir->mnt);
+	int rc = ccs_link_permission(old_dentry, new_dentry, new_dir->mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.path_link);
@@ -993,7 +987,7 @@ static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt, int mode, dev_t dev)
 {
-	int rc = ccs_mknod_permission(dir, dentry, mnt, mode, dev);
+	int rc = ccs_mknod_permission(dentry, mnt, mode, dev);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_mknod);
@@ -1013,7 +1007,7 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt, int mode)
 {
-	int rc = ccs_mkdir_permission(dir, dentry, mnt, mode);
+	int rc = ccs_mkdir_permission(dentry, mnt, mode);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_mkdir);
@@ -1032,7 +1026,7 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
 			   struct vfsmount *mnt)
 {
-	int rc = ccs_rmdir_permission(dir, dentry, mnt);
+	int rc = ccs_rmdir_permission(dentry, mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_rmdir);
@@ -1051,7 +1045,7 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
 			    struct vfsmount *mnt)
 {
-	int rc = ccs_unlink_permission(dir, dentry, mnt);
+	int rc = ccs_unlink_permission(dentry, mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_unlink);
@@ -1071,7 +1065,7 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 			     struct vfsmount *mnt, const char *old_name)
 {
-	int rc = ccs_symlink_permission(dir, dentry, mnt, old_name);
+	int rc = ccs_symlink_permission(dentry, mnt, old_name);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_symlink);
@@ -1095,8 +1089,7 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct dentry *new_dentry,
 			    struct vfsmount *new_mnt)
 {
-	int rc = ccs_rename_permission(old_dir, old_dentry, new_dir,
-				       new_dentry, new_mnt);
+	int rc = ccs_rename_permission(old_dentry, new_dentry, new_mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_rename);
@@ -1120,7 +1113,7 @@ static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
 			  struct inode *dir, struct dentry *new_dentry,
 			  struct vfsmount *new_mnt)
 {
-	int rc = ccs_link_permission(old_dentry, dir, new_dentry, new_mnt);
+	int rc = ccs_link_permission(old_dentry, new_dentry, new_mnt);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_link);
@@ -1141,7 +1134,7 @@ static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
 static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 			    struct vfsmount *mnt, int mode)
 {
-	int rc = ccs_mknod_permission(dir, dentry, mnt, mode, 0);
+	int rc = ccs_mknod_permission(dentry, mnt, mode, 0);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_create);
@@ -1163,7 +1156,7 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
 			   dev_t dev)
 {
-	int rc = ccs_mknod_permission(dir, dentry, NULL, mode, dev);
+	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_mknod);
@@ -1181,7 +1174,7 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
  */
 static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 {
-	int rc = ccs_mkdir_permission(dir, dentry, NULL, mode);
+	int rc = ccs_mkdir_permission(dentry, NULL, mode);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_mkdir);
@@ -1198,7 +1191,7 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
  */
 static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
 {
-	int rc = ccs_rmdir_permission(dir, dentry, NULL);
+	int rc = ccs_rmdir_permission(dentry, NULL);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_rmdir);
@@ -1215,7 +1208,7 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
  */
 static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
-	int rc = ccs_unlink_permission(dir, dentry, NULL);
+	int rc = ccs_unlink_permission(dentry, NULL);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_unlink);
@@ -1234,7 +1227,7 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 			     const char *old_name)
 {
-	int rc = ccs_symlink_permission(dir, dentry, NULL, old_name);
+	int rc = ccs_symlink_permission(dentry, NULL, old_name);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_symlink);
@@ -1254,8 +1247,7 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct inode *new_dir, struct dentry *new_dentry)
 {
-	int rc = ccs_rename_permission(old_dir, old_dentry, new_dir,
-				       new_dentry, NULL);
+	int rc = ccs_rename_permission(old_dentry, new_dentry, NULL);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_rename);
@@ -1275,7 +1267,7 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 			  struct dentry *new_dentry)
 {
-	int rc = ccs_link_permission(old_dentry, dir, new_dentry, NULL);
+	int rc = ccs_link_permission(old_dentry, new_dentry, NULL);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_link);
@@ -1294,7 +1286,7 @@ static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 			    int mode)
 {
-	int rc = ccs_mknod_permission(dir, dentry, NULL, mode, 0);
+	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
 	if (rc)
 		return rc;
 	while (!original_security_ops.inode_create);
@@ -2592,7 +2584,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.14   2011/05/11\n");
+	printk(KERN_INFO "AKARI: 1.0.15-rc   2011/06/14\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

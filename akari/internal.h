@@ -342,8 +342,6 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 #define CONFIG_CCSECURITY_MAX_ACCEPT_ENTRY 2048
 #define CONFIG_CCSECURITY_POLICY_LOADER "/sbin/ccs-init"
 #define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/sbin/init"
-#endif
-#ifndef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 #define CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 #endif
 #include "ccsecurity.h"

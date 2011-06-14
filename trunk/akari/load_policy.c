@@ -170,7 +170,7 @@ __setup("CCS_trigger=", ccs_trigger_setup);
  */
 void ccs_load_policy(const char *filename)
 {
-	static bool done;
+	static _Bool done;
 	if (ccsecurity_ops.disabled || done)
 		return;
 	if (!ccs_trigger)
@@ -179,7 +179,7 @@ void ccs_load_policy(const char *filename)
 		return;
 	if (!ccs_policy_loader_exists())
 		return;
-	done = true;
+	done = 1;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	{
 		char *argv[2];

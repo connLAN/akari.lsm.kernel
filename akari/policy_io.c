@@ -773,7 +773,8 @@ next:
 	switch (head->r.step) {
 	case 0:
 		ccs_print_namespace(head);
-		ccs_io_printf(head, "PROFILE_VERSION=%u\n", 20100903);
+		ccs_io_printf(head, "PROFILE_VERSION=%u\n",
+			      ns->profile_version);
 		head->r.step++;
 		break;
 	case 1:

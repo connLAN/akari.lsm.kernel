@@ -1804,10 +1804,10 @@ static void ccs_read_domain(struct ccs_io_buffer *head)
 			if (!ccs_read_domain2(head, &domain->acl_info_list))
 				return;
 			head->r.step++;
-			/* fall through */
-		case 2:
 			if (!ccs_set_lf(head))
 				return;
+			/* fall through */
+		case 2:
 			head->r.step = 0;
 			if (head->r.print_this_domain_only)
 				goto done;

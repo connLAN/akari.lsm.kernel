@@ -487,8 +487,10 @@ rerun:
 		is_not = *(right_word - 1) == '!';
 		if (is_not)
 			*(right_word++ - 1) = '\0'; /* Will restore later. */
-		else
+		else if (*(right_word + 1) != '=')
 			*right_word++ = '\0'; /* Will restore later. */
+		else
+			goto out;
 		dprintk(KERN_WARNING "%u: <%s>%s=<%s>\n", __LINE__, left_word,
 			is_not ? "!" : "", right_word);
 		if (!strcmp(left_word, "grant_log")) {

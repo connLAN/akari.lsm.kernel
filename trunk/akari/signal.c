@@ -187,7 +187,7 @@ int ccs_write_ipc(struct ccs_acl_param *param)
 }
 
 /**
- * ccs_file_init - Register ipc related hooks.
+ * ccs_signal_init - Register ipc related hooks.
  *
  * Returns nothing.
  */

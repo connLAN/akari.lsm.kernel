@@ -1,6 +1,7 @@
 Notes for AKARI project
 
-AKARI is Access Keeping And Regulating Instrument for Linux 2.6 kernels.
+AKARI is Access Keeping And Regulating Instrument for Linux 2.6 and later
+kernels.
 
 You can use AKARI for analyzing your system's behavior (i.e. reports which
 application accesses which resources like strace command does) and optionally
@@ -127,3 +128,9 @@ Version 1.0.14   2011/05/11   Minor update release.
    Synchronize with TOMOYO revision 4978.
 
    Fix wrong domainname validation.
+
+Version 1.0.15   2011/06/20   Minor update release.
+
+   Synchronize with TOMOYO 1.8.2 release.
+
+   Add policy namespace support.

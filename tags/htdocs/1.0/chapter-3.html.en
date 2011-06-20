@@ -96,10 +96,10 @@
 <p>Run the following commands in order to build and install AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.14-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz'
-# wget -O akari-1.0.14-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz.asc'
-# gpg akari-1.0.14-20110511.tar.gz.asc
-# tar -zxf akari-1.0.14-20110511.tar.gz
+# wget -O akari-1.0.15-20110620.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.15-20110620.tar.gz'
+# wget -O akari-1.0.15-20110620.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.15-20110620.tar.gz.asc'
+# gpg akari-1.0.15-20110620.tar.gz.asc
+# tar -zxf akari-1.0.15-20110620.tar.gz
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}
@@ -122,10 +122,10 @@ You must choose CONFIG_MODULES=y for building this module.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.1-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz'
-$ wget -O ccs-tools-1.8.1-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110511.tar.gz.asc'
-$ gpg ccs-tools-1.8.1-20110511.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.1-20110511.tar.gz
+$ wget -O ccs-tools-1.8.2-20110620.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110620.tar.gz'
+$ wget -O ccs-tools-1.8.2-20110620.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110620.tar.gz.asc'
+$ gpg ccs-tools-1.8.2-20110620.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.2-20110620.tar.gz
 $ cd ccstools/
 $ make -s
 $ su
@@ -182,36 +182,36 @@ Creating configuration file for ccs-notifyd ... OK
 
 <p>Before:</p>
 <pre>
-title CentOS (2.6.18-238.5.1.e15)
+title CentOS (2.6.18-238.12.1.e15)
 root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.5.1.e15.img
+kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
+initrd /boot/initrd-2.6.18-238.12.1.e15.img
 </pre>
 
 <p>After:</p>
 <pre>
-title CentOS (2.6.18-238.5.1.e15) with AKARI
+title CentOS (2.6.18-238.12.1.e15) with AKARI
 root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.5.1.e15.img
+kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
+initrd /boot/initrd-2.6.18-238.12.1.e15.img
 </pre>
 
 <p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because /sbin/init unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
 
 <p>Before:</p>
 <pre>
-title CentOS (2.6.18-238.5.1.e15)
+title CentOS (2.6.18-238.12.1.e15)
 root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.5.1.e15.img
+kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
+initrd /boot/initrd-2.6.18-238.12.1.e15.img
 </pre>
 
 <p>After:</p>
 <pre>
-title CentOS (2.6.18-238.5.1.e15) with AKARI
+title CentOS (2.6.18-238.12.1.e15) with AKARI
 root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.5.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.5.1.e15.img
+kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
+initrd /boot/initrd-2.6.18-238.12.1.e15.img
 </pre>
 
 <h3><a name="3.6">3.6. Rebooting your system</a></h3>
@@ -221,10 +221,10 @@ initrd /boot/initrd-2.6.18-238.5.1.e15.img
 <p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
 
 <pre class="output">
-AKARI: 1.0.14   2011/05/11
+AKARI: 1.0.15   2011/06/20
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.1+   2011/05/11
+CCSecurity: 1.8.2   2011/06/20
 Mandatory Access Control activated.
 </pre>
 

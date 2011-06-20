@@ -168,6 +168,15 @@
 <li>14.3. <a href="chapter-14.html.ja#14.3">設定</a></li>
 </ul>
 
+<p><strong>Chapter 15: <a class="black" href="chapter-15.html.ja">名前空間の管理はどのように行いますか？</a></strong></p>
+<ul>
+<li>15.1. <a href="chapter-15.html.ja#15.1">ポリシー名前空間について</a></li>
+<li>15.2. <a href="chapter-15.html.ja#15.2">名前空間はどのように指定しますか？</a></li>
+<li>15.3. <a href="chapter-15.html.ja#15.3">名前空間の異なるドメインへの遷移はどのように行いますか？</a></li>
+<li>15.4. <a href="chapter-15.html.ja#15.4">ポリシーエディタから名前空間をどのように指定しますか？</a></li>
+<li>15.5. <a href="chapter-15.html.ja#15.5">名前空間を利用する上での注意点</a></li>
+</ul>
+
 <h3><a name="appendix" href="index.html.ja#appendix">付録</a></h3>
 
 <p><strong>Appendix A: <a class="black" href="man-pages/index.html.ja">管理ツール</a></strong></p>

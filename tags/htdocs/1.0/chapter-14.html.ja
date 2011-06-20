@@ -31,7 +31,7 @@
 <div id="documentation">
 
 <div class="navheader">
-<p><a href="chapter-13.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="index.html.ja#appendix">&lt;次&gt;</a></p>
+<p><a href="chapter-13.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="chapter-15.html.ja">&lt;次&gt;</a></p>
 </div>
 
 <h2>Chapter 14: Apache で mod_ccs モジュールを使用する</h2>
@@ -65,7 +65,7 @@
 <p>mod_ccs モジュールのソースコードをダウンロードします：</p>
 
 <pre class="command">
-# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=4393&amp;root=tomoyo'
+# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=5152&amp;root=tomoyo'
 </pre>
 
 <p>mod_ccs モジュールをコンパイル／インストール／有効化します：</p>
@@ -251,7 +251,7 @@ EOF
 <a href="index.html.ja">目次</a>
 </td>
 <td class="docs-next">
-<a href="index.html.ja#appendix">次</a>
+<a href="chapter-15.html.ja">次</a>
 </td>
 </tr>
 <tr>
@@ -261,7 +261,7 @@ EOF
 <td class="docs-home">
 </td>
 <td class="docs-next-description">
-<p>付録</p>
+<p>Chapter 15: 名前空間の管理はどのように行いますか？</p>
 </td>
 </tr>
 </table>

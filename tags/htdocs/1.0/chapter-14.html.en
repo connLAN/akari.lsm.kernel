@@ -31,7 +31,7 @@
 <div id="documentation">
 
 <div class="navheader">
-<p><a href="chapter-13.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="index.html.en#appendix">&lt;Next&gt;</a></p>
+<p><a href="chapter-13.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="chapter-15.html.en">&lt;Next&gt;</a></p>
 </div>
 
 <h2>Chapter 14: Securing Apache with the mod_ccs module</h2>
@@ -65,7 +65,7 @@
 <p>Download the source code for the mod_ccs:</p>
 
 <pre class="command">
-# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=4393&amp;root=tomoyo'
+# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=5152&amp;root=tomoyo'
 </pre>
 
 <p>Compile, install and activate mod_ccs:</p>
@@ -251,7 +251,7 @@ EOF
 <a href="index.html.en">Index</a>
 </td>
 <td class="docs-next">
-<a href="index.html.en#appendix">Next</a>
+<a href="chapter-15.html.en">Next</a>
 </td>
 </tr>
 <tr>
@@ -261,7 +261,7 @@ EOF
 <td class="docs-home">
 </td>
 <td class="docs-next-description">
-<p>Appendix</p>
+<p>Chapter 15: How do I manage policy namespace?</p>
 </td>
 </tr>
 </table>

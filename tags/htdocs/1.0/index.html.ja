@@ -53,6 +53,7 @@
 <p><strong>Chapter 12: <a class="black" href="chapter-12.html.ja">ユーザ認証の強化</a></strong></p>
 <p><strong>Chapter 13: <a class="black" href="chapter-13.html.ja">カーネルの外部でプログラムの実行可否を判断する</a></strong></p>
 <p><strong>Chapter 14: <a class="black" href="chapter-14.html.ja">Apache で mod_ccs モジュールを使用する</a></strong></p>
+<p><strong>Chapter 15: <a class="black" href="chapter-15.html.ja">名前空間の管理はどのように行いますか？</a></strong></p>
 
 <h3><a name="appendix" href="index-long.html.ja#appendix">付録</a></h3>
 

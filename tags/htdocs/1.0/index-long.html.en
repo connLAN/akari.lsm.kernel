@@ -168,6 +168,15 @@
 <li>14.3. <a href="chapter-14.html.en#14.3">Configuration</a></li>
 </ul>
 
+<p><strong>Chapter 15: <a class="black" href="chapter-15.html.en">How do I manage policy namespace?</a></strong></p>
+<ul>
+<li>15.1. <a href="chapter-15.html.en#15.1">About policy namespace</a></li>
+<li>15.2. <a href="chapter-15.html.en#15.2">How to specify namespaces?</a></li>
+<li>15.3. <a href="chapter-15.html.en#15.3">How to specify domain transition across namespaces?</a></li>
+<li>15.4. <a href="chapter-15.html.en#15.4">How to use namespace from policy editor?</a></li>
+<li>15.5. <a href="chapter-15.html.en#15.5">Pitfalls when using namespaces</a></li>
+</ul>
+
 <h3><a name="appendix" href="index.html.en#appendix">Appendix</a></h3>
 
 <p><strong>Appendix A: <a class="black" href="man-pages/index.html.en">The userspace tools</a></strong></p>

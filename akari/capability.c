@@ -124,7 +124,7 @@ static bool ccs_same_capability_acl(const struct ccs_acl_info *a,
  */
 int ccs_write_capability(struct ccs_acl_param *param)
 {
-	struct ccs_capability_acl e = {	.head.type = CCS_TYPE_CAPABILITY_ACL };
+	struct ccs_capability_acl e = { .head.type = CCS_TYPE_CAPABILITY_ACL };
 	const char *operation = ccs_read_token(param);
 	for (e.operation = 0; e.operation < CCS_MAX_CAPABILITY_INDEX;
 	     e.operation++) {

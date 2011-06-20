@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja-JP">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI : 導入ガイド : Chapter 15</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.ja"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.ja" title="AKARI ホーム">ホーム</a></li>
+<li id="tomoyo-about"><a href="../about.html.ja" title="AKARI の詳細">詳細</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.ja" title="公式ドキュメント">ドキュメント</a></li>
+<li id="tomoyo-support"><a href="../support.html.ja" title="サポート情報">サポート</a></li>
+<li id="tomoyo-links"><a href="../links.html.ja" title="Links">リンク</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-15.html.en" title="Go to English page">English page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-14.html.ja">&lt;前&gt;</a> <a href="index.html.ja">&lt;目次&gt;</a> <a href="index.html.ja#appendix">&lt;次&gt;</a></p>
+</div>
+
+<h2>Chapter 15: 名前空間の管理はどのように行いますか？</h2>
+
+<h3><a name="15.1">15.1. ポリシー名前空間について</a></h3>
+
+<p>この導入ガイドでは今まで、ドメインの名前は &lt;kernel&gt; で始まると説明してきました。しかし、それが正しいのは &lt;kernel&gt; 名前空間においてのみです。 TOMOYO 1.8.2 で導入されたポリシー名前空間を利用すると、 &lt;kernel&gt; 以外の名前空間を利用することができる（つまり、ドメインの名前が &lt;kernel&gt; 以外で始まることができる）ようになります。</p>
+
+<p>それぞれのポリシー名前空間は、独立したドメインポリシー、例外ポリシー、プロファイルのセットを持っています。ある名前空間が持つセットは他の名前空間が持つセットとは独立しています。この独立性により、あなた（および特定のアプリケーション向けのポリシーを作成して配布したい人）は、（他の名前空間へとジャンプするためのディレクティブを他の名前空間用のポリシーファイルに追加する必要があるという点を除いて）他の名前空間との干渉を心配することなくポリシーファイルを作成することが可能になります。</p>
+
+<h3><a name="15.2">15.2. 名前空間はどのように指定しますか？</a></h3>
+
+<p>この導入ガイドでは、これ以降、名前空間であることを示すために &lt;$namespace&gt; という表記を用います。 $namespace は TOMOYO の文字列表現規則に沿った任意の単語（例： /usr/sbin/sshd 、 /usr/bin/httpd 、 Apache ）です。 &lt;kernel&gt; 名前空間は最初から定義されている名前空間です。 &lt;kernel&gt; 名前空間だけを利用する限り、ポリシーファイルは TOMOYO 1.8.1 と互換性があります。</p>
+
+<p>ドメインの名前は &lt;$namespace&gt; で始まります。例えば、 &lt;kernel&gt; ドメインや &lt;kernel&gt; /sbin/init ドメインは &lt;kernel&gt; 名前空間に属しているのに対して、 &lt;/usr/sbin/sshd&gt; ドメインや &lt;/usr/sbin/sshd&gt; /bin/bash ドメインは &lt;/usr/sbin/sshd&gt; 名前空間に属しています。</p>
+
+<img src="media/fig-2-6.png" alt="fig-2-6.png" width="400" height="300">
+<img src="media/fig-15-1.png" alt="fig-15-1.png" width="400" height="300">
+
+<p>それぞれの名前空間は独立したドメインポリシー、例外ポリシー、プロファイルのセットを持っていますが、 /proc/ccs/ ディレクトリと /etc/ccs/policy/ ディレクトリは（簡単さと互換性のために）全ての名前空間で共有するようになっています。言い換えると、 /proc/ccs/domain_policy /proc/ccs/exception_policy /proc/ccs/profile および /etc/ccs/domain_policy.conf /etc/ccs/exception_policy.conf /etc/ccs/profile.conf は全ての名前空間用のポリシーを保持しています。</p>
+
+<p>/proc/ccs/exception_policy および /proc/ccs/profile に対して名前空間を指定するには、 &lt;$namespace&gt; というプレフィックスを各行の先頭に追加してください。以下に、 &lt;kernel&gt; と &lt;/usr/sbin/httpd&gt; という名前空間を持つ /proc/ccs/profile の例を示します：</p>
+
+<pre>
+&lt;kernel&gt; PROFILE_VERSION=20100903
+&lt;kernel&gt; 0-COMMENT=-----Disabled Mode-----
+&lt;kernel&gt; 0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+&lt;kernel&gt; 1-COMMENT=-----Learning Mode-----
+&lt;kernel&gt; 1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+&lt;kernel&gt; 2-COMMENT=-----Permissive Mode-----
+&lt;kernel&gt; 2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+&lt;kernel&gt; 3-COMMENT=-----Enforcing Mode-----
+&lt;kernel&gt; 3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; PROFILE_VERSION=20100903
+&lt;/usr/sbin/httpd&gt; 0-COMMENT=-----Disabled Mode-----
+&lt;/usr/sbin/httpd&gt; 0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 1-COMMENT=-----Learning Mode-----
+&lt;/usr/sbin/httpd&gt; 1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 2-COMMENT=-----Permissive Mode-----
+&lt;/usr/sbin/httpd&gt; 2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 3-COMMENT=-----Enforcing Mode-----
+&lt;/usr/sbin/httpd&gt; 3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>互換性のために、 &lt;kernel&gt; 名前空間を指定する場合には &lt;kernel&gt; というプレフィックスを省略することができるようになっています。</p>
+
+<p>/proc/ccs/domain_policy に対して名前空間を指定するには、何の配慮も不要です。これは、ドメインポリシーがドメイン名を宣言する行から始まるブロックの集まりとして構成されており、ドメイン名の中にそのドメインが属している名前空間の情報が含まれているからです。以下に、 &lt;kernel&gt; と &lt;/usr/sbin/httpd&gt; という名前空間を持つ /proc/ccs/domain_policy の例を示します：</p>
+
+<pre>
+&lt;kernel&gt;
+use_profile 0
+use_group 0
+
+&lt;kernel&gt; /sbin/init
+use_profile 0
+use_group 0
+
+&lt;/usr/sbin/httpd&gt;
+use_profile 1
+use_group 0
+
+&lt;/usr/sbin/httpd&gt; /var/www/cgi-bin/counter.cgi
+use_profile 1
+use_group 0
+</pre>
+
+<h3><a name="15.3">15.3. 名前空間の異なるドメインへの遷移はどのように行いますか？</a></h3>
+
+<p>上で説明したように、ある名前空間から他の名前空間へとジャンプするためのディレクティブを追加する必要があります。そのために２つのディレクティブが定義されています。</p>
+
+<p>reset_domain ディレクティブは、このディレクティブで指定されたプログラムのパス名を持つ名前空間へと遷移するようにします。構文は <a href="policy-specification/exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> ディレクティブと同じです。以下の例では /usr/sbin/sshd が実行されると &lt;/usr/sbin/sshd&gt; ドメインへと遷移するようになります：</p>
+
+<pre>
+reset_domain /usr/sbin/sshd from any
+</pre>
+
+<p>no_reset_domain ディレクティブは、 reset_domain ディレクティブの効果を打ち消します。構文は <a href="policy-specification/exception-policy-syntax.html.en#no_initialize_domain">no_initialize_domain</a> ディレクティブと同じです。</p>
+
+<p>また、条件付きアクセス許可の auto_domain_transition= という指定を用いて、ポリシーで許可されるのと同時に任意の名前空間へと遷移させることができます。（ただし、ポリシーで許可されたからといって、ドメイン遷移の後にそのアクセス要求が成功するという保証は存在しないため、利用する場合には注意してください。）</p>
+
+<pre>
+file pivot_root /usr/lxc/lxc1/ /usr/lxc/lxc1/oldroot/ auto_domain_transition="&lt;lxc1&gt;"
+file pivot_root /usr/lxc/lxc2/ /usr/lxc/lxc2/oldroot/ auto_domain_transition="&lt;lxc2&gt;"
+</pre>
+
+<p>reset_domain ディレクティブは指定されたプログラムのパス名と同じ名前のドメインへしか遷移できないのに対して、条件付きアクセス許可の auto_domain_transition= という指定では任意の単語のドメインへと遷移することができます。言い換えると、前者は &lt;/usr/sbin/httpd&gt; のようなドメインへしか遷移できないのに対して、後者は &lt;/usr/sbin/httpd&gt; や &lt;Apache&gt; のようなドメインへ遷移できます。</p>
+
+<p>task auto_domain_transition ディレクティブおよび task manual_domain_transition ディレクティブは、このディレクティブで指定するドメイン名の中に既に名前空間が含まれているため、何の変更もありません。そのため、以下のように指定することができます：</p>
+
+<pre>
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo00.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo01.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo02.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo03.com
+</pre>
+
+<p>reset_domain ディレクティブおよび条件付きアクセス許可の auto_domain_transition= という指定は名前空間と同じ名前のドメインへしか遷移できないのに対して、 task auto_domain_transition ディレクティブおよび task manual_domain_transition ディレクティブは任意のドメインへと遷移することができます。言い換えると、前者は &lt;/usr/sbin/httpd&gt; のようなドメインへしか遷移できないのに対して、後者は &lt;/usr/sbin/httpd&gt; や &lt;/usr/sbin/httpd&gt; /var/www/cgi-bin/counter.cgi のようなドメインへ遷移できます。</p>
+
+<h3><a name="15.4">15.4. ポリシーエディタから名前空間をどのように指定しますか？</a></h3>
+
+<p><code>ccs-editpolicy</code> は最初に編集する名前空間を &lt;$namespace&gt; に設定するための新しいコマンドラインオプションとして <strong>&lt;$namespace&gt;</strong> がサポートされています。デフォルトの名前空間は &lt;kernel&gt; です。名前空間の指定間違いに注意してください。 <code>ccs-editpolicy</code> は現在編集中の名前空間に基づいて表示内容をフィルタリングするため、指定を間違えた場合、期待したとおりにエントリが表示されなくなります。</p>
+
+<p>&lt;&lt;&lt; Exception Policy Editor &gt;&gt;&gt; 画面および &lt;&lt;&lt; Profile Editor &gt;&gt;&gt; 画面に関しては、 &lt;&lt;&lt; Domain Transition Editor &gt;&gt;&gt; 画面の３行目に現在選択されているドメイン名が表示されるのと同様に、現在編集中の名前空間の名前が３行目に表示されます。 w キーの後に n キーを押すと &lt;&lt;&lt; Namespace Selector &gt;&gt;&gt; 画面に切り替わって、編集したい名前空間を選択することができます。</p>
+
+<p><code>ccs-editpolicy</code> を用いて新しい名前空間を作成して、その名前空間用のプロファイルを作成して、エントリを追加することも可能ですが、より簡単に行うために <code>ccs-loadpolicy</code> を利用することを推奨します。例えば、 &lt;/usr/sbin/httpd&gt; 名前空間で利用するためのプロファイルを作成するために &lt;kernel&gt; 名前空間で利用しているプロファイルを複製するには、以下のような <code>awk</code> スクリプトを利用することができます：</p>
+
+<pre class="command">
+# awk ' { print "&lt;/usr/sbin/httpd&gt; " $0 } ' /etc/ccs/profile.conf | ccs-loadpolicy -p
+</pre>
+
+<p>もし、 &lt;kernel&gt; というプレフィックスが既に /etc/ccs/profile.conf の中で指定されている場合、以下のようなスクリプトになるでしょう：</p>
+
+<pre class="command">
+# grep '^&lt;kernel&gt; ' /etc/ccs/profile.conf | awk ' { $1 = "&lt;/usr/sbin/httpd&gt; "; print $0 } ' | ccs-loadpolicy -p
+</pre>
+
+<p>名前空間の目的は、独立したドメインポリシー、例外ポリシー、プロファイルのセットを利用可能にすることであることを忘れないでください。既存のセットから複製しても構いませんが、既存のセットから複製しなければいけないわけではありません。</p>
+
+<h3><a name="15.5">15.5. 名前空間を利用する上での注意点</a></h3>
+
+<p>名前空間は便利ですが、注意すべき点が幾つかあります。</p>
+
+<ul>
+<li>reset_domain ディレクティブによるドメイン遷移が発生するようなプログラム実行要求は、遷移先のドメインが定義されていない場合、あるいは、遷移先のドメインに割り当てられているプロファイルが定義されていない場合には、プロファイルの設定に関係なく（以下のようなエラーメッセージがコンソールに表示されて）拒否されます。これは、 reset_domain ディレクティブは、異なるポリシーのセットを適用するという明確な意思表示であり、現在の名前空間の設定を遷移先の名前空間へと自動的に継承すべきではないと考えられるためです。そのため、<strong>プロセスが目的の名前空間へと到達しようとする時点よりも前に、その名前空間のためのドメインポリシー、例外ポリシー、プロファイルを明示的にロードしておく必要があります。</strong>
+<pre class="output">
+ERROR: Domain '&lt;/usr/sbin/httpd&gt;' not ready.
+</pre>
+</li>
+<li>特定の名前空間用のポリシーを、他の名前空間用のポリシーとは独立して作成することが可能ですが、明示的に指定されない限りプロセスは異なる名前空間へと遷移しません。そのため、条件付きアクセス許可の auto_domain_transition= という指定、 task auto_domain_transition ディレクティブ、 task manual_domain_transition ディレクティブの何れかを指定しない限り、<strong>（名前空間を使うのであれば、） reset_domain ディレクティブを含まない例外ポリシーは役に立たないでしょう。</strong></li>
+<li>プロファイルを作成するために割り当てられたメモリは解放できないのと同様に、名前空間を作成するために割り当てられたメモリは解放できません。しかし、 /proc/ccs/stat インタフェースから使用してよいメモリ量の上限を制御できるため、普通の使い方であれば問題になることは無いでしょう。</li>
+</ul>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-14.html.ja">前</a>
+</td>
+<td class="docs-index">
+<a href="index.html.ja">目次</a>
+</td>
+<td class="docs-next">
+<a href="index.html.ja#appendix">次</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 14: Apache で mod_ccs モジュールを使用する</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>付録</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-15.html.en">English page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

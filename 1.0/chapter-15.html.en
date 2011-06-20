@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en-US">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta http-equiv="content-style-type" content="text/css">
+<link rel="stylesheet" href="../media/tomoyolinux.css" media="all" type="text/css">
+<title>AKARI : The Official Guide : Chapter 15</title>
+</head>
+
+<body>
+
+<div id="titlebar">
+<a href="../index.html.en"><img src="../media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+</div>
+
+<div id="navbar" class="tomoyo-documentation">
+<ul id="navbarlist">
+<li id="tomoyo-home"><a href="../index.html.en" title="AKARI Home Page">Home</a></li>
+<li id="tomoyo-about"><a href="../about.html.en" title="About AKARI">About</a></li>
+<li id="tomoyo-documentation"><a href="../documentation.html.en" title="Official Documentation">Documentation</a></li>
+<li id="tomoyo-support"><a href="../support.html.en" title="Support information">Support</a></li>
+<li id="tomoyo-links"><a href="../links.html.en" title="Links">Links</a></li>
+</ul>
+<ul id="switch-language">
+<li id="tomoyo-switch-language"><a href="chapter-15.html.ja" title="Go to Japanese page">Japanese page</a></li>
+</ul>
+</div>
+
+<div id="content">
+
+<div id="documentation">
+
+<div class="navheader">
+<p><a href="chapter-14.html.en">&lt;Prev&gt;</a> <a href="index.html.en">&lt;Index&gt;</a> <a href="index.html.en#appendix">&lt;Next&gt;</a></p>
+</div>
+
+<h2>Chapter 15: How do I manage policy namespace?</h2>
+
+<h3><a name="15.1">15.1. About policy namespace</a></h3>
+
+<p>The documentation so far has only shown domains that begin with "&lt;kernel&gt;". A new feature introduced in TOMOYO 1.8.2 introduces the concept of namespaces. Domains that start with "&lt;kernel&gt;" belong to the "&lt;kernel&gt;" namespace, but different namespaces can now be used with domains that start with "&lt;$namespace&gt;", where $namespace can be any arbitrary name.</p>
+
+<p>Each policy namespace has its own set of domain policy, exception policy and profiles, which are all independent of other namespaces. This independency allows you (and those who want to develop and distribute policy for specific applications) to develop policy files without worrying interference among namespaces, except that directives for jumping to different namespaces need to be added to other namespaces.</p>
+
+<h3><a name="15.2">15.2. How to specify namespaces?</a></h3>
+
+<p>The notation "&lt;$namespace&gt;" will be used hereafter, in which $namespace can be a any word (e.g. "/usr/sbin/sshd", "/usr/bin/httpd", "Apache") in TOMOYO's string representation rule. The "&lt;kernel&gt;" namespace is the built-in namespace. As long as you use only "&lt;kernel&gt;" namespace, policy files remain compatible with TOMOYO 1.8.1.</p>
+
+<p>A domain name starts with "&lt;$namespace&gt;". For example, "&lt;kernel&gt;" domain and "&lt;kernel&gt; /sbin/init" domain belong to "&lt;kernel&gt;" namespace whereas "&lt;/usr/sbin/sshd&gt;" domain and "&lt;/usr/sbin/sshd&gt; /bin/bash" domain belong to "&lt;/usr/sbin/sshd&gt;" namespace.</p>
+
+<img src="media/fig-2-6.png" alt="fig-2-6.png" width="400" height="300">
+<img src="media/fig-15-1.png" alt="fig-15-1.png" width="400" height="300">
+
+<p>Although each namespace has its own set of domain policy, exception policy and profiles, the policy for all namespaces are still contained within the same files within /proc/ccs/ and /etc/ccs/policy/ for simplicity and compatibility reasons. In other words, the policy for each namespace is not split into separate files.</p>
+
+<p>To specify namespace in /proc/ccs/exception_policy and /proc/ccs/profile , add "&lt;$namespace&gt;" prefix to each line. An example of /proc/ccs/profile containing "&lt;kernel&gt;" and "&lt;/usr/sbin/httpd&gt;" namespace looks like below:</p>
+
+<pre>
+&lt;kernel&gt; PROFILE_VERSION=20100903
+&lt;kernel&gt; 0-COMMENT=-----Disabled Mode-----
+&lt;kernel&gt; 0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+&lt;kernel&gt; 1-COMMENT=-----Learning Mode-----
+&lt;kernel&gt; 1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+&lt;kernel&gt; 2-COMMENT=-----Permissive Mode-----
+&lt;kernel&gt; 2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+&lt;kernel&gt; 3-COMMENT=-----Enforcing Mode-----
+&lt;kernel&gt; 3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;kernel&gt; 3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; PROFILE_VERSION=20100903
+&lt;/usr/sbin/httpd&gt; 0-COMMENT=-----Disabled Mode-----
+&lt;/usr/sbin/httpd&gt; 0-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 0-CONFIG={ mode=disabled grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 1-COMMENT=-----Learning Mode-----
+&lt;/usr/sbin/httpd&gt; 1-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 1-CONFIG={ mode=learning grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 2-COMMENT=-----Permissive Mode-----
+&lt;/usr/sbin/httpd&gt; 2-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 2-CONFIG={ mode=permissive grant_log=no reject_log=yes }
+&lt;/usr/sbin/httpd&gt; 3-COMMENT=-----Enforcing Mode-----
+&lt;/usr/sbin/httpd&gt; 3-PREFERENCE={ max_audit_log=1024 max_learning_entry=2048 enforcing_penalty=0 }
+&lt;/usr/sbin/httpd&gt; 3-CONFIG={ mode=enforcing grant_log=no reject_log=yes }
+</pre>
+
+<p>For compatibility, "&lt;kernel&gt;" prefix can be omitted when specifying "&lt;kernel&gt;" namespace.</p>
+
+<p>To specify namespace in /proc/ccs/domain_policy , no special care needs to be taken. This is because domain policy consists with blocks where a block starts with a domainname declaration line and the domain name contains namespace which the domain belongs to. An example of /proc/ccs/domain_policy containing "&lt;kernel&gt;" and "&lt;/usr/sbin/httpd&gt;" namespace looks like this:</p>
+
+<pre>
+&lt;kernel&gt;
+use_profile 0
+use_group 0
+
+&lt;kernel&gt; /sbin/init
+use_profile 0
+use_group 0
+
+&lt;/usr/sbin/httpd&gt;
+use_profile 1
+use_group 0
+
+&lt;/usr/sbin/httpd&gt; /var/www/cgi-bin/counter.cgi
+use_profile 1
+use_group 0
+</pre>
+
+<h3><a name="15.3">15.3. How to specify domain transition across namespaces?</a></h3>
+
+<p>As explained above, directives for jumping to different namespaces needs to be added to other namespaces. Two more directives are added.</p>
+
+<p>The "reset_domain" directive causes programs to run in the namespace specified by this program. The syntax is same with <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive. Below example causes all executions of /usr/sbin/sshd to be transit to "&lt;/usr/sbin/sshd&gt;" domain:</p>
+
+<pre>
+reset_domain /usr/sbin/sshd from any
+</pre>
+
+<p>The "no_reset_domain" directive cancels the effect of "reset_domain" directive. The syntax is same with <a href="policy-specification/exception-policy-syntax.html.en#no_initialize_domain">no_initialize_domain</a> directive.</p>
+
+<p>Also, "auto_domain_transition=" part in the conditional ACL allows transition to arbitrary namespaces upon permitted by policy (but use with caution because there is no guarantee that the access request that was permitted by policy never fails after the domain transition).</p>
+
+<pre>
+file pivot_root /usr/lxc/lxc1/ /usr/lxc/lxc1/oldroot/ auto_domain_transition="&lt;lxc1&gt;"
+file pivot_root /usr/lxc/lxc2/ /usr/lxc/lxc2/oldroot/ auto_domain_transition="&lt;lxc2&gt;"
+</pre>
+
+<p>While "reset_domain" directive allows only transition to the domain where the name of the namespace is equals to the name of the program, "auto_domain_transition=" part in the conditional ACL allows transition to the domain where the name of the namespace is an arbitrary word. In other words, the former can transit to domains like "&lt;/usr/sbin/httpd&gt;" whereas the latter can transit to domains like "&lt;/usr/sbin/httpd&gt;" and "&lt;Apache&gt;".</p>
+
+<p>Regarding "task auto_domain_transition" directive and "task manual_domain_transition" directive, there is no change because these directives receive a domainname which already contains the name of the namespace. Thus, you can specify like below:</p>
+
+<pre>
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo00.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo01.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo02.com
+task manual_domain_transition &lt;Apache&gt; /www.tomoyo03.com
+</pre>
+
+<p>While "reset_domain" directive and "auto_domain_transition=" part in the conditional ACL allow only transition to the domain where the name of the domain is equal to the name of the domain's namespace, "task auto_domain_transition" directive and "task manual_domain_transition" directive allow transition to arbitrary domains. In other words, the former can transit to domains like "&lt;/usr/sbin/httpd&gt;" whereas the latter can transit to domains like "&lt;/usr/sbin/httpd&gt;" and "&lt;/usr/sbin/httpd&gt; /var/www/cgi-bin/counter.cgi".</p>
+
+<h3><a name="15.4">15.4. How to use namespace from policy editor?</a></h3>
+
+<p><code>ccs-editpolicy</code> supports new command line option <strong>&lt;$namespace&gt;</strong> which sets the initial namespace to edit to &lt;$namespace&gt; namespace. The default namespace is "&lt;kernel&gt;". Be careful not to typo the namespace. Entries will not be shown as you expect if you typo, for <code>ccs-editpolicy</code> filters entries based on the namespace currently editing.</p>
+
+<p>Regarding &lt;&lt;&lt; Exception Policy Editor &gt;&gt;&gt; screen and &lt;&lt;&lt; Profile Editor &gt;&gt;&gt; screen, the name of namespace currently editing is shown on the third line of the screen as with the name of domainname currently selected is shown on the third line of the &lt;&lt;&lt; Domain Transition Editor &gt;&gt;&gt; screen. You can jump to &lt;&lt;&lt; Namespace Selector &gt;&gt;&gt; screen by pressing "n" key after pressing "w" key in order to select namespace to edit.</p>
+
+<p>Although it is possible to create a new namespace and create profiles for the new namespace and add entries using <code>ccs-editpolicy</code>, it is recommended to use <code>ccs-loadpolicy</code> for your convenience. For example, to clone profile for "&lt;kernel&gt;" namespace in order to use for "&lt;/usr/sbin/httpd&gt;" namespace, you can use an <code>awk</code> script like below:</p>
+
+<pre class="command">
+# awk ' { print "&lt;/usr/sbin/httpd&gt; " $0 } ' /etc/ccs/profile.conf | ccs-loadpolicy -p
+</pre>
+
+<p>If /etc/ccs/profile.conf already contains the "&lt;kernel&gt;" prefix, the script will look like below:</p>
+
+<pre class="command">
+# grep '^&lt;kernel&gt; ' /etc/ccs/profile.conf | awk ' { $1 = "&lt;/usr/sbin/httpd&gt; "; print $0 } ' | ccs-loadpolicy -p
+</pre>
+
+<p>Note that the purpose of namespace is to allow having independent set of domain policy, exception policy and profile. You don't have to clone from existing files.</p>
+
+<h3><a name="15.5">15.5. Pitfalls when using namespaces</a></h3>
+
+<p>Namespace is convenient, but there are a few pitfalls that you need to take care.</p>
+
+<ul>
+<li>Program execution request that causes domain transition by "reset_domain" directive will be denied (with error messages like below printed on the console) regardless of profile configurations if either "the domain to transit to is not defined" or "the profile for the domain to transit to is not defined" is true. This is because "reset_domain" directive is considered as a clear sign for applying different set of policy files and therefore should not automatically inherit configuration from current namespace. <strong>You have to explicitly load domain policy, exception policy and profile for the namespace by the moment a process attempts to transit to that namespace.</strong>
+<pre class="output">
+ERROR: Domain '&lt;/usr/sbin/httpd&gt;' not ready.
+</pre>
+</li>
+<li>Although you can develop policy for specific applications independently, the process will not transit to different namespaces unless explictly specified. <strong>When using namespaces, exception policy without "reset_domain" directive will not be useful</strong> unless one of "auto_domain_transition=" part in the conditional ACL, "task auto_domain_transition" directive or "task manual_domain_transition" directive is specified.</li>
+<li>Memory allocated for creating namespaces cannot be released just like memory allocated for creating profiles cannot be released. This should not matter for normal usage, for the memory quota can be controlled via /proc/ccs/stat interface.</li>
+</ul>
+
+</div><!-- documentation -->
+
+</div><!-- content -->
+
+<div id="navfooter">
+<hr>
+<table>
+<tr>
+<td class="docs-previous">
+<a href="chapter-14.html.en">Prev</a>
+</td>
+<td class="docs-index">
+<a href="index.html.en">Index</a>
+</td>
+<td class="docs-next">
+<a href="index.html.en#appendix">Next</a>
+</td>
+</tr>
+<tr>
+<td class="docs-previous-description">
+<p>Chapter 14: Securing Apache with the mod_ccs module</p>
+</td>
+<td class="docs-home">
+</td>
+<td class="docs-next-description">
+<p>Appendix</p>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="footer">
+<p class="language">Go to <a href="chapter-15.html.ja">Japanese page</a>.</p>
+<p class="timestamp">Last modified: $Date$</p>
+<p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
+</div>
+
+</body>
+</html>

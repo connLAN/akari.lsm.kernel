@@ -28,7 +28,7 @@ $(obj)/policy/stat.conf:
 
 $(obj)/builtin-policy.h: $(obj)/policy/profile.conf $(obj)/policy/exception_policy.conf $(obj)/policy/domain_policy.conf $(obj)/policy/manager.conf $(obj)/policy/stat.conf
 	@echo Generating built-in policy for TOMOYO 1.8.x.
-	@echo "static char ccs_builtin_profile[] __initdata = " > $@.tmp
+	@echo "static char ccs_builtin_profile[] __initdata =" > $@.tmp
 	@sed -e 's/\\/\\\\/g' -e 's/\"/\\"/g' -e 's/\(.*\)/"\1\\n"/' < $(obj)/policy/profile.conf >> $@.tmp
 	@echo "\"\";" >> $@.tmp
 	@echo "static char ccs_builtin_exception_policy[] __initdata =" >> $@.tmp

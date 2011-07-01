@@ -40,7 +40,7 @@
 
 <p>In AKARI, the technique used to enforce MAC makes use of something called <strong>"domains"</strong>. This is an important concept. Every process in a system belongs to a domain, which is determined by its execution history. Broadly speaking, every time a process is executed, a new domain is created. Any particular domain is represented by a concatenation of all previously executed pathanames. This creation of a new domain can also be called a <strong>"domain transition"</strong>. Have a look at this diagram:</p>
 
-<img src="media/fig-3-1.png" alt="fig-3-1.png" width="600" height="450">
+<img src="media/domain_transition.png" alt="Domain Transition" width="600" height="450">
 
 <p>The kernel is always the first domain and is represented in AKARI by <strong>&lt;kernel&gt;</strong>. In this example, the kernel then executes <code>/sbin/init</code>. Because a process has been executed, a new domain is created which in this case is the domain <strong>&lt;kernel&gt; /sbin/init</strong>. The bootup scripts are then executed, which result in further domains being created.</p>
 
@@ -184,11 +184,11 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>Thus, there are four default profiles that each play a different role:</p>
 
-<img src="media/fig-2-5-en.png" alt="fig-2-5-en.png" width="640" height="320">
+<img src="media/default_profiles-en.png" alt="Default profiles" width="640" height="320">
 
 <p>Each of these profiles can be assigned to a domain:</p>
 
-<img src="media/fig-2-6.png" alt="fig-2-6.png" width="600" height="450">
+<img src="media/kernel_namespace.png" alt="Domain refers profiles" width="600" height="450">
 
 <p>The "Learning Mode" profile is the feature of AKARI that makes developing policy very easy. This mode will automatically generate policy for any domain that has this profile selected. This can then be developed and refined into a solid policy. The other profiles, "Permissive Mode" and "Enforcing Mode", are for later on when a domain is ready to be restricted.</p>
 

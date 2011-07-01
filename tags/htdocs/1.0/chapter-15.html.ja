@@ -48,8 +48,8 @@
 
 <p>ドメインの名前は &lt;$namespace&gt; で始まります。例えば、 &lt;kernel&gt; ドメインや &lt;kernel&gt; /sbin/init ドメインは &lt;kernel&gt; 名前空間に属しているのに対して、 &lt;/usr/sbin/sshd&gt; ドメインや &lt;/usr/sbin/sshd&gt; /bin/bash ドメインは &lt;/usr/sbin/sshd&gt; 名前空間に属しています。</p>
 
-<img src="media/fig-2-6.png" alt="fig-2-6.png" width="400" height="300">
-<img src="media/fig-15-1.png" alt="fig-15-1.png" width="400" height="300">
+<img src="media/kernel_namespace.png" alt="Default namespace" width="400" height="300">
+<img src="media/sshd_namespace.png" alt="Namespace for SSH session" width="400" height="300">
 
 <p>それぞれの名前空間は独立したドメインポリシー、例外ポリシー、プロファイルのセットを持っていますが、 /proc/ccs/ ディレクトリと /etc/ccs/policy/ ディレクトリは（簡単さと互換性のために）全ての名前空間で共有するようになっています。言い換えると、 /proc/ccs/domain_policy /proc/ccs/exception_policy /proc/ccs/profile および /etc/ccs/domain_policy.conf /etc/ccs/exception_policy.conf /etc/ccs/profile.conf は全ての名前空間用のポリシーを保持しています。</p>
 

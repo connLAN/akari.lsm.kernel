@@ -40,7 +40,7 @@
 
 <p>AKARI では、強制アクセス制御の適用は<strong>ドメイン</strong>という単位で行われます。これは重要な概念です。システム上に存在する全てのプロセスはそれぞれ１個のドメインに属しています。ドメインはプロセスの実行履歴により決定されます。大まかに言うと、プログラムが実行されるたびに新しいドメインが作成されます。あるドメインの名前はそのドメインに到達するまでに実行された全てのプログラムのパス名を連結したものとして定義されます。このドメインを作成することは<strong>ドメイン遷移</strong>と呼ばれています。以下の図を見てください：</p>
 
-<img src="media/fig-3-1.png" alt="fig-3-1.png" width="600" height="450">
+<img src="media/domain_transition.png" alt="Domain Transition" width="600" height="450">
 
 <p>カーネルは常に最初のドメインであり、 AKARI においては <strong>&lt;kernel&gt;</strong> というドメイン名で定義されます。この例では、カーネルが <code>/sbin/init</code> を実行します。プログラムが実行されたことにより、新しいドメイン、この場合は <strong>&lt;kernel&gt; /sbin/init</strong> という名前を持つドメインが作成されます。起動スクリプトが実行されると、より多くのドメインが作成されていきます。</p>
 
@@ -184,11 +184,11 @@
 
 <p>デフォルトでは役割の異なる４つのプロファイルが定義されています：</p>
 
-<img src="media/fig-2-5-ja.png" alt="fig-2-5-ja.png" width="640" height="320">
+<img src="media/default_profiles-ja.png" alt="Default profiles" width="640" height="320">
 
 <p>これらのプロファイルをドメインへと割り当てていきます：</p>
 
-<img src="media/fig-2-6.png" alt="fig-2-6.png" width="600" height="450">
+<img src="media/kernel_namespace.png" alt="Domain refers profiles" width="600" height="450">
 
 <p>学習モード用プロファイルというのはポリシーの作成を容易にするための AKARI の特徴です。学習モードが割り当てられたドメインではドメインポリシーが自動的に作成されます。学習モードで作成されたポリシーを精製していくことでしっかりとしたポリシーを作成することができます。他のプロファイル（確認モード用と強制モード用）は後でドメインの動作に制限をかける際に利用します。</p>
 

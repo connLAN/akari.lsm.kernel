@@ -47,9 +47,9 @@
 <p>In an operating system (OS), <strong>each program or process is mostly unrestricted</strong> in the tasks that they are able to perform (see illustration below). A security focused OS should implement some form of restriction that prevents a process from performing tasks that they should not perform, or that the administrator specifically wants to prevent them from performing. For example, a web server such as Apache should be allowed to provide only web services. It should not have access to areas of the filesystem that it does not need, and it should not be allowed to start or interact with other unrelated processes. The Linux filesystem Access Control Lists (ACLs) provide little protection, especially as many services are run as the root user. MAC on the other hand can take this protection much further, allowing very precise control over what each process is allowed to do, even for processes running as root (see illustration below). This is important in the event that a process is compromised. Without MAC, <strong>a compromised process would be free to do what it wants!</strong></p>
 
 <p><strong>Unrestricted access on a normal OS:</strong></p>
-<img src="media/fig-1-1.jpg" alt="fig-1-1.jpg" width="500" height="350">
+<img src="media/os-without-mac.jpg" alt="OS without MAC" width="500" height="350">
 <p><strong>Restricted access on an OS using MAC:</strong></p>
-<img src="media/fig-1-2.jpg" alt="fig-1-2.jpg" width="500" height="350">
+<img src="media/os-with-mac.jpg" alt="OS with MAC" width="500" height="350">
 
 <p>MAC therefore provides a way to create a <strong>"policy of least privilege"</strong>. This is where each process has a definition of what they are allowed to do, which is called the "policy". <strong>This policy allows as little as possible for the process to function normally.</strong> If a process or application tries to perform a task that is not allowed by this policy, it is denied the ability to perform this task. This prevents any unwanted activity from occurring.</p>
 

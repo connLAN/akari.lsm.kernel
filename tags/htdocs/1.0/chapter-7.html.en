@@ -42,25 +42,25 @@
 
 <p>Run the policy editor and change the target domains to profile 3:</p>
 
-<img src="media/editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" title="Assign profile 3 to domains for Apache." width="675" height="375">
 
 <p>Press the "@" key to switch to the process list. Verify that the "<code>/usr/sbin/httpd</code>" process and descendants are assigned profile number 3:</p>
 
-<img src="media/editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="675" height="375">
+<img src="media/editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" title="Currently running Apache processes refer profile 3." width="675" height="375">
 
 <p>Quit the policy editor and try an operation which is permitted by policy:</p>
 
-<img src="media/operation-permitted.png" alt="operation-permitted.png" width="547" height="729">
+<img src="media/operation-permitted.png" alt="operation-permitted.png" title="This operation was permitted by policy." width="547" height="729">
 
 <p>The operation was successfully completed, as sending mail is permitted by policy.</p>
 
 <p>Let's try an operation which is not permitted by policy:</p>
 
-<img src="media/unix-penguin.png" alt="unix-penguin.png" width="547" height="729">
+<img src="media/unix-penguin.png" alt="unix-penguin.png" title="Trying an operation which is not permitted by policy." width="547" height="729">
 
 <p>Although it appears to be have been completed successfully, the warning message by <code>/bin/mail</code> shows that the input was empty and so the execution of <code>/bin/cat</code> was rejected:</p>
 
-<img src="media/unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="547" height="477">
+<img src="media/unix-penguin-rejected.png" alt="unix-penguin-rejected.png" title="This operation was rejected by policy." width="547" height="477">
 
 <p>Just like in "Permissive Mode", you can check the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface for how many times policy violations have occurred and the last time a policy violation occurred:</p>
 

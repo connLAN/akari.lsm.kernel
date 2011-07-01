@@ -42,25 +42,25 @@
 
 <p>ポリシーエディタを実行して、対象となるドメインにプロファイル 3 を割り当てます：</p>
 
-<img src="media/editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile3.png" alt="editpolicy-httpd-profile3.png" title="Assign profile 3 to domains for Apache." width="675" height="375">
 
 <p>@ キーを押してプロセス一覧表示に切り替えてください。そして、 <code>/usr/sbin/httpd</code> プロセスとその子孫に対してプロファイル 3 が割り当てられていることを確認してください：</p>
 
-<img src="media/editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" width="675" height="375">
+<img src="media/editpolicy-httpd-process3.png" alt="editpolicy-httpd-process3.png" title="Currently running Apache processes refer profile 3." width="675" height="375">
 
 <p>ポリシーエディタを終了して、ポリシーで許可されている操作をしてみましょう：</p>
 
-<img src="media/operation-permitted.png" alt="operation-permitted.png" width="547" height="729">
+<img src="media/operation-permitted.png" alt="operation-permitted.png" title="This operation was permitted by policy." width="547" height="729">
 
 <p>メールの送信はポリシーで許可されているので、操作は正常に終了しました。</p>
 
 <p>ポリシーで許可されていない操作をしてみましょう：</p>
 
-<img src="media/unix-penguin.png" alt="unix-penguin.png" width="547" height="729">
+<img src="media/unix-penguin.png" alt="unix-penguin.png" title="Trying an operation which is not permitted by policy." width="547" height="729">
 
 <p>一見すると正常に終了したように見えますが、実際には <code>/bin/mail</code> が「入力が空っぽです」と警告しているとおり、 <code>/bin/cat</code> の実行が拒否されています：</p>
 
-<img src="media/unix-penguin-rejected.png" alt="unix-penguin-rejected.png" width="547" height="477">
+<img src="media/unix-penguin-rejected.png" alt="unix-penguin-rejected.png" title="This operation was rejected by policy." width="547" height="477">
 
 <p>確認モードと同様、 <a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> インタフェースからポリシー違反の発生回数と最後に発生した時刻について知ることができます：</p>
 

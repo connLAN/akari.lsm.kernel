@@ -40,7 +40,7 @@
 
 <p>AKARI では、強制アクセス制御の適用は<strong>ドメイン</strong>という単位で行われます。これは重要な概念です。システム上に存在する全てのプロセスはそれぞれ１個のドメインに属しています。ドメインはプロセスの実行履歴により決定されます。大まかに言うと、プログラムが実行されるたびに新しいドメインが作成されます。あるドメインの名前はそのドメインに到達するまでに実行された全てのプログラムのパス名を連結したものとして定義されます。このドメインを作成することは<strong>ドメイン遷移</strong>と呼ばれています。以下の図を見てください：</p>
 
-<img src="media/domain_transition.png" alt="Domain Transition" width="600" height="450">
+<img src="media/domain_transition.png" alt="domain_transition.png" title="Domain Transition" width="600" height="450">
 
 <p>カーネルは常に最初のドメインであり、 AKARI においては <strong>&lt;kernel&gt;</strong> というドメイン名で定義されます。この例では、カーネルが <code>/sbin/init</code> を実行します。プログラムが実行されたことにより、新しいドメイン、この場合は <strong>&lt;kernel&gt; /sbin/init</strong> という名前を持つドメインが作成されます。起動スクリプトが実行されると、より多くのドメインが作成されていきます。</p>
 
@@ -63,7 +63,7 @@
 
 <p>ポリシーエディタにはいくつもの画面が存在し、それぞれが異なる役割を提供しています。デフォルトで最初に表示される画面は <strong>Domain Transition Editor</strong> です。以下の画面は上記のコマンドを実行することで表示されるドメインのツリーです。現時点では &lt;kernel&gt; ドメインだけが定義されています：</p>
 
-<img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="675" height="375">
+<img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" title="Only one domain is defined" width="675" height="375">
 
 <p>初期化されたばかりのポリシーであるため、 /etc/ccs/ ディレクトリに存在するポリシーファイルは空っぽです。 <strong>AKARI には２種類のポリシーのセットが存在しています：１つは現在カーネル内にロードされているポリシーのセットであり、もう１つは /etc/ccs/ ディレクトリ内に保存されているポリシーのセットです。</strong> /etc/ccs/ ディレクトリには複数のポリシーのセットを保存することができ、起動時または必要な時にカーネル内へと読み込ませることができます。ポリシーをディスクに保存する方法については後述します。 q キーを押してポリシーエディタを終了してください。</p>
 
@@ -75,7 +75,7 @@
 
 <p>システムが動作するにつれて、 AKARI は新しいドメインが作成されたことを記録して、ドメインのツリーへと追加していきます。上記のコマンドを実行することにより、システム起動時から現在までに作成された全てのドメインを含むドメインのツリーが表示されます：</p>
 
-<img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="675" height="375">
+<img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" title="Many domains have been created" width="675" height="375">
 
 <p><strong>１行目</strong>は現在表示されている画面の名前と、存在しているドメインの数が表示されます。<br>
 <strong>２行目</strong>はメッセージを表示するための領域です。<br>
@@ -97,17 +97,17 @@
 
 <p>ポリシーエディタの画面で、それぞれの行の２番目に表示されている数値に注目してください：</p>
 
-<img src="media/editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" width="675" height="375">
+<img src="media/editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" title="This domain refers profile 0." width="675" height="375">
 
 <p>この数値は<strong>プロファイル番号</strong>と呼ばれています。プロファイル番号は０～２５５の整数値です。デフォルトのプロファイル番号は０であり、プロファイル０は無効モードとも呼ばれています。無効モードのプロファイルが割り当てられたドメインでは全く制限が行われません。</p>
 
 <p><strong>w</strong> キーを押してポリシーエディタで利用可能な画面の一覧を表示してみましょう：</p>
 
-<img src="media/editpolicy-window-list.png" alt="editpolicy-window-list.png" width="675" height="375">
+<img src="media/editpolicy-window-list.png" alt="editpolicy-window-list.png" title="List of available windows." width="675" height="375">
 
 <p><strong>p</strong> キーを押して <strong>Profile Editor</strong> 画面を表示すると、以下のようなプロファイルの一覧が表示されます：</p>
 
-<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" width="675" height="375">
+<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" title="" List of defined profiles." width="675" height="375">
 
 <p>それぞれのプロファイルには３種類の行が存在しています：</p>
 
@@ -184,11 +184,11 @@
 
 <p>デフォルトでは役割の異なる４つのプロファイルが定義されています：</p>
 
-<img src="media/default_profiles-ja.png" alt="Default profiles" width="640" height="320">
+<img src="media/default_profiles-ja.png" alt="default_profiles-ja.png" title="Default profiles" width="640" height="320">
 
 <p>これらのプロファイルをドメインへと割り当てていきます：</p>
 
-<img src="media/kernel_namespace.png" alt="Domain refers profiles" width="600" height="450">
+<img src="media/kernel_namespace.png" alt="kernel_namespace.png" title="Domain refers profiles" width="600" height="450">
 
 <p>学習モード用プロファイルというのはポリシーの作成を容易にするための AKARI の特徴です。学習モードが割り当てられたドメインではドメインポリシーが自動的に作成されます。学習モードで作成されたポリシーを精製していくことでしっかりとしたポリシーを作成することができます。他のプロファイル（確認モード用と強制モード用）は後でドメインの動作に制限をかける際に利用します。</p>
 
@@ -198,7 +198,7 @@
 
 <p>それぞれのドメインに対する制限の内容は <strong>Domain Policy Editor</strong> 画面で確認できます。この画面は Domain Transition Editor 画面でドメインを選択して Enter キーを押すことで表示されます。現時点ではまだポリシーが定義されていないので、空っぽです。以下の写真は Apache 用のドメインポリシーの例です：</p>
 
-<a href="media/editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375"></a>
+<a href="media/editpolicy-httpd-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" title="Domain policy" width="675" height="375"></a>
 
 <p>ドメインポリシーのパーミッションは file read や file write などのディレクティブと一緒にこの画面に表示されます。ドメインに対して強制モード用のプロファイルを割り当てることにより、ここで定義されているアクセス許可（および例外ポリシーで定義されているアクセス許可（ <a href="chapter-4.html.ja#4.5">4.5: 例外ポリシーを理解する</a>）を参照してください）だけが許可されるようになります。正常な動作をするのに必要最小限の権限を持ったポリシーを作成するために、学習モードと確認モードを使うことができます。ドメインポリシーで指定できるディレクティブについての詳細は <a href="policy-specification/index.html.ja">Appendix B: ポリシー仕様</a>の中の<a href="policy-specification/domain-policy-syntax.html.ja">ドメインポリシー仕様</a>を参照してください。</p>
 
@@ -206,7 +206,7 @@
 
 <p>w キーを押して、次に e キーを押すと、 <strong>Exception Policy Editor</strong> という画面が表示されます：</p>
 
-<a href="media/editpolicy-exception-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" width="675" height="375"></a>
+<a href="media/editpolicy-exception-full.png">（クリックすると全体を表示します。）<br><img src="media/editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" title="Exception policy" width="675" height="375"></a>
 
 <p>矢印キーや Home/End/PageUp/PageDown キーを使って画面をスクロールすることができます。</p>
 

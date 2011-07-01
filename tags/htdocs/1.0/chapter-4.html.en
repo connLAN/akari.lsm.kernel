@@ -40,7 +40,7 @@
 
 <p>In AKARI, the technique used to enforce MAC makes use of something called <strong>"domains"</strong>. This is an important concept. Every process in a system belongs to a domain, which is determined by its execution history. Broadly speaking, every time a process is executed, a new domain is created. Any particular domain is represented by a concatenation of all previously executed pathanames. This creation of a new domain can also be called a <strong>"domain transition"</strong>. Have a look at this diagram:</p>
 
-<img src="media/domain_transition.png" alt="Domain Transition" width="600" height="450">
+<img src="media/domain_transition.png" alt="domain_transition.png" title="Domain Transition" width="600" height="450">
 
 <p>The kernel is always the first domain and is represented in AKARI by <strong>&lt;kernel&gt;</strong>. In this example, the kernel then executes <code>/sbin/init</code>. Because a process has been executed, a new domain is created which in this case is the domain <strong>&lt;kernel&gt; /sbin/init</strong>. The bootup scripts are then executed, which result in further domains being created.</p>
 
@@ -63,7 +63,7 @@
 
 <p>The policy editor provides a number of "screens" that each serve a different role. The default screen that greets the user is the <strong>"Domain Transition Editor"</strong>. The picture below describes the domain tree that should be visible after running the above command. As of now, only the "&lt;kernel&gt;" domain is defined:</p>
 
-<img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" width="675" height="375">
+<img src="media/editpolicy-domain-list1.png" alt="editpolicy-domain-list1.png" title="Only one domain is defined" width="675" height="375">
 
 <p>Since this is a newly initialized policy, the policy files in "/etc/ccs/" are empty. <strong>There are two sets of policy involved in AKARI: policy loaded in the kernel, and policy saved to "/etc/ccs/"</strong>. Many sets of policies can be saved to "/etc/ccs/" and can be loaded into the kernel at boot or on demand. Saving policy to disk will be discussed in later. Press the "q" key to quit the policy editor.</p>
 
@@ -75,7 +75,7 @@
 
 <p>As the system runs, AKARI will record the creation of new domains and add them to the tree. After running the above command, the domain tree should appear populated with all domains created since startup:</p>
 
-<img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" width="675" height="375">
+<img src="media/editpolicy-domain-list2.png" alt="editpolicy-domain-list2.png" title="Many domains have been created" width="675" height="375">
 
 <p>The <strong>first line</strong> shows what screen you are on and how many domains are listed.<br>
 The <strong>second line</strong> is the message area.<br>
@@ -97,17 +97,17 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>In the policy editor, look at the numbers in the second column of each line:</p>
 
-<img src="media/editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" width="675" height="375">
+<img src="media/editpolicy-domain-profile-number.png" alt="editpolicy-domain-profile-number.png" title="This domain refers profile 0." width="675" height="375">
 
 <p>This number is called the <strong>"profile number"</strong>. A profile number is an integer value which takes between 0 and 255. The default profile number is "0", also known as "Disabled Mode", in which the domain is completely unrestricted.</p>
 
 <p>Press the <strong>"w"</strong> key to list the different "screens" that can be viewed using the policy editor:</p>
 
-<img src="media/editpolicy-window-list.png" alt="editpolicy-window-list.png" width="675" height="375">
+<img src="media/editpolicy-window-list.png" alt="editpolicy-window-list.png" title="List of available windows." width="675" height="375">
 
 <p>Press the <strong>"p"</strong> key to select the <strong>"Profile Editor"</strong>, and you will see the list of profiles:</p>
 
-<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" width="675" height="375">
+<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" title="List of defined profiles." width="675" height="375">
 
 <p>Each profile contains 3 fields:</p>
 
@@ -184,11 +184,11 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>Thus, there are four default profiles that each play a different role:</p>
 
-<img src="media/default_profiles-en.png" alt="Default profiles" width="640" height="320">
+<img src="media/default_profiles-en.png" alt="default_profiles-en.png" title="Default profiles" width="640" height="320">
 
 <p>Each of these profiles can be assigned to a domain:</p>
 
-<img src="media/kernel_namespace.png" alt="Domain refers profiles" width="600" height="450">
+<img src="media/kernel_namespace.png" alt="kernel_namespace.png" title="Domain refers profiles" width="600" height="450">
 
 <p>The "Learning Mode" profile is the feature of AKARI that makes developing policy very easy. This mode will automatically generate policy for any domain that has this profile selected. This can then be developed and refined into a solid policy. The other profiles, "Permissive Mode" and "Enforcing Mode", are for later on when a domain is ready to be restricted.</p>
 
@@ -198,7 +198,7 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>The restrictions of each domain can be viewed using the <strong>"Domain Policy Editor"</strong> screen, which can be accessed by selecting a domain in the "Domain Transition Editor" screen, and then pressing the "Enter" key. Since no policy has been developed yet, the screen is empty. This is an example of domain policy for Apache:</p>
 
-<a href="media/editpolicy-httpd-full.png">(Click to view complete screen.)<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375"></a>
+<a href="media/editpolicy-httpd-full.png">(Click to view complete screen.)<br><img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" title="Domain policy" width="675" height="375"></a>
 
 <p>The permissions in domain policy are represented here with directives such as "file read" and "file write". Once the domain is placed in "Enforcing Mode", only the permissions defined in domain policy will be allowed, as well as the permissions defined in exception policy (see <a href="chapter-4.html.en#4.5">4.5: Understanding exception policy</a>). In order to develop a policy of least privilege that still allows normal usage, the "Learning Mode" and "Permissive Mode" can be used. For in depth details on the directives that can be used in domain policy, see <a href="policy-specification/domain-policy-syntax.html.en">Domain policy syntax</a> located in <a href="policy-specification/index.html.en">Appendix B: Policy specification</a>.</p>
 
@@ -206,7 +206,7 @@ Press the <strong>"?"</strong> key to view the available commands. Press the "?"
 
 <p>Press the "w" key, then press the "e" key, and you will see the <strong>"Exception Policy Editor"</strong> screen:</p>
 
-<a href="media/editpolicy-exception-full.png">(Click to view complete screen.)<br><img src="media/editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" width="675" height="375"></a>
+<a href="media/editpolicy-exception-full.png">(Click to view complete screen.)<br><img src="media/editpolicy-exception-list1.png" alt="editpolicy-exception-list1.png" title="Exception policy" width="675" height="375"></a>
 
 <p>You can scroll this window using the arrow keys and/or the Home/End/PageUp/PageDown keys.</p>
 

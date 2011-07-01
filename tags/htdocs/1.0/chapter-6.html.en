@@ -460,11 +460,11 @@ rewrite address_pattern 10.0.0.1-10.0.0.255 @WEB-CLIENT-ADDRESS
 
 <p>Note that Apache may have executed some external programs (e.g. <code>/bin/sh</code>, <code>/usr/bin/perl</code>, <code>/usr/lib/sendmail</code>) and thus has some descendent domains. Be sure to change the profile number for all descendent domains as well.</p>
 
-<img src="media/editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" title="Apache executed external programs." width="675" height="375">
 
 <p>Quit the policy editor and continue using Apache:</p>
 
-<img src="media/operation-permissive.png" alt="operation-permissive.png" width="575" height="475">
+<img src="media/operation-permissive.png" alt="operation-permissive.png" title="Check that Apache has appropriate permissions." width="575" height="475">
 
 <p>You can check the <a href="policy-specification/proc-interface.html.en#stat">/proc/ccs/stat</a> interface for how many times policy violations have occurred and the last time a policy violation occurred:</p>
 

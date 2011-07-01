@@ -460,11 +460,11 @@ rewrite address_pattern 10.0.0.1-10.0.0.255 @WEB-CLIENT-ADDRESS
 
 <p>Apache は（例えば <code>/bin/sh</code> <code>/usr/bin/perl</code> <code>/usr/lib/sendmail</code> のような）外部のプログラムを実行したことにより、 Apache に子ドメインや孫ドメインが作成されているかもしれません。 Apache 本体のドメインだけでなくその子孫ドメインのプロファイル番号も変更するのを忘れないようにしてください。</p>
 
-<img src="media/editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile2.png" alt="editpolicy-httpd-profile2.png" title="Apache executed external programs." width="675" height="375">
 
 <p>q キーを押してポリシーエディタを終了してください。その後、 Apache に対して許可したい操作を再度行ってください：</p>
 
-<img src="media/operation-permissive.png" alt="operation-permissive.png" width="575" height="475">
+<img src="media/operation-permissive.png" alt="operation-permissive.png" title="Check that Apache has appropriate permissions." width="575" height="475">
 
 <p><a href="policy-specification/proc-interface.html.ja#stat">/proc/ccs/stat</a> からポリシー違反の発生回数と最後に発生した時刻について知ることができます：</p>
 

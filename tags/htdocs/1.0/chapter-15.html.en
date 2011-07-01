@@ -48,8 +48,8 @@
 
 <p>A domain name starts with "&lt;$namespace&gt;". For example, "&lt;kernel&gt;" domain and "&lt;kernel&gt; /sbin/init" domain belong to "&lt;kernel&gt;" namespace whereas "&lt;/usr/sbin/sshd&gt;" domain and "&lt;/usr/sbin/sshd&gt; /bin/bash" domain belong to "&lt;/usr/sbin/sshd&gt;" namespace.</p>
 
-<img src="media/kernel_namespace.png" alt="Default namespace" width="400" height="300">
-<img src="media/sshd_namespace.png" alt="Namespace for SSH session" width="400" height="300">
+<img src="media/kernel_namespace.png" alt="kernel_namespace.png" title="Default namespace" width="400" height="300">
+<img src="media/sshd_namespace.png" alt="sshd_namespace.png" title="Namespace for SSH session" width="400" height="300">
 
 <p>Although each namespace has its own set of domain policy, exception policy and profiles, the policy for all namespaces are still contained within the same files within /proc/ccs/ and /etc/ccs/policy/ for simplicity and compatibility reasons. In other words, the policy for each namespace is not split into separate files.</p>
 

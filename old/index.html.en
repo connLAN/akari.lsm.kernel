@@ -77,6 +77,6 @@ Phase 6: <a href="phase-6.html.en">Beyond this guide</a>
 <address><a href="http://akari.sourceforge.jp/">AKARI</a> is a personal project  supported by the author of <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a>.<br>
 <!--#include virtual="/cgi-bin/counter.pl" -->
 </address>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </body>
 </html>

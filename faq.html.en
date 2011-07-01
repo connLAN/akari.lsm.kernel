@@ -10,7 +10,7 @@
 <body>
 
 <div id="titlebar">
-<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left"></a>
+<a href="index.html.en"><img src="media/akarititle.png" alt="akarititle.png" width="174" height="40" border="0" align="left" title="AKARI"></a>
 </div>
 
 <div id="navbar" class="tomoyo-documentation">
@@ -107,7 +107,7 @@
 <p class="language">Go to <a href="faq.html.ja">Japanese page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="SourceForge.jp"></a></p>
+<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

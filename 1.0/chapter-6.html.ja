@@ -69,7 +69,7 @@
 # This file contains rewriting rules used by ccs-patternize command.
 
 # Domain policy consists with domain declaration lines (which start with
-# '&lt' ,) and acl declaration lines (which do not start with '&lt' ).
+# '&lt;' ,) and acl declaration lines (which do not start with '&lt;' ).
 # You can refer the former using 'domain' keyword and the latter using 'acl'
 # keyword.
 #

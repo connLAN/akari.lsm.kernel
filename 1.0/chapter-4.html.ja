@@ -107,7 +107,7 @@
 
 <p><strong>p</strong> キーを押して <strong>Profile Editor</strong> 画面を表示すると、以下のようなプロファイルの一覧が表示されます：</p>
 
-<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" title="" List of defined profiles." width="675" height="375">
+<img src="media/editpolicy-profile-list.png" alt="editpolicy-profile-list.png" title="List of defined profiles." width="675" height="375">
 
 <p>それぞれのプロファイルには３種類の行が存在しています：</p>
 

@@ -50,7 +50,7 @@
 <p><strong>Chapter 3: <a class="black" href="chapter-3.html.ja">どうすれば AKARI をインストールできますか？</a></strong></p>
 <ul>
 <li>3.1. <a href="chapter-3.html.ja#3.1">依存するパッケージのインストール</a></li>
-<li>3.2. <a href="chapter-3.html.ja#3.2">カーネルモジュールのインストール</a></li>
+<li>3.2. <a href="chapter-3.html.ja#3.2">カーネルモジュールのインストール</a><br>
   <ul class="nested">
     <li>3.2.1. <a href="chapter-3.html.ja#3.2.1">カーネルモジュール開発パッケージの入手</a></li>
     <li>3.2.2. <a href="chapter-3.html.ja#3.2.2">AKARI カーネルモジュールのコンパイルとインストール</a></li>

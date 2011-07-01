@@ -50,7 +50,7 @@
 <p><strong>Chapter 3: <a class="black" href="chapter-3.html.en">How do I install AKARI?</a></strong></p>
 <ul>
 <li>3.1. <a href="chapter-3.html.en#3.1">Installing dependencies</a></li>
-<li>3.2. <a href="chapter-3.html.en#3.2">Building the kernel module</a></li>
+<li>3.2. <a href="chapter-3.html.en#3.2">Building the kernel module</a><br>
   <ul class="nested">
     <li>3.2.1. <a href="chapter-3.html.en#3.2.1">Installing the kernel development package</a></li>
     <li>3.2.2. <a href="chapter-3.html.en#3.2.2">Building and installing the AKARI module</a></li>

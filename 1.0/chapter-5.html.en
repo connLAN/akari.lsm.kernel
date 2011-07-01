@@ -54,7 +54,7 @@
 
 <p>Scroll the cursor using arrow-keys and/or Home/End/PageUp/PageDown keys to find the line "/usr/sbin/httpd". In this picture, it is line 386:</p>
 
-<img src="media/editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile0.png" alt="editpolicy-httpd-profile0.png" title="Domain for Apache." width="675" height="375">
 
 <p>If <code>/usr/sbin/httpd</code> is invoked by "&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash", then the domain name is <strong>"&lt;kernel&gt; /usr/sbin/mingetty /bin/login /bin/bash /usr/sbin/httpd"</strong>.</p>
 
@@ -76,7 +76,7 @@ initialize_domain /usr/sbin/sshd from any
 
 <p>Of course, "/usr/sbin/sshd" can be the full pathname of any application you wish to control domain transitions for. Having added this to exception policy, the application will now not create a new domain every time a unique execution occurs. Instead, it will reinitialize the domain to <strong>"&lt;kernel&gt; /usr/sbin/sshd"</strong>:</p>
 
-<img src="media/initialize_domain.png" alt="Initialize domain" width="600" height="315">
+<img src="media/initialize_domain.png" alt="initialize_domain.png" title="Initialize domain" width="600" height="315">
 
 <p>The text "from any" included in the above directive signifies that the application domain should be reinitialized when invoked by <strong>any domain</strong>. It is possible to cause reinitialization to happen only when the application domain is invoked by <strong>a single specified domain</strong>. This is achieved by adding the following to exception policy:</p>
 
@@ -84,7 +84,7 @@ initialize_domain /usr/sbin/sshd from any
 initialize_domain /usr/sbin/sshd from &lt;kernel&gt; /etc/rc.d/init.d/sshd
 </pre>
 
-<img src="media/initialize_domain-sshd.png" alt="Conditionally initialize domain" width="600" height="360">
+<img src="media/initialize_domain-sshd.png" alt="initialize_domain-sshd.png" title="Conditionally initialize domain" width="600" height="360">
 
 <p>It is also allowable to specify only the last part of the domain name instead of the whole domain name. For example, just <strong>"from /etc/rc.d/init.d/sshd"</strong> instead of <strong>"from &lt;kernel&gt; /etc/rc.d/init.d/sshd"</strong>. This would of course be less specific a rule, and would for example still apply to the sshd daemon being run from a terminal.</p>
 
@@ -106,7 +106,7 @@ initialize_domain /usr/sbin/sendmail.sendmail from any
 no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 </pre>
 
-<img src="media/no_initialize_domain-sendmail-mail.png" alt="Conditionally not initialize domain" width="600" height="375">
+<img src="media/no_initialize_domain-sendmail-mail.png" alt="no_initialize_domain-sendmail-mail.png" title="Conditionally not initialize domain" width="600" height="375">
 
 <h4><a name="5.2.3">5.2.3. keep_domain</a></h4>
 
@@ -116,7 +116,7 @@ no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/keep_domain.png" alt="Keep domain" width="600" height="262">
+<img src="media/keep_domain.png" alt="keep_domain.png" title="Keep domain" width="600" height="262">
 
 <p>Now the execution of any application, such as <code>/bin/ls</code> or <code>/bin/cat</code> will not result in the creation of a new domain. It will instead remain in the domain specified above and thus act within the permissions of that domain.</p>
 
@@ -126,7 +126,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 keep_domain any from /bin/bash
 </pre>
 
-<img src="media/keep_domain-any-bash.png" alt="Keep domain with" width="600" height="315">
+<img src="media/keep_domain-any-bash.png" alt="keep_domain-any-bash.png" title="Keep domain" width="600" height="315">
 
 <p>This can be made even more specific, causing the suppression of domain transition only to occur when a specific application is executed from a specific domain. To do this, you could add the following to exception policy:</p>
 
@@ -134,7 +134,7 @@ keep_domain any from /bin/bash
 keep_domain /usr/bin/xargs from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/keep_domain-xargs-bash.png" alt="Conditionally keep domain" width="600" height="322">
+<img src="media/keep_domain-xargs-bash.png" alt="keep_domain-xargs-bash.png" title="Conditionally keep domain" width="600" height="322">
 
 <p>The <a href="#5.2.3">keep_domain</a> directive does not take precedence over the <a href="#5.2.1">initialize_domain</a> directive. If the <a href="#5.2.1">initialize_domain</a> directive has been specified for a particular application, that application will leave any domain with the <a href="#5.2.3">keep_domain</a> directive and reinitialize into its own domain.</p>
 
@@ -153,7 +153,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/no_keep_domain-cat-bash.png" alt="Conditionally not keep domain" width="600" height="300">
+<img src="media/no_keep_domain-cat-bash.png" alt="no_keep_domain-cat-bash.png" title="Conditionally not keep domain" width="600" height="300">
 
 <br>
 
@@ -169,15 +169,15 @@ initialize_domain /usr/sbin/httpd from any
 
 <p>Press the "s" key, enter '1' and press the "Enter" key:</p>
 
-<img src="media/editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" width="675" height="375">
+<img src="media/editpolicy-httpd-set-profile1.png" alt="editpolicy-httpd-set-profile1.png" title="Assign profile 1 to domain for Apache." width="675" height="375">
 
 <p>Now the profile number of the "/usr/sbin/httpd" domain has changed to 1:</p>
 
-<img src="media/editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" width="675" height="375">
+<img src="media/editpolicy-httpd-profile1.png" alt="editpolicy-httpd-profile1.png" title="Domain for Apache refers profile 1." width="675" height="375">
 
 <p>Press the "@" key to switch to the process list. Verify that "/usr/sbin/httpd" processes are assigned profile number 1:</p>
 
-<img src="media/editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" width="675" height="375">
+<img src="media/editpolicy-httpd-process1.png" alt="editpolicy-httpd-process1.png" title="Currently running Apache processes refer profile 1." width="675" height="375">
 
 <h3><a name="5.4">5.4. Gathering necessary permissions</a></h3>
 
@@ -191,13 +191,13 @@ initialize_domain /usr/sbin/httpd from any
 
 <p>Press the "Enter" key to browse the permissions that have been gathered:</p>
 
-<img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" width="675" height="375">
+<img src="media/editpolicy-httpd-acl1.png" alt="editpolicy-httpd-acl1.png" title="Some permissions have been learned." width="675" height="375">
 
 <p>This list was previously empty, but because the domain is in "Learning Mode", any new actions that occurred were appended to domain policy. This will continue until the domain is no longer placed in "Learning Mode". You can press the "r" key to refresh the screen.</p>
 
 <p>Quit the editor and use Apache to generate necessary permissions for normal usage. All actions should be performed that you wish to allow:</p>
 
-<img src="media/operation-learning.png" alt="operation-learning.png" width="551" height="725">
+<img src="media/operation-learning.png" alt="operation-learning.png" title="Do more operations for Apache." width="551" height="725">
 
 <h3><a name="5.5">5.5. Saving permissions to disk</a></h3>
 

@@ -71,13 +71,13 @@ file execute /bin/auth1 exec.realpath="/bin/auth1"
 keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/auth1 /bin/bash
 </pre>
 
-<img src="media/fig-6-2.png" alt="fig-6-2.png" width="600" height="450">
+<img src="media/keep_domain-cerberus.png" alt="Keep domain after authentication" width="600" height="450">
 
 <h3><a name="12.2">12.2. 管理者権限の分割</a></h3>
 
 <p>この階層化構造を利用することにより、 root ユーザの権限を分割することも可能です。 /bin/auth1 のパスワード部分を変更して /bin/auth2 として保存します。 /bin/auth1 を通過することで実行されるシェルに対しては全ての動作を認めるように設定し、 /bin/auth2 を通過することで実行されるシェルに対しては限られた動作（例えばＷｅｂサーバの管理）のみを認めるように設定します：</p>
 
-<img src="media/fig-6-14-en.png" alt="fig-6-14-en.png" width="600" height="450">
+<img src="media/split-domain.png" alt="Splitting domains for each role" width="600" height="450">
 
 <h3><a name="12.3">12.3. 認証プログラムの例</a></h3>
 

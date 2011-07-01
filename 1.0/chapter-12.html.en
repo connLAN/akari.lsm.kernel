@@ -71,13 +71,13 @@ file execute /bin/auth1 exec.realpath="/bin/auth1"
 keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/auth1 /bin/bash
 </pre>
 
-<img src="media/fig-6-2.png" alt="fig-6-2.png" width="600" height="450">
+<img src="media/keep_domain-cerberus.png" alt="Keep domain after authentication" width="600" height="450">
 
 <h3><a name="12.2">12.2. Splitting root permissions</a></h3>
 
 <p>Using this tiered approach, it is also possible to split root permissions. The script can be repeated with a different password and saved as "/bin/auth2". The domain created by execution of "auth1" can be given maximum privileges using domain policy, but the domain create by execution of "auth2" can be given limited privileges, such as to administrate only the web server:</p>
 
-<img src="media/fig-6-14-en.png" alt="fig-6-14-en.png" width="600" height="450">
+<img src="media/split-domain.png" alt="Splitting domains for each role" width="600" height="450">
 
 <h3><a name="12.3">12.3. Example authentication programs</a></h3>
 

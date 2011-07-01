@@ -76,7 +76,7 @@ initialize_domain /usr/sbin/sshd from any
 
 <p>Of course, "/usr/sbin/sshd" can be the full pathname of any application you wish to control domain transitions for. Having added this to exception policy, the application will now not create a new domain every time a unique execution occurs. Instead, it will reinitialize the domain to <strong>"&lt;kernel&gt; /usr/sbin/sshd"</strong>:</p>
 
-<img src="media/fig-3-4.png" alt="fig-3-4.png" width="600" height="315">
+<img src="media/initialize_domain.png" alt="Initialize domain" width="600" height="315">
 
 <p>The text "from any" included in the above directive signifies that the application domain should be reinitialized when invoked by <strong>any domain</strong>. It is possible to cause reinitialization to happen only when the application domain is invoked by <strong>a single specified domain</strong>. This is achieved by adding the following to exception policy:</p>
 
@@ -84,7 +84,7 @@ initialize_domain /usr/sbin/sshd from any
 initialize_domain /usr/sbin/sshd from &lt;kernel&gt; /etc/rc.d/init.d/sshd
 </pre>
 
-<img src="media/fig-3-5.png" alt="fig-3-5.png" width="600" height="360">
+<img src="media/initialize_domain-sshd.png" alt="Conditionally initialize domain" width="600" height="360">
 
 <p>It is also allowable to specify only the last part of the domain name instead of the whole domain name. For example, just <strong>"from /etc/rc.d/init.d/sshd"</strong> instead of <strong>"from &lt;kernel&gt; /etc/rc.d/init.d/sshd"</strong>. This would of course be less specific a rule, and would for example still apply to the sshd daemon being run from a terminal.</p>
 
@@ -106,7 +106,7 @@ initialize_domain /usr/sbin/sendmail.sendmail from any
 no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 </pre>
 
-<img src="media/fig-3-6.png" alt="fig-3-6.png" width="600" height="375">
+<img src="media/no_initialize_domain-sendmail-mail.png" alt="Conditionally not initialize domain" width="600" height="375">
 
 <h4><a name="5.2.3">5.2.3. keep_domain</a></h4>
 
@@ -116,7 +116,7 @@ no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-9.png" alt="fig-3-9.png" width="600" height="262">
+<img src="media/keep_domain.png" alt="Keep domain" width="600" height="262">
 
 <p>Now the execution of any application, such as <code>/bin/ls</code> or <code>/bin/cat</code> will not result in the creation of a new domain. It will instead remain in the domain specified above and thus act within the permissions of that domain.</p>
 
@@ -126,7 +126,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 keep_domain any from /bin/bash
 </pre>
 
-<img src="media/fig-3-8.png" alt="fig-3-8.png" width="600" height="315">
+<img src="media/keep_domain-any-bash.png" alt="Keep domain with" width="600" height="315">
 
 <p>This can be made even more specific, causing the suppression of domain transition only to occur when a specific application is executed from a specific domain. To do this, you could add the following to exception policy:</p>
 
@@ -134,7 +134,7 @@ keep_domain any from /bin/bash
 keep_domain /usr/bin/xargs from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-10.png" alt="fig-3-10.png" width="600" height="322">
+<img src="media/keep_domain-xargs-bash.png" alt="Conditionally keep domain" width="600" height="322">
 
 <p>The <a href="#5.2.3">keep_domain</a> directive does not take precedence over the <a href="#5.2.1">initialize_domain</a> directive. If the <a href="#5.2.1">initialize_domain</a> directive has been specified for a particular application, that application will leave any domain with the <a href="#5.2.3">keep_domain</a> directive and reinitialize into its own domain.</p>
 
@@ -153,7 +153,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-11.png" alt="fig-3-11.png" width="600" height="300">
+<img src="media/no_keep_domain-cat-bash.png" alt="Conditionally not keep domain" width="600" height="300">
 
 <br>
 

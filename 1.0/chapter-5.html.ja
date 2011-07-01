@@ -76,7 +76,7 @@ initialize_domain /usr/sbin/sshd from any
 
 <p>もちろん、 /usr/sbin/sshd の部分はドメイン遷移を制御したいアプリケーションのパス名に置き換えてください。このディレクティブを追加すると、これ以降、今までにない動作パターンでプログラムが実行されても、新しいドメインを作成しないようになります。代わりに、<strong>&lt;kernel&gt; /usr/sbin/sshd</strong> というドメインで動作するようになります：</p>
 
-<img src="media/fig-3-4.png" alt="fig-3-4.png" width="600" height="315">
+<img src="media/initialize_domain.png" alt="Initialize domain" width="600" height="315">
 
 <p>上記のディレクティブの from any という部分は、<strong>任意のドメイン</strong>から実行された場合にドメイン遷移を初期化するという意味です。<strong>特定のドメイン</strong>から実行された場合だけドメイン遷移を初期化させるようにもできます。これは、例外ポリシーに以下のようなエントリを追加することで実現できます：</p>
 
@@ -84,7 +84,7 @@ initialize_domain /usr/sbin/sshd from any
 initialize_domain /usr/sbin/sshd from &lt;kernel&gt; /etc/rc.d/init.d/sshd
 </pre>
 
-<img src="media/fig-3-5.png" alt="fig-3-5.png" width="600" height="360">
+<img src="media/initialize_domain-sshd.png" alt="Conditionally initialize domain" width="600" height="360">
 
 <p>ドメイン名の全体ではなくドメイン名の最後のプログラム名部分だけを指定することもできます。例えば、 <strong>from &lt;kernel&gt; /etc/rc.d/init.d/sshd</strong> の代わりに <strong>from /etc/rc.d/init.d/sshd</strong> のように指定します。これは、もちろんあいまいな指定方法であり、ターミナルからＳＳＨサーバを実行した場合にも適用されるかもしれません。</p>
 
@@ -106,7 +106,7 @@ initialize_domain /usr/sbin/sendmail.sendmail from any
 no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 </pre>
 
-<img src="media/fig-3-6.png" alt="fig-3-6.png" width="600" height="375">
+<img src="media/no_initialize_domain-sendmail-mail.png" alt="Conditionally not initialize domain" width="600" height="375">
 
 <h4><a name="5.2.3">5.2.3. keep_domain</a></h4>
 
@@ -116,7 +116,7 @@ no_initialize_domain /usr/sbin/sendmail.sendmail from /bin/mail
 keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-9.png" alt="fig-3-9.png" width="600" height="262">
+<img src="media/keep_domain.png" alt="Keep domain" width="600" height="262">
 
 <p>このようにすると、 <code>/bin/ls</code> や <code>/bin/cat</code> を実行した場合に、新しいドメインを作成しないようになります。代わりに、上記で指定したドメインに留まり、そのドメインに与えられているアクセス許可で動作するようになります。</p>
 
@@ -126,7 +126,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 keep_domain any from /bin/bash
 </pre>
 
-<img src="media/fig-3-8.png" alt="fig-3-8.png" width="600" height="315">
+<img src="media/keep_domain-any-bash.png" alt="Keep domain with" width="600" height="315">
 
 <p>これは、特定のドメインから特定のプログラムが実行された場合にのみドメイン遷移を抑制するような、より限定的な指定を行うこともできます。そのようにするには、例外ポリシーに以下のエントリを指定します：</p>
 
@@ -134,7 +134,7 @@ keep_domain any from /bin/bash
 keep_domain /usr/bin/xargs from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-10.png" alt="fig-3-10.png" width="600" height="322">
+<img src="media/keep_domain-xargs-bash.png" alt="Conditionally keep domain" width="600" height="322">
 
 <p><a href="#5.2.3">keep_domain</a> ディレクティブは、 <a href="#5.2.1">initialize_domain</a> ディレクティブより優先度が低くなります。もし、特定のプログラムに対して <a href="#5.2.1">initialize_domain</a> ディレクティブが指定されている場合、そのアプリケーションは <a href="#5.2.3">keep_domain</a> ディレクティブが指定されているドメインから抜け出してドメイン遷移を初期化させます。</p>
 
@@ -153,7 +153,7 @@ keep_domain any from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 no_keep_domain /bin/cat from &lt;kernel&gt; /usr/sbin/sshd /bin/bash
 </pre>
 
-<img src="media/fig-3-11.png" alt="fig-3-11.png" width="600" height="300">
+<img src="media/no_keep_domain-cat-bash.png" alt="Conditionally not keep domain" width="600" height="300">
 
 <br>
 

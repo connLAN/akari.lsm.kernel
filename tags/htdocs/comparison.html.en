@@ -94,6 +94,8 @@ Requires kernel 3.1 or later.<br>
 <tr><td colspan=10>Features for specifying more fine grained permissions</td></tr>
 <tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>Restrict based on file's credentials (e.g. owner ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>Allow including grouped permissions? (acl_group)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
+<tr><td></td><td>Allow using policy namespace?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for reducing damage by runaway</td></tr>
 <tr><td></td><td>Sleep penalty (enforcing_penalty)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>execute handler (task {auto_execute_handler,denied_execute_handler})</td><td>Y</td><td colspan=6>Y</td><td></td></tr>

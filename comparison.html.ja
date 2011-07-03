@@ -36,7 +36,7 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
+<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">TOMOYO 2.4</a></td></tr>
 <tr><td>利点</td><td>全ての機能と構文をサポートします。</td><td>カーネルパッケージの置き換えが不要です。</td><td>メインラインカーネルに含まれています。<br>カーネルコンパイル時に組み込まれていれば、カーネルパッケージの置き換えが不要です。</td></tr>
 <tr><td>欠点</td><td>カーネルパッケージの置き換えが必要になります。</td><td>サポートされている機能と構文がカーネルのバージョンおよびカーネルコンパイル時の設定オプションに依存します。</td><td>サポートされている機能と構文がカーネルのバージョンに依存します。</td>
 </tr>
@@ -64,7 +64,7 @@
 <li>CONFIG_SECURITY_PATH=y</li>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
-カーネル 2.6.36 以降が必要です。<br>
+カーネル 3.1 以降が必要です。<br>
 </td></tr>
 </table>
 </div>
@@ -73,12 +73,12 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">TOMOYO 2.3</a></td></tr>
-<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-/2.6.11-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
+<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">TOMOYO 2.4</a></td></tr>
+<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.1-</td></tr>
 <tr><td>種別</td><td>内容</td><td colspan=8></td></tr>
 <tr><td colspan=10>パス名の正確さ</td></tr>
 <tr><td></td><td>ディレクトリに対する書き込み操作を行う際に絶対パスを用いた指定を許可</td><td>○</td><td colspan=3></td><td colspan=3>○<a href="#note1">（*1）</a></td><td>○</td></tr>
-<tr><td></td><td>自プロセスの情報へのアクセスのみを許可（ proc:/self/ ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>自プロセスの情報へのアクセスのみを許可（ proc:/self/ ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>削除されたファイルに対するアクセスを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>４０００文字を超える長いパス名に対するアクセスを許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>パス名の指定を容易にする機能</td></tr>
@@ -99,7 +99,7 @@
 <tr><td></td><td>execute handler 機能（ task {auto_execute_handler,denied_execute_handler} ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>アクセスログを取得する機能</td></tr>
 <tr><td></td><td>ポリシー違反のメール通知</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>許可ログ／拒否ログの取得</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>許可ログ／拒否ログの取得</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>ソフトウェアのアップデートを支援する機能</td></tr>
 <tr><td></td><td>ポリシー違反の対話的な処理</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>ファイルに対するアクセス制御</td></tr>
@@ -115,6 +115,7 @@
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;起動時の名前を制限（ argv[0] ） when executing programs?</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;バイナリローダー（例： /lib/ld-linux.so.2 ）として使用できるプログラムを制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>ファイルの作成を制限（ file create ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ファイル作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ディレクトリの作成を制限（ file mkdir ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
@@ -164,7 +165,7 @@
 （ network unix dgram send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
 <tr><td></td><td>接続要求を受信する際に相手のＵＮＩＸアドレスを制限<br>
 （ network unix {stream,seqpacket} accept ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a> <a href="#note4">（*4）</a></td><td></td></tr>
-<tr><td></td><td>パケットを送信する際に相手のＵＮＩＸアドレスを制限<br>
+<tr><td></td><td>パケットを受信する際に相手のＵＮＩＸアドレスを制限<br>
 （ network unix dgram recv ）</td><td>○</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>自分のＵＮＩＸアドレスを制限<br>
 （ network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>

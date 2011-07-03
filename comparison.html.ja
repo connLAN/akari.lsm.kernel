@@ -94,6 +94,8 @@
 <tr><td colspan=10>より詳細なアクセス許可を指定する機能</td></tr>
 <tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>ファイルの所有者ＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>グループ化されたパーミッション（acl_group）の利用を許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ポリシー名前空間のサポート</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>暴走によるダメージを減らす機能</td></tr>
 <tr><td></td><td>スリープペナルティ機能（ enforcing_penalty ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>execute handler 機能（ task {auto_execute_handler,denied_execute_handler} ）</td><td>○</td><td colspan=6>○</td><td></td></tr>

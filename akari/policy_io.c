@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.2+   2011/07/07
  */
 
 #include "internal.h"
@@ -528,7 +528,7 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	printk(KERN_INFO "CCSecurity: 1.8.2   2011/06/20\n");
+	printk(KERN_INFO "CCSecurity: 1.8.2+   2011/07/07\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
 		const struct ccs_policy_namespace *ns = domain->ns;
@@ -1819,73 +1819,6 @@ done:
 }
 
 /**
- * ccs_write_domain_profile - Assign profile for specified domain.
- *
- * @head: Pointer to "struct ccs_io_buffer".
- *
- * Returns 0 on success, -EINVAL otherwise.
- *
- * This is equivalent to doing
- *
- *     ( echo "select " $domainname; echo "use_profile " $profile ) |
- *     /usr/sbin/ccs-loadpolicy -d
- *
- * Caller holds ccs_read_lock().
- */
-static int ccs_write_domain_profile(struct ccs_io_buffer *head)
-{
-	char *data = head->write_buf;
-	char *cp = strchr(data, ' ');
-	struct ccs_domain_info *domain;
-	unsigned int profile;
-	if (!cp)
-		return -EINVAL;
-	*cp = '\0';
-	profile = simple_strtoul(data, NULL, 10);
-	if (profile >= CCS_MAX_PROFILES)
-		return -EINVAL;
-	domain = ccs_find_domain(cp + 1);
-	if (domain && (!ccs_policy_loaded ||
-		       head->w.ns->profile_ptr[(u8) profile]))
-		domain->profile = (u8) profile;
-	return 0;
-}
-
-/**
- * ccs_read_domain_profile - Read only domainname and profile.
- *
- * @head: Pointer to "struct ccs_io_buffer".
- *
- * Returns nothing.
- *
- * This is equivalent to doing
- *
- *     grep -A 1 '^<kernel>' /proc/ccs/domain_policy |
- *     awk ' { if ( domainname == "" ) { if ( $1 == "<kernel>" )
- *     domainname = $0; } else if ( $1 == "use_profile" ) {
- *     print $2 " " domainname; domainname = ""; } } ; '
- *
- * Caller holds ccs_read_lock().
- */
-static void ccs_read_domain_profile(struct ccs_io_buffer *head)
-{
-	if (head->r.eof)
-		return;
-	list_for_each_cookie(head->r.domain, &ccs_domain_list) {
-		struct ccs_domain_info *domain =
-			list_entry(head->r.domain, typeof(*domain), list);
-		if (domain->is_deleted)
-			continue;
-		if (!ccs_flush(head))
-			return;
-		ccs_io_printf(head, "%u ", domain->profile);
-		ccs_set_string(head, domain->domainname->name);
-		ccs_set_lf(head);
-	}
-	head->r.eof = true;
-}
-
-/**
  * ccs_write_pid - Specify PID to obtain domainname.
  *
  * @head: Pointer to "struct ccs_io_buffer".
@@ -2791,9 +2724,6 @@ ssize_t ccs_read_control(struct ccs_io_buffer *head, char __user *buffer,
 			case CCS_AUDIT:
 				ccs_read_log(head);
 				break;
-			case CCS_DOMAIN_STATUS:
-				ccs_read_domain_profile(head);
-				break;
 			case CCS_EXECUTE_HANDLER:
 			case CCS_PROCESS_STATUS:
 				ccs_read_pid(head);
@@ -2859,8 +2789,6 @@ static int ccs_parse_policy(struct ccs_io_buffer *head, char *line)
 		return ccs_write_domain(head);
 	case CCS_EXCEPTIONPOLICY:
 		return ccs_write_exception(head);
-	case CCS_DOMAIN_STATUS:
-		return ccs_write_domain_profile(head);
 	case CCS_EXECUTE_HANDLER:
 	case CCS_PROCESS_STATUS:
 		return ccs_write_pid(head);
@@ -2962,7 +2890,6 @@ ssize_t ccs_write_control(struct ccs_io_buffer *head,
 			switch (head->type) {
 			case CCS_DOMAINPOLICY:
 			case CCS_EXCEPTIONPOLICY:
-			case CCS_DOMAIN_STATUS:
 			case CCS_STAT:
 			case CCS_PROFILE:
 			case CCS_MANAGER:

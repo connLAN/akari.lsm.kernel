@@ -96,10 +96,10 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.15-20110626.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.15-20110626.tar.gz'
-# wget -O akari-1.0.15-20110626.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.15-20110626.tar.gz.asc'
-# gpg akari-1.0.15-20110626.tar.gz.asc
-# tar -zxf akari-1.0.15-20110626.tar.gz
+# wget -O akari-1.0.16-20110707.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.16-20110707.tar.gz'
+# wget -O akari-1.0.16-20110707.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.16-20110707.tar.gz.asc'
+# gpg akari-1.0.16-20110707.tar.gz.asc
+# tar -zxf akari-1.0.16-20110707.tar.gz
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}
@@ -122,10 +122,10 @@ You must choose CONFIG_MODULES=y for building this module.
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.2-20110626.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110626.tar.gz'
-$ wget -O ccs-tools-1.8.2-20110626.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110626.tar.gz.asc'
-$ gpg ccs-tools-1.8.2-20110626.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.2-20110626.tar.gz
+$ wget -O ccs-tools-1.8.2-20110707.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110707.tar.gz'
+$ wget -O ccs-tools-1.8.2-20110707.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110707.tar.gz.asc'
+$ gpg ccs-tools-1.8.2-20110707.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.2-20110707.tar.gz
 $ cd ccstools/
 $ make -s
 $ su
@@ -221,10 +221,10 @@ initrd /boot/initrd-2.6.18-238.12.1.e15.img
 <p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
 
 <pre class="output">
-AKARI: 1.0.15   2011/06/20
+AKARI: 1.0.16   2011/07/07
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.2   2011/06/20
+CCSecurity: 1.8.2+   2011/07/07
 Mandatory Access Control activated.
 </pre>
 

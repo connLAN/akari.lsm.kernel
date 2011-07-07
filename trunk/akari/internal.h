@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.2+   2011/07/07
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -679,7 +679,6 @@ enum ccs_pref_index {
 enum ccs_proc_interface_index {
 	CCS_DOMAINPOLICY,
 	CCS_EXCEPTIONPOLICY,
-	CCS_DOMAIN_STATUS,
 	CCS_PROCESS_STATUS,
 	CCS_STAT,
 	CCS_AUDIT,

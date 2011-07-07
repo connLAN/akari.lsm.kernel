@@ -134,3 +134,9 @@ Version 1.0.15   2011/06/20   Minor update release.
    Synchronize with TOMOYO 1.8.2 release.
 
    Add policy namespace support.
+
+Version 1.0.16   2011/07/07   Minor update release.
+
+   Synchronize with TOMOYO revision 5235.
+
+   Remove /proc/ccs/.domain_status interface.

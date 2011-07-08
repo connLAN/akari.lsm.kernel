@@ -49,7 +49,6 @@
 <li><a href="proc-interface.html.en#self_domain">/proc/ccs/self_domain</a></li>
 <li><a href="proc-interface.html.en#stat">/proc/ccs/stat</a></li>
 <li><a href="proc-interface.html.en#version">/proc/ccs/version</a></li>
-<li><a href="proc-interface.html.en#.domain_status">/proc/ccs/.domain_status</a></li>
 <li><a href="proc-interface.html.en#.execute_handler">/proc/ccs/.execute_handler</a></li>
 <li><a href="proc-interface.html.en#.process_status">/proc/ccs/.process_status</a></li>
 </ul>

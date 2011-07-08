@@ -155,12 +155,6 @@ Total memory used:                        201120
 
 <p>この読み込み専用インタフェースは、現在実行中の TOMOYO Linux のバージョンを保持しています。</p>
 
-<h3><a name=".domain_status">/proc/ccs/.domain_status</a></h3>
-
-<p>この読み書きインタフェースは、ドメイン名の一覧とそれぞれのドメインに割り当てられているプロファイル番号を保持しています。</p>
-
-<p>このインタフェースは、主に <a href="../man-pages/ccs-setprofile.html.ja">ccs-setprofile</a> が利用します。</p>
-
 <h3><a name=".execute_handler">/proc/ccs/.execute_handler</a></h3>
 
 <p>この読み書きインタフェースは、 execute_handler として動作しているプロセスからのみオープンすることができます。内容は <a href="#.process_status">/proc/ccs/.process_status</a> と同一です。</p>

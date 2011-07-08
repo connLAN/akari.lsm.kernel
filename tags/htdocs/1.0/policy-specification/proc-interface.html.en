@@ -155,12 +155,6 @@ Total memory used:                        201120
 
 <p>This read-only interface contains the currently running version of TOMOYO Linux.</p>
 
-<h3><a name=".domain_status">/proc/ccs/.domain_status</a></h3>
-
-<p>This read/write interface contains a list of domain names and profile numbers currently defined in domain policy.</p>
-
-<p>This is used primarily by the userspace tool <a href="../man-pages/ccs-setprofile.html.en">ccs-setprofile</a>.</p>
-
 <h3><a name=".execute_handler">/proc/ccs/.execute_handler</a></h3>
 
 <p>This read/write interface is openable by only processes running as an execute_handler process. The content is identical to <a href="#.process_status">"/proc/ccs/.process_status"</a>.</p>

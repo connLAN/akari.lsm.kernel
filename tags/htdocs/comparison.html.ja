@@ -92,8 +92,8 @@
 <tr><td colspan=10>Apacheのバーチャルホストに対応する機能</td></tr>
 <tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>より詳細なアクセス許可を指定する機能</td></tr>
-<tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
-<tr><td></td><td>ファイルの所有者ＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>ファイルの所有者ＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>グループ化されたパーミッション（acl_group）の利用を許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ポリシー名前空間のサポート</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>暴走によるダメージを減らす機能</td></tr>
@@ -114,8 +114,8 @@
 <tr><td></td><td>プログラムの実行を制限（ file execute ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;一時的な名前を持つプログラムの実行を許可</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンクのリンク先を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;起動時の名前を制限（ argv[0] ） when executing programs?</td><td>○</td><td colspan=6>○</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;起動時の名前を制限（ argv[0] ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;バイナリローダー（例： /lib/ld-linux.so.2 ）として使用できるプログラムを制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>ファイルの作成を制限（ file create ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
@@ -127,7 +127,7 @@
 <tr><td></td><td>ＵＮＩＸドメインソケットの作成を制限（ file mksock ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ＵＮＩＸドメインソケット作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>シンボリックリンクの作成を制限（ file symlink ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンク作成時のリンク先を制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンク作成時のリンク先を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>デバイスファイルの作成を制限（ file {mkblock,mkchar} ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;デバイスファイル作成時のデバイス番号およびパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ＩＯＣＴＬの可否を制限（ file ioctl ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>

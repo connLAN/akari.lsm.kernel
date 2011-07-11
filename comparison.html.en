@@ -92,8 +92,8 @@ Requires kernel 3.1 or later.<br>
 <tr><td colspan=10>Features for supporting Apache's virtual hosts</td></tr>
 <tr><td></td><td>Allow domain transitions without program execution?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td colspan=10>Features for specifying more fine grained permissions</td></tr>
-<tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
-<tr><td></td><td>Restrict based on file's credentials (e.g. owner ID)?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict based on file's credentials (e.g. owner ID)?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Allow including grouped permissions? (acl_group)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Allow using policy namespace?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for reducing damage by runaway</td></tr>
@@ -114,8 +114,8 @@ Requires kernel 3.1 or later.<br>
 <tr><td></td><td>Restrict executing programs? (file execute)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Allow execution of programs with temporary names?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check dereferenced pathname when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check invocation name (argv[0]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check arguments (argv[]) and environment variables (envp[]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check invocation name (argv[0]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check arguments (argv[]) and environment variables (envp[]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted environment variables names? (misc env)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted binary loader (e.g. /lib/ld-linux.so.2) programs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>Restrict creating files? (file create)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
@@ -127,7 +127,7 @@ Requires kernel 3.1 or later.<br>
 <tr><td></td><td>Restrict creating Unix domain sockets? (file mksock)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating Unix domain sockets?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict creating symbolic links? (file symlink)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check symbolic link's target when creating symbolic links?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check symbolic link's target when creating symbolic links?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict creating device files? (file {mkblock,mkchar})</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check device major/minor numbers and DAC's permission when creating device files?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict use of IOCTL requests? (file ioctl)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>

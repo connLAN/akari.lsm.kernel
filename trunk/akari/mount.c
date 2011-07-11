@@ -91,7 +91,7 @@ static inline void ccs_put_filesystem(struct file_system_type *fstype)
  * ccs_mount_acl - Check permission for mount() operation.
  *
  * @r:        Pointer to "struct ccs_request_info".
- * @dev_name: Name of device file.
+ * @dev_name: Name of device file. Maybe NULL.
  * @dir:      Pointer to "struct path".
  * @type:     Name of filesystem type.
  * @flags:    Mount options.
@@ -204,7 +204,7 @@ out:
 /**
  * __ccs_mount_permission - Check permission for mount() operation.
  *
- * @dev_name:  Name of device file.
+ * @dev_name:  Name of device file. Maybe NULL.
  * @path:      Pointer to "struct path".
  * @type:      Name of filesystem type. Maybe NULL.
  * @flags:     Mount options.

@@ -509,7 +509,7 @@ encode:
 /**
  * ccs_symlink_path - Get symlink's pathname.
  *
- * @pathname: The pathname to solve.
+ * @pathname: The pathname to solve. Maybe NULL.
  * @name:     Pointer to "struct ccs_path_info".
  *
  * Returns 0 on success, negative value otherwise.
@@ -604,7 +604,7 @@ char *ccs_encode(const char *str)
 /**
  * ccs_get_path - Get dentry/vfsmmount of a pathname.
  *
- * @pathname: The pathname to solve.
+ * @pathname: The pathname to solve. Maybe NULL.
  * @path:     Pointer to "struct path".
  *
  * Returns 0 on success, negative value otherwise.

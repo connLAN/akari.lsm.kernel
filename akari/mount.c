@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.2+   2011/07/13
  */
 
 #include "internal.h"
@@ -105,7 +105,6 @@ static int ccs_mount_acl(struct ccs_request_info *r, char *dev_name,
 			 unsigned long flags)
 {
 	struct ccs_obj_info obj = { };
-	struct path path;
 	struct file_system_type *fstype = NULL;
 	const char *requested_type = NULL;
 	const char *requested_dir_name = NULL;
@@ -157,12 +156,11 @@ static int ccs_mount_acl(struct ccs_request_info *r, char *dev_name,
 	}
 	if (need_dev) {
 		/* Get mount point or device file. */
-		if (ccs_get_path(dev_name, &path)) {
+		if (ccs_get_path(dev_name, &obj.path1)) {
 			error = -ENOENT;
 			goto out;
 		}
-		obj.path1 = path;
-		requested_dev_name = ccs_realpath_from_path(&path);
+		requested_dev_name = ccs_realpath_from_path(&obj.path1);
 		if (!requested_dev_name) {
 			error = -ENOENT;
 			goto out;

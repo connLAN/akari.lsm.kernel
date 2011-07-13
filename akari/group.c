@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.2+   2011/07/13
  */
 
 #include "internal.h"
@@ -177,27 +177,19 @@ bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
 			       const struct ccs_group *group)
 {
 	struct ccs_address_group *member;
-	const u32 ip = ntohl(*address);
 	bool matched = false;
+	const u8 size = is_ipv6 ? 16 : 4;
 	list_for_each_entry_srcu(member, &group->member_list, head.list,
 				 &ccs_ss) {
 		if (member->head.is_deleted)
 			continue;
-		if (member->address.is_ipv6) {
-			if (is_ipv6 &&
-			    memcmp(&member->address.ip[0], address, 16) <= 0 &&
-			    memcmp(address, &member->address.ip[1], 16) <= 0) {
-				matched = true;
-				break;
-			}
-		} else {
-			if (!is_ipv6 &&
-			    member->address.ip[0].s6_addr32[0] <= ip &&
-			    ip <= member->address.ip[1].s6_addr32[0]) {
-				matched = true;
-				break;
-			}
-		}
+		if (member->address.is_ipv6 != is_ipv6)
+			continue;
+		if (memcmp(&member->address.ip[0], address, size) > 0 ||
+		    memcmp(address, &member->address.ip[1], size) > 0)
+			continue;
+		matched = true;
+		break;
 	}
 	return matched;
 }

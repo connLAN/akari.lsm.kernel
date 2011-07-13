@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2+   2011/07/07
+ * Version: 1.8.2+   2011/07/13
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -826,13 +826,8 @@ struct ccs_number_union {
 
 /* Structure for holding an IP address. */
 struct ccs_ipaddr_union {
-	/*
-	 * Big endian if storing IPv6 address range.
-	 * Host endian if storing IPv4 address range.
-	 */
-	struct in6_addr ip[2];
-	/* Pointer to address group. */
-	struct ccs_group *group;
+	struct in6_addr ip[2]; /* Big endian. */
+	struct ccs_group *group; /* Pointer to address group. */
 	bool is_ipv6; /* Valid only if @group == NULL. */
 };
 
@@ -1000,9 +995,8 @@ struct ccs_request_info {
 			u8 operation;
 		} path_number;
 		struct {
-			const u32 *address;
-			u32 ip;
-			u16 port;
+			const u32 *address; /* Big endian. */
+			u16 port; /* Host endian. */
 			/* One of values smaller than CCS_SOCK_MAX. */
 			u8 protocol;
 			/* One of values in "enum ccs_network_acl_index". */

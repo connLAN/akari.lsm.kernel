@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.2+   2011/07/13
  */
 
 #include "internal.h"
@@ -39,6 +39,353 @@ const char * const ccs_proto_keyword[CCS_SOCK_MAX] = {
 	[4] = " ", /* Dummy for avoiding NULL pointer dereference. */
 };
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19) && defined(CONFIG_NET)
+#define ccs_in4_pton in4_pton
+#define ccs_in6_pton in6_pton
+#else
+/*
+ * Routines for parsing IPv4 or IPv6 address.
+ * These are copied from lib/hexdump.c net/core/utils.c .
+ */
+#include <linux/ctype.h>
+
+static int hex_to_bin(char ch)
+{
+	if ((ch >= '0') && (ch <= '9'))
+		return ch - '0';
+	ch = tolower(ch);
+	if ((ch >= 'a') && (ch <= 'f'))
+		return ch - 'a' + 10;
+	return -1;
+}
+
+#define IN6PTON_XDIGIT		0x00010000
+#define IN6PTON_DIGIT		0x00020000
+#define IN6PTON_COLON_MASK	0x00700000
+#define IN6PTON_COLON_1		0x00100000	/* single : requested */
+#define IN6PTON_COLON_2		0x00200000	/* second : requested */
+#define IN6PTON_COLON_1_2	0x00400000	/* :: requested */
+#define IN6PTON_DOT		0x00800000	/* . */
+#define IN6PTON_DELIM		0x10000000
+#define IN6PTON_NULL		0x20000000	/* first/tail */
+#define IN6PTON_UNKNOWN		0x40000000
+
+static inline int xdigit2bin(char c, int delim)
+{
+	int val;
+
+	if (c == delim || c == '\0')
+		return IN6PTON_DELIM;
+	if (c == ':')
+		return IN6PTON_COLON_MASK;
+	if (c == '.')
+		return IN6PTON_DOT;
+
+	val = hex_to_bin(c);
+	if (val >= 0)
+		return val | IN6PTON_XDIGIT | (val < 10 ? IN6PTON_DIGIT : 0);
+
+	if (delim == -1)
+		return IN6PTON_DELIM;
+	return IN6PTON_UNKNOWN;
+}
+
+static int ccs_in4_pton(const char *src, int srclen, u8 *dst, int delim,
+			const char **end)
+{
+	const char *s;
+	u8 *d;
+	u8 dbuf[4];
+	int ret = 0;
+	int i;
+	int w = 0;
+
+	if (srclen < 0)
+		srclen = strlen(src);
+	s = src;
+	d = dbuf;
+	i = 0;
+	while(1) {
+		int c;
+		c = xdigit2bin(srclen > 0 ? *s : '\0', delim);
+		if (!(c & (IN6PTON_DIGIT | IN6PTON_DOT | IN6PTON_DELIM |
+			   IN6PTON_COLON_MASK))) {
+			goto out;
+		}
+		if (c & (IN6PTON_DOT | IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+			if (w == 0)
+				goto out;
+			*d++ = w & 0xff;
+			w = 0;
+			i++;
+			if (c & (IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+				if (i != 4)
+					goto out;
+				break;
+			}
+			goto cont;
+		}
+		w = (w * 10) + c;
+		if ((w & 0xffff) > 255) {
+			goto out;
+		}
+cont:
+		if (i >= 4)
+			goto out;
+		s++;
+		srclen--;
+	}
+	ret = 1;
+	memcpy(dst, dbuf, sizeof(dbuf));
+out:
+	if (end)
+		*end = s;
+	return ret;
+}
+
+static int ccs_in6_pton(const char *src, int srclen, u8 *dst, int delim,
+			const char **end)
+{
+	const char *s, *tok = NULL;
+	u8 *d, *dc = NULL;
+	u8 dbuf[16];
+	int ret = 0;
+	int i;
+	int state = IN6PTON_COLON_1_2 | IN6PTON_XDIGIT | IN6PTON_NULL;
+	int w = 0;
+
+	memset(dbuf, 0, sizeof(dbuf));
+
+	s = src;
+	d = dbuf;
+	if (srclen < 0)
+		srclen = strlen(src);
+
+	while (1) {
+		int c;
+
+		c = xdigit2bin(srclen > 0 ? *s : '\0', delim);
+		if (!(c & state))
+			goto out;
+		if (c & (IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
+			/* process one 16-bit word */
+			if (!(state & IN6PTON_NULL)) {
+				*d++ = (w >> 8) & 0xff;
+				*d++ = w & 0xff;
+			}
+			w = 0;
+			if (c & IN6PTON_DELIM) {
+				/* We've processed last word */
+				break;
+			}
+			/*
+			 * COLON_1 => XDIGIT
+			 * COLON_2 => XDIGIT|DELIM
+			 * COLON_1_2 => COLON_2
+			 */
+			switch (state & IN6PTON_COLON_MASK) {
+			case IN6PTON_COLON_2:
+				dc = d;
+				state = IN6PTON_XDIGIT | IN6PTON_DELIM;
+				if (dc - dbuf >= sizeof(dbuf))
+					state |= IN6PTON_NULL;
+				break;
+			case IN6PTON_COLON_1|IN6PTON_COLON_1_2:
+				state = IN6PTON_XDIGIT | IN6PTON_COLON_2;
+				break;
+			case IN6PTON_COLON_1:
+				state = IN6PTON_XDIGIT;
+				break;
+			case IN6PTON_COLON_1_2:
+				state = IN6PTON_COLON_2;
+				break;
+			default:
+				state = 0;
+			}
+			tok = s + 1;
+			goto cont;
+		}
+
+		if (c & IN6PTON_DOT) {
+			ret = ccs_in4_pton(tok ? tok : s, srclen +
+					   (int)(s - tok), d, delim, &s);
+			if (ret > 0) {
+				d += 4;
+				break;
+			}
+			goto out;
+		}
+
+		w = (w << 4) | (0xff & c);
+		state = IN6PTON_COLON_1 | IN6PTON_DELIM;
+		if (!(w & 0xf000)) {
+			state |= IN6PTON_XDIGIT;
+		}
+		if (!dc && d + 2 < dbuf + sizeof(dbuf)) {
+			state |= IN6PTON_COLON_1_2;
+			state &= ~IN6PTON_DELIM;
+		}
+		if (d + 2 >= dbuf + sizeof(dbuf)) {
+			state &= ~(IN6PTON_COLON_1|IN6PTON_COLON_1_2);
+		}
+cont:
+		if ((dc && d + 4 < dbuf + sizeof(dbuf)) ||
+		    d + 4 == dbuf + sizeof(dbuf)) {
+			state |= IN6PTON_DOT;
+		}
+		if (d >= dbuf + sizeof(dbuf)) {
+			state &= ~(IN6PTON_XDIGIT|IN6PTON_COLON_MASK);
+		}
+		s++;
+		srclen--;
+	}
+
+	i = 15; d--;
+
+	if (dc) {
+		while(d >= dc)
+			dst[i--] = *d--;
+		while(i >= dc - dbuf)
+			dst[i--] = 0;
+		while(i >= 0)
+			dst[i--] = *d--;
+	} else
+		memcpy(dst, dbuf, sizeof(dbuf));
+
+	ret = 1;
+out:
+	if (end)
+		*end = s;
+	return ret;
+}
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 32)
+
+/*
+ * Routines for printing IPv4 or IPv6 address.
+ * These are copied from include/linux/kernel.h include/net/ipv6.h
+ * include/net/addrconf.h lib/hexdump.c lib/vsprintf.c and simplified.
+ */
+static const char hex_asc[] = "0123456789abcdef";
+#define hex_asc_lo(x)   hex_asc[((x) & 0x0f)]
+#define hex_asc_hi(x)   hex_asc[((x) & 0xf0) >> 4]
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+static inline char *pack_hex_byte(char *buf, u8 byte)
+{
+	*buf++ = hex_asc_hi(byte);
+	*buf++ = hex_asc_lo(byte);
+	return buf;
+}
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+static inline int ipv6_addr_v4mapped(const struct in6_addr *a)
+{
+	return (a->s6_addr32[0] | a->s6_addr32[1] |
+		(a->s6_addr32[2] ^ htonl(0x0000ffff))) == 0;
+}
+#endif
+
+static inline int ipv6_addr_is_isatap(const struct in6_addr *addr)
+{
+	return (addr->s6_addr32[2] | htonl(0x02000000)) == htonl(0x02005EFE);
+}
+
+static char *ip4_string(char *p, const u8 *addr)
+{
+	/*
+	 * Since this function is called outside vsnprintf(), I can use
+	 * sprintf() here.
+	 */
+	return p +
+		sprintf(p, "%u.%u.%u.%u", addr[0], addr[1], addr[2], addr[3]);
+}
+
+static char *ip6_compressed_string(char *p, const char *addr)
+{
+	int i, j, range;
+	unsigned char zerolength[8];
+	int longest = 1;
+	int colonpos = -1;
+	u16 word;
+	u8 hi, lo;
+	bool needcolon = false;
+	bool useIPv4;
+	struct in6_addr in6;
+
+	memcpy(&in6, addr, sizeof(struct in6_addr));
+
+	useIPv4 = ipv6_addr_v4mapped(&in6) || ipv6_addr_is_isatap(&in6);
+
+	memset(zerolength, 0, sizeof(zerolength));
+
+	if (useIPv4)
+		range = 6;
+	else
+		range = 8;
+
+	/* find position of longest 0 run */
+	for (i = 0; i < range; i++) {
+		for (j = i; j < range; j++) {
+			if (in6.s6_addr16[j] != 0)
+				break;
+			zerolength[i]++;
+		}
+	}
+	for (i = 0; i < range; i++) {
+		if (zerolength[i] > longest) {
+			longest = zerolength[i];
+			colonpos = i;
+		}
+	}
+	if (longest == 1)		/* don't compress a single 0 */
+		colonpos = -1;
+
+	/* emit address */
+	for (i = 0; i < range; i++) {
+		if (i == colonpos) {
+			if (needcolon || i == 0)
+				*p++ = ':';
+			*p++ = ':';
+			needcolon = false;
+			i += longest - 1;
+			continue;
+		}
+		if (needcolon) {
+			*p++ = ':';
+			needcolon = false;
+		}
+		/* hex u16 without leading 0s */
+		word = ntohs(in6.s6_addr16[i]);
+		hi = word >> 8;
+		lo = word & 0xff;
+		if (hi) {
+			if (hi > 0x0f)
+				p = pack_hex_byte(p, hi);
+			else
+				*p++ = hex_asc_lo(hi);
+			p = pack_hex_byte(p, lo);
+		}
+		else if (lo > 0x0f)
+			p = pack_hex_byte(p, lo);
+		else
+			*p++ = hex_asc_lo(lo);
+		needcolon = true;
+	}
+
+	if (useIPv4) {
+		if (needcolon)
+			*p++ = ':';
+		p = ip4_string(p, &in6.s6_addr[12]);
+	}
+	*p = '\0';
+
+	return p;
+}
+#endif
+
 /**
  * ccs_parse_ipaddr_union - Parse an IP address.
  *
@@ -50,92 +397,57 @@ const char * const ccs_proto_keyword[CCS_SOCK_MAX] = {
 bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
 			    struct ccs_ipaddr_union *ptr)
 {
-	u16 * const min = ptr->ip[0].s6_addr16;
-	u16 * const max = ptr->ip[1].s6_addr16;
+	u8 * const min = ptr->ip[0].in6_u.u6_addr8;
+	u8 * const max = ptr->ip[1].in6_u.u6_addr8;
 	char *address = ccs_read_token(param);
-	int count = sscanf(address, "%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx"
-			   "-%hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx",
-			   &min[0], &min[1], &min[2], &min[3],
-			   &min[4], &min[5], &min[6], &min[7],
-			   &max[0], &max[1], &max[2], &max[3],
-			   &max[4], &max[5], &max[6], &max[7]);
-	if (count == 8 || count == 16) {
-		u8 i;
-		if (count == 8)
-			memmove(max, min, sizeof(u16) * 8);
-		for (i = 0; i < 8; i++) {
-			min[i] = htons(min[i]);
-			max[i] = htons(max[i]);
-		}
-		ptr->is_ipv6 = true;
+	const char *end;
+	if (!strchr(address, ':') &&
+	    ccs_in4_pton(address, -1, min, '-', &end) > 0) {
+		ptr->is_ipv6 = false;
+		if (!*end)
+			ptr->ip[1].s6_addr32[0] = ptr->ip[0].s6_addr32[0];
+		else if (*end++ != '-' ||
+			 ccs_in4_pton(end, -1, max, '\0', &end) <= 0 || *end)
+			return false;
 		return true;
 	}
-	count = sscanf(address, "%hu.%hu.%hu.%hu-%hu.%hu.%hu.%hu",
-		       &min[0], &min[1], &min[2], &min[3],
-		       &max[0], &max[1], &max[2], &max[3]);
-	if (count == 4 || count == 8) {
-		/* use host byte order to allow u32 comparison.*/
-		ptr->ip[0].s6_addr32[0] =
-			(((u8) min[0]) << 24) + (((u8) min[1]) << 16)
-			+ (((u8) min[2]) << 8) + (u8) min[3];
-		if (count == 4)
-			ptr->ip[1].s6_addr32[0] = ptr->ip[0].s6_addr32[0];
-		else
-			ptr->ip[1].s6_addr32[0] =
-				(((u8) max[0]) << 24) + (((u8) max[1]) << 16)
-				+ (((u8) max[2]) << 8) + (u8) max[3];
-		ptr->is_ipv6 = false;
+	if (ccs_in6_pton(address, -1, min, '-', &end) > 0) {
+		ptr->is_ipv6 = true;
+		if (!*end)
+			memmove(max, min, sizeof(u16) * 8);
+		else if (*end++ != '-' ||
+			 ccs_in6_pton(end, -1, max, '\0', &end) <= 0 || *end)
+			return false;
 		return true;
 	}
 	return false;
 }
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-#if defined(__LITTLE_ENDIAN)
-#define HIPQUAD(addr)				\
-	((unsigned char *)&addr)[3],		\
-		((unsigned char *)&addr)[2],	\
-		((unsigned char *)&addr)[1],	\
-		((unsigned char *)&addr)[0]
-#elif defined(__BIG_ENDIAN)
-#define HIPQUAD(addr)				\
-	((unsigned char *)&addr)[0],		\
-		((unsigned char *)&addr)[1],	\
-		((unsigned char *)&addr)[2],	\
-		((unsigned char *)&addr)[3]
-#else
-#error "Please fix asm/byteorder.h"
-#endif /* __LITTLE_ENDIAN */
-#endif
 
 /**
  * ccs_print_ipv4 - Print an IPv4 address.
  *
  * @buffer:     Buffer to write to.
  * @buffer_len: Size of @buffer.
- * @min_ip:     Min address in host byte order.
- * @max_ip:     Max address in host byte order.
+ * @min_ip:     Pointer to "u32 in network byte order".
+ * @max_ip:     Pointer to "u32 in network byte order".
  *
  * Returns nothing.
  */
 static void ccs_print_ipv4(char *buffer, const unsigned int buffer_len,
-			   const u32 min_ip, const u32 max_ip)
+			   const u32 *min_ip, const u32 *max_ip)
 {
-	memset(buffer, 0, buffer_len);
-	snprintf(buffer, buffer_len - 1, "%u.%u.%u.%u%c%u.%u.%u.%u",
-		 HIPQUAD(min_ip), min_ip == max_ip ? '\0' : '-',
-		 HIPQUAD(max_ip));
-}
-
-#if !defined(NIP6)
-
-#define NIP6(addr)							\
-	ntohs((addr).s6_addr16[0]), ntohs((addr).s6_addr16[1]),		\
-		ntohs((addr).s6_addr16[2]), ntohs((addr).s6_addr16[3]), \
-		ntohs((addr).s6_addr16[4]), ntohs((addr).s6_addr16[5]), \
-		ntohs((addr).s6_addr16[6]), ntohs((addr).s6_addr16[7])
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
+	snprintf(buffer, buffer_len, "%pI4%c%pI4", min_ip,
+		 *min_ip == *max_ip ? '\0' : '-', max_ip);
+#else
+	char min_addr[sizeof("255.255.255.255")];
+	char max_addr[sizeof("255.255.255.255")];
+	ip4_string(min_addr, (const u8 *) min_ip);
+	ip4_string(max_addr, (const u8 *) max_ip);
+	snprintf(buffer, buffer_len, "%s%c%s", min_addr,
+		 *min_ip == *max_ip ? '\0' : '-', max_addr);
 #endif
+}
 
 /**
  * ccs_print_ipv6 - Print an IPv6 address.
@@ -151,11 +463,17 @@ static void ccs_print_ipv6(char *buffer, const unsigned int buffer_len,
 			   const struct in6_addr *min_ip,
 			   const struct in6_addr *max_ip)
 {
-	memset(buffer, 0, buffer_len);
-	snprintf(buffer, buffer_len - 1,
-		 "%x:%x:%x:%x:%x:%x:%x:%x%c%x:%x:%x:%x:%x:%x:%x:%x",
-		 NIP6(*min_ip), !memcmp(min_ip, max_ip, 16) ? '\0' : '-',
-		 NIP6(*max_ip));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
+	snprintf(buffer, buffer_len, "%pI6c%c%pI6c", min_ip,
+		 !memcmp(min_ip, max_ip, 16) ? '\0' : '-', max_ip);
+#else
+	char min_addr[sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255")];
+	char max_addr[sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255")];
+	ip6_compressed_string(min_addr, (const u8 *) min_ip);
+	ip6_compressed_string(max_addr, (const u8 *) max_ip);
+	snprintf(buffer, buffer_len, "%s%c%s", min_addr,
+		 !memcmp(min_ip, max_ip, 16) ? '\0' : '-', max_addr);
+#endif
 }
 
 /**
@@ -173,8 +491,8 @@ void ccs_print_ip(char *buf, const unsigned int size,
 	if (ptr->is_ipv6)
 		ccs_print_ipv6(buf, size, &ptr->ip[0], &ptr->ip[1]);
 	else
-		ccs_print_ipv4(buf, size, ptr->ip[0].s6_addr32[0],
-			       ptr->ip[1].s6_addr32[0]);
+		ccs_print_ipv4(buf, size, &ptr->ip[0].s6_addr32[0],
+			       &ptr->ip[1].s6_addr32[0]);
 }
 
 /*
@@ -428,8 +746,7 @@ static int ccs_audit_inet_log(struct ccs_request_info *r)
 		ccs_print_ipv6(buf, sizeof(buf), (const struct in6_addr *)
 			       address, (const struct in6_addr *) address);
 	else
-		ccs_print_ipv4(buf, sizeof(buf), r->param.inet_network.ip,
-			       r->param.inet_network.ip);
+		ccs_print_ipv4(buf, sizeof(buf), address, address);
 	len = strlen(buf);
 	snprintf(buf + len, sizeof(buf) - len, " %u",
 		 r->param.inet_network.port);
@@ -463,6 +780,7 @@ static bool ccs_check_inet_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr)
 {
 	const struct ccs_inet_acl *acl = container_of(ptr, typeof(*acl), head);
+	const u8 size = r->param.inet_network.is_ipv6 ? 16 : 4;
 	if (!(acl->perm & (1 << r->param.inet_network.operation)) ||
 	    !ccs_compare_number_union(r->param.inet_network.port, &acl->port))
 		return false;
@@ -470,18 +788,11 @@ static bool ccs_check_inet_acl(struct ccs_request_info *r,
 		return ccs_address_matches_group(r->param.inet_network.is_ipv6,
 						 r->param.inet_network.address,
 						 acl->address.group);
-	else if (acl->address.is_ipv6)
-		return r->param.inet_network.is_ipv6 &&
-			memcmp(&acl->address.ip[0],
-			       r->param.inet_network.address, 16) <= 0 &&
-			memcmp(r->param.inet_network.address,
-			       &acl->address.ip[1], 16) <= 0;
-	else
-		return !r->param.inet_network.is_ipv6 &&
-			acl->address.ip[0].s6_addr32[0] <=
-			r->param.inet_network.ip &&
-			r->param.inet_network.ip <=
-			acl->address.ip[1].s6_addr32[0];
+	return acl->address.is_ipv6 == r->param.inet_network.is_ipv6 &&
+		memcmp(&acl->address.ip[0],
+		       r->param.inet_network.address, size) <= 0 &&
+		memcmp(r->param.inet_network.address,
+		       &acl->address.ip[1], size) <= 0;
 }
 
 /**
@@ -521,10 +832,6 @@ static int ccs_inet_entry(const struct ccs_addr_info *address)
 		r.param.inet_network.is_ipv6 = address->inet.is_ipv6;
 		r.param.inet_network.address = address->inet.address;
 		r.param.inet_network.port = ntohs(address->inet.port);
-		/*
-		 * Use host byte order to allow u32 comparison than memcmp().
-		 */
-		r.param.inet_network.ip = ntohl(*address->inet.address);
 		r.dont_sleep_on_enforce_error =
 			address->operation == CCS_NETWORK_ACCEPT ||
 			address->operation == CCS_NETWORK_RECV;

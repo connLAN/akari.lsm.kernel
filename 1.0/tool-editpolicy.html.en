@@ -301,7 +301,7 @@ If this domain does not have this mark and this domain is not specified by neith
 
 <img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400">
 
-<h4>Domains inside brackets</h4>
+<h4>Domains inside parenthesis</h4>
 
 <p>This means that the domain does not exist. This line is displayed for avoiding tree indent breakage.<br>
 You don't need to create parent domains if processes directly transit to descendant domains by either <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> or <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directives.</p>
@@ -355,7 +355,7 @@ Also, domains which became unreachable due to the directive are now marked with 
 
 <img src="editpolicy/optimize-2.png" alt="optimize-2.png" title="After adding patterned entry" width="720" height="400">
 
-<p>This manually added entry matches many of the entries that are already defined. Move the cursor to the patterned entry you have just added and press the "o" key. This will select all entries that are implied by the patterned etnry:</p>
+<p>This manually added entry matches many of the entries that are already defined. Move the cursor to the patterned entry you have just added and press the "o" key. This will select all entries that are implied by the patterned entry:</p>
 
 <img src="editpolicy/optimize-3.png" alt="optimize-3.png" title="After entering optimize key" width="720" height="400">
 

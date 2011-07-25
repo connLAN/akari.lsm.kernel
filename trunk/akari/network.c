@@ -49,6 +49,7 @@ const char * const ccs_proto_keyword[CCS_SOCK_MAX] = {
  */
 #include <linux/ctype.h>
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 35)
 static int hex_to_bin(char ch)
 {
 	if ((ch >= '0') && (ch <= '9'))
@@ -58,6 +59,7 @@ static int hex_to_bin(char ch)
 		return ch - 'a' + 10;
 	return -1;
 }
+#endif
 
 #define IN6PTON_XDIGIT		0x00010000
 #define IN6PTON_DIGIT		0x00020000

@@ -1167,7 +1167,7 @@ static int ccs_write_domain2(struct ccs_policy_namespace *ns,
 		{ "task ", ccs_write_task },
 	};
 	u8 i;
-	for (i = 0; i < 7; i++) {
+	for (i = 0; i < ARRAY_SIZE(ccs_callback); i++) {
 		if (!ccs_str_starts(&param.data, ccs_callback[i].keyword))
 			continue;
 		return ccs_callback[i].write(&param);

@@ -729,7 +729,7 @@ static int ccs_environ(struct ccs_execve *ee)
 {
 	struct ccs_request_info *r = &ee->r;
 	struct linux_binprm *bprm = ee->bprm;
-	/* env_page->data is allocated by ccs_dump_page(). */
+	/* env_page.data is allocated by ccs_dump_page(). */
 	struct ccs_page_dump env_page = { };
 	char *arg_ptr; /* Size is CCS_EXEC_TMPSIZE bytes */
 	int arg_len = 0;
@@ -795,7 +795,7 @@ static int ccs_environ(struct ccs_execve *ee)
 		offset = 0;
 	}
 out:
-	if (r->mode != 3)
+	if (r->mode != CCS_CONFIG_ENFORCING)
 		error = 0;
 	kfree(env_page.data);
 	kfree(arg_ptr);

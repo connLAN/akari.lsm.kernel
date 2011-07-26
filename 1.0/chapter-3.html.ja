@@ -96,10 +96,10 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.17-20110713.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.17-20110713.tar.gz'
-# wget -O akari-1.0.17-20110713.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.17-20110713.tar.gz.asc'
-# gpg akari-1.0.17-20110713.tar.gz.asc
-# tar -zxf akari-1.0.17-20110713.tar.gz
+# wget -O akari-1.0.17-20110726.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.17-20110726.tar.gz'
+# wget -O akari-1.0.17-20110726.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.17-20110726.tar.gz.asc'
+# gpg akari-1.0.17-20110726.tar.gz.asc
+# tar -zxf akari-1.0.17-20110726.tar.gz
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}

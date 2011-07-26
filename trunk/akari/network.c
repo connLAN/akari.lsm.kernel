@@ -269,11 +269,11 @@ out:
  * These are copied from include/linux/kernel.h include/net/ipv6.h
  * include/net/addrconf.h lib/hexdump.c lib/vsprintf.c and simplified.
  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 static const char hex_asc[] = "0123456789abcdef";
 #define hex_asc_lo(x)   hex_asc[((x) & 0x0f)]
 #define hex_asc_hi(x)   hex_asc[((x) & 0xf0) >> 4]
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 static inline char *pack_hex_byte(char *buf, u8 byte)
 {
 	*buf++ = hex_asc_hi(byte);

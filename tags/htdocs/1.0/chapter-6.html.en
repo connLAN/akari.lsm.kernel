@@ -40,7 +40,7 @@
 
 <p>A particular domain may require many different access permissions to many different resources. Since "Enforcing Mode" allows access to only resources explicitly defined, it is important to cover all necessary resources. To do this, permissions can be patterned. A patterned permission will allow multiple domain policy entries to be shortened into a single entry.</p>
 
-<p>This is particularly important for temporary files due to the variety of single-use pathnames involved. They can either be handled in the manner described below, or handled interactively using the policy editor. For details on handling permissions interactively, see how to <a href="tool-editpolicy.html.en#redundant">Remove redundant entries</a>.</p>
+<p>This is particularly important for temporary files due to the variety of single-use pathnames involved. They can either be handled in the manner described below, or handled interactively using the policy editor. For details on handling permissions interactively, see how to <a href="tool-editpolicy.html.en#make_pattern">Converting ACL entries into patterns</a>.</p>
 
 <p>Use <code>ccs-findtemp</code> to find pathnames from domain policy that are potentially temporary files:</p>
 

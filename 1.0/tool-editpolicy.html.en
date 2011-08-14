@@ -38,133 +38,281 @@
 
 <h2>Contents</h2>
 <ul>
-<li><a href="#hotkeys">General hotkeys</a></li>
-<li><a href="#common">Common operations</a><br>
-  <ul class="nested">
-    <li><a href="#screens">Available screens</a></li>
-    <li><a href="#search">Search for an entry</a></li>
-    <li><a href="#add">Add an entry</a></li>
-    <li><a href="#select">Select an entry</a></li>
-    <li><a href="#delete">Delete an entry</a></li>
-  </ul></li>
-<li><a href="#operations_in_the_domain_transition_editor">Operations in the Domain Transition Editor screen</a></li>
-<li><a href="#initialize_domain_transition">The initialize_domain and no_initialize_domain directives</a></li>
-<li><a href="#suppress_domain_transition">The keep_domain and no_keep_domain directives</a></li>
-<li><a href="#redundant">Remove redundant entries</a></li>
+<li>1. <a href="#invocation">Invocation</a><br>
+<ul class="nested">
+<li>1.1. <a href="#policy_directory">Specifying policy directory</a></li>
+<li>1.2. <a href="#initial_screen">Specifying initial screen to display</a></li>
+<li>1.3. <a href="#initial_namespace">Specifying initial namespace to display</a></li>
+<li>1.4. <a href="#operation_mode">Specifying operation mode</a></li>
+<li>1.5. <a href="#auto_refresh">Specifying automatic refresh</a></li>
+</ul></li>
+<li>2. <a href="#commands">Available commands</a><br>
+<ul class="nested">
+<li>2.1. <a href="#scroll">Scrolling</a></li>
+<li>2.2. <a href="#search">Searching</a></li>
+<li>2.3. <a href="#modify">Modifying</a></li>
+<li>2.4. <a href="#misc">Misc</a></li>
+</ul></li>
+<li>3. <a href="#domain_policy_editor_operations">Operations specific to Domain Policy Editor screen</a><br>
+<ul class="nested">
+<li>3.1. <a href="#domain_policy_editor">Domain Policy Editor screen</a></li>
+<li>3.2. <a href="#make_pattern">Converting ACL entries into patterns</a></li>
+<li>3.3. <a href="#sort_acl">Sorting ACL entries</a></li>
+</ul></li>
+<li>4. <a href="#domain_transition_editor_operations">Operations specific to Domain Transition Editor screen</a><br>
+<ul class="nested">
+<li>4.1. <a href="#browse_transition">Browsing domain transition patterns and exceptions</a></li>
+<li>4.2. <a href="#change_profile">Changing profile number</a></li>
+<li>4.3. <a href="#edit_acl_by_domain">Editing ACL by domain name</a></li>
+<li>4.4. <a href="#edit_acl_by_task">Editing ACL by currently running task</a></li>
+</ul></li>
 </ul>
 
-<h2><a name="hotkeys">General hotkeys</a></h2>
+<hr>
 
-<p>The policy editor can be run with the following command:</p>
+<h2>1. <a name="invocation">Invocation</a></h2>
+
+<p>You can execute the policy editor like below:</p>
 
 <pre class="command">
-# ccs-editpolicy
+# /usr/sbin/ccs-editpolicy
 </pre>
 
-<p>You may give one of a/d/p/m/s to the commandline to choose the initial screen. If an option is not given, the default "Domain Transition Editor" screen is shown.</p>
+<p>The options described below can be specified as options on the command line.</p>
 
-<p>While using the ncurses interface, the hotkeys listed below can be used:</p>
+<h3>1.1. <a name="policy_directory">Specifying policy directory</a></h3>
+
+<p>By default, the policy editor tool edits policy within the /proc/ccs/ directory.</p>
+
+<div class="simple-table">
+<table>
+<tr><th><p>Option</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p>$ipaddress:$port</p></td><td><p>Connect to the policy editing agent process listening at a host with IPv4 address $ipaddress and port $port.</p></td></tr>
+<tr><td><p>/$path/$to/$directory</p></td><td><p>Edit the policy files in the policy/current/ subdirectory of the /$path/$to/$directory directory. Usually, /etc/ccs/ is specified.</p></td></tr>
+</table>
+</div>
+
+<h3>1.2. <a name="initial_screen">Specifying initial screen to display</a></h3>
+
+<p>By default, the policy editor displays <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen.</p>
+
+<div class="simple-table">
+<table>
+<tr><th><p>Option</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p>e</p></td><td><p><a name="exception_policy_editor">"Exception Policy Editor" screen</a></p>
+<img src="editpolicy/exception_policy.png" alt="exception_policy.png" title="Screen for editing /proc/ccs/exception_policy" width="720" height="400">
+<p>This screen is used for editing /proc/ccs/exception_policy .</p>
+</td></tr>
+<tr><td><p>d</p></td><td><p><a name="domain_transition_editor">"Domain Transition Editor" screen</a></p>
+<img src="editpolicy/domain_transition.png" alt="domain_transition.png" title="Screen for editing /proc/ccs/domain_policy" width="720" height="400">
+<p>This screen is used for editing /proc/ccs/domain_policy .<br>
+<p>The <strong>first line</strong> shows what screen you are on and how many domains are listed.<br>
+The <strong>second line</strong> is the message area.<br>
+The <strong>third line</strong> shows the domain name currently selected by the cursor.<br>
+The <strong>fourth line</strong> and downwards are the domains currently defined.</p>
+</td></tr>
+<tr><td><p>p</p></td><td><p><a name="profile_editor">"Profile Editor" screen</a></p><img src="editpolicy/profile.png" alt="profile.png" title="Screen for editing /proc/ccs/profile" width="720" height="400">
+<p>This screen is used for editing /proc/ccs/profile .</p>
+</td></tr>
+<tr><td><p>m</p></td><td><p><a name="manager_policy_editor">"Manager Policy Editor" screen</a></p>
+<img src="editpolicy/manager.png" alt="manager.png" title="Screen for editing /proc/ccs/manager" width="720" height="400">
+<p>This screen is used for editing /proc/ccs/manager .</p>
+</td></tr>
+<tr><td><p>n</p></td><td><p><a name="namespace_selector">"Namespace Selector" screen</a></p>
+<img src="editpolicy/namespace.png" alt="namespace.png" title="Screen for selecting namespace" width="720" height="400">
+<p>This screen is used for selecting the namespace to display.</p>
+</td></tr>
+<tr><td><p>s</p></td><td><p><a name="statistics">"Statistics" screen</a></p>
+<img src="editpolicy/stat.png" alt="stat.png" title="Screen for editing /proc/ccs/stat" width="720" height="400">
+<p>This screen is used for editing /proc/ccs/stat .</p>
+</td></tr>
+</table>
+</div>
+
+<h3>1.3. <a name="initial_namespace">Specifying initial namespace to display</a></h3>
+
+<p>The policy editor by default displays the "&lt;kernel&gt;" namespace.</p>
+
+<div class="simple-table">
+<table>
+<tr><th><p>Option</p></th><th><p>Meaning</p></th></tr>
+<tr><td>&lt;$namespace&gt;</td><td><p>Displays the "&lt;$namespace&gt;" namespace.</p></td></tr>
+</table>
+</div>
+
+<p>Each namespace has its own <a href="#exception_policy_editor">"Exception Policy Editor"</a> screen, <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen and <a href="#profile_editor">"Profile Editor"</a> screen. Currently selected namespace is displayed on the <strong>third line</strong> of each screen.</p>
+<p>You can switch namespaces from <a href="#namespace_selector">"Namespace Selector"</a> screen or from <a href="#domain_jump_across_namespace">Shortcuts displayed on "Domain Transition Editor" screen</a>.</p>
+
+<h3>1.4. <a name="operation_mode">Specifying operation mode</a></h3>
+
+<p>The policy editor by defaults operates for both browsing and editing mode.</p>
+
+<div class="simple-table">
+<table>
+<tr><th><p>Option</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p>readonly</p></td><td><p>Operate for browse-only mode.</p></td></tr>
+</table>
+</div>
+
+<h3>1.5. <a name="auto_refresh">Specifying automatic refresh</a></h3>
+
+<p>The policy editor by default refreshes to the latest information only when the "r" key is pressed.</p>
+
+<div class="simple-table">
+<table>
+<tr><th><p>Option</p></th><th><p>Meaning</p></th></tr>
+<tr><td><p>refresh=$interval</p></td><td><p>Automatically refresh in $interval seconds. This option assumes that browse-only mode is used.</p></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>2. <a name="commands">Available commands</a></h2>
+
+<p>Since the policy editor uses ncurses interface, all operations can be done from the keyboard.</p>
+
+<h3>2.1. <a name="scroll">Scrolling</a></h3>
+
+<br>
 
 <div class="simple-table">
 <table>
 <tr>
 <th><p>Key</p></th>
-<th><p>Scroll action</p></th>
+<th><p>Scroll operation</p></th>
 </tr>
 <tr>
 <td><p>Up-arrow</p></td>
-<td><p>Scroll 1 line up</p></td>
+<td><p>Scroll 1 line up.</p></td>
 </tr>
 <tr>
 <td><p>Down-arrow</p></td>
-<td><p>Scroll 1 line down</p></td>
+<td><p>Scroll 1 line down.</p></td>
 </tr>
 <tr>
 <td><p>PageUp</p></td>
-<td><p>Scroll 1 page up</p></td>
+<td><p>Scroll 1 page up.</p></td>
 </tr>
 <tr>
 <td><p>PageDown</p></td>
-<td><p>Scroll 1 page down</p></td>
+<td><p>Scroll 1 page down.</p></td>
 </tr>
 <tr>
 <td><p>Right-arrow</p></td>
-<td><p>Scroll 1 column right</p></td>
+<td><p>Scroll 1 column right.</p></td>
 </tr>
 <tr>
 <td><p>Left-arrow</p></td>
-<td><p>Scroll 1 column left</p></td>
+<td><p>Scroll 1 column left.</p></td>
 </tr>
 <tr>
 <td><p>Home</p></td>
-<td><p>Move to the top of line</p></td>
+<td><p>Move to the top of line.</p></td>
 </tr>
 <tr>
 <td><p>End</p></td>
-<td><p>Move to the bottom of line</p></td>
+<td><p>Move to the bottom of line.</p></td>
 </tr>
 </table>
 </div>
+
+<h3>2.2. <a name="search">Searching</a></h3>
+
+<br>
 
 <div class="simple-table">
 <table>
 <tr>
 <th><p>Key</p></th>
-<th><p>Search action</p></th>
+<th><p>Search operation</p></th>
 </tr>
 <tr>
-<td><p>f/F</p></td>
-<td><p>Find First</p></td>
+<td><p>"f" or "F"</p></td>
+<td><p>Find the first matching entry.</p>
+<p>To start searching, press the "f" key and type the string that you wish to search, and then press the "Enter" key:</p>
+<img src="editpolicy/find.png" alt="find.png" title="Find First" width="720" height="400">
+</td>
 </tr>
 <tr>
-<td><p>n/N</p></td>
-<td><p>Find Next</p></td>
+<td><p>"n" or "N"</p></td>
+<td><p>Find the next matching entry.</p>
+<p>Continue searching in a forward direction (downwards) using previously typed string.</p></td>
 </tr>
 <tr>
-<td><p>p/P</p></td>
-<td><p>Find Previous</p></td>
+<td><p>"p" or "P"</p></td>
+<td><p>Find the previous matching entry.</p>
+<p>Continue searching in a backward direction (upwards) using previously typed string.</p></td>
 </tr>
 </table>
 </div>
+
+<h3>2.3. <a name="modify">Modifying</a></h3>
+
+<br>
 
 <div class="simple-table">
 <table>
 <tr>
 <th><p>Key</p></th>
-<th><p>Edit action</p></th>
-</tr>
-<tr>
-<td><p>a/A</p></td>
-<td><p>Add an entry.</p></td>
-</tr>
-<tr>
-<td><p>Enter</p></td>
-<td><p>Edit ACLs of a domain at the cursor position on "Domain Transition Editor" screen</p></td>
-</tr>
-<tr>
-<td><p>Space</p></td>
-<td><p>Invert selection state of an entry at the cursor position.</p></td>
-</tr>
-<tr>
-<td><p>c/C</p></td>
-<td><p>Copy selection state of an entry at the cursor position to all entries below the cursor position.</p></td>
-</tr>
-<tr>
-<td><p>d/D</p></td>
-<td><p>Delete selected entries.</p></td>
-</tr>
-<tr>
-<td><p>s/S</p></td>
-<td><p>Set profile number of selected entries on "Domain Transition Editor" screen".<br>
-Set profile value for selected entries on "Profile Editor" screen.<br>
-Set new quota value for selected entries on "Statistics" screen.</p></td>
+<th><p>Modify operation</p></th>
 </tr>
 <tr>
 <td><p>Insert</p></td>
 <td><p>Copy an entry at the cursor position to history buffer.</p></td>
 </tr>
+<tr>
+<td><p>"a" or "A"</p></td>
+<td><p>Add an entry.</p>
+<p>To add an entry, press the "a" key and type the string that you wish to add, and then press the "Enter" key:</p>
+<img src="editpolicy/add.png" alt="add.png" title="Adding an entry" width="720" height="400">
+<p>The strings are saved in the history buffer and can be viewed by pressing the "Insert" key.<br>
+To load strings in the history buffer, press the Up/Down cursor keys.<br>
+This can be used in any of the screens except the "Statistics" screen.</p>
+</td>
+</tr>
+<tr>
+<td><p>Space</p></td>
+<td><p>Invert selection state of an entry at the cursor position.</p>
+<p>Move the cursor to the entry you wish to select and press the "Space" key.<br>
+When an entry is selected, an "&amp;" symbol will appear at the start of the line.<br>
+Multiple entries can be selected.<br>
+The "Space" key can also be used to deselect an entry.</p></td>
+</tr>
+<tr>
+<td><p>"c" or "C"</p></td>
+<td><p>Copy selection state of an entry at the cursor position to all entries below the cursor position.</p>
+<p>The selection state of the entry of the cursor line can be copied to all entries below by pressing the "c" key:</p>
+<img src="editpolicy/copy.png" alt="copy.png" title="Copying selection state" width="720" height="400">
+<p>This makes it easy to select all entries or a block of entries.<br>
+If you wish to select a block of entries, move the cursor to the first entry of the block and press the "Space" (to select) and "c" keys.<br>
+Then move the cursor to the entry that lies below the block and press the "Space" (to deselect) and "c" keys.</p>
+</td>
+</tr>
+<tr>
+<td><p>"d" or "D"</p></td>
+<td><p>Delete selected entries.</p>
+<p>To delete an entry, move the cursor to the entry you wish to delete and press the "d" key:</p>
+<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400">
+<p>This can also be done by selecting all of the entries you wish to delete.</p>
+</td>
+</tr>
+<tr>
+<td><p>"s" or "S"</p></td>
+<td><p>Set profile number of selected entries on "Domain Transition Editor" screen.<br>
+Set profile value for selected entries on "Profile Editor" screen.<br>
+Set new quota value for selected entries on "Statistics" screen.</p>
+</td>
+</tr>
+<tr>
+<td><p>Enter</p></td>
+<td><p>Edit ACLs of a domain at the cursor position on "Domain Transition Editor" screen.</p></td>
+</tr>
 </table>
 </div>
+
+<h3>2.4. <a name="misc">Misc</a></h3>
+
+<br>
 
 <div class="simple-table">
 <table>
@@ -173,193 +321,130 @@ Set new quota value for selected entries on "Statistics" screen.</p></td>
 <th><p>Miscellaneous action</p></th>
 </tr>
 <tr>
-<td><p>q/Q</p></td>
-<td><p>Quit</p></td>
+<td><p>"q" or "Q"</p></td>
+<td><p>Quit the policy editor.</p></td>
 </tr>
 <tr>
-<td><p>r/R</p></td>
-<td><p>Refresh</p></td>
+<td><p>"r" or "R"</p></td>
+<td><p>Refresh to the latest information.</p></td>
 </tr>
 <tr>
-<td><p>w/W</p></td>
-<td><p>Switch to window list.</p></td>
+<td><p>"w" or "W"</p></td>
+<td><p>Display the list of available screens.</p>
+<p>By pressing the "w" key, list of screens are displayed. By pressing a key from the screen, the corresponding screen is displayed:</p>
+
+<img src="editpolicy/window.png" alt="window.png" title="Screen for selecting screen" width="720" height="400">
+</td>
 </tr>
 </table>
 </div>
 
-<h2><a name="common">Common operations</a></h2>
+<hr>
 
-<h3><a name="screens">Available screens</a></h3>
+<h2>3. <a name="domain_policy_editor_operations">Operations specific to Domain Policy Editor screen</a></h2>
 
-<p>Press the "w" key to show the window/screen list and press a key to view the corresponding screen:</p>
+<h3>3.1. <a name="domain_policy_editor">Domain Policy Editor screen</a></h3>
 
-<img src="editpolicy/window-list.png" alt="window-list.png" title="Window List" width="720" height="400">
+<p>You can display this screen by pressing the Enter key (or pressing the "w" key and then pressing the "a" key") after moving the cursor to a domain at the "Domain Transition Editor" screen.</p>
 
-<h4><a name="domain_transition_editor">Domain Transition Editor screen</a></h4>
+<img src="editpolicy/domain_policy.png" alt="domain_policy.png" title="Screen for /proc/ccs/domain_policy" width="720" height="400">
 
-<img src="editpolicy/domain-list.png" alt="domain-list.png" title="Screen for Domain List" width="720" height="400">
+<h3>3.2. <a name="make_pattern">Converting ACL entries into patterns</a></h3>
 
-<p>The <strong>first line</strong> shows what screen you are on and how many domains are listed.<br>
-The <strong>second line</strong> is the message area.<br>
-The <strong>third line</strong> shows the domain name currently selected by the cursor.<br>
-The <strong>fourth line</strong> and downwards are the domains currently defined.</p>
+<p>Redundant entries can be removed by patterning entries (<a href="chapter-6.html.en">see Chapter 6: How do I develop policy?</a>). Switch to the "Domain Policy Editor" screen and add an entry such as "file read /home/kumaneko/SVN/\{\*\}\/\*":</p>
 
-<h4><a name="exception_policy_editor">Exception Policy Editor screen</a></h4>
+<img src="editpolicy/added_patterned_entry.png" alt="added_patterned_entry.png" title="Added patterned entry" width="720" height="400">
 
-<img src="editpolicy/exception-policy.png" alt="exception-policy.png" title="Screen for Exception Policy" width="720" height="400">
+<p>This manually added entry matches many of the entries that are already defined. Move the cursor to the patterned entry you have just added and press the "o" key. This will select all entries that are implied by the patterned entry:</p>
 
-<h4><a name="domain_policy_editor">Domain Policy Editor screen</a></h4>
+<img src="editpolicy/mark_matching_entry.png" alt="mark_matching_entry.png" title="Marking entries matching the patterned entry" width="720" height="400">
 
-<p>Note: This can also be viewed by pressing "Enter" in the "Domain Transition Editor" screen.</p>
+<p>These can now be deleted with the "d" key. This can be repeated for any patterned entries that you add.</p>
 
-<img src="editpolicy/domain-policy.png" alt="domain-policy.png" title="Screen for Domain Policy" width="720" height="400">
+<h3>3.3. <a name="sort_acl">Sorting ACL entries</a></h3>
 
-<h4><a name="profile_editor">Profile Editor screen</a></h4>
+<p>You can toggle sort order by pressing the "@" key.</p>
 
-<img src="editpolicy/profile-list.png" alt="profile-list.png" title="Screen for Profile List" width="720" height="400">
+<img src="editpolicy/acl_by_directives.png" alt="acl_by_directives.png" title="ACL list sorted by directives" width="720" height="400">
 
-<h4><a name="manager_policy_editor">Manager Policy Editor screen</a></h4>
+<img src="editpolicy/acl_by_operands.png" alt="acl_by_operands.png" title="ACL list sorted by operands" width="720" height="400">
 
-<img src="editpolicy/manager-list.png" alt="manager-list.png" title="Screen for Manager List" width="720" height="400">
+<hr>
 
-<h4><a name="statistics_screen">Statistics screen</a></h4>
+<h2>4. <a name="domain_transition_editor_operations">Operations specific to Domain Transition Editor screen</a></h2>
 
-<img src="editpolicy/stat-list.png" alt="stat-list.png" title="Screen for Statistics" width="720" height="400">
+<h3>4.1. <a name="browse_transition">Browsing domain transition patterns and exceptions</a></h3>
 
-<h3><a name="search">Search for an entry</a></h3>
+<p>On this screen, the list of domains in the currently selected namespace and their domain transition patterns are displayed. Also, information on domain transition exceptions (if any) is displayed.</p>
 
-<p>To search for a string, press the "f" key and type the string that you wish to search:</p>
+<p>Lines with a line number at the start of the line (from 4.1.1 to 4.1.3) are information on existent domains. The number after the line number is the profile number assigned to that domain.</p>
 
-<img src="editpolicy/find-first.png" alt="find-first.png" title="Find First" width="720" height="400">
+<p>Lines without a line number at the start of the line (from 4.1.4 to 4.1.7) are information on nonexistent domains. These lines are displayed as an indent keeper when parent domains do not exist or are displayed as a shortcut that indicates the destination domain when domain transition exceptions occur.</p>
 
-<p>To continue searching in a forward direction, press the "n" key.<br>
-To continue searching in a backward direction, press the "b" key.</p>
+<h4>4.1.1. <a name="unreachable_domain">Domains with the "!" mark</a></h4>
 
-<h3><a name="add">Add an entry</a></h3>
+<p>This mark indicates that this domain is unreachable due to the directive in parenthesis.<br>
+You can delete unreachable domains if you don't wish to make these domains reachable by changing the directive in parenthesis.</p>
 
-<p>To add an entry, press the "a" key and type the string that you wish to add. The strings are saved in the history buffer and can be viewed by pressing the "Insert" key. To load strings in the history buffer, press the Up/Down cursor keys. This can be used in any of the screens except the "Statistics" screen.</p>
+<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400">
 
-<p>An example operation in the "Domain Transition Editor" screen:</p>
+<h4>4.1.2. <a name="domain_transition_jump_target">Domains with the "*" mark</a></h4>
 
-<img src="editpolicy/add-domain-list.png" alt="add-domain-list.png" title="Adding an entry into List" width="720" height="400">
+<p>This mark indicates that this domain may be reachable from other than the parent of this domain.</p>
 
-<h3><a name="select">Select an entry</a></h3>
+<img src="editpolicy/domain_jump_target.png" alt="domain_jump_target.png" title="Domains which can be reachable by domain transition jumps." width="720" height="400">
 
-<p>Move the cursor to the entry you wish to select and press the "Space" key. When an entry is selected, an "&amp;" symbol will appear at the start of the line. Multiple entries can be selected, and the "Space" key can also be used to deselect an entry.</p>
+<h4>4.1.3. <a name="domain_keeper">Domains with the "#" mark</a></h4>
 
-<p>The selection state of the entry of the cursor line can be copied to all entries below by pressing the "c" key.</p>
+<p>This mark indicates that multiple programs might belong to this domain.</p>
 
-<img src="editpolicy/copy.png" alt="copy.png" title="Copying selection state" width="720" height="400">
+<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Domains where domain transition may not occur." width="720" height="400">
 
-<p>This makes it easy to select all entries or a block of entries. If you wish to select a block of entries, move the cursor to the first entry of the block and press the "Space" (to select) and "c" keys. Then move the cursor to the entry that lies below the block and press the "Space" (to deselect) and "c" keys.</p>
+<h4>4.1.4. <a name="domain_jump_same_namespace">Domains with "( -&gt; n )"</a></h4>
 
-<h3><a name="delete">Delete an entry</a></h3>
+<p>The process transits to the domain that is in the currently displayed namespace at the line number specified by "n" due to domain transition exceptions.</p>
 
-<p>To delete an entry, move the cursor to the entry you wish to delete and press the "d" key. This can also be done by selecting all of the entries you wish to delete.</p>
+<img src="editpolicy/domain_jump_source.png" alt="domain_jump_source.png" title="Locations where domain transition jumps within current namespace occur." width="720" height="400">
 
-<img src="editpolicy/delete.png" alt="delete.png" title="Deleting selected entries" width="720" height="400">
+<h4>4.1.5. <a name="domain_jump_across_namespace">Domains with "( -&gt; Namespace Jump )"</a></h4>
 
-<br><br>
+<p>The process transits to the domain that is not in the currently displayed namespace due to domain transition exceptions.</p>
 
-<h2><a name="operations_in_the_domain_transition_editor">Operations in the Domain Transition Editor screen</a></h2>
+<img src="editpolicy/domain_jump_across_namespace.png" alt="domain_jump_across_namespace.png" title="Locations where domain transition jumps across namespaces occur." width="720" height="400">
 
-<h4>Change profile number</h4>
+<h4>4.1.6. <a name="domain_jump_no_target">Domains with "( -&gt; Not Found )"</a></h4>
+
+<p>The destination domain specified by domain transition exceptions does not exist.</p>
+
+<img src="editpolicy/domain_jump_no_target.png" alt="domain_jump_no_target.png" title="Locations where domain transition targets do not exist." width="720" height="400">
+
+<h4>4.1.7. <a name="missing_domain">Domains in parenthesis</a></h4>
+
+<p>This domain does not exist. This line is displayed for avoiding tree indent breakage.</p>
+
+<img src="editpolicy/missing_domain.png" alt="missing_domain.png" title="Missing domains." width="720" height="400">
+
+<h3>4.2. <a name="change_profile">Changing profile number</a></h3>
 
 <p>Press the "s" key, type the profile number you wish to set, and press the "Enter" key:</p>
 
 <img src="editpolicy/profile.png" alt="profile.png" title="Setting profile number" width="720" height="400">
 
-<h4>Domains with the "!" mark</h4>
+<h3>4.3. <a name="edit_acl_by_domain">Editing ACL by domain name</a></h3>
 
-<p>This means the domain is unreachable due to either <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> or <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directives.<br>
-Any domains marked with a "!" can be safely deleted, unless they are referenced by either <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> directive or <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directive or auto_domain_transition= condition.</p>
+<p>You can enter the <a href="#domain_policy_editor">"Domain Policy Editor"</a> screen by pressing the Enter key (or pressing the "w" key and then pressing the "a" key") after moving the cursor to a domain at the <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen. You can return to the <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen by pressing the Enter key (or pressing the "w" key and then pressing the "d" key") from the <a href="#domain_policy_editor">"Domain Policy Editor"</a> screen.</p>
 
-<img src="editpolicy/unreachable.png" alt="unreachable.png" title="Unreachable Domain" width="720" height="400">
+<img src="editpolicy/domain_transition.png" alt="domain_transition.png" title="Screen for editing /proc/ccs/domain_policy" width="720" height="400">
 
-<h4>Domains with the "*" mark</h4>
+<img src="editpolicy/domain_policy.png" alt="domain_policy.png" title="Screen for /proc/ccs/domain_policy" width="720" height="400">
 
-<p>This means that multiple domains might transit to this domain due to the <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive.<br>
-If this domain does not have this mark and this domain is not specified by neither <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> nor <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directives, only the parent of this domain can transit to this domain.</p>
+<h3>4.4. <a name="edit_acl_by_task">Editing ACL by currently running task</a></h3>
 
-<img src="editpolicy/initialize_domain-dest.png" alt="initialize_domain-dest.png" title="Initialization Target" width="720" height="400">
+<p>You can enter the "Process State Viewer" screen by pressing the "@" key from the <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen. In this screen, the list of currently running tasks and information on domains which these tasks belong to are displayed like <code>pstree</code> command. You can enter the <a href="#domain_policy_editor">"Domain Policy Editor"</a> screen by moving the cursor to a task that you wish to browse or edit and then pressing the Enter key (or pressing the "w" key and then pressing the "a" key"). You can return to the <a href="#domain_transition_editor">"Domain Transition Editor"</a> screen by pressing the "@" key from the "Process State Viewer" screen.</p>
 
-<h4>Domains with the "#" mark</h4>
+<img src="editpolicy/domain_transition.png" alt="domain_transition.png" title="Screen for editing /proc/ccs/domain_policy" width="720" height="400">
 
-<p>This means that multiple programs might belong to this domain due to the <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directive.</p>
-
-<img src="editpolicy/keep_domain.png" alt="keep_domain.png" title="Keeping Domain" width="720" height="400">
-
-<h4>Domains with "( -&gt; n )"</h4>
-
-<p>This means that the domain is not a real domain. The process transits to the domain at the line number specified by "n" due to the <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive.</p>
-
-<img src="editpolicy/initialize_domain-src.png" alt="initialize_domain-src.png" title="Initialization Source" width="720" height="400">
-
-<h4>Domains with "( -&gt; Not Found )"</h4>
-
-<p>This means that the domain is not a real domain. This occurs when the <a href="exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive has been set, but the destination domain has not been created yet.</p>
-
-<img src="editpolicy/initialize_domain-nodest.png" alt="initialize_domain-nodest.png" title="No Initialization Target" width="720" height="400">
-
-<h4>Domains inside parenthesis</h4>
-
-<p>This means that the domain does not exist. This line is displayed for avoiding tree indent breakage.<br>
-You don't need to create parent domains if processes directly transit to descendant domains by either <a href="policy-specification/domain-policy-syntax.html.en#task_auto_domain_transition">task auto_domain_transition</a> or <a href="policy-specification/domain-policy-syntax.html.en#task_manual_domain_transition">task manual_domain_transition</a> directives.</p>
-
-<img src="editpolicy/deleted-domain.png" alt="deleted-domain.png" title="Deleted Domain" width="720" height="400">
-
-<h2><a name="initialize_domain_transition">The</a> <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> and <a href="policy-specification/exception-policy-syntax.html.en#no_initialize_domain">no_initialize_domain</a> directives</h2>
-
-<p>The <a href="policy-specification/exception-policy-syntax.html.en#initialize_domain">initialize_domain</a> directive involves using the "Exception Policy Editor" and "Domain Transition Editor" screens. First, switch to the "Exception Policy Editor" screen, press "a" to add an entry and then type out the string you wish to add:</p>
-
-<img src="editpolicy/adding-initialize_domain.png" alt="adding-initialize_domain.png" title="Adding initialize_domain" width="720" height="400">
-
-<p>Switch to the "Domain Transition Editor" screen. Domains which execute the program you specified using the directive will have "( -&gt; Not Found )" as the domain for the program does not exist yet.<br>
-Also, domains which became unreachable due to the directive are now marked with the "!" symbol:</p>
-
-<img src="editpolicy/after-initialize_domain.png" alt="after-initialize_domain.png" title="After initialize_domain" width="720" height="400">
-
-<p>To correct this, create the missing domain by pressing the "a" key and entering the new domain:</p>
-
-<img src="editpolicy/adding-initialize_domain-target.png" alt="adding-initialize_domain-target.png" title="Adding initialization target" width="720" height="400">
-
-<p>Now the  "( -&gt; Not Found )" part has changed to "( -&gt; n )":</p>
-
-<img src="editpolicy/after-initialize_domain-target.png" alt="after-initialize_domain-target.png" title="After initialize_domain target" width="720" height="400">
-
-<p>This is the domain corresponding to the entry above:</p>
-
-<img src="editpolicy/added-initialize_domain-target.png" alt="added-initialize_domain-target.png" title="Added initialization target" width="720" height="400">
-
-<p>Now the "/usr/sbin/sendmail" domain is initialized into a new domain. However, the above examples show that it is initialized from a daemon script. You may not want to initialize into a new domain when it is not invoked as a daemon. The <a href="policy-specification/exception-policy-syntax.html.en#no_initialize_domain">no_initialize_domain</a> directive is useful in this situation. Switch to the "Exception Policy Editor" screen and add a new entry, such as "no_initialize_domain /usr/sbin/sendmail from /bin/mail". Now the /usr/sbin/sendmail will no longer initialized into the new domain if it is executed from /bin/mail domain:</p>
-
-<img src="editpolicy/after-no_initialize_domain.png" alt="after-no_initialize_domain.png" title="After no_initialize_domain" width="720" height="400">
-
-<h2><a name="suppress_domain_transition">The</a> <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> and <a href="policy-specification/exception-policy-syntax.html.en#no_keep_domain">no_keep_domain</a> directives</h2>
-
-<p>The <a href="policy-specification/exception-policy-syntax.html.en#keep_domain">keep_domain</a> directive involves using the "Exception Policy Editor" and "Domain Transition Editor" screens. First, switch to the "Exception Policy Editor" screen and add an entry such as "keep_domain any from &lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash". Return to the "Domain Transition Editor" screen and the domain that you have specified the directive for will appear with a "#" symbol. Descendent domains will appear with the "!" symbol:</p>
-
-<img src="editpolicy/after-keep_domain-1.png" alt="after-keep_domain-1.png" title="After keep_domain" width="720" height="400">
-
-<p>Now all executions in the chosen domain will not undergo a domain transition. To force a domain transition for a particular application, the <a href="specification/exception-policy-syntax.html.en#no_keep_domain">no_keep_domain</a> directive can be used. Switch to the "Exception Policy Editor" screen and add an entry such as "no_keep_domain /usr/bin/man from /bin/bash". Return to the "Domain Transition Editor" screen and the "&lt;kernel&gt; /sbin/mingetty /bin/login /bin/bash /usr/bin/man" domain and its descendents are no longer marked with a "!":</p>
-
-<img src="editpolicy/after-no_keep_domain.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400">
-
-<p>It is possible to prevent domain transitions again from "/usr/bin/man" by adding "keep_domain any from /usr/bin/man" in the "Exception Policy Editor" screen. Return to the "Domain Transition Editor" screen:</p>
-
-<img src="editpolicy/after-keep_domain-2.png" alt="after-no_keep_domain.png" title="After no_keep_domain" width="720" height="400">
-
-<h2><a name="redundant">Remove redundant entries</a></h2>
-
-<p>Redundant entries can be removed by patterning entries (see <a href="chapter-6.html.en">Chapter 6: How do I develop policy?</a>). Switch to the Domain Policy Editor screen and add an entry such as "file read /home/kumaneko/SVN/\{\*\}\/\*":</p>
-
-<img src="editpolicy/optimize-2.png" alt="optimize-2.png" title="After adding patterned entry" width="720" height="400">
-
-<p>This manually added entry matches many of the entries that are already defined. Move the cursor to the patterned entry you have just added and press the "o" key. This will select all entries that are implied by the patterned entry:</p>
-
-<img src="editpolicy/optimize-3.png" alt="optimize-3.png" title="After entering optimize key" width="720" height="400">
-
-<p>These can now be deleted with the "d" key. This can be repeated for any patterned entries that you add.</p>
+<img src="editpolicy/process_tree.png" alt="process_tree.png" title="List of runnig processes." width="720" height="400">
 
 </div><!-- regular-content -->
 

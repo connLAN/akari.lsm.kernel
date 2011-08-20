@@ -65,6 +65,7 @@
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
 カーネル 3.1 以降が必要です。<br>
+（ Linux 2.6.33 ～ 3.0 用のバックポートパッチを利用できます。）
 </td></tr>
 </table>
 </div>

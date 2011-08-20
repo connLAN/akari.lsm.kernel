@@ -65,6 +65,7 @@ Kernel package must be built with below configuration options.<br>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
 Requires kernel 3.1 or later.<br>
+(Backport patch for Linux 2.6.33 to 3.0 is available.)
 </td></tr>
 </table>
 </div>

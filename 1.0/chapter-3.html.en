@@ -122,10 +122,10 @@ You must choose CONFIG_MODULES=y for building this module.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.2-20110713.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110713.tar.gz'
-$ wget -O ccs-tools-1.8.2-20110713.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110713.tar.gz.asc'
-$ gpg ccs-tools-1.8.2-20110713.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.2-20110713.tar.gz
+$ wget -O ccs-tools-1.8.2-20110820.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110820.tar.gz'
+$ wget -O ccs-tools-1.8.2-20110820.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.2-20110820.tar.gz.asc'
+$ gpg ccs-tools-1.8.2-20110820.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.2-20110820.tar.gz
 $ cd ccstools/
 $ make -s
 $ su

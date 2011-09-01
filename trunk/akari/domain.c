@@ -573,25 +573,20 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 	struct ccs_domain_info * const old_domain = ccs_current_domain();
 	struct linux_binprm *bprm = ee->bprm;
 	struct ccs_security *task = ccs_current_security();
-	struct ccs_path_info rn = { }; /* real name */
+	const struct ccs_path_info *candidate;
+	struct ccs_path_info exename;
 	int retval;
-	bool need_kfree = false;
 	bool reject_on_transition_failure = false;
-retry:
-	r->matched_acl = NULL;
-	if (need_kfree) {
-		kfree(rn.name);
-		need_kfree = false;
-	}
 
 	/* Get symlink's pathname of program. */
-	retval = ccs_symlink_path(bprm->filename, &rn);
+	retval = ccs_symlink_path(bprm->filename, &exename);
 	if (retval < 0)
-		goto out;
-	need_kfree = true;
+		return retval;
 
 	if (handler) {
-		if (ccs_pathcmp(&rn, handler)) {
+		/* No permission check for execute handler. */
+		candidate = &exename;
+		if (ccs_pathcmp(candidate, handler)) {
 			/* Failed to verify execute handler. */
 			static u8 counter = 20;
 			if (counter) {
@@ -603,22 +598,22 @@ retry:
 		}
 	} else {
 		struct ccs_aggregator *ptr;
-		struct list_head *list =
-			&old_domain->ns->policy_list[CCS_ID_AGGREGATOR];
+		struct list_head *list;
+retry:
 		/* Check 'aggregator' directive. */
+		candidate = &exename;
+		list = &old_domain->ns->policy_list[CCS_ID_AGGREGATOR];
 		list_for_each_entry_srcu(ptr, list, head.list, &ccs_ss) {
 			if (ptr->head.is_deleted ||
-			    !ccs_path_matches_pattern(&rn, ptr->original_name))
+			    !ccs_path_matches_pattern(candidate,
+						      ptr->original_name))
 				continue;
-			kfree(rn.name);
-			need_kfree = false;
-			/* This is OK because it is read only. */
-			rn = *ptr->aggregated_name;
+			candidate = ptr->aggregated_name;
 			break;
 		}
 
 		/* Check execute permission. */
-		retval = ccs_path_permission(r, CCS_TYPE_EXECUTE, &rn);
+		retval = ccs_path_permission(r, CCS_TYPE_EXECUTE, candidate);
 		if (retval == CCS_RETRY_REQUEST)
 			goto retry;
 		if (retval < 0)
@@ -629,21 +624,17 @@ retry:
 		 * wildcard) rather than the pathname passed to execve()
 		 * (which never contains wildcard).
 		 */
-		if (r->param.path.matched_path) {
-			if (need_kfree)
-				kfree(rn.name);
-			need_kfree = false;
-			/* This is OK because it is read only. */
-			rn = *r->param.path.matched_path;
-		}
+		if (r->param.path.matched_path)
+			candidate = r->param.path.matched_path;
 	}
 
 	/* Calculate domain to transit to. */
 	switch (ccs_transition_type(old_domain->ns, old_domain->domainname,
-				    &rn)) {
+				    candidate)) {
 	case CCS_TRANSITION_CONTROL_RESET:
 		/* Transit to the root of specified namespace. */
-		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>", rn.name);
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>",
+			 candidate->name);
 		/*
 		 * Make do_execve() fail if domain transition across namespaces
 		 * has failed.
@@ -653,7 +644,7 @@ retry:
 	case CCS_TRANSITION_CONTROL_INITIALIZE:
 		/* Transit to the child of current namespace's root. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
-			 old_domain->ns->name, rn.name);
+			 old_domain->ns->name, candidate->name);
 		break;
 	case CCS_TRANSITION_CONTROL_KEEP:
 		/* Keep current domain. */
@@ -671,7 +662,8 @@ retry:
 		} else {
 			/* Normal domain transition. */
 			snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
-				 old_domain->domainname->name, rn.name);
+				 old_domain->domainname->name,
+				 candidate->name);
 		}
 		break;
 	}
@@ -713,8 +705,7 @@ retry:
 		}
 	}
 out:
-	if (need_kfree)
-		kfree(rn.name);
+	kfree(exename.name);
 	return retval;
 }
 

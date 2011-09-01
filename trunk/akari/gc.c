@@ -928,7 +928,9 @@ static int ccs_gc_thread(void *unused)
 	static DEFINE_MUTEX(ccs_gc_mutex);
 	if (!mutex_trylock(&ccs_gc_mutex))
 		goto out;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
+	/* daemonize() not needed. */
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	daemonize("GC for CCS");
 #else
 	daemonize();

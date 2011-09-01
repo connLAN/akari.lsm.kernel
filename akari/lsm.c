@@ -2278,6 +2278,8 @@ out:
 #endif
 }
 
+#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /* Never mark this variable as __initdata . */
@@ -2464,6 +2466,26 @@ out:
 	return true;
 #endif
 }
+
+#else
+
+/* Never mark this variable as __initdata . */
+static spinlock_t ccs_vfsmount_lock;
+
+/**
+ * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ *
+ * Returns true on success, false otherwise.
+ */
+static bool __init ccs_find_vfsmount_lock(void)
+{
+	ccsecurity_exports.vfsmount_lock = &ccs_vfsmount_lock;
+	printk(KERN_INFO "vfsmount_lock is not used due to !CONFIG_SMP && "
+	       "!CONFIG_DEBUG_SPINLOCK.\n");
+	return true;
+}
+
+#endif
 
 /*
  * Why not to copy all operations by "original_security_ops = *ops" ?

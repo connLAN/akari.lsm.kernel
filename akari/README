@@ -148,3 +148,13 @@ Version 1.0.17   2011/07/13   Minor update release.
    Fix /proc/ccs/stat parser.
 
    Accept "::" notation for IPv6 address.
+
+Version 1.0.18   2011/09/03   Minor update release.
+
+   Synchronize with TOMOYO revision 5401.
+
+   Avoid race when retrying "file execute" permission check.
+
+   Remove unneeded daemonize().
+
+   Fix load failure of !CONFIG_SMP && !CONFIG_DEBUG_SPINLOCK kernels.

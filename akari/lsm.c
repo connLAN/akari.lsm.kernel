@@ -506,8 +506,10 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		return -ENOMEM;
 	if (!security->ee) {
 		int rc;
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 		if (!ccs_policy_loaded)
 			ccs_load_policy(bprm->filename);
+#endif
 		rc = ccs_start_execve(bprm, &security->ee);
 		if (security->ee) {
 			ccs_read_unlock(security->ee->reader_idx);

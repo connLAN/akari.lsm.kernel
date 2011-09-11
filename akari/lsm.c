@@ -2101,6 +2101,33 @@ static int lsm_addr_calculator(struct file *file);
 static void * __init ccs_find_security_ops_on_arm(unsigned int *base);
 #endif
 
+#if defined(ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+/**
+ * ccs_find_vfsmount_lock_on_arm - Find vfsmount_lock spinlock on ARM.
+ *
+ * @ip:   Address of dummy function's entry point.
+ * @addr: Address of the variable which is used within @function.
+ * @base: Address of function's entry point.
+ *
+ * Returns address of vfsmount_lock on success, NULL otherwise.
+ */
+static void * __init ccs_find_vfsmount_lock_on_arm(unsigned int *ip,
+						   unsigned long addr,
+						   unsigned int *base)
+{
+	int i;
+	for (i = 0; i < 32; ip++, i++) {
+		static unsigned int *ip4ret;
+		if ((*(ip + 2 + ((*ip & 0xFFF) >> 2))) != addr)
+			continue;
+		ip = base + i;
+		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
+		return &ip4ret;
+	}
+	return NULL;
+}
+#endif
+
 /**
  * ccs_find_variable - Find variable's address using dummy.
  *
@@ -2132,6 +2159,10 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 #if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	if (function == lsm_addr_calculator)
 		return ccs_find_security_ops_on_arm((unsigned int *) base);
+#endif
+#if defined(ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+	return ccs_find_vfsmount_lock_on_arm(function, addr,
+					     (unsigned int *) base);
 #endif
 	/* First, assume absolute adressing mode is used. */
 	for (i = 0; i < 128; i++) {

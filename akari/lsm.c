@@ -2097,6 +2097,7 @@ out:
 #endif
 
 #if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+static int lsm_addr_calculator(struct file *file);
 static void * __init ccs_find_security_ops_on_arm(unsigned int *base);
 #endif
 
@@ -2209,7 +2210,7 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 			continue;
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
 		ip4ret += (*(ip + 1) & 0xFFF) >> 2;
-		if ((unsigned long) ip4ret != &ccs_security_ops)
+		if ((void *) ip4ret != &ccs_security_ops)
 			continue;
 		ip = base + i;
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));

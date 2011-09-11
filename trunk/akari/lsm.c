@@ -2096,6 +2096,10 @@ out:
 
 #endif
 
+#if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+static void * __init ccs_find_security_ops_on_arm(unsigned int *base);
+#endif
+
 /**
  * ccs_find_variable - Find variable's address using dummy.
  *
@@ -2124,6 +2128,10 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 		base = __symbol_get(symbol);
 	if (!base)
 		return NULL;
+#if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	if (function == lsm_addr_calculator)
+		return ccs_find_security_ops_on_arm((unsigned int *) base);
+#endif
 	/* First, assume absolute adressing mode is used. */
 	for (i = 0; i < 128; i++) {
 		if (*(unsigned long *) cp == addr)
@@ -2166,7 +2174,7 @@ static struct security_operations *ccs_security_ops;
  *
  * @file: Pointer to "struct file".
  *
- * Returns return value fromfrom security_file_alloc().
+ * Returns return value from security_file_alloc().
  *
  * Never mark this function as __init in order to make sure that compiler
  * generates identical code for security_file_alloc() and this function.
@@ -2176,6 +2184,41 @@ static int lsm_addr_calculator(struct file *file)
 	return ccs_security_ops->file_alloc_security(file);
 }
 
+#ifdef ARM
+/**
+ * ccs_find_security_ops_on_arm - Find security_ops on ARM.
+ *
+ * @base: Address of security_file_alloc().
+ *
+ * Returns address of security_ops on success, NULL otherwise.
+ */
+static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
+{
+	int i;
+	unsigned int *ip = (unsigned int *) lsm_addr_calculator;
+	for (i = 0; i < 32; ip++, i++) {
+		static unsigned int *ip4ret;
+		/*
+		 * Find
+		 *   ldr r3, [pc, #offset1]
+		 *   ldr r3, [r3, #offset2]
+		 * sequence.
+		 */
+		if ((*ip & 0xFFFFF000) != 0xE59F3000 ||
+		    (*(ip + 1) & 0xFFFFF000) != 0xE5933000)
+			continue;
+		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
+		ip4ret += (*(ip + 1) & 0xFFF) >> 2;
+		if ((unsigned long) ip4ret != &ccs_security_ops)
+			continue;
+		ip = base + i;
+		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
+		ip4ret += (*(ip + 1) & 0xFFF) >> 2;
+		return &ip4ret;
+	}
+	return NULL;
+}
+#endif
 #endif
 
 /**

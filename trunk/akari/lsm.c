@@ -2793,10 +2793,10 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	}
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	*ptr = *ccs_find_cred_security(task->cred);
+	get_task_struct((struct task_struct *) task);
 #else
 	*ptr = ccs_default_security;
 #endif
-	get_task_struct((struct task_struct *) task);
 	ptr->task = (struct task_struct *) task;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	/* ptr->cred may point to garbage. I need to explicitly clear. */

@@ -2418,7 +2418,7 @@ static void lsm_pin(struct vfsmount *mnt)
 {
 	spin_lock(&ccs_vfsmount_lock);
 	mnt->mnt_pinned++;
-	spin_lock(&ccs_vfsmount_lock);
+	spin_unlock(&ccs_vfsmount_lock);
 }
 
 #endif

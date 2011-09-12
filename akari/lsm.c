@@ -2096,12 +2096,12 @@ out:
 
 #endif
 
-#if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if defined(CONFIG_ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 static int lsm_addr_calculator(struct file *file);
 static void * __init ccs_find_security_ops_on_arm(unsigned int *base);
 #endif
 
-#if defined(ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+#if defined(CONFIG_ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 /**
  * ccs_find_vfsmount_lock_on_arm - Find vfsmount_lock spinlock on ARM.
  *
@@ -2156,11 +2156,11 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 		base = __symbol_get(symbol);
 	if (!base)
 		return NULL;
-#if defined(ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if defined(CONFIG_ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	if (function == lsm_addr_calculator)
 		return ccs_find_security_ops_on_arm((unsigned int *) base);
 #endif
-#if defined(ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+#if defined(CONFIG_ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 	return ccs_find_vfsmount_lock_on_arm(function, addr,
 					     (unsigned int *) base);
 #endif
@@ -2216,7 +2216,7 @@ static int lsm_addr_calculator(struct file *file)
 	return ccs_security_ops->file_alloc_security(file);
 }
 
-#ifdef ARM
+#ifdef CONFIG_ARM
 /**
  * ccs_find_security_ops_on_arm - Find security_ops on ARM.
  *

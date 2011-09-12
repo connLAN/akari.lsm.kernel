@@ -2118,7 +2118,7 @@ static void * __init ccs_find_vfsmount_lock_on_arm(unsigned int *ip,
 	int i;
 	for (i = 0; i < 32; ip++, i++) {
 		static unsigned int *ip4ret;
-		if ((*(ip + 2 + ((*ip & 0xFFF) >> 2))) != addr)
+		if (*(ip + 2 + ((*ip & 0xFFF) >> 2)) != addr)
 			continue;
 		ip = base + i;
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
@@ -2226,10 +2226,19 @@ static int lsm_addr_calculator(struct file *file)
  */
 static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 {
+	static unsigned int *ip4ret;
 	int i;
+	const unsigned long addr = (unsigned long) &ccs_security_ops;
 	unsigned int *ip = (unsigned int *) lsm_addr_calculator;
 	for (i = 0; i < 32; ip++, i++) {
-		static unsigned int *ip4ret;
+		if (*(ip + 2 + ((*ip & 0xFFF) >> 2)) != addr)
+			continue;
+		ip = base + i;
+		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
+		return &ip4ret;
+	}
+	ip = (unsigned int *) lsm_addr_calculator;
+	for (i = 0; i < 32; ip++, i++) {
 		/*
 		 * Find
 		 *   ldr r3, [pc, #offset1]
@@ -2241,21 +2250,11 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 			continue;
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
 		ip4ret += (*(ip + 1) & 0xFFF) >> 2;
-		if ((void *) ip4ret != &ccs_security_ops)
+		if ((unsigned long) ip4ret != addr)
 			continue;
 		ip = base + i;
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
 		ip4ret += (*(ip + 1) & 0xFFF) >> 2;
-		return &ip4ret;
-	}
-	ip = (unsigned int *) lsm_addr_calculator;
-	for (i = 0; i < 32; ip++, i++) {
-		static unsigned int *ip4ret;
-		if (*(ip + 2 + ((*ip & 0xFFF) >> 2)) !=
-		    (unsigned long) &ccs_security_ops)
-			continue;
-		ip = base + i;
-		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
 		return &ip4ret;
 	}
 	return NULL;

@@ -55,7 +55,7 @@ The kernel package should be built with below configuration options in addition 
 <li>CONFIG_SECURITY_NETWORK=y</li>
 <li>CONFIG_SECURITY_PATH=y</li>
 </ul>
-Currently known to work on x86_32 and x86_64. Other architectures are not tested yet.
+Currently known to work on x86_32 x86_64 SH and ARM. Other architectures are not tested yet.
 </td><td>
 Kernel package must be built with below configuration options.<br>
 <ul>
@@ -64,7 +64,7 @@ Kernel package must be built with below configuration options.<br>
 <li>CONFIG_SECURITY_PATH=y</li>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
-Requires kernel 3.1 or later.<br>
+Requires kernel 3.1.<br>
 (Backport patch for Linux 2.6.33 to 3.0 is available.)
 </td></tr>
 </table>
@@ -75,7 +75,7 @@ Requires kernel 3.1 or later.<br>
 <div class="simple-table-wrap">
 <table>
 <tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.en">TOMOYO 2.4</a></td></tr>
-<tr><td></td><td>Supported kernel version</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.1-</td></tr>
+<tr><td></td><td>Supported kernel version</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.1</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>
 <tr><td></td><td>Allow use of absolute pathnames for directory modification operations?</td><td>Y</td><td colspan=3></td><td colspan=3>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>

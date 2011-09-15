@@ -205,22 +205,26 @@ out:
 	return ptr ? &ptr->entry : NULL;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+/* Use functions in lsm.c */
+#undef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+#endif
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-static struct ccs_security ccs_oom_security = {
+struct ccs_security ccs_oom_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-static struct ccs_security ccs_default_security = {
+struct ccs_security ccs_default_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
 /* List of "struct ccs_security". */
 struct list_head ccs_task_security_list[CCS_MAX_TASK_SECURITY_HASH];
 /* Lock for protecting ccs_task_security_list[]. */
-DEFINE_SPINLOCK(ccs_task_security_list_lock);
+static DEFINE_SPINLOCK(ccs_task_security_list_lock);
 
 /**
  * ccs_add_task_security - Add "struct ccs_security" to list.
@@ -261,7 +265,6 @@ static int __ccs_alloc_task_security(const struct task_struct *task)
 	return 0;
 }
 
-#if 0
 /**
  * ccs_find_task_security - Find "struct ccs_security" for given task.
  *
@@ -305,7 +308,6 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	ccs_add_task_security(ptr, list);
 	return ptr;
 }
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
 

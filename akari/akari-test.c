@@ -9,9 +9,7 @@
 #include <linux/slab.h>
 #include <linux/security.h>
 #include <linux/namei.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
-#include <linux/namespace.h>
-#endif
+#include <linux/mount.h>
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 #error This module supports only 2.6.0 and later kernels.
@@ -407,6 +405,8 @@ out:
 #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
+
+#include <linux/namespace.h>
 
 /* Never mark this variable as __initdata . */
 static spinlock_t ccs_vfsmount_lock;

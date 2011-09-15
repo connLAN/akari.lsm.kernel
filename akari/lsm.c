@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.18   2011/09/03
+ * Version: 1.0.19   2011/09/15
  */
 
 #include "internal.h"
@@ -16,8 +16,27 @@ static void ccs_task_security_gc(void);
 static int ccs_copy_cred_security(const struct cred *new,
 				  const struct cred *old, gfp_t gfp);
 static struct ccs_security *ccs_find_cred_security(const struct cred *cred);
-static void (*ccs___put_task_struct) (struct task_struct *t);
-#endif
+static DEFINE_SPINLOCK(ccs_task_security_list_lock);
+static atomic_t ccs_in_execve_tasks = ATOMIC_INIT(0);
+/*
+ * List of "struct ccs_security" for "struct pid".
+ *
+ * All instances on this list is guaranteed that "struct ccs_security"->pid !=
+ * NULL. Also, instances on this list that are in execve() are guaranteed that
+ * "struct ccs_security"->cred remembers "struct linux_binprm"->cred with a
+ * refcount on "struct linux_binprm"->cred.
+ */
+struct list_head ccs_task_security_list[CCS_MAX_TASK_SECURITY_HASH];
+/*
+ * List of "struct ccs_security" for "struct cred".
+ *
+ * Since the number of "struct cred" is nearly equals to the number of
+ * "struct pid", we allocate hash tables like ccs_task_security_list.
+ *
+ * All instances on this list are guaranteed that "struct ccs_security"->pid ==
+ * NULL and "struct ccs_security"->cred != NULL.
+ */
+static struct list_head ccs_cred_security_list[CCS_MAX_TASK_SECURITY_HASH];
 
 /* Dummy security context for avoiding NULL pointer dereference. */
 static struct ccs_security ccs_oom_security = {
@@ -28,6 +47,12 @@ static struct ccs_security ccs_oom_security = {
 static struct ccs_security ccs_default_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
+#else
+/* Dummy security context for avoiding NULL pointer dereference. */
+extern struct ccs_security ccs_oom_security;
+/* Dummy security context for avoiding NULL pointer dereference. */
+extern struct ccs_security ccs_default_security;
+#endif
 
 /* For exporting variables and functions. */
 struct ccsecurity_exports ccsecurity_exports;
@@ -53,116 +78,6 @@ static struct security_operations original_security_ops /* = *security_ops; */;
 #endif
 
 /**
- * ccs_add_task_security - Add "struct ccs_security" to list.
- *
- * @ptr:  Pointer to "struct ccs_security".
- * @list: Pointer to "struct list_head".
- *
- * Returns nothing.
- */
-static void ccs_add_task_security(struct ccs_security *ptr,
-				  struct list_head *list)
-{
-	unsigned long flags;
-	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
-	list_add_rcu(&ptr->list, list);
-	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
-}
-
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
-
-/**
- * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
- *
- * @rcu: Pointer to "struct rcu_head".
- *
- * Returns nothing.
- */
-static void ccs_rcu_free(struct rcu_head *rcu)
-{
-	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
-	struct ccs_execve *ee = ptr->ee;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	/*
-	 * If this security context was used by "struct task_struct" and
-	 * remembers "struct cred" in "struct linux_binprm", it indicates that
-	 * that "struct task_struct" exited immediately after do_execve() has
-	 * failed.
-	 */
-	if (ptr->task && ptr->cred) {
-		/*
-		printk(KERN_DEBUG
-		       "Dropping refcount on \"struct cred\" in "
-		       "\"struct linux_binprm\" because some "
-		       "\"struct task_struct\" has exit()ed immediately after "
-		       "do_execve() has failed.\n");
-		*/
-		put_cred(ptr->cred);
-	}
-#endif
-	if (ee) {
-		/*
-		printk(KERN_DEBUG
-		       "Releasing memory in \"struct ccs_execve\" because "
-		       "some \"struct task_struct\" has exit()ed immediately "
-		       "after do_execve() has failed.\n");
-		*/
-		kfree(ee->handler_path);
-		kfree(ee->tmp);
-		kfree(ee->dump.data);
-		kfree(ee);
-	}
-	kfree(ptr);
-}
-
-#else
-
-/**
- * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
- *
- * @arg: Pointer to "void".
- *
- * Returns nothing.
- */
-static void ccs_rcu_free(void *arg)
-{
-	struct ccs_security *ptr = arg;
-	struct ccs_execve *ee = ptr->ee;
-	if (ee) {
-		kfree(ee->handler_path);
-		kfree(ee->tmp);
-		kfree(ee->dump.data);
-		kfree(ee);
-	}
-	kfree(ptr);
-}
-
-#endif
-
-/**
- * ccs_del_security - Release "struct ccs_security".
- *
- * @ptr: Pointer to "struct ccs_security".
- *
- * Returns nothing.
- */
-static void ccs_del_security(struct ccs_security *ptr)
-{
-	unsigned long flags;
-	if (ptr == &ccs_default_security || ptr == &ccs_oom_security)
-		return;
-	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
-	list_del_rcu(&ptr->list);
-	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
-	call_rcu(&ptr->rcu, ccs_rcu_free);
-#else
-	call_rcu(&ptr->rcu, ccs_rcu_free, ptr);
-#endif
-}
-
-/**
  * ccs_clear_execve - Release memory used by do_execve().
  *
  * @ret:      0 if do_execve() succeeded, negative value otherwise.
@@ -186,6 +101,7 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	 */
 	put_cred(security->cred);
 	security->cred = NULL;
+	atomic_dec(&ccs_in_execve_tasks);
 #endif
 	ee->reader_idx = ccs_read_lock();
 	ccs_finish_execve(ret, ee);
@@ -193,13 +109,89 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
-/*
- * List of "struct ccs_security" for "struct cred".
+/**
+ * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
  *
- * Since the number of "struct cred" is nearly equals to the number of
- * "struct task_struct", we allocate hash tables like ccs_task_security_list.
+ * @rcu: Pointer to "struct rcu_head".
+ *
+ * Returns nothing.
  */
-static struct list_head ccs_cred_security_list[CCS_MAX_TASK_SECURITY_HASH];
+static void ccs_rcu_free(struct rcu_head *rcu)
+{
+	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
+	struct ccs_execve *ee = ptr->ee;
+	/*
+	 * If this security context was associated with "struct pid" and
+	 * remembers "struct cred" in "struct linux_binprm", it indicates that
+	 * a "struct task_struct" associated with this security context exited
+	 * immediately after do_execve() has failed.
+	 */
+	if (ptr->pid && ptr->cred) {
+#ifdef CONFIG_AKARI_DEBUG
+		static bool done = false;
+		if (!done) {
+			printk(KERN_INFO "AKARI: Dropping refcount on "
+			       "\"struct cred\" in \"struct linux_binprm\" "
+			       "because some \"struct task_struct\" has "
+			       "exit()ed immediately after do_execve() has "
+			       "failed.\n");
+			done = true;
+		}
+#endif
+		put_cred(ptr->cred);
+		atomic_dec(&ccs_in_execve_tasks);
+	}
+	/*
+	 * If this security context was associated with "struct pid",
+	 * drop refcount obtained by get_pid() in ccs_find_task_security().
+	 */
+	if (ptr->pid) {
+#ifdef CONFIG_AKARI_DEBUG
+		static bool done = false;
+		if (!done) {
+			printk(KERN_INFO "AKARI: Dropping refcount on "
+			       "\"struct pid\".\n");
+			done = true;
+		}
+#endif
+		put_pid(ptr->pid);
+	}
+	if (ee) {
+#ifdef CONFIG_AKARI_DEBUG
+		static bool done = false;
+		if (!done) {
+			printk(KERN_INFO "AKARI: Releasing memory in "
+			       "\"struct ccs_execve\" because some "
+			       "\"struct task_struct\" has exit()ed "
+			       "immediately after do_execve() has failed.\n");
+			done = true;
+		}
+#endif
+		kfree(ee->handler_path);
+		kfree(ee->tmp);
+		kfree(ee->dump.data);
+		kfree(ee);
+	}
+	kfree(ptr);
+}
+
+/**
+ * ccs_del_security - Release "struct ccs_security".
+ *
+ * @ptr: Pointer to "struct ccs_security".
+ *
+ * Returns nothing.
+ */
+static void ccs_del_security(struct ccs_security *ptr)
+{
+	unsigned long flags;
+	if (ptr == &ccs_default_security || ptr == &ccs_oom_security)
+		return;
+	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
+	list_del_rcu(&ptr->list);
+	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
+	call_rcu(&ptr->rcu, ccs_rcu_free);
+}
 
 /**
  * ccs_add_cred_security - Add "struct ccs_security" to list.
@@ -213,6 +205,12 @@ static void ccs_add_cred_security(struct ccs_security *ptr)
 	unsigned long flags;
 	struct list_head *list = &ccs_cred_security_list
 		[hash_ptr((void *) ptr->cred, CCS_TASK_SECURITY_HASH_BITS)];
+#ifdef CONFIG_AKARI_DEBUG
+	if (ptr->pid)
+		printk(KERN_INFO "AKARI: \"struct ccs_security\"->pid != NULL"
+		       "\n");
+#endif
+	ptr->pid = NULL;
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
 	list_add_rcu(&ptr->list, list);
 	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
@@ -355,28 +353,6 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 #else
 
 /**
- * ccs_copy_task_security - Allocate memory for new tasks.
- *
- * @task: Pointer to "struct task_struct".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_copy_task_security(struct task_struct *task)
-{
-	struct ccs_security *old_security = ccs_current_security();
-	struct ccs_security *new_security = kzalloc(sizeof(*new_security),
-						    GFP_KERNEL);
-	struct list_head *list = &ccs_task_security_list
-		[hash_ptr((void *) task, CCS_TASK_SECURITY_HASH_BITS)];
-	if (!new_security)
-		return -ENOMEM;
-	*new_security = *old_security;
-	new_security->task = task;
-	ccs_add_task_security(new_security, list);
-	return 0;
-}
-
-/**
  * ccs_task_alloc_security - Allocate memory for new tasks.
  *
  * @p: Pointer to "struct task_struct".
@@ -385,13 +361,13 @@ static int ccs_copy_task_security(struct task_struct *task)
  */
 static int ccs_task_alloc_security(struct task_struct *p)
 {
-	int rc = ccs_copy_task_security(p);
+	int rc = ccs_alloc_task_security(p);
 	if (rc)
 		return rc;
 	while (!original_security_ops.task_alloc_security);
 	rc = original_security_ops.task_alloc_security(p);
 	if (rc)
-		ccs_del_security(ccs_find_task_security(p));
+		ccs_free_task_security(p);
 	return rc;
 }
 
@@ -406,7 +382,7 @@ static void ccs_task_free_security(struct task_struct *p)
 {
 	while (!original_security_ops.task_free_security);
 	original_security_ops.task_free_security(p);
-	ccs_del_security(ccs_find_task_security(p));
+	ccs_free_task_security(p);
 }
 
 /**
@@ -520,6 +496,7 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 			 */
 			get_cred(bprm->cred);
 			security->cred = bprm->cred;
+			atomic_inc(&ccs_in_execve_tasks);
 #endif
 		}
 		if (rc)
@@ -2340,30 +2317,6 @@ out:
 #endif
 }
 
-/**
- * ccs_find___put_task_struct - Find address of __put_task_struct().
- *
- * Returns true on success, false otherwise.
- */
-static bool __init ccs_find___put_task_struct(void)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	void *ptr;
-	ptr = ccs_find_symbol(" __put_task_struct\n");
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve __put_task_struct().\n");
-		goto out;
-	}
-	ccs___put_task_struct = ptr;
-	printk(KERN_INFO "__put_task_struct=%p\n", ptr);
-	return true;
-out:
-	return false;
-#else
-	return true;
-#endif
-}
-
 #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
@@ -2566,8 +2519,6 @@ static spinlock_t ccs_vfsmount_lock;
 static bool __init ccs_find_vfsmount_lock(void)
 {
 	ccsecurity_exports.vfsmount_lock = &ccs_vfsmount_lock;
-	printk(KERN_INFO "vfsmount_lock is not used due to !CONFIG_SMP && "
-	       "!CONFIG_DEBUG_SPINLOCK.\n");
 	return true;
 }
 
@@ -2681,18 +2632,20 @@ static int __init ccs_init(void)
 {
 	struct security_operations *ops = ccs_find_security_ops();
 	if (!ops || !ccs_find_find_task_by_pid() ||
-	    !ccs_find_vfsmount_lock() || !ccs_find___put_task_struct())
+	    !ccs_find_vfsmount_lock())
 		return -EINVAL;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	{
 		int idx;
-		for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
+		for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
 			INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
+			INIT_LIST_HEAD(&ccs_task_security_list[idx]);
+		}
 	}
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.18   2011/09/03\n");
+	printk(KERN_INFO "AKARI: 1.0.19   2011/09/15\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;
@@ -2729,6 +2682,25 @@ bool ccs_used_by_cred(const struct ccs_domain_info *domain)
 	return false;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+
+/**
+ * ccs_add_task_security - Add "struct ccs_security" to list.
+ *
+ * @ptr:  Pointer to "struct ccs_security".
+ * @list: Pointer to "struct list_head".
+ *
+ * Returns nothing.
+ */
+static void ccs_add_task_security(struct ccs_security *ptr,
+				  struct list_head *list)
+{
+	unsigned long flags;
+	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
+	list_add_rcu(&ptr->list, list);
+	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
+}
+
 /**
  * ccs_find_task_security - Find "struct ccs_security" for given task.
  *
@@ -2751,10 +2723,9 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	while (!list->next);
 	rcu_read_lock();
 	list_for_each_entry_rcu(ptr, list, list) {
-		if (ptr->task != task)
+		if (ptr->pid != task->pids[PIDTYPE_PID].pid)
 			continue;
 		rcu_read_unlock();
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 		/*
 		 * Current thread needs to transit from old domain to new
 		 * domain before do_execve() succeeds in order to check
@@ -2787,19 +2758,21 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 */
 		if (task == current && ptr->cred &&
 		    atomic_read(&ptr->cred->usage) == 1) {
-			/*
-			printk(KERN_DEBUG
-			       "pid=%u: Reverting domain transition because "
-			       "do_execve() has failed.\n", task->pid);
-			*/
+#ifdef CONFIG_AKARI_DEBUG
+			static bool done = false;
+			if (!done) {
+				printk(KERN_INFO "AKARI: Reverting domain "
+				       "transition because do_execve() has "
+				       "failed.\n");
+				done = true;
+			}
+#endif
 			ccs_clear_execve(-1, ptr);
 		}
-#endif
 		return ptr;
 	}
 	rcu_read_unlock();
 	if (task != current) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 		/*
 		 * If a thread does nothing after fork(), caller will reach
 		 * here because "struct ccs_security" for that thread is not
@@ -2819,9 +2792,6 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 * like get_robust_list() does.
 		 */
 		return ccs_find_cred_security(__task_cred(task));
-#else
-		return &ccs_default_security;
-#endif
 	}
 	/* Use GFP_ATOMIC because caller may have called rcu_read_lock(). */
 	ptr = kzalloc(sizeof(*ptr), GFP_ATOMIC);
@@ -2831,22 +2801,13 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		send_sig(SIGKILL, current, 0);
 		return &ccs_oom_security;
 	}
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	*ptr = *ccs_find_cred_security(task->cred);
-	get_task_struct((struct task_struct *) task);
-#else
-	*ptr = ccs_default_security;
-#endif
-	ptr->task = (struct task_struct *) task;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	/* ptr->cred may point to garbage. I need to explicitly clear. */
+	/* We can shortcut because task == current. */
+	ptr->pid = get_pid(((struct task_struct *) task)->pids[PIDTYPE_PID].pid);
 	ptr->cred = NULL;
-#endif
 	ccs_add_task_security(ptr, list);
 	return ptr;
 }
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
 /**
  * ccs_copy_cred_security - Allocate memory for new credentials.
@@ -2902,44 +2863,39 @@ static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
  *
  * Since security_task_free_security() is missing, I can't release memory
  * associated with "struct task_struct" when a task dies. Therefore, I hold
- * a reference on "struct task_struct" and runs garbage collection when I
- * became the last user who refers that "struct task_struct".
+ * a reference on "struct pid" and runs garbage collection when associated
+ * "struct task_struct" has gone.
  */
 static void ccs_task_security_gc(void)
 {
 	static DEFINE_MUTEX(lock);
-	static unsigned int counter;
+	static atomic_t gc_counter = ATOMIC_INIT(0);
 	unsigned int idx;
-	if (!mutex_trylock(&lock))
+	/*
+	 * If some process is doing execve(), try to garbage collection now.
+	 * We should kfree() memory associated with "struct ccs_security"->ee
+	 * as soon as execve() has completed in order to compensate for lack of
+	 * security_bprm_free() and security_task_free() hooks.
+	 *
+	 * Otherwise, reduce frequency for performance reason.
+	 */
+	if (!atomic_read(&ccs_in_execve_tasks) &&
+	    atomic_inc_return(&gc_counter) < 1024)
 		return;
-	/* Checking every time is too wasteful. */
-	if (counter++ < 1024)
-		goto skip;
-	counter = 0;
+	atomic_set(&gc_counter, 0);
+	if (mutex_lock_interruptible(&lock))
+		return;
 	rcu_read_lock();
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
 		struct ccs_security *ptr;
 		struct list_head *list = &ccs_task_security_list[idx];
 		list_for_each_entry_rcu(ptr, list, list) {
-			struct task_struct *task =
-				(struct task_struct *) ptr->task;
-			/* Am I the last one using this task? */
-			if (atomic_read(&task->usage) != 1)
+			if (pid_task(ptr->pid, PIDTYPE_PID))
 				continue;
-			/*
-			 * We need to call put_task_struct(task); here.
-			 * However, since put_task_struct() is an inlined
-			 * function which calls __put_task_struct() and
-			 * __put_task_struct() is not exported,
-			 * we embed put_task_struct() into here.
-			 */
-			atomic_dec(&task->usage);
-			ccs___put_task_struct(task);
 			ccs_del_security(ptr);
 		}
 	}
 	rcu_read_unlock();
-skip:
 	mutex_unlock(&lock);
 }
 

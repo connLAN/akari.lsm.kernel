@@ -1930,8 +1930,10 @@ extern struct ccsecurity_exports ccsecurity_exports;
  */
 struct ccs_security {
 	struct list_head list;
-	const struct task_struct *task; /* Maybe NULL. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
+	const struct task_struct *task;
+#else
+	struct pid *pid; /* Maybe NULL. */
 	const struct cred *cred; /* Maybe NULL. */
 #endif
 	struct ccs_domain_info *ccs_domain_info;
@@ -1945,7 +1947,6 @@ bool ccs_used_by_cred(const struct ccs_domain_info *domain);
 int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep);
 void ccs_finish_execve(int retval, struct ccs_execve *ee);
 void ccs_load_policy(const char *filename);
-extern spinlock_t ccs_task_security_list_lock;
 
 #define CCS_TASK_SECURITY_HASH_BITS 12
 #define CCS_MAX_TASK_SECURITY_HASH (1u << CCS_TASK_SECURITY_HASH_BITS)

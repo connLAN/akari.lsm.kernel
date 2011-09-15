@@ -96,10 +96,10 @@
 <p>Run the following commands in order to build and install AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.18-20110903.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.18-20110903.tar.gz'
-# wget -O akari-1.0.18-20110903.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.18-20110903.tar.gz.asc'
-# gpg akari-1.0.18-20110903.tar.gz.asc
-# tar -zxf akari-1.0.18-20110903.tar.gz
+# wget -O akari-1.0.19-20110915.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.19-20110915.tar.gz'
+# wget -O akari-1.0.19-20110915.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.19-20110915.tar.gz.asc'
+# gpg akari-1.0.19-20110915.tar.gz.asc
+# tar -zxf akari-1.0.19-20110915.tar.gz
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}
@@ -221,7 +221,7 @@ initrd /boot/initrd-2.6.18-238.12.1.e15.img
 <p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
 
 <pre class="output">
-AKARI: 1.0.18   2011/09/03
+AKARI: 1.0.19   2011/09/15
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.2+   2011/09/03

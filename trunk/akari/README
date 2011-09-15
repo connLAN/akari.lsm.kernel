@@ -178,6 +178,6 @@ Version 1.0.19   2011/09/15   Minor update release.
    (i.e. "struct ccs_security") in order to reduce amount of dead memory
    waiting for garbage collection. (2.6.29 and later kernels)
 
-   Add akari-test.ko for checking whether akari.ko seems to work or not.
+   Add akari_test.ko for checking whether akari.ko seems to work or not.
 
    Add SH and ARM architectures support. (Needs more testing.)

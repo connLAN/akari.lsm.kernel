@@ -165,6 +165,8 @@ Version 1.0.19   2011/09/15   Minor update release.
 
    Fix build error on CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER=y case.
 
+   Use lookup_mnt() rather than __put_namespace(). (2.6.0 to 2.6.2 kernels) 
+
    Fix unbalanced spin_lock()/spin_unlock() pair in lsm_pin().
    (2.6.15 to 2.6.35 kernels)
 

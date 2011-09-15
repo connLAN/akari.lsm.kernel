@@ -2322,38 +2322,59 @@ out:
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /* Never mark this variable as __initdata . */
-static spinlock_t ccs_vfsmount_lock;
+static spinlock_t ccs_vfsmount_lock __cacheline_aligned_in_smp =
+SPIN_LOCK_UNLOCKED;
+
+static struct list_head *mount_hashtable;
+static int hash_mask, hash_bits;
 
 /**
- * lsm_umnt_tr - Dummy function which prototype is identical to umount_tree() in fs/namespace.c.
+ * hash - Copy of hash() in fs/namespace.c.
  *
  * @mnt: Pointer to "struct vfsmount".
+ * @dentry: Pointer to "struct dentry".
  *
- * Returns nothing.
+ * Returns hash value.
  */
-static void lsm_umnt_tr(struct vfsmount *mnt)
+static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
 {
-	/* Nothing to do because this function is not called. */
+	unsigned long tmp = ((unsigned long) mnt / L1_CACHE_BYTES);
+	tmp += ((unsigned long) dentry / L1_CACHE_BYTES);
+	tmp = tmp + (tmp >> hash_bits);
+	return tmp & hash_mask;
 }
 
 /**
- * lsm__put_nmspce - Dummy function which does identical to __put_namespace() in fs/namespace.c.
+ * lsm_lu_mnt - Dummy function which does identical to lookup_mnt() in fs/namespace.c.
  *
- * @namespace: Pointer to "struct namespace".
+ * @mnt:    Pointer to "struct vfsmount".
+ * @dentry: Pointer to "struct dentry".
  *
- * Returns nothing.
+ * Returns pointer to "struct vfsmount".
  *
  * Never mark this function as __init in order to make sure that compiler
- * generates identical code for __put_namespace() and this function.
+ * generates identical code for lookup_mnt() and this function.
  */
-static void lsm__put_nmspce(struct namespace *namespace)
+static struct vfsmount *lsm_lu_mnt(struct vfsmount *mnt, struct dentry *dentry)
 {
-	down_write(&namespace->sem);
+	struct list_head * head = mount_hashtable + hash(mnt, dentry);
+	struct list_head * tmp = head;
+	struct vfsmount *p, *found = NULL;
+
 	spin_lock(&ccs_vfsmount_lock);
-	lsm_umnt_tr(namespace->root);
+	for (;;) {
+		tmp = tmp->next;
+		p = NULL;
+		if (tmp == head)
+			break;
+		p = list_entry(tmp, struct vfsmount, mnt_hash);
+		if (p->mnt_parent == mnt && p->mnt_mountpoint == dentry) {
+			found = mntget(p);
+			break;
+		}
+	}
 	spin_unlock(&ccs_vfsmount_lock);
-	up_write(&namespace->sem);
-	kfree(namespace);
+	return found;
 }
 
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
@@ -2427,11 +2448,10 @@ static bool __init ccs_find_vfsmount_lock(void)
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = ccs_find_variable(lsm__put_nmspce,
-			       (unsigned long) &ccs_vfsmount_lock,
-			       " __put_namespace\n");
+	cp = ccs_find_variable(lsm_lu_mnt, (unsigned long) &ccs_vfsmount_lock,
+			       " lookup_mnt\n");
 	if (!cp) {
-		printk(KERN_ERR "Can't resolve __put_namespace().\n");
+		printk(KERN_ERR "Can't resolve lookup_mnt().\n");
 		goto out;
 	}
 	/* This should be "spinlock_t *vfsmount_lock;". */
@@ -2444,13 +2464,6 @@ static bool __init ccs_find_vfsmount_lock(void)
 	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
 	return true;
 out:
-	/*
-	 * Dummy call for preventing lsm_umnt_tr() from being inlined into
-	 * lsm__put_nmspce().
-	 */
-	cp = ccs_find_variable(lsm_umnt_tr,
-			       (unsigned long) &ccs_vfsmount_lock,
-			       " __put_namespace\n");
 	return false;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 	void *cp;

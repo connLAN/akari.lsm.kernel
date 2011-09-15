@@ -2267,7 +2267,7 @@ static struct security_operations * __init ccs_find_security_ops(void)
 		printk(KERN_ERR "Can't resolve security_ops structure.\n");
 		goto out;
 	}
-	printk(KERN_INFO "&security_ops=%p\n", ptr);
+	printk(KERN_INFO "security_ops=%p\n", ptr);
 	ops = *ptr;
 	if (!ops) {
 		printk(KERN_ERR "No security_operations registered.\n");

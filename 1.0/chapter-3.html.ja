@@ -117,6 +117,58 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <p>もし、ご利用のカーネルでサポートされている機能や構文について知りたい場合には <a href="../comparison.html.ja">AKARI / TOMOYO 機能比較表</a> を参照してください。</p>
 
+<h4><a name="3.2.3">3.2.3. AKARI カーネルモジュールをロードできるかどうかを確認（省略可）</a></h4>
+
+<p>AKARI モジュールを登録する処理は環境依存であるため、問題が起こる場合があります。そのため、問題なくロードできるかどうかを現時点で確認しておくことを推奨します。</p>
+
+<p>以下のコマンドを実行して akari_test.ko モジュールをロードしてください：</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# modprobe akari_test
+# dmesg
+</pre>
+<pre class="output">
+security_ops=c0baa1ec
+find_task_by_vpid=c046d860
+find_task_by_pid_ns=c046d840
+vfsmount_lock=c09de340
+All dependent symbols have been guessed.
+Please verify these addresses using System.map for this kernel (e.g. /boot/System.map-`uname -r` ).
+If these addresses are correct, you can try loading AKARI module on this kernel.</pre>
+
+<p>akari_test.ko のロードに成功した場合、上記のように推定されたシンボルのアドレスが表示されますので、実際の System.map ファイルの内容と比較して一致していることを確認してください。（表示されるシンボルの種類やアドレスは環境により異なります。）：</p>
+
+<pre class="command">
+# for i in c0baa1ec c046d860 c046d840 c09de340; do grep $i /boot/System.map-${VERSION}; done
+</pre>
+<pre class="output">
+c0baa1ec B security_ops
+c046d860 T find_task_by_vpid
+c046d840 T find_task_by_pid_ns
+c09de340 D vfsmount_lock
+</pre>
+
+<p>一致している場合には先へ進んでください。一致しなかった場合、このまま続行しても正常に動作しないので、作者にご連絡ください。</p>
+
+<p>akari_test.ko のロードに失敗した場合、下記のようにエラーメッセージが表示されます。このまま続行しても正常に動作しないので、作者にご連絡ください：</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# modprobe akari_test
+</pre>
+<pre class="output">
+FATAL: Error inserting akari_test (/lib/modules/2.6.32/extra/akari_test.ko): Invalid argument
+</pre>
+<pre class="command">
+# dmesg
+</pre>
+<pre class="output">
+Sorry, I couldn't guess dependent symbols.
+I need some changes for supporting your environment.
+Please contact the author.
+</pre>
+
 <h3><a name="3.3">3.3. 管理ツールのインストール</a></h3>
 
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
@@ -227,8 +279,6 @@ Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.2+   2011/09/03
 Mandatory Access Control activated.
 </pre>
-
-<p>AKARI モジュールを登録する処理は環境依存であるため、問題が起こる場合があります。もし問題が発生した場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
 
 <p>カーネルコンパイル時の設定や起動時のオプションによっては、上記のメッセージが表示されないかもしれません。その場合、 /proc/ccs/ ディレクトリをチェックしてください。もし、 /proc/ccs/ ディレクトリが作成されていた場合、 AKARI モジュールは正常に登録されています。</p>
 

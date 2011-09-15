@@ -117,6 +117,58 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <p>If you are interested in what functionality and syntax are supported for your kernel, see <a href="../comparison.html.en">AKARI / TOMOYO functionality comparison table</a>.</p>
 
+<h4><a name="3.2.3">3.2.3. Check whether AKARI kernel module can be loaded or not (Optional)</a></h4>
+
+<p>Since registering AKARI module depends on your environment, you might encounter problems. Therefore, I recommend you to confirm that AKARI module can be loaded at this step.</p>
+
+<p>Run the following commands in order to try to load akari_test.ko module:</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# modprobe akari_test
+# dmesg
+</pre>
+<pre class="output">
+security_ops=c0baa1ec
+find_task_by_vpid=c046d860
+find_task_by_pid_ns=c046d840
+vfsmount_lock=c09de340
+All dependent symbols have been guessed.
+Please verify these addresses using System.map for this kernel (e.g. /boot/System.map-`uname -r` ).
+If these addresses are correct, you can try loading AKARI module on this kernel.</pre>
+
+<p>If akari_test.ko was loaded successfully, guessed addresses like above are printed. Therefore, please compare guessed addresses from akari_test.ko and actual addresses from System.map file. (Number of symbols and addresses printed depends on your environment.):</p>
+
+<pre class="command">
+# for i in c0baa1ec c046d860 c046d840 c09de340; do grep $i /boot/System.map-${VERSION}; done
+</pre>
+<pre class="output">
+c0baa1ec B security_ops
+c046d860 T find_task_by_vpid
+c046d840 T find_task_by_pid_ns
+c09de340 D vfsmount_lock
+</pre>
+
+<p>Please proceed if these addresses are correct. Otherwise, please contact the author since AKARI module will not work even if you continue.</p>
+
+<p>If akari_test.ko was not loaded successfully, error messages like below are printed. In this case, please contact the author since AKARI module will not work even if you continue:</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# modprobe akari_test
+</pre>
+<pre class="output">
+FATAL: Error inserting akari_test (/lib/modules/2.6.32/extra/akari_test.ko): Invalid argument
+</pre>
+<pre class="command">
+# dmesg
+</pre>
+<pre class="output">
+Sorry, I couldn't guess dependent symbols.
+I need some changes for supporting your environment.
+Please contact the author.
+</pre>
+
 <h3><a name="3.3">3.3. Install the userspace tools</a></h3>
 
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
@@ -227,8 +279,6 @@ Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.2+   2011/09/03
 Mandatory Access Control activated.
 </pre>
-
-<p>Since registering AKARI module depends on your environment, you might encounter problems. In that case, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
 
 <p>You may not be able to find these messages depending on kernel configuration and kernel boot parameters. In that case, you can check for /proc/ccs/ directory. If /proc/ccs/ directory exists, AKARI module was successfully registered.</p>
 

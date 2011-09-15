@@ -45,4 +45,6 @@ $(obj)/builtin-policy.h: $(obj)/policy/profile.conf $(obj)/policy/exception_poli
 	@echo "\"\";" >> $@.tmp
 	@mv $@.tmp $@
 
-$(obj)/policy_io.o: $(obj)/builtin-policy.h
+$(obj)/policy_io.o: $(obj)/builtin-policy.h $(obj)/config.h
+
+.o: $(obj)/config.h

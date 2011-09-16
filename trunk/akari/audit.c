@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #include "internal.h"
@@ -338,7 +338,8 @@ static void ccs_update_task_domain(struct ccs_request_info *r)
 	const char *cp;
 	const struct ccs_acl_info *acl = r->matched_acl;
 	r->matched_acl = NULL;
-	if (!acl || !acl->cond || !acl->cond->transit)
+	if (!acl || !acl->cond || !acl->cond->transit ||
+	    acl->cond->exec_transit)
 		return;
 	while (1) {
 		buf = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);

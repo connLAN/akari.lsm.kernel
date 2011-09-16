@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2+   2011/09/03
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #include "internal.h"
@@ -528,7 +528,7 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	printk(KERN_INFO "CCSecurity: 1.8.2+   2011/09/03\n");
+	printk(KERN_INFO "CCSecurity: 1.8.3-pre   2011/09/16\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
 		const struct ccs_policy_namespace *ns = domain->ns;
@@ -1383,6 +1383,10 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 	case 0:
 		head->r.cond_index = 0;
 		head->r.cond_step++;
+		if (cond->transit && cond->exec_transit) {
+			ccs_set_space(head);
+			ccs_set_string(head, cond->transit->name);
+		}
 		/* fall through */
 	case 1:
 		{
@@ -1496,7 +1500,7 @@ static bool ccs_print_condition(struct ccs_io_buffer *head,
 			ccs_io_printf(head, " grant_log=%s",
 				      ccs_yesno(cond->grant_log ==
 						CCS_GRANTLOG_YES));
-		if (cond->transit) {
+		if (cond->transit && !cond->exec_transit) {
 			const char *name = cond->transit->name;
 			ccs_set_string(head, " auto_domain_transition=\"");
 			ccs_set_string(head, name);

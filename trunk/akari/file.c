@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #include "internal.h"
@@ -614,12 +614,40 @@ int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 	do {
 		ccs_check_acl(r, ccs_check_path_acl);
 		error = ccs_audit_path_log(r);
-		/*
-		 * Do not retry for execute request, for aggregator may have
-		 * changed.
-		 */
-	} while (error == CCS_RETRY_REQUEST && operation != CCS_TYPE_EXECUTE);
+	} while (error == CCS_RETRY_REQUEST);
 	return error;
+}
+
+/**
+ * ccs_execute_permission - Check permission for execute operation.
+ *
+ * @r:         Pointer to "struct ccs_request_info".
+ * @filename:  Filename to check.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * Caller holds ccs_read_lock().
+ */
+int ccs_execute_permission(struct ccs_request_info *r,
+			   const struct ccs_path_info *filename)
+{
+	/*
+	 * Unlike other permission checks, this check is done regardless of
+	 * profile mode settings in order to check for domain transition
+	 * preference.
+	 */
+	r->type = CCS_MAC_FILE_EXECUTE;
+	r->mode = ccs_get_mode(r->profile, r->type);
+	r->param_type = CCS_TYPE_PATH_ACL;
+	r->param.path.filename = filename;
+	r->param.path.operation = CCS_TYPE_EXECUTE;
+	ccs_check_acl(r, ccs_check_path_acl);
+	r->ee->transition = r->matched_acl && r->matched_acl->cond &&
+		r->matched_acl->cond->exec_transit ?
+		r->matched_acl->cond->transit : NULL;
+	if (r->mode != CCS_CONFIG_DISABLED)
+		return ccs_audit_path_log(r);
+	return 0;
 }
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)

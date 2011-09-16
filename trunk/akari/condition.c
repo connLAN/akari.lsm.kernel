@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2   2011/06/20
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #include "internal.h"
@@ -355,8 +355,9 @@ static inline bool ccs_same_condition(const struct ccs_condition *a,
 		a->numbers_count == b->numbers_count &&
 		a->names_count == b->names_count &&
 		a->argc == b->argc && a->envc == b->envc &&
-		a->grant_log == b->grant_log && a->transit == b->transit &&
-		!memcmp(a + 1, b + 1, a->size - sizeof(*a));
+		a->grant_log == b->grant_log &&
+		a->exec_transit == b->exec_transit && a->transit == b->transit
+		&& !memcmp(a + 1, b + 1, a->size - sizeof(*a));
 }
 
 /**
@@ -435,6 +436,48 @@ out:
 }
 
 /**
+ * ccs_get_transit_preference - Parse domain transition preference for execve().
+ *
+ * @param: Pointer to "struct ccs_acl_param".
+ * @e:     Pointer to "struct ccs_condition".
+ *
+ * Returns the condition string part.
+ */
+static char *ccs_get_transit_preference(struct ccs_acl_param *param,
+					struct ccs_condition *e)
+{
+	char * const pos = param->data;
+	bool flag;
+	if (*pos == '<') {
+		e->transit = ccs_get_domainname(param);
+		goto done;
+	}
+	{
+		char *cp = strchr(pos, ' ');
+		if (cp)
+			*cp = '\0';
+		flag = ccs_correct_path(pos) || !strcmp(pos, "keep") ||
+			!strcmp(pos, "initialize") || !strcmp(pos, "reset") ||
+			!strcmp(pos, "child") || !strcmp(pos, "parent");
+		if (cp)
+			*cp = ' ';
+	}
+	if (!flag)
+		return pos;
+	e->transit = ccs_get_name(ccs_read_token(param));
+done:
+	if (e->transit) {
+		e->exec_transit = true;
+		return param->data;
+	}
+	/*
+	 * Return a bad read-only condition string that will let
+	 * ccs_get_condition() return NULL.
+	 */
+	return "/";
+}
+
+/**
  * ccs_get_condition - Parse condition part.
  *
  * @param: Pointer to "struct ccs_acl_param".
@@ -450,7 +493,7 @@ struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param)
 	struct ccs_argv *argv = NULL;
 	struct ccs_envp *envp = NULL;
 	struct ccs_condition e = { };
-	char * const start_of_string = param->data;
+	char * const start_of_string = ccs_get_transit_preference(param, &e);
 	char * const end_of_string = start_of_string + strlen(start_of_string);
 	char *pos;
 rerun:
@@ -625,8 +668,9 @@ store_value:
 		+ e.envc * sizeof(struct ccs_envp);
 	entry = kzalloc(e.size, CCS_GFP_FLAGS);
 	if (!entry)
-		return NULL;
+		goto out2;
 	*entry = e;
+	e.transit = NULL;
 	condp = (struct ccs_condition_element *) (entry + 1);
 	numbers_p = (struct ccs_number_union *) (condp + e.condc);
 	names_p = (struct ccs_name_union *) (numbers_p + e.numbers_count);
@@ -653,6 +697,8 @@ out:
 		ccs_del_condition(&entry->head.list);
 		kfree(entry);
 	}
+out2:
+	ccs_put_name(e.transit);
 	return NULL;
 }
 

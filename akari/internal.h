@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2+   2011/07/13
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -950,6 +950,7 @@ struct ccs_condition {
 	u16 argc; /* Number of "struct ccs_argv". */
 	u16 envc; /* Number of "struct ccs_envp". */
 	u8 grant_log; /* One of values in "enum ccs_grant_log". */
+	bool exec_transit; /* True if transit is for "file execute". */
 	const struct ccs_path_info *transit; /* Maybe NULL. */
 	/*
 	 * struct ccs_condition_element condition[condc];
@@ -1106,6 +1107,7 @@ struct ccs_execve {
 	struct ccs_obj_info obj;
 	struct linux_binprm *bprm;
 	struct ccs_domain_info *previous_domain;
+	const struct ccs_path_info *transition;
 	int reader_idx;
 	/* For execute_handler */
 	const struct ccs_path_info *handler;
@@ -1453,6 +1455,8 @@ const struct ccs_path_info *ccs_path_matches_group
 (const struct ccs_path_info *pathname, const struct ccs_group *group);
 int ccs_close_control(struct ccs_io_buffer *head);
 int ccs_env_perm(struct ccs_request_info *r, const char *env);
+int ccs_execute_permission(struct ccs_request_info *r,
+			   const struct ccs_path_info *filename);
 int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
 int ccs_open_control(const u8 type, struct file *file);

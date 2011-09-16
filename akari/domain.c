@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.2+   2011/09/03
+ * Version: 1.8.3-pre   2011/09/16
  */
 
 #include "internal.h"
@@ -97,6 +97,18 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 		new_entry->cond = ccs_get_condition(param);
 		if (!new_entry->cond)
 			return -EINVAL;
+		/*
+		 * Domain transition preference is allowed for only 
+		 * "file execute"/"task auto_execute_handler"/
+		 * "task denied_auto_execute_handler" entries.
+		 */
+		if (new_entry->cond->exec_transit &&
+		    !(new_entry->type == CCS_TYPE_PATH_ACL &&
+		      container_of(new_entry, struct ccs_path_acl, head)->perm
+		      == 1 << CCS_TYPE_EXECUTE) &&
+		    new_entry->type != CCS_TYPE_AUTO_EXECUTE_HANDLER &&
+		    new_entry->type != CCS_TYPE_DENIED_EXECUTE_HANDLER)
+			goto out;
 	}
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
@@ -613,7 +625,7 @@ retry:
 		}
 
 		/* Check execute permission. */
-		retval = ccs_path_permission(r, CCS_TYPE_EXECUTE, candidate);
+		retval = ccs_execute_permission(r, candidate);
 		if (retval == CCS_RETRY_REQUEST)
 			goto retry;
 		if (retval < 0)
@@ -627,11 +639,45 @@ retry:
 		if (r->param.path.matched_path)
 			candidate = r->param.path.matched_path;
 	}
-
-	/* Calculate domain to transit to. */
+	/*
+	 * Check for domain transition preference if "file execute" matched.
+	 * If preference is given, make do_execve() fail if domain transition
+	 * has failed, for domain transition preference should be used with
+	 * destination domain defined.
+	 */
+	if (r->ee->transition) {
+		const char *domainname = r->ee->transition->name;
+		reject_on_transition_failure = true;
+		if (!strcmp(domainname, "keep"))
+			goto force_keep_domain;
+		if (!strcmp(domainname, "child"))
+			goto force_child_domain;
+		if (!strcmp(domainname, "reset"))
+			goto force_reset_domain;
+		if (!strcmp(domainname, "initialize"))
+			goto force_initialize_domain;
+		if (!strcmp(domainname, "parent")) {
+			char *cp;
+			strncpy(ee->tmp, old_domain->domainname->name,
+				CCS_EXEC_TMPSIZE - 1);
+			cp = strrchr(ee->tmp, ' ');
+			if (cp)
+				*cp = '\0';
+		} else if (*domainname == '<')
+			strncpy(ee->tmp, domainname, CCS_EXEC_TMPSIZE - 1);
+		else
+			snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
+				 old_domain->domainname->name, domainname);
+		goto force_jump_domain;
+	}
+	/*
+	 * No domain transition preference specified.
+	 * Calculate domain to transit to.
+	 */
 	switch (ccs_transition_type(old_domain->ns, old_domain->domainname,
 				    candidate)) {
 	case CCS_TRANSITION_CONTROL_RESET:
+force_reset_domain:
 		/* Transit to the root of specified namespace. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "<%s>",
 			 candidate->name);
@@ -642,11 +688,13 @@ retry:
 		reject_on_transition_failure = true;
 		break;
 	case CCS_TRANSITION_CONTROL_INITIALIZE:
+force_initialize_domain:
 		/* Transit to the child of current namespace's root. */
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
 			 old_domain->ns->name, candidate->name);
 		break;
 	case CCS_TRANSITION_CONTROL_KEEP:
+force_keep_domain:
 		/* Keep current domain. */
 		domain = old_domain;
 		break;
@@ -659,14 +707,15 @@ retry:
 			 * before /sbin/init.
 			 */
 			domain = old_domain;
-		} else {
-			/* Normal domain transition. */
-			snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
-				 old_domain->domainname->name,
-				 candidate->name);
+			break;
 		}
+force_child_domain:
+		/* Normal domain transition. */
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1, "%s %s",
+			 old_domain->domainname->name, candidate->name);
 		break;
 	}
+force_jump_domain:
 	/*
 	 * Tell GC that I started execve().
 	 * Also, tell open_exec() to check read permission.
@@ -1127,6 +1176,9 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type)
 		return false;
 	ee->handler = container_of(r->matched_acl, struct ccs_handler_acl,
 				   head)->handler;
+	ee->transition = r->matched_acl && r->matched_acl->cond &&
+		r->matched_acl->cond->exec_transit ?
+		r->matched_acl->cond->transit : NULL;
 	return true;
 }
 

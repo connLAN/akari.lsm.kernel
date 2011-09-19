@@ -1108,7 +1108,6 @@ struct ccs_execve {
 	struct linux_binprm *bprm;
 	struct ccs_domain_info *previous_domain;
 	const struct ccs_path_info *transition;
-	int reader_idx;
 	/* For execute_handler */
 	const struct ccs_path_info *handler;
 	char *handler_path; /* = kstrdup(handler->name, CCS_GFP_FLAGS) */

@@ -103,7 +103,6 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	security->cred = NULL;
 	atomic_dec(&ccs_in_execve_tasks);
 #endif
-	ee->reader_idx = ccs_read_lock();
 	ccs_finish_execve(ret, ee);
 }
 
@@ -168,8 +167,6 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 		}
 #endif
 		kfree(ee->handler_path);
-		kfree(ee->tmp);
-		kfree(ee->dump.data);
 		kfree(ee);
 	}
 	kfree(ptr);
@@ -488,7 +485,6 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 #endif
 		rc = ccs_start_execve(bprm, &security->ee);
 		if (security->ee) {
-			ccs_read_unlock(security->ee->reader_idx);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 			/*
 			 * Get refcount on "struct cred" in

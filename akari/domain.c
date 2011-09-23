@@ -98,7 +98,7 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 		if (!new_entry->cond)
 			return -EINVAL;
 		/*
-		 * Domain transition preference is allowed for only 
+		 * Domain transition preference is allowed for only
 		 * "file execute"/"task auto_execute_handler"/
 		 * "task denied_auto_execute_handler" entries.
 		 */

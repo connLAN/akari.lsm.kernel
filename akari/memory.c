@@ -29,40 +29,38 @@ void ccs_warn_oom(const char *function)
 		panic("MAC Initialization failed.\n");
 }
 
-/*
- * Lock for protecting ccs_memory_used.
- *
- * I don't use atomic_t because it can handle only 16MB in 2.4 kernels.
- */
-static DEFINE_SPINLOCK(ccs_policy_memory_lock);
 /* Memoy currently used by policy/audit log/query. */
 unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
 /* Memory quota for "policy"/"audit log"/"query". */
 unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
+/* Protected by ccs_policy_lock mutex. */
+unsigned int ccs_memory_size; /* = ksize(ptr) */
+#endif
 
 /**
  * ccs_memory_ok - Check memory quota.
  *
- * @ptr:  Pointer to allocated memory. Maybe NULL.
- * @size: Size in byte. Not used if @ptr is NULL.
+ * @ptr: Pointer to allocated memory. Maybe NULL.
  *
  * Returns true if @ptr is not NULL and quota not exceeded, false otherwise.
+ *
+ * Caller holds ccs_policy_lock mutex.
  */
-bool ccs_memory_ok(const void *ptr, const unsigned int size)
+bool ccs_memory_ok(const void *ptr)
 {
 	if (ptr) {
-		const size_t s = ccs_round2(size);
-		bool result;
-		spin_lock(&ccs_policy_memory_lock);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+		const size_t s = ksize(ptr);
+#else
+		const size_t s = ccs_memory_size;
+#endif
 		ccs_memory_used[CCS_MEMORY_POLICY] += s;
-		result = !ccs_memory_quota[CCS_MEMORY_POLICY] ||
-			ccs_memory_used[CCS_MEMORY_POLICY] <=
-			ccs_memory_quota[CCS_MEMORY_POLICY];
-		if (!result)
-			ccs_memory_used[CCS_MEMORY_POLICY] -= s;
-		spin_unlock(&ccs_policy_memory_lock);
-		if (result)
+		if (!ccs_memory_quota[CCS_MEMORY_POLICY] ||
+		    ccs_memory_used[CCS_MEMORY_POLICY] <=
+		    ccs_memory_quota[CCS_MEMORY_POLICY])
 			return true;
+		ccs_memory_used[CCS_MEMORY_POLICY] -= s;
 	}
 	ccs_warn_oom(__func__);
 	return false;
@@ -76,34 +74,20 @@ bool ccs_memory_ok(const void *ptr, const unsigned int size)
  *
  * Returns pointer to allocated memory on success, NULL otherwise.
  * @data is zero-cleared on success.
+ *
+ * Caller holds ccs_policy_lock mutex.
  */
 void *ccs_commit_ok(void *data, const unsigned int size)
 {
 	void *ptr = kmalloc(size, CCS_GFP_FLAGS);
-	if (ccs_memory_ok(ptr, size)) {
+	ccs_set_memory_size(size);
+	if (ccs_memory_ok(ptr)) {
 		memmove(ptr, data, size);
 		memset(data, 0, size);
 		return ptr;
 	}
 	kfree(ptr);
 	return NULL;
-}
-
-/**
- * ccs_memory_free - Free memory for elements.
- *
- * @ptr:  Pointer to allocated memory.
- * @size: Size in byte.
- *
- * Returns nothing.
- */
-void ccs_memory_free(const void *ptr, size_t size)
-{
-	size_t s = ccs_round2(size);
-	spin_lock(&ccs_policy_memory_lock);
-	ccs_memory_used[CCS_MEMORY_POLICY] -= s;
-	spin_unlock(&ccs_policy_memory_lock);
-	kfree(ptr);
 }
 
 /**
@@ -130,7 +114,8 @@ struct ccs_group *ccs_get_group(struct ccs_acl_param *param, const u8 idx)
 		goto out;
 	list = &param->ns->group_list[idx];
 	list_for_each_entry(group, list, head.list) {
-		if (e.group_name != group->group_name)
+		if (e.group_name != group->group_name ||
+		    atomic_read(&group->head.users) == CCS_GC_IN_PROGRESS)
 			continue;
 		atomic_inc(&group->head.users);
 		found = true;
@@ -182,14 +167,16 @@ const struct ccs_path_info *ccs_get_name(const char *name)
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		return NULL;
 	list_for_each_entry(ptr, head, head.list) {
-		if (hash != ptr->entry.hash || strcmp(name, ptr->entry.name))
+		if (hash != ptr->entry.hash || strcmp(name, ptr->entry.name) ||
+		    atomic_read(&ptr->head.users) == CCS_GC_IN_PROGRESS)
 			continue;
 		atomic_inc(&ptr->head.users);
 		goto out;
 	}
 	allocated_len = sizeof(*ptr) + len;
 	ptr = kzalloc(allocated_len, CCS_GFP_FLAGS);
-	if (ccs_memory_ok(ptr, allocated_len)) {
+	ccs_set_memory_size(allocated_len);
+	if (ccs_memory_ok(ptr)) {
 		ptr->entry.name = ((char *) ptr) + sizeof(*ptr);
 		memmove((char *) ptr->entry.name, name, len);
 		atomic_set(&ptr->head.users, 1);

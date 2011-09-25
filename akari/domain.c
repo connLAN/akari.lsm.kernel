@@ -37,6 +37,8 @@ int ccs_update_policy(struct ccs_acl_head *new_entry, const int size,
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		return -ENOMEM;
 	list_for_each_entry_srcu(entry, list, list, &ccs_ss) {
+		if (entry->is_deleted == CCS_GC_IN_PROGRESS)
+			continue;
 		if (!check_duplicate(entry, new_entry))
 			continue;
 		entry->is_deleted = param->is_delete;
@@ -113,6 +115,8 @@ int ccs_update_domain(struct ccs_acl_info *new_entry, const int size,
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
 	list_for_each_entry_srcu(entry, list, list, &ccs_ss) {
+		if (entry->is_deleted == CCS_GC_IN_PROGRESS)
+			continue;
 		if (!ccs_same_acl_head(entry, new_entry) ||
 		    !check_duplicate(entry, new_entry))
 			continue;
@@ -449,7 +453,8 @@ struct ccs_policy_namespace *ccs_assign_namespace(const char *domainname)
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
 	ptr = ccs_find_namespace(domainname, len);
-	if (!ptr && ccs_memory_ok(entry, sizeof(*entry) + len + 1)) {
+	ccs_set_memory_size(sizeof(*entry) + len + 1);
+	if (!ptr && ccs_memory_ok(entry)) {
 		char *name = (char *) (entry + 1);
 		ptr = entry;
 		memmove(name, domainname, len);

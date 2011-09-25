@@ -600,8 +600,8 @@ static int ccs_update_mount_acl(struct ccs_acl_param *param)
  *
  * Caller holds ccs_read_lock().
  */
-int ccs_path_permission(struct ccs_request_info *r, u8 operation,
-			const struct ccs_path_info *filename)
+static int ccs_path_permission(struct ccs_request_info *r, u8 operation,
+			       const struct ccs_path_info *filename)
 {
 	int error;
 	r->type = ccs_p2mac[operation];

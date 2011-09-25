@@ -498,7 +498,8 @@ static struct ccs_profile *ccs_assign_profile(struct ccs_policy_namespace *ns,
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
 	ptr = ns->profile_ptr[profile];
-	if (!ptr && ccs_memory_ok(entry, sizeof(*entry))) {
+	ccs_set_memory_size(sizeof(*entry));
+	if (!ptr && ccs_memory_ok(entry)) {
 		ptr = entry;
 		ptr->default_config = CCS_CONFIG_DISABLED |
 			CCS_CONFIG_WANT_GRANT_LOG | CCS_CONFIG_WANT_REJECT_LOG;

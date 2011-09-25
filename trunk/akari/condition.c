@@ -407,9 +407,9 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 		found = true;
 		goto out;
 	}
-	list_for_each_entry_srcu(ptr, &ccs_condition_list, head.list,
-				 &ccs_ss) {
-		if (!ccs_same_condition(ptr, entry))
+	list_for_each_entry(ptr, &ccs_condition_list, head.list) {
+		if (!ccs_same_condition(ptr, entry) ||
+		    atomic_read(&ptr->head.users) == CCS_GC_IN_PROGRESS)
 			continue;
 		/* Same entry found. Share this entry. */
 		atomic_inc(&ptr->head.users);
@@ -417,9 +417,10 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 		break;
 	}
 	if (!found) {
-		if (ccs_memory_ok(entry, entry->size)) {
+		ccs_set_memory_size(entry->size);
+		if (ccs_memory_ok(entry)) {
 			atomic_set(&entry->head.users, 1);
-			list_add_rcu(&entry->head.list, &ccs_condition_list);
+			list_add(&entry->head.list, &ccs_condition_list);
 		} else {
 			found = true;
 			ptr = NULL;

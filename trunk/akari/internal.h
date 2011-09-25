@@ -270,6 +270,44 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 38)
+
+/**
+ * __list_del_entry - Deletes entry from list without re-initialization.
+ *
+ * @entry: Pointer to "struct list_head".
+ *
+ * Returns nothing.
+ *
+ * This is for compatibility with older kernels.
+ */
+static inline void __list_del_entry(struct list_head *entry)
+{
+	__list_del(entry->prev, entry->next);
+}
+
+#endif
+
+#ifndef list_for_each_entry_safe
+
+/**
+ * list_for_each_entry_safe - Iterate over list of given type safe against removal of list entry.
+ *
+ * @pos:    The "type *" to use as a loop cursor.
+ * @n:      Another "type *" to use as temporary storage.
+ * @head:   Pointer to "struct list_head".
+ * @member: The name of the list_struct within the struct.
+ *
+ * This is for compatibility with older kernels.
+ */
+#define list_for_each_entry_safe(pos, n, head, member)                  \
+	for (pos = list_entry((head)->next, typeof(*pos), member),      \
+		     n = list_entry(pos->member.next, typeof(*pos), member); \
+	     &pos->member != (head);					\
+	     pos = n, n = list_entry(n->member.next, typeof(*n), member))
+
+#endif
+
 #ifndef srcu_dereference
 
 /**
@@ -762,6 +800,9 @@ enum ccs_value_type {
 /* Size of temporary buffer for execve() operation. */
 #define CCS_EXEC_TMPSIZE     4096
 
+/* Garbage collector is trying to kfree() this element. */
+#define CCS_GC_IN_PROGRESS -1
+
 /* Profile number is an integer between 0 and 255. */
 #define CCS_MAX_PROFILES 256
 
@@ -814,7 +855,7 @@ enum ccs_value_type {
 /* Common header for holding ACL entries. */
 struct ccs_acl_head {
 	struct list_head list;
-	bool is_deleted;
+	s8 is_deleted; /* true or false or CCS_GC_IN_PROGRESS */
 } __attribute__((__packed__));
 
 /* Common header for shared entries. */
@@ -827,7 +868,7 @@ struct ccs_shared_acl_head {
 struct ccs_acl_info {
 	struct list_head list;
 	struct ccs_condition *cond; /* Maybe NULL. */
-	bool is_deleted;
+	s8 is_deleted; /* true or false or CCS_GC_IN_PROGRESS */
 	u8 type; /* One of values in "enum ccs_acl_entry_type_index". */
 } __attribute__((__packed__));
 
@@ -1425,7 +1466,7 @@ bool ccs_domain_def(const unsigned char *buffer);
 bool ccs_domain_quota_ok(struct ccs_request_info *r);
 bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 		   struct ccs_page_dump *dump);
-bool ccs_memory_ok(const void *ptr, const unsigned int size);
+bool ccs_memory_ok(const void *ptr);
 bool ccs_number_matches_group(const unsigned long min, const unsigned long max,
 			      const struct ccs_group *group);
 bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
@@ -1460,8 +1501,6 @@ int ccs_get_path(const char *pathname, struct path *path);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
 int ccs_open_control(const u8 type, struct file *file);
 int ccs_parse_ip_address(struct ccs_acl_param *param, u16 *min, u16 *max);
-int ccs_path_permission(struct ccs_request_info *r, u8 operation,
-			const struct ccs_path_info *filename);
 int ccs_poll_control(struct file *file, poll_table *wait);
 int ccs_poll_log(struct file *file, poll_table *wait);
 int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
@@ -1510,7 +1549,6 @@ void ccs_del_condition(struct list_head *element);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 void ccs_get_attributes(struct ccs_obj_info *obj);
 void ccs_init_policy_namespace(struct ccs_policy_namespace *ns);
-void ccs_memory_free(const void *ptr, size_t size);
 void ccs_normalize_line(unsigned char *buffer);
 void ccs_notify_gc(struct ccs_io_buffer *head, const bool is_register);
 void ccs_print_ip(char *buf, const unsigned int size,
@@ -1871,6 +1909,38 @@ static inline int ccs_round2(size_t size)
 	return bsize;
 }
 
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
+/**
+ * ccs_set_memory_size - Set memory size to be allocated.
+ *
+ * @size: Unused.
+ *
+ * Returns nothing.
+ *
+ * Caller holds ccs_policy_lock mutex.
+ */
+static inline void ccs_set_memory_size(const unsigned int size)
+{
+	/* ccs_memory_ok() uses ksize(). */
+}
+#else
+extern unsigned int ccs_memory_size;
+/**
+ * ccs_set_memory_size - Set memory size to be allocated.
+ *
+ * @size: Memory size in byte.
+ *
+ * Returns nothing.
+ *
+ * Caller holds ccs_policy_lock mutex.
+ */
+static inline void ccs_set_memory_size(const unsigned int size)
+{
+	/* ccs_memory_ok() uses ccs_round2(size). */
+	ccs_memory_size = size;
+}
 #endif
 
 /**

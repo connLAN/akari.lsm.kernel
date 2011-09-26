@@ -1466,7 +1466,7 @@ bool ccs_domain_def(const unsigned char *buffer);
 bool ccs_domain_quota_ok(struct ccs_request_info *r);
 bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 		   struct ccs_page_dump *dump);
-bool ccs_memory_ok(const void *ptr);
+bool ccs_memory_ok(const void *ptr, const unsigned int size);
 bool ccs_number_matches_group(const unsigned long min, const unsigned long max,
 			      const struct ccs_group *group);
 bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
@@ -1909,38 +1909,6 @@ static inline int ccs_round2(size_t size)
 	return bsize;
 }
 
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-/**
- * ccs_set_memory_size - Set memory size to be allocated.
- *
- * @size: Unused.
- *
- * Returns nothing.
- *
- * Caller holds ccs_policy_lock mutex.
- */
-static inline void ccs_set_memory_size(const unsigned int size)
-{
-	/* ccs_memory_ok() uses ksize(). */
-}
-#else
-extern unsigned int ccs_memory_size;
-/**
- * ccs_set_memory_size - Set memory size to be allocated.
- *
- * @size: Memory size in byte.
- *
- * Returns nothing.
- *
- * Caller holds ccs_policy_lock mutex.
- */
-static inline void ccs_set_memory_size(const unsigned int size)
-{
-	/* ccs_memory_ok() uses ccs_round2(size). */
-	ccs_memory_size = size;
-}
 #endif
 
 /**

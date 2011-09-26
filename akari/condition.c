@@ -417,8 +417,7 @@ static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry)
 		break;
 	}
 	if (!found) {
-		ccs_set_memory_size(entry->size);
-		if (ccs_memory_ok(entry)) {
+		if (ccs_memory_ok(entry, entry->size)) {
 			atomic_set(&entry->head.users, 1);
 			list_add(&entry->head.list, &ccs_condition_list);
 		} else {

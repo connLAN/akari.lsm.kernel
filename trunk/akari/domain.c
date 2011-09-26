@@ -453,8 +453,7 @@ struct ccs_policy_namespace *ccs_assign_namespace(const char *domainname)
 	if (mutex_lock_interruptible(&ccs_policy_lock))
 		goto out;
 	ptr = ccs_find_namespace(domainname, len);
-	ccs_set_memory_size(sizeof(*entry) + len + 1);
-	if (!ptr && ccs_memory_ok(entry)) {
+	if (!ptr && ccs_memory_ok(entry, sizeof(*entry) + len + 1)) {
 		char *name = (char *) (entry + 1);
 		ptr = entry;
 		memmove(name, domainname, len);

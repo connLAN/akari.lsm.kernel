@@ -8,22 +8,6 @@
 
 #include "internal.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-/**
- * ccs_memory_free - Free memory for elements.
- *
- * @ptr: Pointer to allocated memory.
- *
- * Returns nothing.
- *
- * Caller holds ccs_policy_lock mutex.
- */
-static inline void ccs_memory_free(const void *ptr)
-{
-	ccs_memory_used[CCS_MEMORY_POLICY] -= ksize(ptr);
-	kfree(ptr);
-}
-#else
 /**
  * ccs_memory_free - Free memory for elements.
  *
@@ -87,7 +71,6 @@ static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type)
 	ccs_memory_used[CCS_MEMORY_POLICY] -= ccs_round2(size);
 	kfree(ptr);
 }
-#endif
 
 /* The list for "struct ccs_io_buffer". */
 static LIST_HEAD(ccs_io_buffer_list);
@@ -405,11 +388,7 @@ static inline void ccs_del_domain(struct list_head *element)
 	 */
 	list_for_each_entry_safe(acl, tmp, &domain->acl_info_list, list) {
 		ccs_del_acl(&acl->list);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-		ccs_memory_free(acl);
-#else
 		ccs_memory_free(acl, CCS_ID_ACL);
-#endif
 	}
 	ccs_put_name(domain->domainname);
 }
@@ -710,11 +689,7 @@ static void ccs_try_to_gc(const enum ccs_policy_id type,
 	mutex_lock(&ccs_policy_lock);
 	if (type == CCS_ID_DOMAIN)
 		ccs_del_domain(element);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-	ccs_memory_free(element);
-#else
 	ccs_memory_free(element, type);
-#endif
 	return;
 reinject:
 	/*

@@ -33,28 +33,21 @@ void ccs_warn_oom(const char *function)
 unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
 /* Memory quota for "policy"/"audit log"/"query". */
 unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
-/* Protected by ccs_policy_lock mutex. */
-unsigned int ccs_memory_size; /* = ksize(ptr) */
-#endif
 
 /**
  * ccs_memory_ok - Check memory quota.
  *
- * @ptr: Pointer to allocated memory. Maybe NULL.
+ * @ptr:  Pointer to allocated memory. Maybe NULL.
+ * @size: Size in byte. Not used if @ptr is NULL.
  *
  * Returns true if @ptr is not NULL and quota not exceeded, false otherwise.
  *
  * Caller holds ccs_policy_lock mutex.
  */
-bool ccs_memory_ok(const void *ptr)
+bool ccs_memory_ok(const void *ptr, const unsigned int size)
 {
 	if (ptr) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-		const size_t s = ksize(ptr);
-#else
-		const size_t s = ccs_memory_size;
-#endif
+		const size_t s = ccs_round2(size);
 		ccs_memory_used[CCS_MEMORY_POLICY] += s;
 		if (!ccs_memory_quota[CCS_MEMORY_POLICY] ||
 		    ccs_memory_used[CCS_MEMORY_POLICY] <=
@@ -80,8 +73,7 @@ bool ccs_memory_ok(const void *ptr)
 void *ccs_commit_ok(void *data, const unsigned int size)
 {
 	void *ptr = kmalloc(size, CCS_GFP_FLAGS);
-	ccs_set_memory_size(size);
-	if (ccs_memory_ok(ptr)) {
+	if (ccs_memory_ok(ptr, size)) {
 		memmove(ptr, data, size);
 		memset(data, 0, size);
 		return ptr;
@@ -175,8 +167,7 @@ const struct ccs_path_info *ccs_get_name(const char *name)
 	}
 	allocated_len = sizeof(*ptr) + len;
 	ptr = kzalloc(allocated_len, CCS_GFP_FLAGS);
-	ccs_set_memory_size(allocated_len);
-	if (ccs_memory_ok(ptr)) {
+	if (ccs_memory_ok(ptr, allocated_len)) {
 		ptr->entry.name = ((char *) ptr) + sizeof(*ptr);
 		memmove((char *) ptr->entry.name, name, len);
 		atomic_set(&ptr->head.users, 1);

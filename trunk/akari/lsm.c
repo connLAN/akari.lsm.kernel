@@ -1851,6 +1851,8 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
+int ccs_path_permission(struct ccs_request_info *r, u8 operation,
+			const struct ccs_path_info *filename);
 
 /**
  * ccs_prepend - Copy of prepend() in fs/dcache.c.

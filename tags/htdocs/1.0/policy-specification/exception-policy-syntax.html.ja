@@ -56,6 +56,47 @@ acl_group 0 file read /dev/null
 aggregator /usr/bin/tac /usr/bin/cat
 </pre>
 
+<h3><a name="reset_domain">reset_domain</a></h3>
+
+<p>このディレクティブは、指定されたプログラムが実行された場合に指定された名前空間で動作させるために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>reset_domain "program" from any</li>
+<li>reset_domain "program" from "last_pathname_of_domain"</li>
+<li>reset_domain "program" from "domain"</li>
+<li>reset_domain any from any</li>
+<li>reset_domain any from "last_pathname_of_domain"</li>
+<li>reset_domain any from "domain"</li>
+</ul>
+
+<p>以下の例では <code>/usr/sbin/sshd</code> が実行されると &lt;/usr/sbin/sshd&gt; ドメインに遷移するように指定しています：</p>
+
+<pre>
+reset_domain /usr/sbin/sshd from any
+</pre>
+
+<h3><a name="no_reset_domain">no_reset_domain</a></h3>
+
+<p>このディレクティブは <a href="#reset_domain">reset_domain</a> ディレクティブの効果を打ち消すために使用します。</p>
+
+<p>可能な組み合わせ：</p>
+<ul>
+<li>no_reset_domain "program" from any</li>
+<li>no_reset_domain "program" from "last_pathname_of_domain"</li>
+<li>no_reset_domain "program" from "domain"</li>
+<li>no_reset_domain any from any</li>
+<li>no_reset_domain any from "last_pathname_of_domain"</li>
+<li>no_reset_domain any from "domain"</li>
+</ul>
+
+<p>以下の例ではドメイン名が /bin/mail で終わるドメインから <code>/usr/sbin/sendmail.sendmail</code> が実行された場合には &lt;/usr/sbin/sendmail.sendmail&gt; ドメインへと遷移しないようにしています：</p>
+
+<pre>
+reset_domain /usr/sbin/sendmail.sendmail from any
+no_reset_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
 <h3><a name="initialize_domain">initialize_domain</a></h3>
 
 <p>このディレクティブは、指定されたプログラム実行された場合に &lt;kernel&gt; の子ドメインで動作させるために使用します。</p>

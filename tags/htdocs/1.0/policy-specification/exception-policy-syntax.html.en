@@ -56,6 +56,47 @@ acl_group 0 file read /dev/null
 aggregator /usr/bin/tac /usr/bin/cat
 </pre>
 
+<h3><a name="reset_domain">reset_domain</a></h3>
+
+<p>This directive causes programs to run in the root domain of specified namespace.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>reset_domain "program" from any</li>
+<li>reset_domain "program" from "last_pathname_of_domain"</li>
+<li>reset_domain "program" from "domain"</li>
+<li>reset_domain any from any</li>
+<li>reset_domain any from "last_pathname_of_domain"</li>
+<li>reset_domain any from "domain"</li>
+</ul>
+
+<p>This example causes all executions of <code>/usr/sbin/sshd</code> to be reset to "&lt;/usr/sbin/sshd&gt;" domain:</p>
+
+<pre>
+reset_domain /usr/sbin/sshd from any
+</pre>
+
+<h3><a name="no_reset_domain">no_reset_domain</a></h3>
+
+<p>This directive cancels the effect of <a href="#reset_domain">reset_domain</a> directive.</p>
+
+<p>Possible entries:</p>
+<ul>
+<li>no_reset_domain "program" from any</li>
+<li>no_reset_domain "program" from "last_pathname_of_domain"</li>
+<li>no_reset_domain "program" from "domain"</li>
+<li>no_reset_domain any from any</li>
+<li>no_reset_domain any from "last_pathname_of_domain"</li>
+<li>no_reset_domain any from "domain"</li>
+</ul>
+
+<p>This example causes all executions of <code>/usr/sbin/sendmail.sendmail</code> not to be reset to "&lt;/usr/sbin/sendmail.sendmail&gt;" domain when <code>/usr/sbin/sendmail.sendmail</code> is executed from domains which the name of domains end with "/bin/mail":</p>
+
+<pre>
+reset_domain /usr/sbin/sendmail.sendmail from any
+no_reset_domain /usr/sbin/sendmail.sendmail from /bin/mail
+</pre>
+
 <h3><a name="initialize_domain">initialize_domain</a></h3>
 
 <p>This directive causes programs to run in a child of "&lt;kernel&gt;" domain.</p>

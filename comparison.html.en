@@ -120,7 +120,7 @@ Requires kernel 3.1.<br>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check arguments (argv[]) and environment variables (envp[]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted environment variables names? (misc env)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted binary loader (e.g. /lib/ld-linux.so.2) programs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Specify domain transition preference?</td><td></td><td colspan=6></td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Specify domain transition preference?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td></td><td>Restrict creating files? (file create)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating files?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict creating directories? (file mkdir)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>

@@ -120,7 +120,7 @@
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;バイナリローダー（例： /lib/ld-linux.so.2 ）として使用できるプログラムを制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ドメイン遷移方法を指定</td><td></td><td colspan=6></td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ドメイン遷移方法を指定</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td></td><td>ファイルの作成を制限（ file create ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ファイル作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ディレクトリの作成を制限（ file mkdir ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>

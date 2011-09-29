@@ -70,6 +70,8 @@
 <ul>
 <li><a href="exception-policy-syntax.html.ja#acl_group">acl_group</a></li>
 <li><a href="exception-policy-syntax.html.ja#aggregator">aggregator</a></li>
+<li><a href="exception-policy-syntax.html.ja#reset_domain">reset_domain</a></li>
+<li><a href="exception-policy-syntax.html.ja#no_reset_domain">no_reset_domain</a></li>
 <li><a href="exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a></li>
 <li><a href="exception-policy-syntax.html.ja#no_initialize_domain">no_initialize_domain</a></li>
 <li><a href="exception-policy-syntax.html.ja#keep_domain">keep_domain</a></li>

@@ -40,15 +40,17 @@
 
 <h3><a name="transition_by_execute">プログラム実行要求による遷移</a></h3>
 
-<p>この種類のドメイン遷移はアクセス制御のモードに依存します。プロファイルの <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::file または CONFIG::file::execute</a> （後者が前者より優先されます）で mode=enforcing という設定が行われていない限り、ドメイン遷移が失敗（ドメイン名が長すぎるかドメインを作成するためのメモリを割り当てることができなかった場合に発生します）してもプログラムの実行要求は拒否されません。</p>
-
-<p>プロセスがプログラムを実行しようとすると、以下の処理が行われます。</p>
+<p>この種類のドメイン遷移はアクセス制御のモードに依存します。プロセスがプログラムを実行しようとすると、以下の処理が行われます。</p>
 
 <p><strong>[source]</strong> は現在のドメイン名（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash ）または現在のドメイン名の最後のパス名（例： /bin/bash ）を表します。</p>
 
+<p><strong>[current_domain]</strong> は現在のドメイン名（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash ）を表します。</p>
+
+<p><strong>[current_namespace]</strong> は現在のドメインの名前空間の名前（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash ドメインの場合は &lt;kernel&gt; ）を表します。</p>
+
 <p><strong>[destination]</strong> はプログラムの実行要求が成功した場合に遷移するドメイン名（例： &lt;kernel&gt; /usr/sbin/sshd /bin/bash /bin/cat ）を表します。</p>
 
-<p><strong>[candidate]</strong> はパーミッションのチェックの対象となるパス名（例： /bin/cat ）で、 [destination] を計算するときにも使われるパス名を表します。</p>
+<p><strong>[candidate]</strong> はパーミッションのチェックの対象となるパス名（例： /bin/cat ）を表します。</p>
 
 <div class="simple-table-wrap">
 <table>
@@ -57,9 +59,38 @@
 <th><p>内容</p></th>
 </tr>
 <tr>
-<td><p>(1) <a href="domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> ディレクティブのチェック</p></td>
-<td><p>
-もし、 task auto_execute_handler [pathname] というエントリが存在している場合、 [pathname] を [candidate] としてステップ (6) へと進みます。</p></td>
+<td><p>(1) task auto_execute_handler ディレクティブのチェック</p></td>
+<td><p>ドメインポリシーに<br>
+&nbsp;&nbsp;<a href="domain-policy-syntax.html.ja#task_auto_execute_handler">task auto_execute_handler</a> [pathname] keep<br>
+というエントリが存在している場合、 [current_domain] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] child<br>
+というエントリが存在している場合、 [current_domain] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] reset<br>
+というエントリが存在している場合、 &lt;[pathname]&gt; を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] initialize<br>
+というエントリが存在している場合、 [current_namespace] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] parent<br>
+というエントリが存在している場合、 [current_domain] の親ドメインを [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] [domainname]<br>
+というエントリが存在している場合、 [domainname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname] [pathname]<br>
+というエントリが存在している場合、 [current_domain] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task auto_execute_handler [pathname]<br>
+というエントリが存在している場合、 [pathname] を [candidate] にしてステップ (6) へと進みます。</p></td>
 </tr>
 <tr>
 <td><p>(2) プログラムのパス名を取得</p></td>
@@ -67,48 +98,141 @@
 シンボリックリンクとして提供されているプログラムに対処するために、パス名の最後のシンボリックリンクは解決しないようにします。</p></td>
 </tr>
 <tr>
-<td><p>(3) <a href="exception-policy-syntax.html.ja#aggregator">aggregator</a> ディレクティブのチェック</p></td>
-<td><p>もし、例外ポリシーに aggregator [candidate] [pathname] というエントリが存在している場合、 [pathname] を [candidate] にします。</p></td>
+<td><p>(3) aggregator ディレクティブのチェック</p></td>
+<td><p>もし、例外ポリシーに<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#aggregator">aggregator</a> [candidate] [pathname]<br>
+というエントリが存在している場合、 [pathname] を [candidate] にします。</p></td>
 </tr>
 <tr>
-<td><p>(4) <a href="domain-policy-syntax.html.ja#file_execute">file execute</a> ディレクティブのチェック</p></td>
-<td><p>もし、 file execute [candidate] というエントリが存在しているか、あるいは現在のドメインに割り当てられているプロファイルのモードが mode=enforcing では無い場合、ステップ (6) へと進みます。</p></td>
+<td><p>(4) file execute ディレクティブのチェック</p></td>
+<td><p>ドメインポリシーに<br>
+&nbsp;&nbsp;<a href="domain-policy-syntax.html.ja#file_execute">file execute</a> [candidate] keep<br>
+というエントリが存在している場合、 [current_domain] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] child<br>
+というエントリが存在している場合、 [current_domain] [candidate] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] reset<br>
+というエントリが存在している場合、 &lt;[candidate]&gt; を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] initialize<br>
+というエントリが存在している場合、 [current_namespace] [candidate] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] parent<br>
+というエントリが存在している場合、 [current_domain] の親ドメインを [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] [domainname]<br>
+というエントリが存在している場合、 [domainname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate] [pathname]<br>
+というエントリが存在している場合、 [current_domain] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;file execute [candidate]<br>
+というエントリが存在している場合、ステップ (6) に進みます。</p>
+<br>
+<p>その他の場合、プロファイルの <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::file または CONFIG::file::execute</a> （後者が前者より優先されます）で mode=enforcing という設定が行われていた場合にはステップ (5) に進みます。そうではない場合には、ステップ (6) に進みます。</p></td>
 </tr>
 <tr>
-<td><p>(5) <a href="domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> ディレクティブのチェック</p></td>
+<td><p>(5) task denied_execute_handlerディレクティブのチェック</p></td>
+<td><p>ドメインポリシーに<br>
+&nbsp;&nbsp;<a href="domain-policy-syntax.html.ja#task_denied_execute_handler">task denied_execute_handler</a> [pathname] keep<br>
+というエントリが存在している場合、 [current_domain] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] child<br>
+というエントリが存在している場合、 [current_domain] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] reset<br>
+というエントリが存在している場合、 &lt;[pathname]&gt; を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] initialize<br>
+というエントリが存在している場合、 [current_namespace] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] parent<br>
+というエントリが存在している場合、 [current_domain] の親ドメインを [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] [domainname]<br>
+というエントリが存在している場合、 [domainname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname] [pathname]<br>
+というエントリが存在している場合、 [current_domain] [pathname] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>ドメインポリシーに<br>
+&nbsp;&nbsp;task denied_execute_handler [pathname]<br>
+というエントリが存在している場合、 [pathname] を [candidate] にしてステップ (6) へと進みます。</p>
+<br>
+<p>存在しない場合、実行要求は拒否されます。</p></td>
+</tr>
+<tr>
+<td><p>(6) デフォルトのドメイン遷移の決定</p></td>
 <td><p>
-もし、 task denied_execute_handler [pathname] というエントリが存在している場合、 [pathname] を [candidate] にします。<br>
-存在しない場合、実行要求は拒否されます。</p></td>
+１番最初に、例外ポリシーに<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#reset_domain">reset_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;reset_domain any from [source]<br>
+&nbsp;&nbsp;reset_domain any from any<br>
+の何れかのエントリが存在しており、かつ、<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#no_reset_domain">no_reset_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;no_reset_domain any from [source]<br>
+&nbsp;&nbsp;no_reset_domain any from any<br>
+の何れのエントリも存在しない場合、 &lt;[candidate]&gt; を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>
+２番目に、例外ポリシーに<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;initialize_domain any from [source]<br>
+&nbsp;&nbsp;initialize_domain any from any<br>
+の何れかのエントリが存在しており、かつ、<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#no_initialize_domain">no_initialize_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;no_initialize_domain any from [source]<br>
+&nbsp;&nbsp;no_initialize_domain any from any<br>
+の何れのエントリも存在しない場合、 [current_namespace] [candidate] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>
+３番目に、例外ポリシーに<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#keep_domain">keep_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;keep_domain any from [source]<br>
+&nbsp;&nbsp;keep_domain any from any<br>
+の何れかのエントリが存在しており、かつ、<br>
+&nbsp;&nbsp;<a href="exception-policy-syntax.html.ja#no_keep_domain">no_keep_domain</a> [candidate] from [source]<br>
+&nbsp;&nbsp;no_keep_domain any from [source]<br>
+&nbsp;&nbsp;no_keep_domain any from any<br>
+の何れのエントリも存在しない場合、 [current_domain] を [destination] にしてステップ (7) へ進みます。</p>
+<br>
+<p>４番目に、 [current_domain] [candidate] を [destination] にします。</p></td>
 </tr>
 <tr>
-<td><p>(6) <a href="exception-policy-syntax.html.ja#no_initialize_domain">no_initialize_domain</a> ディレクティブのチェック</p></td>
-<td><p>もし、例外ポリシーに no_initialize_domain [candidate] from [source] または no_initialize_domain any from [source] または no_initialize_domain any from any というエントリが存在している場合、ステップ (8) へと進みます。</p></td>
-</tr>
-<tr>
-<td><p>(7) <a href="exception-policy-syntax.html.ja#initialize_domain">initialize_domain</a> ディレクティブのチェック</p></td>
-<td><p>もし、例外ポリシーに initialize_domain [candidate] from [source] または initialize_domain any from [source] または initialize_domain any from any というエントリが存在している場合、 &lt;kernel&gt; [candidate] を [destination] としてステップ (10) へと進みます。</p></td>
-</tr>
-<tr>
-<td><p>(8) <a href="exception-policy-syntax.html.ja#no_keep_domain">no_keep_domain</a> ディレクティブのチェック</p></td>
-<td><p>もし、例外ポリシーに no_keep_domain [candidate] from [source] または no_keep_domain any from [source] または no_keep_domain any from any というエントリが存在している場合、現在のドメイン名と [candidate] を連結したドメイン名を [destination] としてステップ (10) へと進みます。</p></td>
-</tr>
-<tr>
-<td><p>(9) <a href="exception-policy-syntax.html.ja#keep_domain">keep_domain</a> ディレクティブのチェック</p></td>
-<td><p>もし、例外ポリシーに keep_domain [candidate] from [source] または keep_domain any from [source] または keep_domain any from any というエントリが存在している場合、現在のドメイン名を [destination] とします。<br>
-存在しない場合、現在のドメイン名と [candidate] を連結したドメイン名を [destination] とします。</p></td>
-</tr>
-<tr>
-<td><p>(10) 遷移先ドメインの作成</p></td>
-<td><p>ステップ (6) ～ (9) で計算された [destination] ドメインが存在しない場合には作成します。<br>
-もし、 [destination] ドメインを作成することができず、かつ現在のドメインに割り当てられているプロファイルのモードが mode=enforcing の場合、実行要求は拒否されます。<br>
+<td><p>(7) 遷移先ドメインの作成</p></td>
+<td><p>ステップ (1) または (4) または (5) または (6) で決定した [destination] が存在しない場合には作成します。</p>
+<br>
+<p>ステップ (1) または (4) または (5) で決定された [destination] を作成できなかった場合には、プログラムの実行要求は拒否されます。</p>
+<br>
+<p>reset_domain で決定された [destination] を作成できなかった場合には、プログラムの実行要求は拒否されます。</p>
+<br>
+<p>ステップ (6) で決定された [destination] を作成できなかった場合で、かつ、プロファイルの <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::file または CONFIG::file::execute</a> （後者が前者より優先されます）で mode=enforcing という設定が行われていた場合にはプログラムの実行要求は拒否されます。<br>
 そうではない場合、 <a href="domain-policy-syntax.html.ja#transition_failed">transition_failed</a> ディレクティブを設定して、ドメイン遷移を行わないまま実行要求の処理を継続します。</p></td>
 </tr>
 <tr>
-<td><p>(11) 環境変数のチェック</p></td>
+<td><p>(8) 環境変数のチェック</p></td>
 <td><p>もし、１個以上の環境変数の許可が [destination] ドメインに与えられておらず、かつ [destination] ドメインに割り当てられているプロファイル（ <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::misc または CONFIG::misc::env</a> （後者が前者より優先されます））のモードが mode=enforcing の場合、実行要求は拒否されます。</p></td>
 </tr>
 <tr>
-<td><p>(12) プログラムの実行</p></td>
+<td><p>(9) バイナリローダのチェック</p></td>
+<td><p>（バイナリローダを必要とするプログラムの場合、）バイナリローダに対する読み込み許可が [destination] ドメインに与えられておらず、かつ [destination] ドメインに割り当てられているプロファイル（ <a href="../chapter-9.html.ja#9.2.2">CONFIG または CONFIG::file または CONFIG::file::open</a> （後者が前者より優先されます））のモードが mode=enforcing の場合、実行要求は拒否されます。</p></td>
+</tr>
+<tr>
+<td><p>(10) プログラムの実行</p></td>
 <td><p>もし、カレントプロセスが要求されたプログラムによって正常に置き換えられた場合、カレントプロセスは [destination] ドメインへと遷移します。</p></td>
 </tr>
 </table>

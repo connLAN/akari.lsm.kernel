@@ -2475,7 +2475,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	ccs_set_string(head, "1.8.3-pre");
+	ccs_set_string(head, "1.8.3");
 	head->r.eof = true;
 }
 

@@ -36,7 +36,7 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.en">TOMOYO 2.4</a></td></tr>
+<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
 <tr><td>Advantages</td><td>Complete functionality and syntax are supported.</td><td>No need to replace kernel package.</td><td>Included in upstream kernels.<br>No need to replace kernel package if built into the kernel.</td></tr>
 <tr><td>Disadvantages</td><td>Need to replace kernel package.</td><td>Supported functionality and syntax depend on kernel's version and kernel's configuration options.</td><td>Supported functionality and syntax depend on kernel's version.</td>
 </tr>
@@ -62,10 +62,11 @@ Kernel package must be built with below configuration options.<br>
 <li>CONFIG_SECURITY=y</li>
 <li>CONFIG_SECURITYFS=y</li>
 <li>CONFIG_SECURITY_PATH=y</li>
+<li>CONFIG_SECURITY_NETWORK=y</li>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
-Requires kernel 3.1.<br>
-(Backport patch for Linux 2.6.33 to 3.0 is available.)
+Requires kernel 3.2.<br>
+(Backport patch for Linux 2.6.33 to 3.1 is available.)
 </td></tr>
 </table>
 </div>
@@ -74,8 +75,8 @@ Requires kernel 3.1.<br>
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.en">TOMOYO 2.4</a></td></tr>
-<tr><td></td><td>Supported kernel version</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.1</td></tr>
+<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
+<tr><td></td><td>Supported kernel version</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.2</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>
 <tr><td></td><td>Allow use of absolute pathnames for directory modification operations?</td><td>Y</td><td colspan=3></td><td colspan=3>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>
@@ -87,11 +88,11 @@ Requires kernel 3.1.<br>
 <tr><td></td><td>Allow grouping pathnames? (path_group)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for assisting specifying numeric values</td></tr>
 <tr><td></td><td>Allow grouping numbers? (number_group)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>Allow grouping IP addresses? (address_group)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>Allow grouping IP addresses? (address_group)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for reducing reboots</td></tr>
 <tr><td></td><td>Memory reclaimed by garbage collection?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Features for supporting more fine grained domain transitions</td></tr>
-<tr><td></td><td>Allow domain transitions without program execution? (task manual_domain_transition)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>Allow domain transitions without program execution? (task manual_domain_transition)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Automatically perform domain transitions upon condition match? (task auto_domain_transition)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
 <tr><td colspan=10>Features for specifying more fine grained permissions</td></tr>
 <tr><td></td><td>Restrict based on process's credentials (e.g. user ID)?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
@@ -118,9 +119,9 @@ Requires kernel 3.1.<br>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check dereferenced pathname when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check invocation name (argv[0]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check arguments (argv[]) and environment variables (envp[]) when executing programs?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted environment variables names? (misc env)</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted environment variables names? (misc env)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Restrict permitted binary loader (e.g. /lib/ld-linux.so.2) programs?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Specify domain transition preference?</td><td>Y</td><td colspan=6>Y</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Specify domain transition preference?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict creating files? (file create)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check DAC's permission when creating files?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict creating directories? (file mkdir)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
@@ -154,26 +155,26 @@ Requires kernel 3.1.<br>
 <tr><td></td><td>Restrict exchange of root directories? (file pivot_root)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Access control for Networks</td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing connections?<br>
-(network inet stream connect)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network inet stream connect)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing packets?<br>
-(network inet {dgram,raw} send)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network inet {dgram,raw} send)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for incoming connections?<br>
 (network inet stream accept)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a> <a href="#note4">(*4)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for incoming packets?<br>
 (network inet {dgram,raw} recv)</td><td>Y</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>Restrict local IP addresses and port numbers?<br>
-(network inet {stream,dgram,raw} bind / network inet stream listen)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network inet {stream,dgram,raw} bind / network inet stream listen)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td></td><td>Reserve specific local port numbers for applications that need them?</td><td>Y</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for outgoing connections?<br>
-(network unix {stream,seqpacket} connect)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network unix {stream,seqpacket} connect)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for outgoing packets?<br>
-(network unix dgram send)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network unix dgram send)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for incoming connections?<br>
 (network unix {stream,seqpacket} accept)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a> <a href="#note4">(*4)</a></td><td></td></tr>
 <tr><td></td><td>Restrict remote UNIX addresses for incoming packets?<br>
 (network unix dgram recv)</td><td>Y</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>Restrict local UNIX addresses?<br>
-(network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td></td></tr>
+(network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen)</td><td>Y</td><td colspan=6>Y<a href="#note3">(*3)</a></td><td>Y</td></tr>
 <tr><td colspan=10>Access control for Capabilities</td></tr>
 <tr><td></td><td>Restrict original capabilities? (capability)</td><td>Y</td><td colspan=6></td><td></td></tr>
 <tr><td colspan=10>Access control for IPC</td></tr>

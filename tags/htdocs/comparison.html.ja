@@ -36,7 +36,7 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">TOMOYO 2.4</a></td></tr>
+<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.ja">TOMOYO 2.5</a></td></tr>
 <tr><td>利点</td><td>全ての機能と構文をサポートします。</td><td>カーネルパッケージの置き換えが不要です。</td><td>メインラインカーネルに含まれています。<br>カーネルコンパイル時に組み込まれていれば、カーネルパッケージの置き換えが不要です。</td></tr>
 <tr><td>欠点</td><td>カーネルパッケージの置き換えが必要になります。</td><td>サポートされている機能と構文がカーネルのバージョンおよびカーネルコンパイル時の設定オプションに依存します。</td><td>サポートされている機能と構文がカーネルのバージョンに依存します。</td>
 </tr>
@@ -62,10 +62,11 @@
 <li>CONFIG_SECURITY=y</li>
 <li>CONFIG_SECURITYFS=y</li>
 <li>CONFIG_SECURITY_PATH=y</li>
+<li>CONFIG_SECURITY_NETWORK=y</li>
 <li>CONFIG_SECURITY_TOMOYO=y</li>
 </ul>
-カーネル 3.1 が必要です。<br>
-（ Linux 2.6.33 ～ 3.0 用のバックポートパッチを利用できます。）
+カーネル 3.2 が必要です。<br>
+（ Linux 2.6.33 ～ 3.1 用のバックポートパッチを利用できます。）
 </td></tr>
 </table>
 </div>
@@ -74,8 +75,8 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">TOMOYO 2.4</a></td></tr>
-<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.1</td></tr>
+<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.ja">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.ja">TOMOYO 2.5</a></td></tr>
+<tr><td></td><td>対応カーネルバージョン</td><td>2.4.30-2.4.37<br>2.6.11-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.2</td></tr>
 <tr><td>種別</td><td>内容</td><td colspan=8></td></tr>
 <tr><td colspan=10>パス名の正確さ</td></tr>
 <tr><td></td><td>ディレクトリに対する書き込み操作を行う際に絶対パスを用いた指定を許可</td><td>○</td><td colspan=3></td><td colspan=3>○<a href="#note1">（*1）</a></td><td>○</td></tr>
@@ -87,11 +88,11 @@
 <tr><td></td><td>パス名のグループ化（ path_group ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>数値の指定を容易にする機能</td></tr>
 <tr><td></td><td>数値のグループ化（ number_group ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>ＩＰアドレスのグループ化（ address_group ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>ＩＰアドレスのグループ化（ address_group ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>再起動回数を減らす機能</td></tr>
 <tr><td></td><td>ガベージコレクションによるメモリ解放</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>より詳細なドメイン遷移を行う機能</td></tr>
-<tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可（ task manual_domain_transition ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>プログラムの実行を伴わないドメイン遷移を許可（ task manual_domain_transition ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>条件を満たしたら自動的にドメイン遷移を行う（ task auto_domain_transition ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
 <tr><td colspan=10>より詳細なアクセス許可を指定する機能</td></tr>
 <tr><td></td><td>プロセスのユーザＩＤなどを利用した制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
@@ -118,9 +119,9 @@
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;シンボリックリンクのリンク先を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;起動時の名前を制限（ argv[0] ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;引数（ argv[] ）および環境変数（ envp[] ）の内容を制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;使用してよい環境変数名を制限（ misc env ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;バイナリローダー（例： /lib/ld-linux.so.2 ）として使用できるプログラムを制限</td><td>○</td><td colspan=6>○</td><td></td></tr>
-<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ドメイン遷移方法を指定</td><td>○</td><td colspan=6>○</td><td></td></tr>
+<tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ドメイン遷移方法を指定</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ファイルの作成を制限（ file create ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;ファイル作成時のパーミッションを制限</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td></td><td>ディレクトリの作成を制限（ file mkdir ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
@@ -154,26 +155,26 @@
 <tr><td></td><td>ルートディレクトリの交換を制限（ file pivot_root ）</td><td>○</td><td colspan=6>○</td><td>○</td></tr>
 <tr><td colspan=10>ネットワークに対するアクセス制御</td></tr>
 <tr><td></td><td>接続要求を送信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
-（ network inet stream connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network inet stream connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td></td><td>パケットを送信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
-（ network inet {dgram,raw} send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network inet {dgram,raw} send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td></td><td>接続要求を受信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
 （ network inet stream accept ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a> <a href="#note4">（*4）</a></td><td></td></tr>
 <tr><td></td><td>パケットを受信する際にリモートホストのＩＰアドレスおよびポート番号を制限<br>
 （ network inet {dgram,raw} recv ）</td><td>○</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>ローカルホストのＩＰアドレスおよびポート番号を制限<br>
-（ network inet {stream,dgram,raw} bind / network inet stream listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network inet {stream,dgram,raw} bind / network inet stream listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td></td><td>特定のローカルポート番号を必要とするアプリケーションのために予約しておく</td><td>○</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>接続要求を送信する際に相手のＵＮＩＸアドレスを制限<br>
-（ network unix {stream,seqpacket} connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network unix {stream,seqpacket} connect ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td></td><td>パケットを送信する際に相手のＵＮＩＸアドレスを制限<br>
-（ network unix dgram send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network unix dgram send ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td></td><td>接続要求を受信する際に相手のＵＮＩＸアドレスを制限<br>
 （ network unix {stream,seqpacket} accept ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a> <a href="#note4">（*4）</a></td><td></td></tr>
 <tr><td></td><td>パケットを受信する際に相手のＵＮＩＸアドレスを制限<br>
 （ network unix dgram recv ）</td><td>○</td><td colspan=6></td><td></td></tr>
 <tr><td></td><td>自分のＵＮＩＸアドレスを制限<br>
-（ network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td></td></tr>
+（ network unix {stream,dgram,seqpacket} bind / network unix {stream,seqpacket} listen ）</td><td>○</td><td colspan=6>○<a href="#note3">（*3）</a></td><td>○</td></tr>
 <tr><td colspan=10>ケイパビリティに対するアクセス制御</td></tr>
 <tr><td></td><td>独自のケイパビリティを用いた制限（ capability ）</td><td>○</td><td colspan=6></td><td></td></tr>
 <tr><td colspan=10>プロセス間通信に対するアクセス制御</td></tr>

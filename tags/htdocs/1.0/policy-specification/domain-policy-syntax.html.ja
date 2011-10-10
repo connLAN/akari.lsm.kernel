@@ -97,6 +97,21 @@ file append /var/log/auth.log
 <li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
 </ul>
 
+<h3><a name="file_getattr">file getattr</a></h3>
+
+<p>このディレクティブは、指定されたパス名の属性情報を取得することを許可します。</p>
+
+<p>以下の例では /dev/null の属性情報の取得を許可しています：</p>
+
+<pre>
+file getattr /dev/null
+</pre>
+
+<p>参照：</p>
+<ul>
+<li><a href="exception-policy-syntax.html.ja#path_group">path_group</a></li>
+</ul>
+
 <h3><a name="file_create">file create</a></h3>
 
 <p>このディレクティブは、指定されたファイルを指定されたパーミッションで作成することを許可します。</p>

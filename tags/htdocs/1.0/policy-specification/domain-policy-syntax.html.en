@@ -97,6 +97,21 @@ file append /var/log/auth.log
 <li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
 </ul>
 
+<h3><a name="file_getattr">file getattr</a></h3>
+
+<p>This directive allows the domain to get attribute information of the specified pathname.</p>
+
+<p>This example allows the domain to get attribute information of the file "/dev/null":</p>
+
+<pre>
+file getattr /dev/null
+</pre>
+
+<p>See also:</p>
+<ul>
+<li><a href="exception-policy-syntax.html.en#path_group">path_group</a></li>
+</ul>
+
 <h3><a name="file_create">file create</a></h3>
 
 <p>This directive allows the domain to create the specified file with the specified permissions.</p>

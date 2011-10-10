@@ -88,6 +88,7 @@
 <li><a href="domain-policy-syntax.html.en#file_read">file read</a></li>
 <li><a href="domain-policy-syntax.html.en#file_write">file write</a></li>
 <li><a href="domain-policy-syntax.html.en#file_append">file append</a></li>
+<li><a href="domain-policy-syntax.html.en#file_getattr">file getattr</a></li>
 <li><a href="domain-policy-syntax.html.en#file_create">file create</a></li>
 <li><a href="domain-policy-syntax.html.en#file_unlink">file unlink</a></li>
 <li><a href="domain-policy-syntax.html.en#file_chown">file chown</a></li>

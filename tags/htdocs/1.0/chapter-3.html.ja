@@ -98,6 +98,8 @@
 <pre class="command">
 # wget -O akari-1.0.20-20110929.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.20-20110929.tar.gz'
 # wget -O akari-1.0.20-20110929.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.20-20110929.tar.gz.asc'
+# wget http://I-love.SAKURA.ne.jp/kumaneko-key
+# gpg --import kumaneko-key
 # gpg akari-1.0.20-20110929.tar.gz.asc
 # tar -zxf akari-1.0.20-20110929.tar.gz
 # make SUBDIRS=$PWD/akari modules
@@ -179,10 +181,12 @@ $ wget -O ccs-tools-1.8.3-20110929.tar.gz.asc 'http://sourceforge.jp/frs/redir.p
 $ gpg ccs-tools-1.8.3-20110929.tar.gz.asc
 $ tar -zxf ccs-tools-1.8.3-20110929.tar.gz
 $ cd ccstools/
-$ make -s
+$ make -s USRLIBDIR=/usr/lib
 $ su
-# make -s install
+# make -s USRLIBDIR=/usr/lib install
 </pre>
+
+<p>必要に応じて、 USRLIBDIR=/usr/lib を USRLIBDIR=/usr/lib64 （６４ビット用の場合）または USRLIBDIR=/usr/lib32 （３２ビット用の場合）に変更してください。</p>
 
 <h3><a name="3.4">3.4. 設定の初期化</a></h3>
 

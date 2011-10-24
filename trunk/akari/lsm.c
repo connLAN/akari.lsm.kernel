@@ -484,8 +484,8 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 			ccs_load_policy(bprm->filename);
 #endif
 		rc = ccs_start_execve(bprm, &security->ee);
-		if (security->ee) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+		if (security->ee) {
 			/*
 			 * Get refcount on "struct cred" in
 			 * "struct linux_binprm" and remember it.
@@ -493,8 +493,8 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 			get_cred(bprm->cred);
 			security->cred = bprm->cred;
 			atomic_inc(&ccs_in_execve_tasks);
-#endif
 		}
+#endif
 		if (rc)
 			return rc;
 	}

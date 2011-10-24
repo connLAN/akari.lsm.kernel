@@ -1029,6 +1029,8 @@ static bool ccs_select_domain(struct ccs_io_buffer *head, const char *data)
 	} else if (!strncmp(data, "domain=", 7)) {
 		if (*(data + 7) == '<')
 			domain = ccs_find_domain(data + 7);
+	} else if (sscanf(data, "Q=%u", &pid) == 1) {
+		domain = ccs_find_domain_by_qid(pid);
 	} else
 		return false;
 	head->w.domain = domain;
@@ -2832,6 +2834,7 @@ ssize_t ccs_write_control(struct ccs_io_buffer *head,
 		return -EFAULT;
 	if (mutex_lock_interruptible(&head->io_sem))
 		return -EINTR;
+	head->read_user_buf_avail = 0;
 	idx = ccs_read_lock();
 	/* Read a line and dispatch it to the policy handler. */
 	while (avail_len > 0) {

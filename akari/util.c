@@ -1074,6 +1074,7 @@ bool ccs_domain_quota_ok(struct ccs_request_info *r)
 		case CCS_TYPE_AUTO_EXECUTE_HANDLER:
 		case CCS_TYPE_DENIED_EXECUTE_HANDLER:
 		case CCS_TYPE_AUTO_TASK_ACL:
+		case CCS_TYPE_MANUAL_TASK_ACL:
 			perm = 0;
 			break;
 		default:

@@ -442,8 +442,8 @@ static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
  */
 static struct vfsmount *lsm_lu_mnt(struct vfsmount *mnt, struct dentry *dentry)
 {
-	struct list_head * head = mount_hashtable + hash(mnt, dentry);
-	struct list_head * tmp = head;
+	struct list_head *head = mount_hashtable + hash(mnt, dentry);
+	struct list_head *tmp = head;
 	struct vfsmount *p, *found = NULL;
 
 	spin_lock(&ccs_vfsmount_lock);

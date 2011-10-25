@@ -127,7 +127,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	 */
 	if (ptr->pid && ptr->cred) {
 #ifdef CONFIG_AKARI_DEBUG
-		static bool done = false;
+		static bool done;
 		if (!done) {
 			printk(KERN_INFO "AKARI: Dropping refcount on "
 			       "\"struct cred\" in \"struct linux_binprm\" "
@@ -146,7 +146,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	 */
 	if (ptr->pid) {
 #ifdef CONFIG_AKARI_DEBUG
-		static bool done = false;
+		static bool done;
 		if (!done) {
 			printk(KERN_INFO "AKARI: Dropping refcount on "
 			       "\"struct pid\".\n");
@@ -157,7 +157,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	}
 	if (ee) {
 #ifdef CONFIG_AKARI_DEBUG
-		static bool done = false;
+		static bool done;
 		if (!done) {
 			printk(KERN_INFO "AKARI: Releasing memory in "
 			       "\"struct ccs_execve\" because some "
@@ -2355,8 +2355,8 @@ static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
  */
 static struct vfsmount *lsm_lu_mnt(struct vfsmount *mnt, struct dentry *dentry)
 {
-	struct list_head * head = mount_hashtable + hash(mnt, dentry);
-	struct list_head * tmp = head;
+	struct list_head *head = mount_hashtable + hash(mnt, dentry);
+	struct list_head *tmp = head;
 	struct vfsmount *p, *found = NULL;
 
 	spin_lock(&ccs_vfsmount_lock);
@@ -2770,7 +2770,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		if (task == current && ptr->cred &&
 		    atomic_read(&ptr->cred->usage) == 1) {
 #ifdef CONFIG_AKARI_DEBUG
-			static bool done = false;
+			static bool done;
 			if (!done) {
 				printk(KERN_INFO "AKARI: Reverting domain "
 				       "transition because do_execve() has "
@@ -2814,7 +2814,8 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 	}
 	*ptr = *ccs_find_cred_security(task->cred);
 	/* We can shortcut because task == current. */
-	ptr->pid = get_pid(((struct task_struct *) task)->pids[PIDTYPE_PID].pid);
+	ptr->pid = get_pid(((struct task_struct *) task)->
+			   pids[PIDTYPE_PID].pid);
 	ptr->cred = NULL;
 	ccs_add_task_security(ptr, list);
 	return ptr;

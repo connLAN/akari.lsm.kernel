@@ -107,13 +107,12 @@ static int ccs_in4_pton(const char *src, int srclen, u8 *dst, int delim,
 	s = src;
 	d = dbuf;
 	i = 0;
-	while(1) {
+	while (1) {
 		int c;
 		c = xdigit2bin(srclen > 0 ? *s : '\0', delim);
 		if (!(c & (IN6PTON_DIGIT | IN6PTON_DOT | IN6PTON_DELIM |
-			   IN6PTON_COLON_MASK))) {
+			   IN6PTON_COLON_MASK)))
 			goto out;
-		}
 		if (c & (IN6PTON_DOT | IN6PTON_DELIM | IN6PTON_COLON_MASK)) {
 			if (w == 0)
 				goto out;
@@ -128,9 +127,8 @@ static int ccs_in4_pton(const char *src, int srclen, u8 *dst, int delim,
 			goto cont;
 		}
 		w = (w * 10) + c;
-		if ((w & 0xffff) > 255) {
+		if ((w & 0xffff) > 255)
 			goto out;
-		}
 cont:
 		if (i >= 4)
 			goto out;
@@ -220,24 +218,20 @@ static int ccs_in6_pton(const char *src, int srclen, u8 *dst, int delim,
 
 		w = (w << 4) | (0xff & c);
 		state = IN6PTON_COLON_1 | IN6PTON_DELIM;
-		if (!(w & 0xf000)) {
+		if (!(w & 0xf000))
 			state |= IN6PTON_XDIGIT;
-		}
 		if (!dc && d + 2 < dbuf + sizeof(dbuf)) {
 			state |= IN6PTON_COLON_1_2;
 			state &= ~IN6PTON_DELIM;
 		}
-		if (d + 2 >= dbuf + sizeof(dbuf)) {
+		if (d + 2 >= dbuf + sizeof(dbuf))
 			state &= ~(IN6PTON_COLON_1|IN6PTON_COLON_1_2);
-		}
 cont:
 		if ((dc && d + 4 < dbuf + sizeof(dbuf)) ||
-		    d + 4 == dbuf + sizeof(dbuf)) {
+		    d + 4 == dbuf + sizeof(dbuf))
 			state |= IN6PTON_DOT;
-		}
-		if (d >= dbuf + sizeof(dbuf)) {
+		if (d >= dbuf + sizeof(dbuf))
 			state &= ~(IN6PTON_XDIGIT|IN6PTON_COLON_MASK);
-		}
 		s++;
 		srclen--;
 	}
@@ -245,11 +239,11 @@ cont:
 	i = 15; d--;
 
 	if (dc) {
-		while(d >= dc)
+		while (d >= dc)
 			dst[i--] = *d--;
-		while(i >= dc - dbuf)
+		while (i >= dc - dbuf)
 			dst[i--] = 0;
-		while(i >= 0)
+		while (i >= 0)
 			dst[i--] = *d--;
 	} else
 		memcpy(dst, dbuf, sizeof(dbuf));
@@ -369,8 +363,7 @@ static char *ip6_compressed_string(char *p, const char *addr)
 			else
 				*p++ = hex_asc_lo(hi);
 			p = pack_hex_byte(p, lo);
-		}
-		else if (lo > 0x0f)
+		} else if (lo > 0x0f)
 			p = pack_hex_byte(p, lo);
 		else
 			*p++ = hex_asc_lo(lo);

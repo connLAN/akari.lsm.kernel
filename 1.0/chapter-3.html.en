@@ -93,7 +93,7 @@
 
 <h4><a name="3.2.2">3.2.2. Building and installing the AKARI module</a></h4>
 
-<p>Run the following commands in order to build and install AKARI:</p>
+<p>Run the following commands in order to extract source code of AKARI:</p>
 
 <pre class="command">
 # wget -O akari-1.0.21-20111025.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.21-20111025.tar.gz'
@@ -102,6 +102,35 @@
 # gpg --import kumaneko-key
 # gpg akari-1.0.21-20111025.tar.gz.asc
 # tar -zxf akari-1.0.21-20111025.tar.gz
+</pre>
+
+<p>If your system is using /bin/systemd rather than /sbin/init, you want to activate AKARI when /bin/systemd was executed rather than when /sbin/init was executed. If you want to activate AKARI when /bin/systemd was executed, you can edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>
+
+<p>Before:</p>
+<pre>
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/sbin/init"
+</pre>
+
+<p>After:</p>
+<pre>
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/bin/systemd"
+</pre>
+
+<p>If you want to activate AKARI as soon as the kernel module is loaded, you can define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER line in akari/config.h like below. (But be sure to supply built-in policy configuration located at akari/policy/ directory if you define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER, or the system will panic as soon as the kernel module is loaded.):</p>
+
+<p>Before:</p>
+<pre>
+//#define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+</pre>
+
+<p>After:</p>
+<pre>
+#define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+</pre>
+
+<p>Run the following commands in order to build and install AKARI:</p>
+
+<pre class="command">
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}
@@ -206,7 +235,7 @@ export PATH=$PATH:/usr/sbin
 # /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
 </pre>
 
-<p>Other users may wish to <strong>make use of all the restrictive capabilities of AKARI</strong>, and may want to analyze or restrict all possible operations (e.g. files, networks, capabilities, environment variables, signal transmissions). This is suitable for users wanting to secure their system as much as possible. This is also what this guide generally assumes the reader has chosen. In this case, run the following command:</p>
+<p>Other users may wish to <strong>make use of all the restrictive capabilities of AKARI</strong>, and may want to analyze or restrict all possible operations (e.g. files, networks, environment variables). This is suitable for users wanting to secure their system as much as possible. This is also what this guide generally assumes the reader has chosen. In this case, run the following command:</p>
 
 <pre class="command">
 # /usr/lib/ccs/init_policy --module_name=akari
@@ -232,9 +261,25 @@ Creating configuration file for ccs-patternize ... OK
 Creating configuration file for ccs-notifyd ... OK
 </pre>
 
+<p>You may create /sbin/akari-init like below if you want to prevent your system from booting when loading the kernel module has failed, for /sbin/ccs-init (the program you specify at <a href="#3.5">Configuring your bootloader</a>) will assume that AKARI is not supported and continue boot procedure when loading the kernel module has failed. (Please use /bin/modprobe if modprobe in your system is located at /bin rather than /sbin.):</p>
+
+<pre class=command>
+# echo '#! /bin/sh' &gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /sbin/init "$@"' &gt;&gt; /sbin/akari-init
+# chmod 755 /sbin/akari-init
+</pre>
+
+<p>Please create /sbin/akari-init like below if your system is using /bin/systemd rather than /sbin/init. (Also, check that you have changed CONFIG_CCSECURITY_ACTIVATION_TRIGGER from /sbin/init to /bin/systemd at <a href="#3.2.2">Building and installing the AKARI module</a> unless you have defined CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER.):</p>
+
+<pre class=command>
+# echo '#! /bin/sh' &gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /bin/systemd "$@"' &gt;&gt; /sbin/akari-init
+# chmod 755 /sbin/akari-init
+</pre>
+
 <h3><a name="3.5">3.5. Configuring your bootloader</a></h3>
 
-<p>Now edit your bootloader (e.g. GRUB) to add "init=/sbin/ccs-init" to the kernel boot options. An example is shown below.</p>
+<p>Now edit your bootloader (e.g. GRUB) to add "init=/sbin/ccs-init" to the kernel boot options. An example is shown below. (If you created /sbin/akari-init, please add init=/sbin/akari-init rather than init=/sbin/ccs-init.)</p>
 
 <p>Before:</p>
 <pre>

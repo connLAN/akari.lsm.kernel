@@ -93,7 +93,7 @@
 
 <h4><a name="3.2.2">3.2.2. AKARI カーネルモジュールのコンパイルとインストール</a></h4>
 
-<p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください：</p>
+<p>以下のコマンドを実行して AKARI カーネルモジュールのソースコードを展開してください：</p>
 
 <pre class="command">
 # wget -O akari-1.0.21-20111025.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.21-20111025.tar.gz'
@@ -102,6 +102,35 @@
 # gpg --import kumaneko-key
 # gpg akari-1.0.21-20111025.tar.gz.asc
 # tar -zxf akari-1.0.21-20111025.tar.gz
+</pre>
+
+<p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、 /sbin/init が実行されるタイミングではなく /bin/systemd が実行されるタイミングで AKARI を有効化したいことでしょう。もし、 /bin/systemd が実行されるタイミングで AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
+
+<p>変更前：</p>
+<pre>
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/sbin/init"
+</pre>
+
+<p>変更後：</p>
+<pre>
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/bin/systemd"
+</pre>
+
+<p>もし、カーネルモジュールがロードされるのと同時に AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER 行を定義してください。（ただし、 CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER を定義する場合、 akari/policy/ ディレクトリにカーネルモジュール内に埋め込むためのポリシーを提供する必要があります。忘れた場合、カーネルモジュールがロードされるのと同時にカーネルパニックになります。）：</p>
+
+<p>変更前：</p>
+<pre>
+//#define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+</pre>
+
+<p>変更後：</p>
+<pre>
+#define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+</pre>
+
+<p>以下のコマンドを実行して AKARI カーネルモジュールをインストールしてください：</p>
+
+<pre class="command">
 # make SUBDIRS=$PWD/akari modules
 # make SUBDIRS=$PWD/akari modules_install
 # depmod ${VERSION}
@@ -206,7 +235,7 @@ export PATH=$PATH:/usr/sbin
 # /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
 </pre>
 
-<p><strong>AKARI が提供する全部の機能</strong>を使ってファイルやネットワークやケイパビリティや環境変数やシグナルの送信といった操作を解析したり制限したいと思うユーザもいることでしょう。これは、可能な限りシステムのセキュリティを高めたいと考えているユーザに適しています。このガイドでは全部の機能を使うことを想定して作成されています。全部の機能を使う場合、以下のコマンドを実行してください：</p>
+<p><strong>AKARI が提供する全部の機能</strong>を使ってファイルやネットワークや環境変数といった操作を解析したり制限したいと思うユーザもいることでしょう。これは、可能な限りシステムのセキュリティを高めたいと考えているユーザに適しています。このガイドでは全部の機能を使うことを想定して作成されています。全部の機能を使う場合、以下のコマンドを実行してください：</p>
 
 <pre class="command">
 # /usr/lib/ccs/init_policy --module_name=akari
@@ -232,9 +261,25 @@ Creating configuration file for ccs-patternize ... OK
 Creating configuration file for ccs-notifyd ... OK
 </pre>
 
+<p>（<a href="#3.5">ブートローダの設定</a>で指定するプログラムである） /sbin/ccs-init は、カーネルモジュールのロードに失敗した場合には、 AKARI がサポートされていないものと考えて起動処理を先に進めます。もし、カーネルモジュールのロードに失敗した場合には起動させないようにしたい場合、以下のように /sbin/akari-init を作成してください。 （ modprobe が /sbin ではなく /bin にあるシステムの場合、 /bin/modprobe を指定してください。）：</p>
+
+<pre class=command>
+# echo '#! /bin/sh' &gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /sbin/init "$@"' &gt;&gt; /sbin/akari-init
+# chmod 755 /sbin/akari-init
+</pre>
+
+<p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、以下のように /sbin/akari-init を作成してください。（また、 <a href="#3.2.2">AKARI カーネルモジュールのコンパイルとインストール</a>で CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER を定義しなかった場合には、 CONFIG_CCSECURITY_ACTIVATION_TRIGGER を /sbin/init から /bin/systemd に変更したことを確認してください。）：</p>
+
+<pre class=command>
+# echo '#! /bin/sh' &gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /bin/systemd "$@"' &gt;&gt; /sbin/akari-init
+# chmod 755 /sbin/akari-init
+</pre>
+
 <h3><a name="3.5">3.5. ブートローダの設定</a></h3>
 
-<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します。</p>
+<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します。（ /sbin/akari-init を作成した場合、 init=/sbin/ccs-init の代わりに init=/sbin/akari-init を指定してください。）</p>
 
 <p>変更前：</p>
 <pre>

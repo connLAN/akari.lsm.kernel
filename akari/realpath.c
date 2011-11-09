@@ -7,15 +7,36 @@
  */
 
 #include "internal.h"
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
-#define ccs_lookup_flags LOOKUP_FOLLOW
-#else
-#define ccs_lookup_flags (LOOKUP_FOLLOW | LOOKUP_POSITIVE)
-#endif
+
+/***** SECTION1: Constants definition *****/
+
+#define SOCKFS_MAGIC 0x534F434B
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
 #define s_fs_info u.generic_sbp
 #endif
+
+/***** SECTION2: Structure definition *****/
+
+/***** SECTION3: Prototype definition section *****/
+
+char *ccs_encode(const char *str);
+char *ccs_encode2(const char *str, int str_len);
+char *ccs_realpath_from_path(struct path *path);
+const char *ccs_get_exe(void);
+void ccs_fill_path_info(struct ccs_path_info *ptr);
+
+static char *ccs_get_absolute_path(struct path *path, char * const buffer,
+				   const int buflen);
+static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
+				 const int buflen);
+static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
+				const int buflen);
+static char *ccs_get_socket_name(struct path *path, char * const buffer,
+				 const int buflen);
+static int ccs_const_part_length(const char *filename);
+
+/***** SECTION4: Standalone functions section *****/
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
 
@@ -169,33 +190,9 @@ static inline void ccs_realpath_unlock(void)
 
 #endif
 
-/**
- * ccs_kern_path - Wrapper for kern_path().
- *
- * @pathname: Pathname to resolve. Maybe NULL.
- * @flags:    Lookup flags.
- * @path:     Pointer to "struct path".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_kern_path(const char *pathname, int flags, struct path *path)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
-	if (!pathname || kern_path(pathname, flags, path))
-		return -ENOENT;
-#else
-	struct nameidata nd;
-	if (!pathname || path_lookup(pathname, flags, &nd))
-		return -ENOENT;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
-	*path = nd.path;
-#else
-	path->dentry = nd.dentry;
-	path->mnt = nd.mnt;
-#endif
-#endif
-	return 0;
-}
+/***** SECTION5: Variables definition section *****/
+
+/***** SECTION6: Dependent functions section *****/
 
 /**
  * ccs_get_absolute_path - Get the path of a dentry but ignores chroot'ed root.
@@ -507,33 +504,6 @@ encode:
 }
 
 /**
- * ccs_symlink_path - Get symlink's pathname.
- *
- * @pathname: The pathname to solve. Maybe NULL.
- * @name:     Pointer to "struct ccs_path_info".
- *
- * Returns 0 on success, negative value otherwise.
- *
- * This function uses kzalloc(), so caller must kfree() if this function
- * didn't return NULL.
- */
-int ccs_symlink_path(const char *pathname, struct ccs_path_info *name)
-{
-	char *buf;
-	struct path path;
-	if (ccs_kern_path(pathname, ccs_lookup_flags ^ LOOKUP_FOLLOW, &path))
-		return -ENOENT;
-	buf = ccs_realpath_from_path(&path);
-	path_put(&path);
-	if (buf) {
-		name->name = buf;
-		ccs_fill_path_info(name);
-		return 0;
-	}
-	return -ENOMEM;
-}
-
-/**
  * ccs_encode2 - Encode binary string to ascii string.
  *
  * @str:     String in binary format.
@@ -602,14 +572,95 @@ char *ccs_encode(const char *str)
 }
 
 /**
- * ccs_get_path - Get dentry/vfsmmount of a pathname.
+ * ccs_const_part_length - Evaluate the initial length without a pattern in a token.
  *
- * @pathname: The pathname to solve. Maybe NULL.
- * @path:     Pointer to "struct path".
+ * @filename: The string to evaluate.
  *
- * Returns 0 on success, negative value otherwise.
+ * Returns the initial length without a pattern in @filename.
  */
-int ccs_get_path(const char *pathname, struct path *path)
+static int ccs_const_part_length(const char *filename)
 {
-	return ccs_kern_path(pathname, ccs_lookup_flags, path);
+	char c;
+	int len = 0;
+	if (!filename)
+		return 0;
+	while (1) {
+		c = *filename++;
+		if (!c)
+			break;
+		if (c != '\\') {
+			len++;
+			continue;
+		}
+		c = *filename++;
+		switch (c) {
+		case '\\':  /* "\\" */
+			len += 2;
+			continue;
+		case '0':   /* "\ooo" */
+		case '1':
+		case '2':
+		case '3':
+			c = *filename++;
+			if (c < '0' || c > '7')
+				break;
+			c = *filename++;
+			if (c < '0' || c > '7')
+				break;
+			len += 4;
+			continue;
+		}
+		break;
+	}
+	return len;
+}
+
+/**
+ * ccs_fill_path_info - Fill in "struct ccs_path_info" members.
+ *
+ * @ptr: Pointer to "struct ccs_path_info" to fill in.
+ *
+ * The caller sets "struct ccs_path_info"->name.
+ */
+void ccs_fill_path_info(struct ccs_path_info *ptr)
+{
+	const char *name = ptr->name;
+	const int len = strlen(name);
+	ptr->total_len = len;
+	ptr->const_len = ccs_const_part_length(name);
+	ptr->is_dir = len && (name[len - 1] == '/');
+	ptr->is_patterned = (ptr->const_len < len);
+	ptr->hash = full_name_hash(name, len);
+}
+
+/**
+ * ccs_get_exe - Get ccs_realpath() of current process.
+ *
+ * Returns the ccs_realpath() of current process on success, NULL otherwise.
+ *
+ * This function uses kzalloc(), so the caller must kfree()
+ * if this function didn't return NULL.
+ */
+const char *ccs_get_exe(void)
+{
+	struct mm_struct *mm = current->mm;
+	struct vm_area_struct *vma;
+	const char *cp = NULL;
+	if (!mm)
+		return NULL;
+	down_read(&mm->mmap_sem);
+	for (vma = mm->mmap; vma; vma = vma->vm_next) {
+		if ((vma->vm_flags & VM_EXECUTABLE) && vma->vm_file) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
+			struct path path = { vma->vm_file->f_vfsmnt,
+					     vma->vm_file->f_dentry };
+			cp = ccs_realpath_from_path(&path);
+#else
+			cp = ccs_realpath_from_path(&vma->vm_file->f_path);
+#endif
+			break;
+		}
+	}
+	up_read(&mm->mmap_sem);
+	return cp;
 }

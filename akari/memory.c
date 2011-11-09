@@ -8,6 +8,72 @@
 
 #include "internal.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+/* Use functions in lsm.c */
+#undef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+#endif
+
+/***** SECTION1: Constants definition *****/
+
+/***** SECTION2: Structure definition *****/
+
+/***** SECTION3: Prototype definition section *****/
+
+bool ccs_memory_ok(const void *ptr, const unsigned int size);
+const struct ccs_path_info *ccs_get_name(const char *name);
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+struct ccs_security *ccs_find_task_security(const struct task_struct *task);
+#endif
+void *ccs_commit_ok(void *data, const unsigned int size);
+void __init ccs_mm_init(void);
+void ccs_warn_oom(const char *function);
+
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+static int __ccs_alloc_task_security(const struct task_struct *task);
+static void __ccs_free_task_security(const struct task_struct *task);
+static void ccs_add_task_security(struct ccs_security *ptr,
+				  struct list_head *list);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
+static void ccs_rcu_free(struct rcu_head *rcu);
+#else
+static void ccs_rcu_free(void *arg);
+#endif
+#endif
+
+/***** SECTION4: Standalone functions section *****/
+
+/***** SECTION5: Variables definition section *****/
+
+/* Memoy currently used by policy/audit log/query. */
+unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
+
+/* Memory quota for "policy"/"audit log"/"query". */
+unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
+
+/* The list for "struct ccs_name". */
+struct list_head ccs_name_list[CCS_MAX_HASH];
+
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+
+/* Dummy security context for avoiding NULL pointer dereference. */
+struct ccs_security ccs_oom_security = {
+	.ccs_domain_info = &ccs_kernel_domain
+};
+
+/* Dummy security context for avoiding NULL pointer dereference. */
+struct ccs_security ccs_default_security = {
+	.ccs_domain_info = &ccs_kernel_domain
+};
+
+/* List of "struct ccs_security". */
+struct list_head ccs_task_security_list[CCS_MAX_TASK_SECURITY_HASH];
+/* Lock for protecting ccs_task_security_list[]. */
+static DEFINE_SPINLOCK(ccs_task_security_list_lock);
+
+#endif
+
+/***** SECTION6: Dependent functions section *****/
+
 /**
  * ccs_warn_oom - Print out of memory warning message.
  *
@@ -28,11 +94,6 @@ void ccs_warn_oom(const char *function)
 	if (!ccs_policy_loaded)
 		panic("MAC Initialization failed.\n");
 }
-
-/* Memoy currently used by policy/audit log/query. */
-unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
-/* Memory quota for "policy"/"audit log"/"query". */
-unsigned int ccs_memory_quota[CCS_MAX_MEMORY_STAT];
 
 /**
  * ccs_memory_ok - Check memory quota.
@@ -81,56 +142,6 @@ void *ccs_commit_ok(void *data, const unsigned int size)
 	kfree(ptr);
 	return NULL;
 }
-
-/**
- * ccs_get_group - Allocate memory for "struct ccs_path_group"/"struct ccs_number_group"/"struct ccs_address_group".
- *
- * @param: Pointer to "struct ccs_acl_param".
- * @idx:   Index number.
- *
- * Returns pointer to "struct ccs_group" on success, NULL otherwise.
- */
-struct ccs_group *ccs_get_group(struct ccs_acl_param *param, const u8 idx)
-{
-	struct ccs_group e = { };
-	struct ccs_group *group = NULL;
-	struct list_head *list;
-	const char *group_name = ccs_read_token(param);
-	bool found = false;
-	if (!ccs_correct_word(group_name) || idx >= CCS_MAX_GROUP)
-		return NULL;
-	e.group_name = ccs_get_name(group_name);
-	if (!e.group_name)
-		return NULL;
-	if (mutex_lock_interruptible(&ccs_policy_lock))
-		goto out;
-	list = &param->ns->group_list[idx];
-	list_for_each_entry(group, list, head.list) {
-		if (e.group_name != group->group_name ||
-		    atomic_read(&group->head.users) == CCS_GC_IN_PROGRESS)
-			continue;
-		atomic_inc(&group->head.users);
-		found = true;
-		break;
-	}
-	if (!found) {
-		struct ccs_group *entry = ccs_commit_ok(&e, sizeof(e));
-		if (entry) {
-			INIT_LIST_HEAD(&entry->member_list);
-			atomic_set(&entry->head.users, 1);
-			list_add_tail_rcu(&entry->head.list, list);
-			group = entry;
-			found = true;
-		}
-	}
-	mutex_unlock(&ccs_policy_lock);
-out:
-	ccs_put_name(e.group_name);
-	return found ? group : NULL;
-}
-
-/* The list for "struct ccs_name". */
-struct list_head ccs_name_list[CCS_MAX_HASH];
 
 /**
  * ccs_get_name - Allocate memory for string data.
@@ -183,26 +194,7 @@ out:
 	return ptr ? &ptr->entry : NULL;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-/* Use functions in lsm.c */
-#undef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
-#endif
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
-
-/* Dummy security context for avoiding NULL pointer dereference. */
-struct ccs_security ccs_oom_security = {
-	.ccs_domain_info = &ccs_kernel_domain
-};
-
-/* Dummy security context for avoiding NULL pointer dereference. */
-struct ccs_security ccs_default_security = {
-	.ccs_domain_info = &ccs_kernel_domain
-};
-
-/* List of "struct ccs_security". */
-struct list_head ccs_task_security_list[CCS_MAX_TASK_SECURITY_HASH];
-/* Lock for protecting ccs_task_security_list[]. */
-static DEFINE_SPINLOCK(ccs_task_security_list_lock);
 
 /**
  * ccs_add_task_security - Add "struct ccs_security" to list.
@@ -344,9 +336,6 @@ static void __ccs_free_task_security(const struct task_struct *task)
 
 #endif
 
-/* Initial namespace.*/
-struct ccs_policy_namespace ccs_kernel_namespace;
-
 /**
  * ccs_mm_init - Initialize mm related code.
  *
@@ -357,10 +346,6 @@ void __init ccs_mm_init(void)
 	int idx;
 	for (idx = 0; idx < CCS_MAX_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_name_list[idx]);
-	ccs_kernel_namespace.name = "<kernel>";
-	ccs_init_policy_namespace(&ccs_kernel_namespace);
-	ccs_kernel_domain.ns = &ccs_kernel_namespace;
-	INIT_LIST_HEAD(&ccs_kernel_domain.acl_info_list);
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_task_security_list[idx]);

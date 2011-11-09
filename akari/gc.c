@@ -8,6 +8,87 @@
 
 #include "internal.h"
 
+/***** SECTION1: Constants definition *****/
+
+/* For compatibility with older kernels. */
+#ifndef for_each_process
+#define for_each_process for_each_task
+#endif
+
+/* The list for "struct ccs_io_buffer". */
+static LIST_HEAD(ccs_io_buffer_list);
+/* Lock for protecting ccs_io_buffer_list. */
+static DEFINE_SPINLOCK(ccs_io_buffer_list_lock);
+
+/***** SECTION2: Structure definition *****/
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+
+/*
+ * Lock for syscall users.
+ *
+ * This lock is used for protecting single SRCU section for 2.6.18 and
+ * earlier kernels because they don't have SRCU support.
+ */
+struct ccs_lock_struct {
+	int counter_idx; /* Currently active index (0 or 1). */
+	int counter[2];  /* Current users. Protected by ccs_counter_lock. */
+};
+
+#endif
+
+/***** SECTION3: Prototype definition section *****/
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+int ccs_lock(void);
+#endif
+void ccs_del_acl(struct list_head *element);
+void ccs_del_condition(struct list_head *element);
+void ccs_notify_gc(struct ccs_io_buffer *head, const bool is_register);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+void ccs_unlock(const int idx);
+#endif
+
+static bool ccs_domain_used_by_task(struct ccs_domain_info *domain);
+static bool ccs_name_used_by_io_buffer(const char *string, const size_t size);
+static bool ccs_struct_used_by_io_buffer(const struct list_head *element);
+static int ccs_gc_thread(void *unused);
+static void ccs_collect_acl(struct list_head *list);
+static void ccs_collect_entry(void);
+static void ccs_collect_member(const enum ccs_policy_id id,
+			       struct list_head *member_list);
+static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type);
+static void ccs_put_name_union(struct ccs_name_union *ptr);
+static void ccs_put_number_union(struct ccs_number_union *ptr);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+static void ccs_synchronize_counter(void);
+#endif
+static void ccs_try_to_gc(const enum ccs_policy_id type,
+			  struct list_head *element);
+
+/***** SECTION4: Standalone functions section *****/
+
+/***** SECTION5: Variables definition section *****/
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
+
+/*
+ * Lock for syscall users.
+ *
+ * This lock is held for only protecting single SRCU section.
+ */
+struct srcu_struct ccs_ss;
+
+#else
+
+static struct ccs_lock_struct ccs_counter;
+/* Lock for protecting ccs_counter. */
+static DEFINE_SPINLOCK(ccs_counter_lock);
+
+#endif
+
+/***** SECTION6: Dependent functions section *****/
+
 /**
  * ccs_memory_free - Free memory for elements.
  *
@@ -22,9 +103,13 @@ static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type)
 {
 	/* Size of an element. */
 	static const u8 e[CCS_MAX_POLICY] = {
+#ifdef CONFIG_CCSECURITY_PORTRESERVE
 		[CCS_ID_RESERVEDPORT] = sizeof(struct ccs_reserved),
+#endif
 		[CCS_ID_GROUP] = sizeof(struct ccs_group),
+#ifdef CONFIG_CCSECURITY_NETWORK
 		[CCS_ID_ADDRESS_GROUP] = sizeof(struct ccs_address_group),
+#endif
 		[CCS_ID_PATH_GROUP] = sizeof(struct ccs_path_group),
 		[CCS_ID_NUMBER_GROUP] = sizeof(struct ccs_number_group),
 		[CCS_ID_AGGREGATOR] = sizeof(struct ccs_aggregator),
@@ -44,11 +129,17 @@ static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type)
 		= sizeof(struct ccs_path_number_acl),
 		[CCS_TYPE_MKDEV_ACL] = sizeof(struct ccs_mkdev_acl),
 		[CCS_TYPE_MOUNT_ACL] = sizeof(struct ccs_mount_acl),
+#ifdef CONFIG_CCSECURITY_NETWORK
 		[CCS_TYPE_INET_ACL] = sizeof(struct ccs_inet_acl),
 		[CCS_TYPE_UNIX_ACL] = sizeof(struct ccs_unix_acl),
+#endif
 		[CCS_TYPE_ENV_ACL] = sizeof(struct ccs_env_acl),
+#ifdef CONFIG_CCSECURITY_CAPABILITY
 		[CCS_TYPE_CAPABILITY_ACL] = sizeof(struct ccs_capability_acl),
+#endif
+#ifdef CONFIG_CCSECURITY_IPC
 		[CCS_TYPE_SIGNAL_ACL] = sizeof(struct ccs_signal_acl),
+#endif
 		[CCS_TYPE_AUTO_EXECUTE_HANDLER]
 		= sizeof(struct ccs_handler_acl),
 		[CCS_TYPE_DENIED_EXECUTE_HANDLER]
@@ -72,10 +163,30 @@ static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type)
 	kfree(ptr);
 }
 
-/* The list for "struct ccs_io_buffer". */
-static LIST_HEAD(ccs_io_buffer_list);
-/* Lock for protecting ccs_io_buffer_list. */
-static DEFINE_SPINLOCK(ccs_io_buffer_list_lock);
+/**
+ * ccs_put_name_union - Drop reference on "struct ccs_name_union".
+ *
+ * @ptr: Pointer to "struct ccs_name_union".
+ *
+ * Returns nothing.
+ */
+static void ccs_put_name_union(struct ccs_name_union *ptr)
+{
+	ccs_put_group(ptr->group);
+	ccs_put_name(ptr->filename);
+}
+
+/**
+ * ccs_put_number_union - Drop reference on "struct ccs_number_union".
+ *
+ * @ptr: Pointer to "struct ccs_number_union".
+ *
+ * Returns nothing.
+ */
+static void ccs_put_number_union(struct ccs_number_union *ptr)
+{
+	ccs_put_group(ptr->group);
+}
 
 /**
  * ccs_struct_used_by_io_buffer - Check whether the list element is used by /proc/ccs/ users or not.
@@ -185,11 +296,6 @@ static inline void ccs_del_manager(struct list_head *element)
 	ccs_put_name(ptr->manager);
 }
 
-/* For compatibility with older kernels. */
-#ifndef for_each_process
-#define for_each_process for_each_task
-#endif
-
 /**
  * ccs_domain_used_by_task - Check whether the given pointer is referenced by a task.
  *
@@ -265,7 +371,7 @@ out:
  *
  * Returns nothing.
  */
-static void ccs_del_acl(struct list_head *element)
+void ccs_del_acl(struct list_head *element)
 {
 	struct ccs_acl_info *acl = container_of(element, typeof(*acl), list);
 	ccs_put_condition(acl->cond);
@@ -313,6 +419,7 @@ static void ccs_del_acl(struct list_head *element)
 			ccs_put_number_union(&entry->flags);
 		}
 		break;
+#ifdef CONFIG_CCSECURITY_NETWORK
 	case CCS_TYPE_INET_ACL:
 		{
 			struct ccs_inet_acl *entry =
@@ -328,6 +435,7 @@ static void ccs_del_acl(struct list_head *element)
 			ccs_put_name_union(&entry->name);
 		}
 		break;
+#endif
 	case CCS_TYPE_ENV_ACL:
 		{
 			struct ccs_env_acl *entry =
@@ -335,18 +443,23 @@ static void ccs_del_acl(struct list_head *element)
 			ccs_put_name(entry->env);
 		}
 		break;
+#ifdef CONFIG_CCSECURITY_CAPABILITY
 	case CCS_TYPE_CAPABILITY_ACL:
 		{
 			/* Nothing to do. */
 		}
 		break;
+#endif
+#ifdef CONFIG_CCSECURITY_IPC
 	case CCS_TYPE_SIGNAL_ACL:
 		{
 			struct ccs_signal_acl *entry =
 				container_of(acl, typeof(*entry), head);
+			ccs_put_number_union(&entry->sig);
 			ccs_put_name(entry->domainname);
 		}
 		break;
+#endif
 	case CCS_TYPE_AUTO_EXECUTE_HANDLER:
 	case CCS_TYPE_DENIED_EXECUTE_HANDLER:
 		{
@@ -509,29 +622,7 @@ static inline void ccs_del_name(struct list_head *element)
 	/* Nothing to do. */
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
-
-/*
- * Lock for syscall users.
- *
- * This lock is held for only protecting single SRCU section.
- */
-struct srcu_struct ccs_ss;
-
-#else
-
-/*
- * Lock for syscall users.
- *
- * This lock is used for protecting single SRCU section for 2.6.18 and
- * earlier kernels because they don't have SRCU support.
- */
-static struct {
-	int counter_idx; /* Currently active index (0 or 1). */
-	int counter[2];  /* Current users. Protected by ccs_counter_lock. */
-} ccs_counter;
-/* Lock for protecting ccs_counter. */
-static DEFINE_SPINLOCK(ccs_counter_lock);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
 
 /**
  * ccs_lock - Alternative for srcu_read_lock().
@@ -645,15 +736,19 @@ static void ccs_try_to_gc(const enum ccs_policy_id type,
 	case CCS_ID_PATH_GROUP:
 		ccs_del_path_group(element);
 		break;
+#ifdef CONFIG_CCSECURITY_NETWORK
 	case CCS_ID_ADDRESS_GROUP:
 		ccs_del_address_group(element);
 		break;
+#endif
 	case CCS_ID_NUMBER_GROUP:
 		ccs_del_number_group(element);
 		break;
+#ifdef CONFIG_CCSECURITY_PORTRESERVE
 	case CCS_ID_RESERVEDPORT:
 		ccs_del_reservedport(element);
 		break;
+#endif
 	case CCS_ID_CONDITION:
 		ccs_del_condition(element);
 		break;
@@ -799,7 +894,11 @@ static void ccs_collect_entry(void)
 				id = CCS_ID_NUMBER_GROUP;
 				break;
 			default:
+#ifdef CONFIG_CCSECURITY_NETWORK
 				id = CCS_ID_ADDRESS_GROUP;
+#else
+				continue;
+#endif
 				break;
 			}
 			list_for_each_entry_safe(group, tmp, list, head.list) {

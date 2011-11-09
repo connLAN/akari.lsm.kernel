@@ -402,7 +402,6 @@ static char *ccs_print_header(struct ccs_request_info *r);
 static char *ccs_read_token(struct ccs_acl_param *param);
 static void ccs_update_task_domain(struct ccs_request_info *r);
 
-static bool __ccs_lport_reserved(const u16 port);
 static bool ccs_correct_domain(const unsigned char *domainname);
 static bool ccs_correct_path(const char *filename);
 static bool ccs_correct_word(const char *string);
@@ -415,8 +414,6 @@ static bool ccs_manager(void);
 static bool ccs_namespace_jump(const char *domainname);
 static bool ccs_parse_argv(char *left, char *right, struct ccs_argv *argv);
 static bool ccs_parse_envp(char *left, char *right, struct ccs_envp *envp);
-static bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
-				   struct ccs_ipaddr_union *ptr);
 static bool ccs_parse_name_union(struct ccs_acl_param *param,
 				 struct ccs_name_union *ptr);
 static bool ccs_parse_name_union_quoted(struct ccs_acl_param *param,
@@ -456,7 +453,6 @@ static int ccs_update_manager_entry(const char *manager, const bool is_delete);
 static int ccs_update_policy(const int size, struct ccs_acl_param *param);
 static int ccs_write_aggregator(struct ccs_acl_param *param);
 static int ccs_write_answer(struct ccs_io_buffer *head);
-static int ccs_write_capability(struct ccs_acl_param *param);
 static int ccs_write_domain(struct ccs_io_buffer *head);
 static int ccs_write_domain2(struct ccs_policy_namespace *ns,
 			     struct list_head *list, char *data,
@@ -464,18 +460,14 @@ static int ccs_write_domain2(struct ccs_policy_namespace *ns,
 static int ccs_write_exception(struct ccs_io_buffer *head);
 static int ccs_write_file(struct ccs_acl_param *param);
 static int ccs_write_group(struct ccs_acl_param *param, const u8 type);
-static int ccs_write_inet_network(struct ccs_acl_param *param);
-static int ccs_write_ipc(struct ccs_acl_param *param);
 static int ccs_write_manager(struct ccs_io_buffer *head);
 static int ccs_write_misc(struct ccs_acl_param *param);
 static int ccs_write_pid(struct ccs_io_buffer *head);
 static int ccs_write_profile(struct ccs_io_buffer *head);
-static int ccs_write_reserved_port(struct ccs_acl_param *param);
 static int ccs_write_stat(struct ccs_io_buffer *head);
 static int ccs_write_task(struct ccs_acl_param *param);
 static int ccs_write_transition_control(struct ccs_acl_param *param,
 					const u8 type);
-static int ccs_write_unix_network(struct ccs_acl_param *param);
 static s8 ccs_find_yesno(const char *string, const char *find);
 static ssize_t ccs_read(struct file *file, char __user *buf, size_t count,
 			loff_t *ppos);
@@ -519,8 +511,6 @@ static void ccs_io_printf(struct ccs_io_buffer *head, const char *fmt, ...)
 	__printf(2, 3);
 static void ccs_normalize_line(unsigned char *buffer);
 static void ccs_print_config(struct ccs_io_buffer *head, const u8 config);
-static void ccs_print_ip(char *buf, const unsigned int size,
-			 const struct ccs_ipaddr_union *ptr);
 static void ccs_print_name_union(struct ccs_io_buffer *head,
 				 const struct ccs_name_union *ptr);
 static void ccs_print_name_union_quoted(struct ccs_io_buffer *head,
@@ -546,6 +536,28 @@ static void ccs_set_string(struct ccs_io_buffer *head, const char *string);
 static void ccs_set_uint(unsigned int *i, const char *string,
 			 const char *find);
 static void ccs_update_stat(const u8 index);
+
+#ifdef CONFIG_CCSECURITY_PORTRESERVE
+static bool __ccs_lport_reserved(const u16 port);
+static int ccs_write_reserved_port(struct ccs_acl_param *param);
+#endif
+
+#ifdef CONFIG_CCSECURITY_NETWORK
+static bool ccs_parse_ipaddr_union(struct ccs_acl_param *param,
+				   struct ccs_ipaddr_union *ptr);
+static int ccs_write_inet_network(struct ccs_acl_param *param);
+static int ccs_write_unix_network(struct ccs_acl_param *param);
+static void ccs_print_ip(char *buf, const unsigned int size,
+			 const struct ccs_ipaddr_union *ptr);
+#endif
+
+#ifdef CONFIG_CCSECURITY_CAPABILITY
+static int ccs_write_capability(struct ccs_acl_param *param);
+#endif
+
+#ifdef CONFIG_CCSECURITY_IPC
+static int ccs_write_ipc(struct ccs_acl_param *param);
+#endif
 
 /***** SECTION4: Standalone functions section *****/
 

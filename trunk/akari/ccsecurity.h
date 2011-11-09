@@ -201,18 +201,6 @@ static inline int ccs_umount_permission(struct vfsmount *mnt, int flags)
 	return func ? func(mnt, flags) : 0;
 }
 
-static inline _Bool ccs_lport_reserved(const u16 port)
-{
-	_Bool (*func) (const u16) = ccsecurity_ops.lport_reserved;
-	return func ? func(port) : 0;
-}
-
-static inline int ccs_ptrace_permission(long request, long pid)
-{
-	int (*func) (long, long) = ccsecurity_ops.ptrace_permission;
-	return func ? func(request, pid) : 0;
-}
-
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 
 static inline void ccs_save_open_mode(int mode)
@@ -270,12 +258,6 @@ static inline int ccs_parse_table(int __user *name, int nlen,
 	int (*func) (int __user *, int, void __user *, void __user *,
 		     struct ctl_table *) = ccsecurity_ops.parse_table;
 	return func ? func(name, nlen, oldval, newval, table) : 0;
-}
-
-static inline _Bool ccs_capable(const u8 operation)
-{
-	_Bool (*func) (const u8) = ccsecurity_ops.capable;
-	return func ? func(operation) : 1;
 }
 
 static inline int ccs_mknod_permission(struct dentry *dentry,
@@ -366,82 +348,6 @@ static inline int ccs_uselib_permission(struct dentry *dentry,
 
 #endif
 
-static inline int ccs_kill_permission(pid_t pid, int sig)
-{
-	int (*func) (pid_t, int) = ccsecurity_ops.kill_permission;
-	return func ? func(pid, sig) : 0;
-}
-
-static inline int ccs_tgkill_permission(pid_t tgid, pid_t pid, int sig)
-{
-	int (*func) (pid_t, pid_t, int) = ccsecurity_ops.tgkill_permission;
-	return func ? func(tgid, pid, sig) : 0;
-}
-
-static inline int ccs_tkill_permission(pid_t pid, int sig)
-{
-	int (*func) (pid_t, int) = ccsecurity_ops.tkill_permission;
-	return func ? func(pid, sig) : 0;
-}
-
-static inline int ccs_socket_create_permission(int family, int type,
-					       int protocol)
-{
-	int (*func) (int, int, int) = ccsecurity_ops.socket_create_permission;
-	return func ? func(family, type, protocol) : 0;
-}
-
-static inline int ccs_socket_listen_permission(struct socket *sock)
-{
-	int (*func) (struct socket *)
-		= ccsecurity_ops.socket_listen_permission;
-	return func ? func(sock) : 0;
-}
-
-static inline int ccs_socket_connect_permission(struct socket *sock,
-						struct sockaddr *addr,
-						int addr_len)
-{
-	int (*func) (struct socket *, struct sockaddr *, int)
-		= ccsecurity_ops.socket_connect_permission;
-	return func ? func(sock, addr, addr_len) : 0;
-}
-
-static inline int ccs_socket_bind_permission(struct socket *sock,
-					     struct sockaddr *addr,
-					     int addr_len)
-{
-	int (*func) (struct socket *, struct sockaddr *, int)
-		= ccsecurity_ops.socket_bind_permission;
-	return func ? func(sock, addr, addr_len) : 0;
-}
-
-static inline int ccs_socket_post_accept_permission(struct socket *sock,
-						    struct socket *newsock)
-{
-	int (*func) (struct socket *, struct socket *)
-		= ccsecurity_ops.socket_post_accept_permission;
-	return func ? func(sock, newsock) : 0;
-}
-
-static inline int ccs_socket_sendmsg_permission(struct socket *sock,
-						struct msghdr *msg,
-						int size)
-{
-	int (*func) (struct socket *, struct msghdr *, int)
-		= ccsecurity_ops.socket_sendmsg_permission;
-	return func ? func(sock, msg, size) : 0;
-}
-
-static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
-						     struct sk_buff *skb,
-						     int flags)
-{
-	int (*func) (struct sock *, struct sk_buff *, int)
-		= ccsecurity_ops.socket_post_recvmsg_permission;
-	return func ? func(sk, skb, flags) : 0;
-}
-
 static inline int ccs_chown_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, uid_t user,
 				       gid_t group)
@@ -459,61 +365,11 @@ static inline int ccs_chmod_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt, mode) : 0;
 }
 
-static inline int ccs_getattr_permission(struct vfsmount *mnt,
-					 struct dentry *dentry)
-{
-	int (*func) (struct vfsmount *, struct dentry *)
-		= ccsecurity_ops.getattr_permission;
-	return func ? func(mnt, dentry) : 0;
-}
-
-static inline int ccs_sigqueue_permission(pid_t pid, int sig)
-{
-	int (*func) (pid_t, int) = ccsecurity_ops.sigqueue_permission;
-	return func ? func(pid, sig) : 0;
-}
-
-static inline int ccs_tgsigqueue_permission(pid_t tgid, pid_t pid, int sig)
-{
-	int (*func) (pid_t, pid_t, int) = ccsecurity_ops.tgsigqueue_permission;
-	return func ? func(tgid, pid, sig) : 0;
-}
-
 static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 					    struct pt_regs *regs)
 {
 	return ccsecurity_ops.search_binary_handler(bprm, regs);
 }
-
-#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
-
-static inline int ccs_alloc_task_security(const struct task_struct *task)
-{
-	int (*func) (const struct task_struct *)
-		= ccsecurity_ops.alloc_task_security;
-	return func ? func(task) : 0;
-}
-
-static inline void ccs_free_task_security(const struct task_struct *task)
-{
-	void (*func) (const struct task_struct *)
-		= ccsecurity_ops.free_task_security;
-	if (func)
-		func(task);
-}
-
-#else
-
-static inline int ccs_alloc_task_security(const struct task_struct *task)
-{
-	return 0;
-}
-
-static inline void ccs_free_task_security(const struct task_struct *task)
-{
-}
-
-#endif
 
 #else
 
@@ -564,16 +420,6 @@ static inline int ccs_umount_permission(struct vfsmount *mnt, int flags)
 	return 0;
 }
 
-static inline _Bool ccs_lport_reserved(const u16 port)
-{
-	return 0;
-}
-
-static inline int ccs_ptrace_permission(long request, long pid)
-{
-	return 0;
-}
-
 static inline void ccs_save_open_mode(int mode)
 {
 }
@@ -610,11 +456,6 @@ static inline int ccs_parse_table(int __user *name, int nlen,
 				  struct ctl_table *table)
 {
 	return 0;
-}
-
-static inline _Bool ccs_capable(const u8 operation)
-{
-	return 1;
 }
 
 static inline int ccs_mknod_permission(struct dentry *dentry,
@@ -687,26 +528,122 @@ static inline int ccs_fcntl_permission(struct file *file, unsigned int cmd,
 	return 0;
 }
 
-static inline int ccs_kill_permission(pid_t pid, int sig)
+static inline int ccs_chown_permission(struct dentry *dentry,
+				       struct vfsmount *mnt, uid_t user,
+				       gid_t group)
 {
 	return 0;
 }
 
-static inline int ccs_tgkill_permission(pid_t tgid, pid_t pid, int sig)
+static inline int ccs_chmod_permission(struct dentry *dentry,
+				       struct vfsmount *mnt, mode_t mode)
 {
 	return 0;
 }
 
-static inline int ccs_tkill_permission(pid_t pid, int sig)
+static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
+					    struct pt_regs *regs)
+{
+	return search_binary_handler(bprm, regs);
+}
+
+#endif
+
+#ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
+
+static inline int ccs_alloc_task_security(const struct task_struct *task)
+{
+	int (*func) (const struct task_struct *)
+		= ccsecurity_ops.alloc_task_security;
+	return func ? func(task) : 0;
+}
+
+static inline void ccs_free_task_security(const struct task_struct *task)
+{
+	void (*func) (const struct task_struct *)
+		= ccsecurity_ops.free_task_security;
+	if (func)
+		func(task);
+}
+
+#else
+
+static inline int ccs_alloc_task_security(const struct task_struct *task)
 {
 	return 0;
 }
 
-static inline int ccs_socket_create_permission(int family, int type,
-					       int protocol)
+static inline void ccs_free_task_security(const struct task_struct *task)
+{
+}
+
+#endif
+
+#ifdef CONFIG_CCSECURITY_FILE_GETATTR
+
+static inline int ccs_getattr_permission(struct vfsmount *mnt,
+					 struct dentry *dentry)
+{
+	int (*func) (struct vfsmount *, struct dentry *)
+		= ccsecurity_ops.getattr_permission;
+	return func ? func(mnt, dentry) : 0;
+}
+
+#else
+
+static inline int ccs_getattr_permission(struct vfsmount *mnt,
+					 struct dentry *dentry)
 {
 	return 0;
 }
+
+#endif
+
+#ifdef CONFIG_CCSECURITY_NETWORK
+
+static inline int ccs_socket_listen_permission(struct socket *sock)
+{
+	int (*func) (struct socket *)
+		= ccsecurity_ops.socket_listen_permission;
+	return func ? func(sock) : 0;
+}
+
+static inline int ccs_socket_connect_permission(struct socket *sock,
+						struct sockaddr *addr,
+						int addr_len)
+{
+	int (*func) (struct socket *, struct sockaddr *, int)
+		= ccsecurity_ops.socket_connect_permission;
+	return func ? func(sock, addr, addr_len) : 0;
+}
+
+static inline int ccs_socket_bind_permission(struct socket *sock,
+					     struct sockaddr *addr,
+					     int addr_len)
+{
+	int (*func) (struct socket *, struct sockaddr *, int)
+		= ccsecurity_ops.socket_bind_permission;
+	return func ? func(sock, addr, addr_len) : 0;
+}
+
+static inline int ccs_socket_post_accept_permission(struct socket *sock,
+						    struct socket *newsock)
+{
+	int (*func) (struct socket *, struct socket *)
+		= ccsecurity_ops.socket_post_accept_permission;
+	return func ? func(sock, newsock) : 0;
+}
+
+static inline int ccs_socket_sendmsg_permission(struct socket *sock,
+						struct msghdr *msg,
+						int size)
+{
+	int (*func) (struct socket *, struct msghdr *, int)
+		= ccsecurity_ops.socket_sendmsg_permission;
+	return func ? func(sock, msg, size) : 0;
+}
+
+#else
 
 static inline int ccs_socket_listen_permission(struct socket *sock)
 {
@@ -734,10 +671,26 @@ static inline int ccs_socket_post_accept_permission(struct socket *sock,
 }
 
 static inline int ccs_socket_sendmsg_permission(struct socket *sock,
-						struct msghdr *msg, int size)
+						struct msghdr *msg,
+						int size)
 {
 	return 0;
 }
+
+#endif
+
+#ifdef CONFIG_CCSECURITY_NETWORK_RECVMSG
+
+static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
+						     struct sk_buff *skb,
+						     int flags)
+{
+	int (*func) (struct sock *, struct sk_buff *, int)
+		= ccsecurity_ops.socket_post_recvmsg_permission;
+	return func ? func(sk, skb, flags) : 0;
+}
+
+#else
 
 static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
 						     struct sk_buff *skb,
@@ -746,21 +699,111 @@ static inline int ccs_socket_post_recvmsg_permission(struct sock *sk,
 	return 0;
 }
 
-static inline int ccs_chown_permission(struct dentry *dentry,
-				       struct vfsmount *mnt, uid_t user,
-				       gid_t group)
+#endif
+
+#ifdef CONFIG_CCSECURITY_PORTRESERVE
+
+static inline _Bool ccs_lport_reserved(const u16 port)
+{
+	_Bool (*func) (const u16) = ccsecurity_ops.lport_reserved;
+	return func ? func(port) : 0;
+}
+
+#else
+
+static inline _Bool ccs_lport_reserved(const u16 port)
 {
 	return 0;
 }
 
-static inline int ccs_chmod_permission(struct dentry *dentry,
-				       struct vfsmount *mnt, mode_t mode)
+#endif
+
+#ifdef CONFIG_CCSECURITY_CAPABILITY
+
+static inline _Bool ccs_capable(const u8 operation)
+{
+	_Bool (*func) (const u8) = ccsecurity_ops.capable;
+	return func ? func(operation) : 1;
+}
+
+static inline int ccs_socket_create_permission(int family, int type,
+					       int protocol)
+{
+	int (*func) (int, int, int) = ccsecurity_ops.socket_create_permission;
+	return func ? func(family, type, protocol) : 0;
+}
+
+static inline int ccs_ptrace_permission(long request, long pid)
+{
+	int (*func) (long, long) = ccsecurity_ops.ptrace_permission;
+	return func ? func(request, pid) : 0;
+}
+
+#else
+
+static inline _Bool ccs_capable(const u8 operation)
+{
+	return 1;
+}
+
+static inline int ccs_socket_create_permission(int family, int type,
+					       int protocol)
 {
 	return 0;
 }
 
-static inline int ccs_getattr_permission(struct vfsmount *mnt,
-					 struct dentry *dentry)
+static inline int ccs_ptrace_permission(long request, long pid)
+{
+	return 0;
+}
+
+#endif
+
+#ifdef CONFIG_CCSECURITY_IPC
+
+static inline int ccs_kill_permission(pid_t pid, int sig)
+{
+	int (*func) (pid_t, int) = ccsecurity_ops.kill_permission;
+	return func ? func(pid, sig) : 0;
+}
+
+static inline int ccs_tgkill_permission(pid_t tgid, pid_t pid, int sig)
+{
+	int (*func) (pid_t, pid_t, int) = ccsecurity_ops.tgkill_permission;
+	return func ? func(tgid, pid, sig) : 0;
+}
+
+static inline int ccs_tkill_permission(pid_t pid, int sig)
+{
+	int (*func) (pid_t, int) = ccsecurity_ops.tkill_permission;
+	return func ? func(pid, sig) : 0;
+}
+
+static inline int ccs_sigqueue_permission(pid_t pid, int sig)
+{
+	int (*func) (pid_t, int) = ccsecurity_ops.sigqueue_permission;
+	return func ? func(pid, sig) : 0;
+}
+
+static inline int ccs_tgsigqueue_permission(pid_t tgid, pid_t pid, int sig)
+{
+	int (*func) (pid_t, pid_t, int) = ccsecurity_ops.tgsigqueue_permission;
+	return func ? func(tgid, pid, sig) : 0;
+}
+
+#else
+
+static inline int ccs_kill_permission(pid_t pid, int sig)
+{
+	return 0;
+}
+
+static inline int ccs_tgkill_permission(pid_t tgid, pid_t pid, int sig)
+{
+	return 0;
+}
+
+static inline int ccs_tkill_permission(pid_t pid, int sig)
 {
 	return 0;
 }
@@ -773,21 +816,6 @@ static inline int ccs_sigqueue_permission(pid_t pid, int sig)
 static inline int ccs_tgsigqueue_permission(pid_t tgid, pid_t pid, int sig)
 {
 	return 0;
-}
-
-static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
-					    struct pt_regs *regs)
-{
-	return search_binary_handler(bprm, regs);
-}
-
-static inline int ccs_alloc_task_security(const struct task_struct *task)
-{
-	return 0;
-}
-
-static inline void ccs_free_task_security(const struct task_struct *task)
-{
 }
 
 #endif

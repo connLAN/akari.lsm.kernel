@@ -202,19 +202,12 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos, struct ccs_page
 struct ccs_domain_info *ccs_assign_domain(const char *domainname, const bool transit);
 void ccs_get_attributes(struct ccs_obj_info *obj);
 
-static bool __ccs_capable(const u8 operation);
-static bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
-				      const struct ccs_group *group);
 static bool ccs_alphabet_char(const char c);
 static bool ccs_argv(const unsigned int index, const char *arg_ptr,
 		     const int argc, const struct ccs_argv *argv, u8 *checked);
 static bool ccs_byte_range(const char *str);
-static bool ccs_check_capability_acl(struct ccs_request_info *r,
-				     const struct ccs_acl_info *ptr);
 static bool ccs_check_env_acl(struct ccs_request_info *r,
 			      const struct ccs_acl_info *ptr);
-static bool ccs_check_inet_acl(struct ccs_request_info *r,
-			       const struct ccs_acl_info *ptr);
 static bool ccs_check_mkdev_acl(struct ccs_request_info *r,
 				const struct ccs_acl_info *ptr);
 static bool ccs_check_mount_acl(struct ccs_request_info *r,
@@ -225,11 +218,7 @@ static bool ccs_check_path_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr);
 static bool ccs_check_path_number_acl(struct ccs_request_info *r,
 				      const struct ccs_acl_info *ptr);
-static bool ccs_check_signal_acl(struct ccs_request_info *r,
-				 const struct ccs_acl_info *ptr);
 static bool ccs_check_task_acl(struct ccs_request_info *r,
-			       const struct ccs_acl_info *ptr);
-static bool ccs_check_unix_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr);
 static bool ccs_compare_number_union(const unsigned long value,
 				     const struct ccs_number_union *ptr);
@@ -250,7 +239,6 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type);
 static bool ccs_get_realpath(struct ccs_path_info *buf, struct dentry *dentry,
 			     struct vfsmount *mnt);
 static bool ccs_hexadecimal(const char c);
-static bool ccs_kernel_service(void);
 static bool ccs_number_matches_group(const unsigned long min,
 				     const unsigned long max,
 				     const struct ccs_group *group);
@@ -284,8 +272,6 @@ static int __ccs_chown_permission(struct dentry *dentry,
 static int __ccs_chroot_permission(struct path *path);
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg);
-static int __ccs_getattr_permission(struct vfsmount *mnt,
-				    struct dentry *dentry);
 static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 				  unsigned long arg);
 static int __ccs_link_permission(struct dentry *old_dentry,
@@ -310,27 +296,12 @@ static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 #endif
 static int __ccs_pivot_root_permission(struct path *old_path,
 				       struct path *new_path);
-static int __ccs_ptrace_permission(long request, long pid);
 static int __ccs_rename_permission(struct dentry *old_dentry,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt);
 static int __ccs_rmdir_permission(struct dentry *dentry, struct vfsmount *mnt);
 static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 				       struct pt_regs *regs);
-static int __ccs_socket_bind_permission(struct socket *sock,
-					struct sockaddr *addr, int addr_len);
-static int __ccs_socket_connect_permission(struct socket *sock,
-					   struct sockaddr *addr,
-					   int addr_len);
-static int __ccs_socket_create_permission(int family, int type, int protocol);
-static int __ccs_socket_listen_permission(struct socket *sock);
-static int __ccs_socket_post_accept_permission(struct socket *sock,
-					       struct socket *newsock);
-static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
-						struct sk_buff *skb,
-						int flags);
-static int __ccs_socket_sendmsg_permission(struct socket *sock,
-					   struct msghdr *msg, int size);
 static int __ccs_symlink_permission(struct dentry *dentry,
 				    struct vfsmount *mnt, const char *from);
 static int __ccs_truncate_permission(struct dentry *dentry,
@@ -342,32 +313,18 @@ static int __ccs_unlink_permission(struct dentry *dentry,
 static int __ccs_uselib_permission(struct dentry *dentry,
 				   struct vfsmount *mnt);
 #endif
-static int ccs_audit_capability_log(struct ccs_request_info *r);
 static int ccs_audit_env_log(struct ccs_request_info *r);
-static int ccs_audit_inet_log(struct ccs_request_info *r);
 static int ccs_audit_mkdev_log(struct ccs_request_info *r);
 static int ccs_audit_mount_log(struct ccs_request_info *r);
-static int ccs_audit_net_log(struct ccs_request_info *r, const char *family,
-			     const u8 protocol, const u8 operation,
-			     const char *address);
 static int ccs_audit_path2_log(struct ccs_request_info *r);
 static int ccs_audit_path_log(struct ccs_request_info *r);
 static int ccs_audit_path_number_log(struct ccs_request_info *r);
-static int ccs_audit_signal_log(struct ccs_request_info *r);
-static int ccs_audit_unix_log(struct ccs_request_info *r);
-static int ccs_check_inet_address(const struct sockaddr *addr,
-				  const unsigned int addr_len, const u16 port,
-				  struct ccs_addr_info *address);
-static int ccs_check_unix_address(struct sockaddr *addr,
-				  const unsigned int addr_len,
-				  struct ccs_addr_info *address);
 static int ccs_env_perm(struct ccs_request_info *r, const char *env);
 static int ccs_environ(struct ccs_execve *ee);
 static int ccs_execute_permission(struct ccs_request_info *r,
 				  const struct ccs_path_info *filename);
 static int ccs_find_next_domain(struct ccs_execve *ee);
 static int ccs_get_path(const char *pathname, struct path *path);
-static int ccs_inet_entry(const struct ccs_addr_info *address);
 static int ccs_kern_path(const char *pathname, int flags, struct path *path);
 static int ccs_mkdev_perm(const u8 operation, struct dentry *dentry,
 			  struct vfsmount *mnt, const unsigned int mode,
@@ -398,13 +355,8 @@ static
 #endif
 int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 			const struct ccs_path_info *filename);
-static int ccs_signal_acl(const int pid, const int sig);
-static int ccs_signal_acl0(pid_t tgid, pid_t pid, int sig);
-static int ccs_signal_acl2(const int sig, const int pid);
 static int ccs_symlink_path(const char *pathname, struct ccs_path_info *name);
 static int ccs_try_alt_exec(struct ccs_execve *ee);
-static int ccs_unix_entry(const struct ccs_addr_info *address);
-static u8 ccs_sock_family(struct sock *sk);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 static void __ccs_clear_open_mode(void);
 static void __ccs_save_open_mode(int mode);
@@ -413,6 +365,70 @@ static void ccs_add_slash(struct ccs_path_info *buf);
 static void ccs_print_ulong(char *buffer, const int buffer_len,
 			    const unsigned long value, const u8 type);
 static void ccs_unescape(unsigned char *dest);
+
+#ifdef CONFIG_CCSECURITY_CAPABILITY
+static bool __ccs_capable(const u8 operation);
+static bool ccs_check_capability_acl(struct ccs_request_info *r,
+				     const struct ccs_acl_info *ptr);
+static bool ccs_kernel_service(void);
+static int __ccs_ptrace_permission(long request, long pid);
+static int __ccs_socket_create_permission(int family, int type, int protocol);
+static int ccs_audit_capability_log(struct ccs_request_info *r);
+#endif
+
+#ifdef CONFIG_CCSECURITY_NETWORK
+static bool ccs_address_matches_group(const bool is_ipv6, const u32 *address,
+				      const struct ccs_group *group);
+static bool ccs_check_inet_acl(struct ccs_request_info *r,
+			       const struct ccs_acl_info *ptr);
+static bool ccs_check_unix_acl(struct ccs_request_info *r,
+			       const struct ccs_acl_info *ptr);
+static bool ccs_kernel_service(void);
+static int __ccs_socket_bind_permission(struct socket *sock,
+					struct sockaddr *addr, int addr_len);
+static int __ccs_socket_connect_permission(struct socket *sock,
+					   struct sockaddr *addr,
+					   int addr_len);
+static int __ccs_socket_listen_permission(struct socket *sock);
+static int __ccs_socket_post_accept_permission(struct socket *sock,
+					       struct socket *newsock);
+static int __ccs_socket_sendmsg_permission(struct socket *sock,
+					   struct msghdr *msg, int size);
+static int ccs_audit_inet_log(struct ccs_request_info *r);
+static int ccs_audit_net_log(struct ccs_request_info *r, const char *family,
+			     const u8 protocol, const u8 operation,
+			     const char *address);
+static int ccs_audit_unix_log(struct ccs_request_info *r);
+static int ccs_check_inet_address(const struct sockaddr *addr,
+				  const unsigned int addr_len, const u16 port,
+				  struct ccs_addr_info *address);
+static int ccs_check_unix_address(struct sockaddr *addr,
+				  const unsigned int addr_len,
+				  struct ccs_addr_info *address);
+static int ccs_inet_entry(const struct ccs_addr_info *address);
+static int ccs_unix_entry(const struct ccs_addr_info *address);
+static u8 ccs_sock_family(struct sock *sk);
+#endif
+
+#ifdef CONFIG_CCSECURITY_NETWORK_RECVMSG
+static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
+						struct sk_buff *skb,
+						int flags);
+#endif
+
+#ifdef CONFIG_CCSECURITY_IPC
+static bool ccs_check_signal_acl(struct ccs_request_info *r,
+				 const struct ccs_acl_info *ptr);
+static int ccs_audit_signal_log(struct ccs_request_info *r);
+static int ccs_signal_acl(const int pid, const int sig);
+static int ccs_signal_acl0(pid_t tgid, pid_t pid, int sig);
+static int ccs_signal_acl2(const int sig, const int pid);
+#endif
+
+#ifdef CONFIG_CCSECURITY_FILE_GETATTR
+static int __ccs_getattr_permission(struct vfsmount *mnt,
+				    struct dentry *dentry);
+#endif
 
 /***** SECTION4: Standalone functions section *****/
 
@@ -2924,6 +2940,8 @@ static int __ccs_unlink_permission(struct dentry *dentry, struct vfsmount *mnt)
 	return ccs_path_perm(CCS_TYPE_UNLINK, dentry, mnt, NULL);
 }
 
+#ifdef CONFIG_CCSECURITY_FILE_GETATTR
+
 /**
  * __ccs_getattr_permission - Check permission for vfs_getattr().
  *
@@ -2937,6 +2955,8 @@ static int __ccs_getattr_permission(struct vfsmount *mnt,
 {
 	return ccs_path_perm(CCS_TYPE_GETATTR, dentry, mnt, NULL);
 }
+
+#endif
 
 /**
  * __ccs_symlink_permission - Check permission for vfs_symlink().
@@ -3478,17 +3498,6 @@ static int ccs_check_unix_address(struct sockaddr *addr,
 }
 
 /**
- * ccs_kernel_service - Check whether I'm kernel service or not.
- *
- * Returns true if I'm kernel service, false otherwise.
- */
-static bool ccs_kernel_service(void)
-{
-	/* Nothing to do if I am a kernel service. */
-	return segment_eq(get_fs(), KERNEL_DS);
-}
-
-/**
  * ccs_sock_family - Get socket's family.
  *
  * @sk: Pointer to "struct sock".
@@ -3509,26 +3518,6 @@ static u8 ccs_sock_family(struct sock *sk)
 	default:
 		return 0;
 	}
-}
-
-/**
- * __ccs_socket_create_permission - Check permission for creating a socket.
- *
- * @family:   Protocol family.
- * @type:     Unused.
- * @protocol: Unused.
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int __ccs_socket_create_permission(int family, int type, int protocol)
-{
-	if (ccs_kernel_service())
-		return 0;
-	if (family == PF_PACKET && !ccs_capable(CCS_USE_PACKET_SOCKET))
-		return -EPERM;
-	if (family == PF_ROUTE && !ccs_capable(CCS_USE_ROUTE_SOCKET))
-		return -EPERM;
-	return 0;
 }
 
 /**
@@ -3806,6 +3795,21 @@ out:
 
 #endif
 
+#if defined(CONFIG_CCSECURITY_CAPABILITY) || defined(CONFIG_CCSECURITY_NETWORK)
+
+/**
+ * ccs_kernel_service - Check whether I'm kernel service or not.
+ *
+ * Returns true if I'm kernel service, false otherwise.
+ */
+static bool ccs_kernel_service(void)
+{
+	/* Nothing to do if I am a kernel service. */
+	return segment_eq(get_fs(), KERNEL_DS);
+}
+
+#endif
+
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 
 /**
@@ -3860,6 +3864,26 @@ static bool __ccs_capable(const u8 operation)
 	}
 	ccs_read_unlock(idx);
 	return !error;
+}
+
+/**
+ * __ccs_socket_create_permission - Check permission for creating a socket.
+ *
+ * @family:   Protocol family.
+ * @type:     Unused.
+ * @protocol: Unused.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_socket_create_permission(int family, int type, int protocol)
+{
+	if (ccs_kernel_service())
+		return 0;
+	if (family == PF_PACKET && !ccs_capable(CCS_USE_PACKET_SOCKET))
+		return -EPERM;
+	if (family == PF_ROUTE && !ccs_capable(CCS_USE_ROUTE_SOCKET))
+		return -EPERM;
+	return 0;
 }
 
 /**

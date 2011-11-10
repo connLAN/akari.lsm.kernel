@@ -47,8 +47,10 @@ static const u8 ccs_index2category[CCS_MAX_MAC_INDEX] = {
 	[CCS_MAC_FILE_MOUNT]      = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_UMOUNT]     = CCS_MAC_CATEGORY_FILE,
 	[CCS_MAC_FILE_PIVOT_ROOT] = CCS_MAC_CATEGORY_FILE,
+#ifdef CONFIG_CCSECURITY_MISC
 	/* CONFIG::misc group */
 	[CCS_MAC_ENVIRON]         = CCS_MAC_CATEGORY_MISC,
+#endif
 #ifdef CONFIG_CCSECURITY_NETWORK
 	/* CONFIG::network group */
 	[CCS_MAC_NETWORK_INET_STREAM_BIND]       = CCS_MAC_CATEGORY_NETWORK,
@@ -135,8 +137,10 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 	[CCS_MAC_FILE_MOUNT]      = "mount",
 	[CCS_MAC_FILE_UMOUNT]     = "unmount",
 	[CCS_MAC_FILE_PIVOT_ROOT] = "pivot_root",
+#ifdef CONFIG_CCSECURITY_MISC
 	/* CONFIG::misc group */
 	[CCS_MAC_ENVIRON] = "env",
+#endif
 #ifdef CONFIG_CCSECURITY_NETWORK
 	/* CONFIG::network group */
 	[CCS_MAC_NETWORK_INET_STREAM_BIND]       = "inet_stream_bind",
@@ -189,7 +193,9 @@ const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
 #ifdef CONFIG_CCSECURITY_NETWORK
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_NETWORK]    = "network",
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_MISC]       = "misc",
+#endif
 #ifdef CONFIG_CCSECURITY_IPC
 	[CCS_MAX_MAC_INDEX + CCS_MAC_CATEGORY_IPC]        = "ipc",
 #endif
@@ -235,7 +241,9 @@ static const char * const ccs_category_keywords[CCS_MAX_MAC_CATEGORY_INDEX] = {
 #ifdef CONFIG_CCSECURITY_NETWORK
 	[CCS_MAC_CATEGORY_NETWORK]    = "network",
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 	[CCS_MAC_CATEGORY_MISC]       = "misc",
+#endif
 #ifdef CONFIG_CCSECURITY_IPC
 	[CCS_MAC_CATEGORY_IPC]        = "ipc",
 #endif
@@ -461,7 +469,6 @@ static int ccs_write_exception(struct ccs_io_buffer *head);
 static int ccs_write_file(struct ccs_acl_param *param);
 static int ccs_write_group(struct ccs_acl_param *param, const u8 type);
 static int ccs_write_manager(struct ccs_io_buffer *head);
-static int ccs_write_misc(struct ccs_acl_param *param);
 static int ccs_write_pid(struct ccs_io_buffer *head);
 static int ccs_write_profile(struct ccs_io_buffer *head);
 static int ccs_write_stat(struct ccs_io_buffer *head);
@@ -475,8 +482,6 @@ static ssize_t ccs_read_self(struct file *file, char __user *buf, size_t count,
 			     loff_t *ppos);
 static ssize_t ccs_write(struct file *file, const char __user *buf,
 			 size_t count, loff_t *ppos);
-static ssize_t ccs_write_self(struct file *file, const char __user *buf,
-			      size_t count, loff_t *ppos);
 static struct ccs_condition *ccs_commit_condition(struct ccs_condition *entry);
 static struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param);
 static struct ccs_domain_info *ccs_find_domain(const char *domainname);
@@ -555,8 +560,17 @@ static void ccs_print_ip(char *buf, const unsigned int size,
 static int ccs_write_capability(struct ccs_acl_param *param);
 #endif
 
+#ifdef CONFIG_CCSECURITY_MISC
+static int ccs_write_misc(struct ccs_acl_param *param);
+#endif
+
 #ifdef CONFIG_CCSECURITY_IPC
 static int ccs_write_ipc(struct ccs_acl_param *param);
+#endif
+
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
+static ssize_t ccs_write_self(struct file *file, const char __user *buf,
+			      size_t count, loff_t *ppos);
 #endif
 
 /***** SECTION4: Standalone functions section *****/
@@ -1189,7 +1203,9 @@ static
 const
 #endif
 struct file_operations ccs_self_operations = {
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 	.write = ccs_write_self,
+#endif
 	.read  = ccs_read_self,
 };
 
@@ -3035,9 +3051,12 @@ static int ccs_update_domain(const int size, struct ccs_acl_param *param)
 		 */
 		if (new_entry->cond->exec_transit &&
 		    !(new_entry->type == CCS_TYPE_PATH_ACL &&
-		      new_entry->perm == 1 << CCS_TYPE_EXECUTE) &&
-		    new_entry->type != CCS_TYPE_AUTO_EXECUTE_HANDLER &&
-		    new_entry->type != CCS_TYPE_DENIED_EXECUTE_HANDLER)
+		      new_entry->perm == 1 << CCS_TYPE_EXECUTE)
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
+		    && new_entry->type != CCS_TYPE_AUTO_EXECUTE_HANDLER &&
+		    new_entry->type != CCS_TYPE_DENIED_EXECUTE_HANDLER
+#endif
+		    )
 			return -EINVAL;
 	}
 	if (mutex_lock_interruptible(&ccs_policy_lock))
@@ -3102,6 +3121,7 @@ static int ccs_write_task(struct ccs_acl_param *param)
 					    "auto_domain_transition ");
 	if (!is_auto && !ccs_str_starts(&param->data,
 					"manual_domain_transition ")) {
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 		struct ccs_handler_acl *e = &param->e.handler_acl;
 		char *handler;
 		if (ccs_str_starts(&param->data, "auto_execute_handler "))
@@ -3120,7 +3140,11 @@ static int ccs_write_task(struct ccs_acl_param *param)
 		if (e->handler->is_patterned)
 			return -EINVAL; /* No patterns allowed. */
 		return ccs_update_domain(sizeof(*e), param);
+#else
+		error = -EINVAL;
+#endif
 	} else {
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 		struct ccs_task_acl *e = &param->e.task_acl;
 		e->head.type = is_auto ?
 			CCS_TYPE_AUTO_TASK_ACL : CCS_TYPE_MANUAL_TASK_ACL;
@@ -3128,6 +3152,9 @@ static int ccs_write_task(struct ccs_acl_param *param)
 		if (!e->domainname)
 			return -EINVAL;
 		return ccs_update_domain(sizeof(*e), param);
+#else
+		error = -EINVAL;
+#endif
 	}
 	return error;
 }
@@ -3287,6 +3314,8 @@ static int ccs_write_file(struct ccs_acl_param *param)
 	return -EINVAL;
 }
 
+#ifdef CONFIG_CCSECURITY_MISC
+
 /**
  * ccs_write_misc - Update environment variable list.
  *
@@ -3309,6 +3338,8 @@ static int ccs_write_misc(struct ccs_acl_param *param)
 	}
 	return -EINVAL;
 }
+
+#endif
 
 #ifdef CONFIG_CCSECURITY_IPC
 
@@ -3392,7 +3423,9 @@ static int ccs_write_domain2(struct ccs_policy_namespace *ns,
 		{ "network inet ", ccs_write_inet_network },
 		{ "network unix ", ccs_write_unix_network },
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 		{ "misc ", ccs_write_misc },
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 		{ "capability ", ccs_write_capability },
 #endif
@@ -3805,6 +3838,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 		if (first)
 			return true;
 		ccs_print_name_union(head, &ptr->name);
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	} else if (acl_type == CCS_TYPE_AUTO_EXECUTE_HANDLER ||
 		   acl_type == CCS_TYPE_DENIED_EXECUTE_HANDLER) {
 		struct ccs_handler_acl *ptr
@@ -3814,6 +3848,8 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 			       ? "auto_execute_handler " :
 			       "denied_execute_handler ");
 		ccs_set_string(head, ptr->handler->name);
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 	} else if (acl_type == CCS_TYPE_AUTO_TASK_ACL ||
 		   acl_type == CCS_TYPE_MANUAL_TASK_ACL) {
 		struct ccs_task_acl *ptr =
@@ -3823,6 +3859,7 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 			       "auto_domain_transition " :
 			       "manual_domain_transition ");
 		ccs_set_string(head, ptr->domainname->name);
+#endif
 	} else if (head->r.print_transition_related_only &&
 		   !may_trigger_transition) {
 		return true;
@@ -3885,11 +3922,13 @@ static bool ccs_print_entry(struct ccs_io_buffer *head,
 			return true;
 		ccs_print_name_union(head, &ptr->name);
 		ccs_print_number_union(head, &ptr->number);
+#ifdef CONFIG_CCSECURITY_MISC
 	} else if (acl_type == CCS_TYPE_ENV_ACL) {
 		struct ccs_env_acl *ptr =
 			container_of(acl, typeof(*ptr), head);
 		ccs_set_group(head, "misc env ");
 		ccs_set_string(head, ptr->env->name);
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 	} else if (acl_type == CCS_TYPE_CAPABILITY_ACL) {
 		struct ccs_capability_acl *ptr =
@@ -4553,7 +4592,9 @@ static void ccs_add_entry(char *header)
 	char *realpath = NULL;
 	char *argv0 = NULL;
 	char *symlink = NULL;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	char *handler;
+#endif
 	char *cp = strchr(header, '\n');
 	int len;
 	if (!cp)
@@ -4579,15 +4620,19 @@ static void ccs_add_entry(char *header)
 		if (symlink)
 			len += ccs_truncate(symlink + 1) + 1;
 	}
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	handler = strstr(header, "type=execute_handler");
 	if (handler)
 		len += ccs_truncate(handler) + 6;
+#endif
 	buffer = kmalloc(len, CCS_GFP_FLAGS);
 	if (!buffer)
 		return;
 	snprintf(buffer, len - 1, "%s", cp);
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	if (handler)
 		ccs_addprintf(buffer, len, " task.%s", handler);
+#endif
 	if (realpath)
 		ccs_addprintf(buffer, len, " exec.%s", realpath);
 	if (argv0)
@@ -4638,10 +4683,14 @@ static bool ccs_domain_quota_ok(struct ccs_request_info *r)
 #endif
 			perm = ptr->perm;
 			break;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 		case CCS_TYPE_AUTO_EXECUTE_HANDLER:
 		case CCS_TYPE_DENIED_EXECUTE_HANDLER:
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 		case CCS_TYPE_AUTO_TASK_ACL:
 		case CCS_TYPE_MANUAL_TASK_ACL:
+#endif
 			perm = 0;
 			break;
 		default:
@@ -5769,7 +5818,9 @@ static int ccs_parse_policy(struct ccs_io_buffer *head, char *line)
 		return ccs_write_domain(head);
 	case CCS_EXCEPTIONPOLICY:
 		return ccs_write_exception(head);
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	case CCS_EXECUTE_HANDLER:
+#endif
 	case CCS_PROCESS_STATUS:
 		return ccs_write_pid(head);
 	case CCS_STAT:
@@ -5896,6 +5947,7 @@ static int ccs_open(struct inode *inode, struct file *file)
 		return -ENOMEM;
 	mutex_init(&head->io_sem);
 	head->type = type;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	if (type == CCS_EXECUTE_HANDLER) {
 		/* Allow execute_handler to read process's status. */
 		if (!(ccs_current_flags() & CCS_TASK_IS_EXECUTE_HANDLER)) {
@@ -5903,6 +5955,7 @@ static int ccs_open(struct inode *inode, struct file *file)
 			return -EPERM;
 		}
 	}
+#endif
 	if ((file->f_mode & FMODE_READ) && type != CCS_AUDIT &&
 	    type != CCS_QUERY) {
 		/* Don't allocate read_buf for poll() access. */
@@ -6011,7 +6064,9 @@ static ssize_t ccs_read(struct file *file, char __user *buf, size_t count,
 			case CCS_AUDIT:
 				ccs_read_log(head);
 				break;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 			case CCS_EXECUTE_HANDLER:
+#endif
 			case CCS_PROCESS_STATUS:
 				ccs_read_pid(head);
 				break;
@@ -6037,6 +6092,8 @@ static ssize_t ccs_read(struct file *file, char __user *buf, size_t count,
 	mutex_unlock(&head->io_sem);
 	return len;
 }
+
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 
 /**
  * ccs_write_self - write() for /proc/ccs/self_domain interface.
@@ -6088,6 +6145,8 @@ out:
 	kfree(data);
 	return error ? error : count;
 }
+
+#endif
 
 /**
  * ccs_write - write() for /proc/ccs/ interface.
@@ -6245,8 +6304,10 @@ static void __init ccs_proc_init(void)
 	ccs_create_entry("profile",          0600, ccs_dir, CCS_PROFILE);
 	ccs_create_entry("manager",          0600, ccs_dir, CCS_MANAGER);
 	ccs_create_entry("version",          0400, ccs_dir, CCS_VERSION);
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	ccs_create_entry(".execute_handler", 0666, ccs_dir,
 			 CCS_EXECUTE_HANDLER);
+#endif
 	{
 		struct proc_dir_entry *e = create_proc_entry("self_domain",
 							     0666, ccs_dir);

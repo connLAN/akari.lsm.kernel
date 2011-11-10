@@ -133,19 +133,25 @@ static void ccs_memory_free(const void *ptr, const enum ccs_policy_id type)
 		[CCS_TYPE_INET_ACL] = sizeof(struct ccs_inet_acl),
 		[CCS_TYPE_UNIX_ACL] = sizeof(struct ccs_unix_acl),
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 		[CCS_TYPE_ENV_ACL] = sizeof(struct ccs_env_acl),
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 		[CCS_TYPE_CAPABILITY_ACL] = sizeof(struct ccs_capability_acl),
 #endif
 #ifdef CONFIG_CCSECURITY_IPC
 		[CCS_TYPE_SIGNAL_ACL] = sizeof(struct ccs_signal_acl),
 #endif
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 		[CCS_TYPE_AUTO_EXECUTE_HANDLER]
 		= sizeof(struct ccs_handler_acl),
 		[CCS_TYPE_DENIED_EXECUTE_HANDLER]
 		= sizeof(struct ccs_handler_acl),
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 		[CCS_TYPE_AUTO_TASK_ACL] = sizeof(struct ccs_task_acl),
 		[CCS_TYPE_MANUAL_TASK_ACL] = sizeof(struct ccs_task_acl),
+#endif
 	};
 	size_t size;
 	if (type == CCS_ID_ACL)
@@ -436,6 +442,7 @@ void ccs_del_acl(struct list_head *element)
 		}
 		break;
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 	case CCS_TYPE_ENV_ACL:
 		{
 			struct ccs_env_acl *entry =
@@ -443,6 +450,7 @@ void ccs_del_acl(struct list_head *element)
 			ccs_put_name(entry->env);
 		}
 		break;
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 	case CCS_TYPE_CAPABILITY_ACL:
 		{
@@ -460,6 +468,7 @@ void ccs_del_acl(struct list_head *element)
 		}
 		break;
 #endif
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	case CCS_TYPE_AUTO_EXECUTE_HANDLER:
 	case CCS_TYPE_DENIED_EXECUTE_HANDLER:
 		{
@@ -468,6 +477,8 @@ void ccs_del_acl(struct list_head *element)
 			ccs_put_name(entry->handler);
 		}
 		break;
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 	case CCS_TYPE_AUTO_TASK_ACL:
 	case CCS_TYPE_MANUAL_TASK_ACL:
 		{
@@ -476,6 +487,7 @@ void ccs_del_acl(struct list_head *element)
 			ccs_put_name(entry->domainname);
 		}
 		break;
+#endif
 	}
 }
 

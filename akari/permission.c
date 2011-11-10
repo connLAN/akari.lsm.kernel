@@ -206,8 +206,6 @@ static bool ccs_alphabet_char(const char c);
 static bool ccs_argv(const unsigned int index, const char *arg_ptr,
 		     const int argc, const struct ccs_argv *argv, u8 *checked);
 static bool ccs_byte_range(const char *str);
-static bool ccs_check_env_acl(struct ccs_request_info *r,
-			      const struct ccs_acl_info *ptr);
 static bool ccs_check_mkdev_acl(struct ccs_request_info *r,
 				const struct ccs_acl_info *ptr);
 static bool ccs_check_mount_acl(struct ccs_request_info *r,
@@ -218,8 +216,6 @@ static bool ccs_check_path_acl(struct ccs_request_info *r,
 			       const struct ccs_acl_info *ptr);
 static bool ccs_check_path_number_acl(struct ccs_request_info *r,
 				      const struct ccs_acl_info *ptr);
-static bool ccs_check_task_acl(struct ccs_request_info *r,
-			       const struct ccs_acl_info *ptr);
 static bool ccs_compare_number_union(const unsigned long value,
 				     const struct ccs_number_union *ptr);
 static bool ccs_condition(struct ccs_request_info *r,
@@ -235,7 +231,6 @@ static bool ccs_file_matches_pattern2(const char *filename,
 				      const char *filename_end,
 				      const char *pattern,
 				      const char *pattern_end);
-static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type);
 static bool ccs_get_realpath(struct ccs_path_info *buf, struct dentry *dentry,
 			     struct vfsmount *mnt);
 static bool ccs_hexadecimal(const char c);
@@ -313,14 +308,11 @@ static int __ccs_unlink_permission(struct dentry *dentry,
 static int __ccs_uselib_permission(struct dentry *dentry,
 				   struct vfsmount *mnt);
 #endif
-static int ccs_audit_env_log(struct ccs_request_info *r);
 static int ccs_audit_mkdev_log(struct ccs_request_info *r);
 static int ccs_audit_mount_log(struct ccs_request_info *r);
 static int ccs_audit_path2_log(struct ccs_request_info *r);
 static int ccs_audit_path_log(struct ccs_request_info *r);
 static int ccs_audit_path_number_log(struct ccs_request_info *r);
-static int ccs_env_perm(struct ccs_request_info *r, const char *env);
-static int ccs_environ(struct ccs_execve *ee);
 static int ccs_execute_permission(struct ccs_request_info *r,
 				  const struct ccs_path_info *filename);
 static int ccs_find_next_domain(struct ccs_execve *ee);
@@ -356,7 +348,6 @@ static
 int ccs_path_permission(struct ccs_request_info *r, u8 operation,
 			const struct ccs_path_info *filename);
 static int ccs_symlink_path(const char *pathname, struct ccs_path_info *name);
-static int ccs_try_alt_exec(struct ccs_execve *ee);
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 static void __ccs_clear_open_mode(void);
 static void __ccs_save_open_mode(int mode);
@@ -364,7 +355,14 @@ static void __ccs_save_open_mode(int mode);
 static void ccs_add_slash(struct ccs_path_info *buf);
 static void ccs_print_ulong(char *buffer, const int buffer_len,
 			    const unsigned long value, const u8 type);
-static void ccs_unescape(unsigned char *dest);
+
+#ifdef CONFIG_CCSECURITY_MISC
+static bool ccs_check_env_acl(struct ccs_request_info *r,
+			      const struct ccs_acl_info *ptr);
+static int ccs_audit_env_log(struct ccs_request_info *r);
+static int ccs_env_perm(struct ccs_request_info *r, const char *env);
+static int ccs_environ(struct ccs_execve *ee);
+#endif
 
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 static bool __ccs_capable(const u8 operation);
@@ -430,6 +428,17 @@ static int __ccs_getattr_permission(struct vfsmount *mnt,
 				    struct dentry *dentry);
 #endif
 
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
+static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type);
+static int ccs_try_alt_exec(struct ccs_execve *ee);
+static void ccs_unescape(unsigned char *dest);
+#endif
+
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
+static bool ccs_check_task_acl(struct ccs_request_info *r,
+			       const struct ccs_acl_info *ptr);
+#endif
+
 /***** SECTION4: Standalone functions section *****/
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
@@ -442,7 +451,7 @@ static int __ccs_getattr_permission(struct vfsmount *mnt,
  *
  * Returns return value of copy_strings_kernel().
  */
-static int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
+static inline int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
 {
 	const int ret = copy_strings_kernel(1, &arg, bprm);
 	if (ret >= 0)
@@ -460,7 +469,7 @@ static int ccs_copy_argv(const char *arg, struct linux_binprm *bprm)
  *
  * Returns return value of copy_strings_kernel().
  */
-static int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
+static inline int ccs_copy_argv(char *arg, struct linux_binprm *bprm)
 {
 	const int ret = copy_strings_kernel(1, &arg, bprm);
 	if (ret >= 0)
@@ -781,10 +790,12 @@ retry:
 			if (ccs_check_mount_acl(r, ptr))
 				break;
 			continue;
+#ifdef CONFIG_CCSECURITY_MISC
 		case CCS_TYPE_ENV_ACL:
 			if (ccs_check_env_acl(r, ptr))
 				break;
 			continue;
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 		case CCS_TYPE_CAPABILITY_ACL:
 			if (ccs_check_capability_acl(r, ptr))
@@ -807,10 +818,12 @@ retry:
 				break;
 			continue;
 #endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 		case CCS_TYPE_MANUAL_TASK_ACL:
 			if (ccs_check_task_acl(r, ptr))
 				break;
 			continue;
+#endif
 		}
 		if (!ccs_condition(r, ptr->cond))
 			continue;
@@ -939,7 +952,9 @@ static enum ccs_transition_type ccs_transition_type
 static int ccs_find_next_domain(struct ccs_execve *ee)
 {
 	struct ccs_request_info *r = &ee->r;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	const struct ccs_path_info *handler = ee->handler;
+#endif
 	struct ccs_domain_info *domain = NULL;
 	struct ccs_domain_info * const old_domain = ccs_current_domain();
 	struct linux_binprm *bprm = ee->bprm;
@@ -954,6 +969,7 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 	if (retval < 0)
 		return retval;
 
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	if (handler) {
 		/* No permission check for execute handler. */
 		candidate = &exename;
@@ -967,7 +983,9 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 			}
 			goto out;
 		}
-	} else {
+	} else 
+#endif
+	{
 		struct ccs_aggregator *ptr;
 		struct list_head *list;
 retry:
@@ -1117,89 +1135,7 @@ out:
 	return retval;
 }
 
-/**
- * ccs_environ - Check permission for environment variable names.
- *
- * @ee: Pointer to "struct ccs_execve".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_environ(struct ccs_execve *ee)
-{
-	struct ccs_request_info *r = &ee->r;
-	struct linux_binprm *bprm = ee->bprm;
-	/* env_page.data is allocated by ccs_dump_page(). */
-	struct ccs_page_dump env_page = { };
-	char *arg_ptr; /* Size is CCS_EXEC_TMPSIZE bytes */
-	int arg_len = 0;
-	unsigned long pos = bprm->p;
-	int offset = pos % PAGE_SIZE;
-	int argv_count = bprm->argc;
-	int envp_count = bprm->envc;
-	/* printk(KERN_DEBUG "start %d %d\n", argv_count, envp_count); */
-	int error = -ENOMEM;
-	ee->r.type = CCS_MAC_ENVIRON;
-	ee->r.profile = ccs_current_domain()->profile;
-	ee->r.mode = ccs_get_mode(ee->r.profile, CCS_MAC_ENVIRON);
-	if (!r->mode || !envp_count)
-		return 0;
-	arg_ptr = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);
-	if (!arg_ptr)
-		goto out;
-	while (error == -ENOMEM) {
-		if (!ccs_dump_page(bprm, pos, &env_page))
-			goto out;
-		pos += PAGE_SIZE - offset;
-		/* Read. */
-		while (argv_count && offset < PAGE_SIZE) {
-			if (!env_page.data[offset++])
-				argv_count--;
-		}
-		if (argv_count) {
-			offset = 0;
-			continue;
-		}
-		while (offset < PAGE_SIZE) {
-			const unsigned char c = env_page.data[offset++];
-			if (c && arg_len < CCS_EXEC_TMPSIZE - 10) {
-				if (c == '=') {
-					arg_ptr[arg_len++] = '\0';
-				} else if (c == '\\') {
-					arg_ptr[arg_len++] = '\\';
-					arg_ptr[arg_len++] = '\\';
-				} else if (c > ' ' && c < 127) {
-					arg_ptr[arg_len++] = c;
-				} else {
-					arg_ptr[arg_len++] = '\\';
-					arg_ptr[arg_len++] = (c >> 6) + '0';
-					arg_ptr[arg_len++]
-						= ((c >> 3) & 7) + '0';
-					arg_ptr[arg_len++] = (c & 7) + '0';
-				}
-			} else {
-				arg_ptr[arg_len] = '\0';
-			}
-			if (c)
-				continue;
-			if (ccs_env_perm(r, arg_ptr)) {
-				error = -EPERM;
-				break;
-			}
-			if (!--envp_count) {
-				error = 0;
-				break;
-			}
-			arg_len = 0;
-		}
-		offset = 0;
-	}
-out:
-	if (r->mode != CCS_CONFIG_ENFORCING)
-		error = 0;
-	kfree(env_page.data);
-	kfree(arg_ptr);
-	return error;
-}
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 
 /**
  * ccs_unescape - Unescape escaped string.
@@ -1476,6 +1412,8 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type)
 	return true;
 }
 
+#endif
+
 #ifdef CONFIG_MMU
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 23)
 #define CCS_BPRM_MMU
@@ -1567,6 +1505,7 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 	ee->r.obj = &ee->obj;
 	ee->obj.path1.dentry = bprm->file->f_dentry;
 	ee->obj.path1.mnt = bprm->file->f_vfsmnt;
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	/*
 	 * No need to call ccs_environ() for execute handler because envp[] is
 	 * moved to argv[].
@@ -1575,15 +1514,22 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 		retval = ccs_try_alt_exec(ee);
 		goto done;
 	}
+#endif
 	retval = ccs_find_next_domain(ee);
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	if (retval == -EPERM &&
 	    ccs_find_execute_handler(ee, CCS_TYPE_DENIED_EXECUTE_HANDLER)) {
 		retval = ccs_try_alt_exec(ee);
 		goto done;
 	}
+#endif
+#ifdef CONFIG_CCSECURITY_MISC
 	if (!retval)
 		retval = ccs_environ(ee);
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 done:
+#endif
 	ccs_read_unlock(idx);
 	kfree(ee->tmp);
 	ee->tmp = NULL;
@@ -4052,6 +3998,8 @@ static int ccs_signal_acl0(pid_t tgid, pid_t pid, int sig)
 
 #endif
 
+#ifdef CONFIG_CCSECURITY_MISC
+
 /**
  * ccs_check_env_acl - Check permission for environment variable's name.
  *
@@ -4089,7 +4037,7 @@ static int ccs_audit_env_log(struct ccs_request_info *r)
  *
  * Caller holds ccs_read_lock().
  */
-int ccs_env_perm(struct ccs_request_info *r, const char *env)
+static int ccs_env_perm(struct ccs_request_info *r, const char *env)
 {
 	struct ccs_path_info environ;
 	int error;
@@ -4105,6 +4053,92 @@ int ccs_env_perm(struct ccs_request_info *r, const char *env)
 	} while (error == CCS_RETRY_REQUEST);
 	return error;
 }
+
+/**
+ * ccs_environ - Check permission for environment variable names.
+ *
+ * @ee: Pointer to "struct ccs_execve".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_environ(struct ccs_execve *ee)
+{
+	struct ccs_request_info *r = &ee->r;
+	struct linux_binprm *bprm = ee->bprm;
+	/* env_page.data is allocated by ccs_dump_page(). */
+	struct ccs_page_dump env_page = { };
+	char *arg_ptr; /* Size is CCS_EXEC_TMPSIZE bytes */
+	int arg_len = 0;
+	unsigned long pos = bprm->p;
+	int offset = pos % PAGE_SIZE;
+	int argv_count = bprm->argc;
+	int envp_count = bprm->envc;
+	/* printk(KERN_DEBUG "start %d %d\n", argv_count, envp_count); */
+	int error = -ENOMEM;
+	ee->r.type = CCS_MAC_ENVIRON;
+	ee->r.profile = ccs_current_domain()->profile;
+	ee->r.mode = ccs_get_mode(ee->r.profile, CCS_MAC_ENVIRON);
+	if (!r->mode || !envp_count)
+		return 0;
+	arg_ptr = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);
+	if (!arg_ptr)
+		goto out;
+	while (error == -ENOMEM) {
+		if (!ccs_dump_page(bprm, pos, &env_page))
+			goto out;
+		pos += PAGE_SIZE - offset;
+		/* Read. */
+		while (argv_count && offset < PAGE_SIZE) {
+			if (!env_page.data[offset++])
+				argv_count--;
+		}
+		if (argv_count) {
+			offset = 0;
+			continue;
+		}
+		while (offset < PAGE_SIZE) {
+			const unsigned char c = env_page.data[offset++];
+			if (c && arg_len < CCS_EXEC_TMPSIZE - 10) {
+				if (c == '=') {
+					arg_ptr[arg_len++] = '\0';
+				} else if (c == '\\') {
+					arg_ptr[arg_len++] = '\\';
+					arg_ptr[arg_len++] = '\\';
+				} else if (c > ' ' && c < 127) {
+					arg_ptr[arg_len++] = c;
+				} else {
+					arg_ptr[arg_len++] = '\\';
+					arg_ptr[arg_len++] = (c >> 6) + '0';
+					arg_ptr[arg_len++]
+						= ((c >> 3) & 7) + '0';
+					arg_ptr[arg_len++] = (c & 7) + '0';
+				}
+			} else {
+				arg_ptr[arg_len] = '\0';
+			}
+			if (c)
+				continue;
+			if (ccs_env_perm(r, arg_ptr)) {
+				error = -EPERM;
+				break;
+			}
+			if (!--envp_count) {
+				error = 0;
+				break;
+			}
+			arg_len = 0;
+		}
+		offset = 0;
+	}
+out:
+	if (r->mode != CCS_CONFIG_ENFORCING)
+		error = 0;
+	kfree(env_page.data);
+	kfree(arg_ptr);
+	return error;
+}
+
+#endif
 
 /**
  * ccs_argv - Check argv[] in "struct linux_binbrm".
@@ -4767,6 +4801,7 @@ out:
 	return true;
 }
 
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 
 /**
  * ccs_check_task_acl - Check permission for task operation.
@@ -4783,6 +4818,8 @@ static bool ccs_check_task_acl(struct ccs_request_info *r,
 	return !ccs_pathcmp(r->param.task.domainname, acl->domainname);
 }
 
+#endif
+
 /**
  * ccs_init_request_info - Initialize "struct ccs_request_info" members.
  *
@@ -4798,6 +4835,7 @@ static bool ccs_check_task_acl(struct ccs_request_info *r,
  */
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 {
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 	u8 i;
 	const char *buf;
 	for (i = 0; i < 255; i++) {
@@ -4817,6 +4855,14 @@ int ccs_init_request_info(struct ccs_request_info *r, const u8 index)
 	}
 	ccs_transition_failed(buf);
 	return CCS_CONFIG_DISABLED;
+#else
+	const u8 profile = ccs_current_domain()->profile;
+	memset(r, 0, sizeof(*r));
+	r->profile = profile;
+	r->type = index;
+	r->mode = ccs_get_mode(profile, index);
+	return r->mode;
+#endif
 }
 
 /**

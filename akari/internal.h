@@ -396,6 +396,9 @@ static inline void __list_del_entry(struct list_head *entry)
 #undef CONFIG_CCSECURITY_NETWORK_RECVMSG
 #undef CONFIG_CCSECURITY_CAPABILITY
 #undef CONFIG_CCSECURITY_IPC
+#undef CONFIG_CCSECURITY_MISC
+#undef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
+#undef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 #undef CONFIG_CCSECURITY_PORTRESERVE
 /* Define AKARI 1.0 config. */
 #include "config.h"
@@ -443,7 +446,9 @@ enum ccs_acl_entry_type_index {
 	CCS_TYPE_PATH_NUMBER_ACL,
 	CCS_TYPE_MKDEV_ACL,
 	CCS_TYPE_MOUNT_ACL,
+#ifdef CONFIG_CCSECURITY_MISC
 	CCS_TYPE_ENV_ACL,
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 	CCS_TYPE_CAPABILITY_ACL,
 #endif
@@ -454,10 +459,14 @@ enum ccs_acl_entry_type_index {
 #ifdef CONFIG_CCSECURITY_IPC
 	CCS_TYPE_SIGNAL_ACL,
 #endif
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	CCS_TYPE_AUTO_EXECUTE_HANDLER,
 	CCS_TYPE_DENIED_EXECUTE_HANDLER,
+#endif
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 	CCS_TYPE_AUTO_TASK_ACL,
 	CCS_TYPE_MANUAL_TASK_ACL,
+#endif
 };
 
 /* Index numbers for "struct ccs_condition". */
@@ -571,7 +580,9 @@ enum ccs_mac_category_index {
 #ifdef CONFIG_CCSECURITY_NETWORK
 	CCS_MAC_CATEGORY_NETWORK,
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 	CCS_MAC_CATEGORY_MISC,
+#endif
 #ifdef CONFIG_CCSECURITY_IPC
 	CCS_MAC_CATEGORY_IPC,
 #endif
@@ -637,8 +648,12 @@ enum ccs_mac_index {
 	CCS_MAC_NETWORK_UNIX_SEQPACKET_CONNECT,
 	CCS_MAC_NETWORK_UNIX_SEQPACKET_ACCEPT,
 #endif
+#ifdef CONFIG_CCSECURITY_MISC
 	CCS_MAC_ENVIRON,
+#endif
+#ifdef CONFIG_CCSECURITY_IPC
 	CCS_MAC_SIGNAL,
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 	CCS_MAC_CAPABILITY_USE_ROUTE_SOCKET,
 	CCS_MAC_CAPABILITY_USE_PACKET_SOCKET,
@@ -793,7 +808,9 @@ enum ccs_proc_interface_index {
 	CCS_PROFILE,
 	CCS_QUERY,
 	CCS_MANAGER,
+#ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	CCS_EXECUTE_HANDLER,
+#endif
 };
 
 /* Index numbers for special mount operations. */
@@ -1116,7 +1133,6 @@ struct ccs_request_info {
 			u8 operation;
 			bool is_ipv6;
 		} inet_network;
-#endif
 		struct {
 			const struct ccs_path_info *address;
 			/* One of values smaller than CCS_SOCK_MAX. */
@@ -1124,19 +1140,24 @@ struct ccs_request_info {
 			/* One of values in "enum ccs_network_acl_index". */
 			u8 operation;
 		} unix_network;
+#endif
+#ifdef CONFIG_CCSECURITY_MISC
 		struct {
 			const struct ccs_path_info *name;
 		} environ;
+#endif
 #ifdef CONFIG_CCSECURITY_CAPABILITY
 		struct {
 			/* One of values in "enum ccs_capability_acl_index". */
 			u8 operation;
 		} capability;
 #endif
+#ifdef CONFIG_CCSECURITY_IPC
 		struct {
 			const char *dest_pattern;
 			int sig;
 		} signal;
+#endif
 		struct {
 			const struct ccs_path_info *type;
 			const struct ccs_path_info *dir;
@@ -1144,9 +1165,11 @@ struct ccs_request_info {
 			unsigned long flags;
 			int need_dev;
 		} mount;
+#ifdef CONFIG_CCSECURITY_TASK_DOMAIN_TRANSITION
 		struct {
 			const struct ccs_path_info *domainname;
 		} task;
+#endif
 	} param;
 	/*
 	 * For updating current->ccs_domain_info at ccs_update_task_domain().

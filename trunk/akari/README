@@ -199,3 +199,9 @@ Version 1.0.21   2011/10/25   Minor update release.
    Use query id for reaching target process's domain policy.
 
    Fix quota counting.
+
+Version 1.0.22   2011/11/11   Minor update release.
+
+   Synchronize with TOMOYO revision 5625.
+
+   Optimize for object's size.

@@ -1,9 +1,9 @@
 /*
- * security/ccsecurity/domain.c
+ * security/ccsecurity/permission.c
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.3   2011/09/29
+ * Version: 1.8.3+   2011/11/11
  */
 
 #include "internal.h"

@@ -106,15 +106,15 @@ file read /bin/cat
 #
 # action_to_take is a command line you want to use for notification.
 # The command specified by this parameter must read the policy violation
-# notifycation from standard input. For example, mail, curl and xmessage
+# notification from standard input. For example, mail, curl and xmessage
 # commands can read from standard input.
 # This parameter is passed to execve(). Thus, please use a wrapper program
 # if you need shell processing (e.g. wildcard expansion, environment
 # variables).
 #
 # minimal_interval is grace time in second before re-notifying the next
-# occurrence of policy violation. You can specify 60 to limit notifycation
-# to once per a minute, 3600 to limit notifycation to once per an hour.
+# occurrence of policy violation. You can specify 60 to limit notification
+# to once per a minute, 3600 to limit notification to once per an hour.
 # You can specify 0 to unlimit, but notifying of every policy violation
 # events (e.g. sending a mail) might annoy you because policy violation
 # can occur in clusters if once occurred.

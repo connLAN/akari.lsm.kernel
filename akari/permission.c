@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2011/11/11
+ * Version: 1.8.3+   2011/11/18
  */
 
 #include "internal.h"
@@ -49,7 +49,7 @@ static const u8 ccs_p2mac[CCS_MAX_PATH_OPERATION] = {
 	[CCS_TYPE_WRITE]      = CCS_MAC_FILE_OPEN,
 	[CCS_TYPE_APPEND]     = CCS_MAC_FILE_OPEN,
 	[CCS_TYPE_UNLINK]     = CCS_MAC_FILE_UNLINK,
-#ifdef CONFIG_CCSECURITY_GETATTR
+#ifdef CONFIG_CCSECURITY_FILE_GETATTR
 	[CCS_TYPE_GETATTR]    = CCS_MAC_FILE_GETATTR,
 #endif
 	[CCS_TYPE_RMDIR]      = CCS_MAC_FILE_RMDIR,

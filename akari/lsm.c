@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.22   2011/11/11
+ * Version: 1.0.23   2011/11/18
  */
 
 #include "internal.h"
@@ -2656,7 +2656,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.22   2011/11/11\n");
+	printk(KERN_INFO "AKARI: 1.0.23   2011/11/18\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

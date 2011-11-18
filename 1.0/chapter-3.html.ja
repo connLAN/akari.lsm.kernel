@@ -96,12 +96,12 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールのソースコードを展開してください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.22-20111111.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.22-20111111.tar.gz'
-# wget -O akari-1.0.22-20111111.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.22-20111111.tar.gz.asc'
+# wget -O akari-1.0.23-20111118.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.23-20111118.tar.gz'
+# wget -O akari-1.0.23-20111118.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.23-20111118.tar.gz.asc'
 # wget http://I-love.SAKURA.ne.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.22-20111111.tar.gz.asc
-# tar -zxf akari-1.0.22-20111111.tar.gz
+# gpg akari-1.0.23-20111118.tar.gz.asc
+# tar -zxf akari-1.0.23-20111118.tar.gz
 </pre>
 
 <p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、 /sbin/init が実行されるタイミングではなく /bin/systemd が実行されるタイミングで AKARI を有効化したいことでしょう。もし、 /bin/systemd が実行されるタイミングで AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
@@ -322,10 +322,10 @@ initrd /boot/initrd-2.6.18-238.12.1.e15.img
 <p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
 
 <pre class="output">
-AKARI: 1.0.22   2011/11/11
+AKARI: 1.0.23   2011/11/18
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.3+   2011/11/11
+CCSecurity: 1.8.3+   2011/11/18
 Mandatory Access Control activated.
 </pre>
 

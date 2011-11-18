@@ -205,3 +205,9 @@ Version 1.0.22   2011/11/11   Minor update release.
    Synchronize with TOMOYO revision 5625.
 
    Optimize for object's size.
+
+Version 1.0.23   2011/11/18   Minor update release.
+
+   Synchronize with TOMOYO revision 5646.
+
+   Fix kernel config mapping error.

@@ -4886,7 +4886,7 @@ int ccs_audit_log(struct ccs_request_info *r)
 				 r->param.path_number.number);
 			break;
 		default:
-			snprintf(buf, sizeof(buf), "%lX",
+			snprintf(buf, sizeof(buf), "%lu",
 				 r->param.path_number.number);
 			break;
 		}

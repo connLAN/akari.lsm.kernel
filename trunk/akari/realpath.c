@@ -22,7 +22,7 @@
 
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
-char *ccs_realpath_from_path(struct path *path);
+char *ccs_realpath(struct path *path);
 const char *ccs_get_exe(void);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 
@@ -436,7 +436,7 @@ static char *ccs_get_socket_name(struct path *path, char * const buffer,
 #define SOCKFS_MAGIC 0x534F434B
 
 /**
- * ccs_realpath_from_path - Returns realpath(3) of the given pathname but ignores chroot'ed root.
+ * ccs_realpath - Returns realpath(3) of the given pathname but ignores chroot'ed root.
  *
  * @path: Pointer to "struct path".
  *
@@ -445,7 +445,7 @@ static char *ccs_get_socket_name(struct path *path, char * const buffer,
  * This function uses kzalloc(), so caller must kfree() if this function
  * didn't return NULL.
  */
-char *ccs_realpath_from_path(struct path *path)
+char *ccs_realpath(struct path *path)
 {
 	char *buf = NULL;
 	char *name = NULL;
@@ -654,9 +654,9 @@ const char *ccs_get_exe(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
 			struct path path = { vma->vm_file->f_vfsmnt,
 					     vma->vm_file->f_dentry };
-			cp = ccs_realpath_from_path(&path);
+			cp = ccs_realpath(&path);
 #else
-			cp = ccs_realpath_from_path(&vma->vm_file->f_path);
+			cp = ccs_realpath(&vma->vm_file->f_path);
 #endif
 			break;
 		}

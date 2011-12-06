@@ -799,8 +799,8 @@ enum ccs_pref_index {
 
 /* Index numbers for /proc/ccs/ interfaces. */
 enum ccs_proc_interface_index {
-	CCS_DOMAINPOLICY,
-	CCS_EXCEPTIONPOLICY,
+	CCS_DOMAIN_POLICY,
+	CCS_EXCEPTION_POLICY,
 	CCS_PROCESS_STATUS,
 	CCS_STAT,
 	CCS_AUDIT,
@@ -1544,20 +1544,16 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 bool ccs_memory_ok(const void *ptr, const unsigned int size);
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
-char *ccs_realpath_from_path(struct path *path);
+char *ccs_realpath(struct path *path);
 const char *ccs_get_exe(void);
 const struct ccs_path_info *ccs_get_name(const char *name);
+int ccs_audit_log(struct ccs_request_info *r);
+int ccs_check_acl(struct ccs_request_info *r);
 int ccs_init_request_info(struct ccs_request_info *r, const u8 index);
-int ccs_print_ipv4(char *buffer, const unsigned int buffer_len, const u32 *ip);
-int ccs_print_ipv6(char *buffer, const unsigned int buffer_len,
-		   const struct in6_addr *ip);
-int ccs_supervisor(struct ccs_request_info *r, const char *fmt, ...)
-	__printf(2, 3);
 struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 					  const bool transit);
 u8 ccs_get_config(const u8 profile, const u8 index);
 void *ccs_commit_ok(void *data, const unsigned int size);
-void ccs_check_acl(struct ccs_request_info *r);
 void ccs_del_acl(struct list_head *element);
 void ccs_del_condition(struct list_head *element);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
@@ -1572,11 +1568,6 @@ void ccs_write_log(struct ccs_request_info *r, const char *fmt, ...)
 
 extern bool ccs_policy_loaded;
 extern const char * const ccs_dif[CCS_MAX_DOMAIN_INFO_FLAGS];
-extern const char * const ccs_mac_keywords[CCS_MAX_MAC_INDEX
-					   + CCS_MAX_MAC_CATEGORY_INDEX];
-extern const char * const ccs_path_keyword[CCS_MAX_PATH_OPERATION];
-extern const char * const ccs_proto_keyword[CCS_SOCK_MAX];
-extern const char * const ccs_socket_keyword[CCS_MAX_NETWORK_OPERATION];
 extern const u8 ccs_c2mac[CCS_MAX_CAPABILITY_INDEX];
 extern const u8 ccs_pn2mac[CCS_MAX_PATH_NUMBER_OPERATION];
 extern const u8 ccs_pnnn2mac[CCS_MAX_MKDEV_OPERATION];

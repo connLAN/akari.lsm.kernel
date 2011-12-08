@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2011/11/11
+ * Version: 1.8.3+   2011/12/08
  */
 
 #include <linux/version.h>
@@ -285,7 +285,9 @@ const struct ccsecurity_exports ccsecurity_exports = {
 #ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
 	.load_policy = ccs_load_policy,
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+	.d_absolute_path = d_absolute_path,
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 	.__d_path = __d_path,
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	.vfsmount_lock = &vfsmount_lock,

@@ -3,10 +3,15 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2011/11/11
+ * Version: 1.8.3+   2011/12/08
  */
 
 #include "internal.h"
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+#include <linux/nsproxy.h>
+#include <linux/mnt_namespace.h>
+#endif
 
 /***** SECTION1: Constants definition *****/
 
@@ -211,12 +216,63 @@ static inline void ccs_realpath_unlock(void)
 static char *ccs_get_absolute_path(struct path *path, char * const buffer,
 				   const int buflen)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 	char *pos = ERR_PTR(-ENOMEM);
 	if (buflen >= 256) {
-		struct path root = { };
-		pos = ccsecurity_exports.__d_path(path, &root, buffer,
-						  buflen - 1);
+		pos = ccsecurity_exports.d_absolute_path(path, buffer,
+							 buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
+			struct inode *inode = path->dentry->d_inode;
+			if (inode && S_ISDIR(inode->i_mode)) {
+				buffer[buflen - 2] = '/';
+				buffer[buflen - 1] = '\0';
+			}
+		}
+	}
+	return pos;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	/*
+	 * __d_path() will start returning NULL by backporting commit 02125a82
+	 * "fix apparmor dereferencing potentially freed dentry, sanitize
+	 * __d_path() API".
+	 *
+	 * Unfortunately, __d_path() after applying that commit always returns
+	 * NULL when root is empty. d_absolute_path() is provided for TOMOYO
+	 * 2.x and AppArmor but TOMOYO 1.x does not use it, for TOMOYO 1.x
+	 * might be built as a loadable kernel module and there is no warrantee
+	 * that TOMOYO 1.x is recompiled after applying that commit. Also,
+	 * I don't want to search /proc/kallsyms for d_absolute_path() because
+	 * I want to keep TOMOYO 1.x architecture independent. Thus, supply
+	 * non empty root like AppArmor's d_namespace_path() did.
+	 */
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		static bool ccs_no_empty;
+		if (!ccs_no_empty) {
+			struct path root = { };
+			pos = ccsecurity_exports.__d_path(path, &root, buffer,
+							  buflen - 1);
+		} else {
+			pos = NULL;
+		}
+		if (!pos) {
+			struct task_struct *task = current;
+			struct path root;
+			struct path tmp;
+			spin_lock(&task->fs->lock);
+			root.mnt = task->nsproxy->mnt_ns->root;
+			root.dentry = root.mnt->mnt_root;
+			path_get(&root);
+			spin_unlock(&task->fs->lock);
+			tmp = root;
+			pos = ccsecurity_exports.__d_path(path, &tmp, buffer,
+							  buflen - 1);
+			path_put(&root);
+			if (!pos)
+				return ERR_PTR(-EINVAL);
+			/* Remember if __d_path() needs non empty root. */
+			ccs_no_empty = true;
+		}
 		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
 			struct inode *inode = path->dentry->d_inode;
 			if (inode && S_ISDIR(inode->i_mode)) {
@@ -479,18 +535,21 @@ char *ccs_realpath(struct path *path)
 #endif
 		inode = sb->s_root->d_inode;
 		/*
-		 * Get local name for filesystems without rename() operation
-		 * or dentry without vfsmount.
+		 * Use local name for "filesystems without rename() operation"
+		 * or "path without vfsmount" or "absolute name is unavailable"
+		 * cases.
 		 */
-		if (!path->mnt || (inode->i_op && !inode->i_op->rename)) {
+		if (!path->mnt || (inode->i_op && !inode->i_op->rename))
+			pos = ERR_PTR(-EINVAL);
+		else {
+			/* Get absolute name for the rest. */
+			ccs_realpath_lock();
+			pos = ccs_get_absolute_path(path, buf, buf_len - 1);
+			ccs_realpath_unlock();
+		}
+		if (pos == ERR_PTR(-EINVAL))
 			pos = ccs_get_local_path(path->dentry, buf,
 						 buf_len - 1);
-			goto encode;
-		}
-		/* Get absolute name for the rest. */
-		ccs_realpath_lock();
-		pos = ccs_get_absolute_path(path, buf, buf_len - 1);
-		ccs_realpath_unlock();
 encode:
 		if (IS_ERR(pos))
 			continue;

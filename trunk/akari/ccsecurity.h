@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2011  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2011/11/11
+ * Version: 1.8.3+   2011/12/08
  */
 
 #ifndef _LINUX_CCSECURITY_H
@@ -33,19 +33,28 @@ int search_binary_handler(struct linux_binprm *bprm, struct pt_regs *regs);
 
 #ifdef CONFIG_CCSECURITY
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+/* Obtain prototype of __d_path() or d_absolute_path(). */
+#include <linux/dcache.h>
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+/* Obtain prototype of find_task_by_vpid() and find_task_by_pid_ns(). */
+#include <linux/sched.h>
+#endif
+
 /* For exporting variables and functions. */
 struct ccsecurity_exports {
 	void (*load_policy) (const char *filename);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-	char *(*__d_path) (const struct path *path, struct path *root,
-			   char *buf, int buflen);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+	typeof(d_absolute_path) (*d_absolute_path);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	typeof(__d_path) (*__d_path);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	spinlock_t *vfsmount_lock;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	struct task_struct *(*find_task_by_vpid) (pid_t pid);
-	struct task_struct *(*find_task_by_pid_ns) (pid_t pid,
-						    struct pid_namespace *ns);
+	typeof(find_task_by_vpid) (*find_task_by_vpid);
+	typeof(find_task_by_pid_ns) (*find_task_by_pid_ns);
 #endif
 };
 

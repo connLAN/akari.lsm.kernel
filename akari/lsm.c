@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.23   2011/11/18
+ * Version: 1.0.23+   2011/12/08
  */
 
 #include "internal.h"
@@ -2505,7 +2505,7 @@ out:
 	return true;
 out:
 	return false;
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
 	void *ptr = ccs_find_symbol(" __d_path\n");
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve __d_path().\n");
@@ -2513,6 +2513,15 @@ out:
 	}
 	ccsecurity_exports.__d_path = ptr;
 	printk(KERN_INFO "__d_path=%p\n", ptr);
+	return true;
+#else
+	void *ptr = ccs_find_symbol(" d_absolute_path\n");
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve d_absolute_path().\n");
+		return false;
+	}
+	ccsecurity_exports.d_absolute_path = ptr;
+	printk(KERN_INFO "d_absolute_path=%p\n", ptr);
 	return true;
 #endif
 }
@@ -2656,7 +2665,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.23   2011/11/18\n");
+	printk(KERN_INFO "AKARI: 1.0.23+   2011/12/08\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

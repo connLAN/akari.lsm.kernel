@@ -815,7 +815,7 @@ retry:
 		else
 			error = 0;
 	} while (error == CCS_RETRY_REQUEST &&
-		 r->type == CCS_MAC_FILE_EXECUTE);
+		 r->type != CCS_MAC_FILE_EXECUTE);
 	return error;
 }
 

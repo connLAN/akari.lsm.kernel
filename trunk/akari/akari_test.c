@@ -589,13 +589,21 @@ out:
 	return true;
 out:
 	return false;
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
 	void *ptr = ccs_find_symbol(" __d_path\n");
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve __d_path().\n");
 		return false;
 	}
 	printk(KERN_INFO "__d_path=%p\n", ptr);
+	return true;
+#else
+	void *ptr = ccs_find_symbol(" d_absolute_path\n");
+	if (!ptr) {
+		printk(KERN_ERR "Can't resolve d_absolute_path().\n");
+		return false;
+	}
+	printk(KERN_INFO "d_absolute_path=%p\n", ptr);
 	return true;
 #endif
 }

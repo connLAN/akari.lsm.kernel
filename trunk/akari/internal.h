@@ -1713,7 +1713,7 @@ static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
 	rcu_read_lock();
-	pid = task_tgid_vnr(current->real_parent);
+	pid = task_tgid_vnr(rcu_dereference(current->real_parent));
 	rcu_read_unlock();
 	return pid;
 }

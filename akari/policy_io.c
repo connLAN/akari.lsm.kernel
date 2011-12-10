@@ -2815,7 +2815,7 @@ next:
  */
 static int ccs_update_policy(const int size, struct ccs_acl_param *param)
 {
-	struct ccs_acl_head *new_entry = &param->e.acl_head; 
+	struct ccs_acl_head *new_entry = &param->e.acl_head;
 	int error = param->is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_head *entry;
 	struct list_head *list = param->list;
@@ -3067,7 +3067,7 @@ static bool ccs_select_domain(struct ccs_io_buffer *head, const char *data)
  */
 static int ccs_update_acl(const int size, struct ccs_acl_param *param)
 {
-	struct ccs_acl_info *new_entry = &param->e.acl_info; 
+	struct ccs_acl_info *new_entry = &param->e.acl_info;
 	const bool is_delete = param->is_delete;
 	int error = is_delete ? -ENOENT : -ENOMEM;
 	struct ccs_acl_info *entry;
@@ -4261,7 +4261,8 @@ static int ccs_write_reserved_port(struct ccs_acl_param *param)
 	struct ccs_policy_namespace *ns = param->ns;
 	int error;
 	u8 *tmp;
-	if (param->data[0] == '@' || !ccs_parse_number_union(param, &e->port) ||
+	if (param->data[0] == '@' ||
+	    !ccs_parse_number_union(param, &e->port) ||
 	    e->port.values[1] > 65535 || param->data[0])
 		return -EINVAL;
 	param->list = &ns->policy_list[CCS_ID_RESERVEDPORT];

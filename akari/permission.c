@@ -143,7 +143,7 @@ static const u8 ccs_unix2mac[CCS_SOCK_MAX][CCS_MAX_NETWORK_OPERATION] = {
 
 #endif
 
-#ifdef CONFIG_CCSECURITY_CAPABILITY 
+#ifdef CONFIG_CCSECURITY_CAPABILITY
 
 /*
  * Mapping table from "enum ccs_capability_acl_index" to "enum ccs_mac_index".
@@ -188,7 +188,8 @@ struct ccs_addr_info {
 
 /***** SECTION3: Prototype definition section *****/
 
-bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos, struct ccs_page_dump *dump);
+bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
+		   struct ccs_page_dump *dump);
 void ccs_get_attributes(struct ccs_obj_info *obj);
 
 static bool ccs_alphabet_char(const char c);
@@ -963,7 +964,7 @@ static int ccs_find_next_domain(struct ccs_execve *ee)
 			}
 			goto out;
 		}
-	} else 
+	} else
 #endif
 	{
 		struct ccs_aggregator *ptr;

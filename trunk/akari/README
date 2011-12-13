@@ -211,3 +211,9 @@ Version 1.0.23   2011/11/18   Minor update release.
    Synchronize with TOMOYO revision 5646.
 
    Fix kernel config mapping error.
+
+Version 1.0.24   2011/12/13   Minor update release.
+
+   Synchronize with TOMOYO revision 5711.
+
+   Follow __d_path() behavior change. (Only 2.6.36 and later)

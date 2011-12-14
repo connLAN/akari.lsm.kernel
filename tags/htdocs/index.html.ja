@@ -64,27 +64,21 @@
 
 <hr>
 
+<p class="timestamp">２０１１年１２月１３日</p>
+<h4>AKARI 1.0.24 がリリースされました。</h4>
+<p class="article">Linux 3.2-rc5 カーネルで導入された __d_path() の仕様変更に対応するために AKARI がアップデートされました。この仕様変更は、 Linux 2.6.36 以降のカーネルに対してもバックポートされる可能性があります。この仕様変更の影響を受けるカーネルを利用する場合、このバージョンにアップデートすることを忘れないでください。</p>
+
+<br>
+
 <p class="timestamp">２０１１年１１月１８日</p>
 <h4>AKARI 1.0.23 がリリースされました。</h4>
 <p class="article">AKARI の新しいパッケージがリリースされました。</p>
 
 <br>
 
-<p class="timestamp">２０１１年６月２０日</p>
-<h4>AKARI 1.0.15 がリリースされました。</h4>
-<p class="article">AKARI と ccs-tools の新しいパッケージがリリースされました。</p>
-
-<br>
-
 <p class="timestamp">２０１１年５月１７日</p>
 <h4>ウェブサイトがリニューアルされました。</h4>
 <p class="article">AKARI のウェブサイトが大きくリニューアルされました。気に入っていただけると嬉しいです。お気づきの点がありましたら、<a href="mailto:tomoyo-users@lists.sourceforge.jp">メーリングリスト</a>宛にお知らせください。</p>
-
-<br>
-
-<p class="timestamp">２０１１年５月１１日</p>
-<h4>AKARI 1.0.14 がリリースされました。</h4>
-<p class="article">AKARI と ccs-tools の新しいパッケージがリリースされました。</p>
 
 </div><!-- news -->
 

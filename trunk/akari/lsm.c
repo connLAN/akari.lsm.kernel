@@ -649,6 +649,27 @@ static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
 	return original_security_ops.path_chown(path, user, group);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+
+/**
+ * ccs_path_chmod - Check permission for chmod().
+ *
+ * @path: Pointer to "struct path".
+ * @mode: Mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chmod(struct path *path, umode_t mode)
+{
+	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chmod);
+	return original_security_ops.path_chmod(path, mode);
+}
+
+#else
+
 /**
  * ccs_path_chmod - Check permission for chmod().
  *
@@ -667,6 +688,8 @@ static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
 	while (!original_security_ops.path_chmod);
 	return original_security_ops.path_chmod(dentry, vfsmnt, mode);
 }
+
+#endif
 
 /**
  * ccs_path_chroot - Check permission for chroot().
@@ -814,6 +837,49 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 
 #if defined(CONFIG_SECURITY_PATH)
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+
+/**
+ * ccs_path_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
+			  umode_t mode, unsigned int dev)
+{
+	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mknod);
+	return original_security_ops.path_mknod(dir, dentry, mode, dev);
+}
+
+/**
+ * ccs_path_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
+			  umode_t mode)
+{
+	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mkdir);
+	return original_security_ops.path_mkdir(dir, dentry, mode);
+}
+
+#else
+
 /**
  * ccs_path_mknod - Check permission for mknod().
  *
@@ -851,6 +917,8 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 	while (!original_security_ops.path_mkdir);
 	return original_security_ops.path_mkdir(dir, dentry, mode);
 }
+
+#endif
 
 /**
  * ccs_path_rmdir - Check permission for rmdir().

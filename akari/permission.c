@@ -3450,7 +3450,7 @@ static int __ccs_socket_post_recvmsg_permission(struct sock *sk,
 				ipv6_addr_set(sin6, 0, 0, htonl(0xffff),
 					      ip_hdr(skb)->saddr);
 			else
-				ipv6_addr_copy(sin6, &ipv6_hdr(skb)->saddr);
+				*sin6 = ipv6_hdr(skb)->saddr;
 			break;
 		}
 	case PF_INET:

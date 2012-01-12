@@ -1,7 +1,7 @@
 /*
  * akari-test.c
  *
- * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  */
 #include <linux/version.h>
 #include <linux/module.h>

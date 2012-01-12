@@ -1,7 +1,7 @@
 /*
  * security/ccsecurity/policy_io.c
  *
- * Copyright (C) 2005-2011  NTT DATA CORPORATION
+ * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
  * Version: 1.8.3+   2011/12/13
  */
@@ -509,7 +509,7 @@ static u8 ccs_condition_type(const char *word);
 static u8 ccs_make_byte(const u8 c1, const u8 c2, const u8 c3);
 static u8 ccs_parse_ulong(unsigned long *result, char **str);
 static unsigned int ccs_poll(struct file *file, poll_table *wait);
-static void __init ccs_create_entry(const char *name, const mode_t mode,
+static void __init ccs_create_entry(const char *name, const umode_t mode,
 				    struct proc_dir_entry *parent,
 				    const u8 key);
 static void __init ccs_load_builtin_policy(void);
@@ -5306,7 +5306,7 @@ out:
  *
  * Returns file type string.
  */
-static inline const char *ccs_filetype(const mode_t mode)
+static inline const char *ccs_filetype(const umode_t mode)
 {
 	switch (mode & S_IFMT) {
 	case S_IFREG:
@@ -5380,7 +5380,7 @@ static char *ccs_print_header(struct ccs_request_info *r)
 	for (i = 0; i < CCS_MAX_PATH_STAT; i++) {
 		struct ccs_mini_stat *stat;
 		unsigned int dev;
-		mode_t mode;
+		umode_t mode;
 		if (!obj->stat_valid[i])
 			continue;
 		stat = &obj->stat[i];
@@ -6383,7 +6383,7 @@ out:
  *
  * Returns nothing.
  */
-static void __init ccs_create_entry(const char *name, const mode_t mode,
+static void __init ccs_create_entry(const char *name, const umode_t mode,
 				    struct proc_dir_entry *parent,
 				    const u8 key)
 {

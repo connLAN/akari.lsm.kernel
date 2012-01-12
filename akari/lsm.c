@@ -1186,6 +1186,49 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 
 #else
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+
+/**
+ * ccs_inode_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
+			   umode_t mode, dev_t dev)
+{
+	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mknod);
+	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
+}
+
+/**
+ * ccs_inode_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
+			   umode_t mode)
+{
+	int rc = ccs_mkdir_permission(dentry, NULL, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mkdir);
+	return original_security_ops.inode_mkdir(dir, dentry, mode);
+}
+
+#else
+
 /**
  * ccs_inode_mknod - Check permission for mknod().
  *
@@ -1223,6 +1266,8 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	while (!original_security_ops.inode_mkdir);
 	return original_security_ops.inode_mkdir(dir, dentry, mode);
 }
+
+#endif
 
 /**
  * ccs_inode_rmdir - Check permission for rmdir().
@@ -1317,6 +1362,29 @@ static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 	return original_security_ops.inode_link(old_dentry, dir, new_dentry);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+
+/**
+ * ccs_inode_create - Check permission for creat().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
+			    umode_t mode)
+{
+	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_create);
+	return original_security_ops.inode_create(dir, dentry, mode);
+}
+
+#else
+
 /**
  * ccs_inode_create - Check permission for creat().
  *
@@ -1335,6 +1403,8 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 	while (!original_security_ops.inode_create);
 	return original_security_ops.inode_create(dir, dentry, mode);
 }
+
+#endif
 
 #endif
 

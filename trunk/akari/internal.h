@@ -1,7 +1,7 @@
 /*
  * security/ccsecurity/internal.h
  *
- * Copyright (C) 2005-2011  NTT DATA CORPORATION
+ * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
  * Version: 1.8.3+   2011/11/11
  */
@@ -995,7 +995,7 @@ struct ccs_mini_stat {
 	uid_t uid;
 	gid_t gid;
 	ino_t ino;
-	mode_t mode;
+	umode_t mode;
 	dev_t dev;
 	dev_t rdev;
 };

@@ -1,7 +1,7 @@
 /*
  * lsm.c
  *
- * Copyright (C) 2010-2011  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
  * Version: 1.0.24   2011/12/13
  */

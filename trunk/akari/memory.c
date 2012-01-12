@@ -1,7 +1,7 @@
 /*
  * security/ccsecurity/memory.c
  *
- * Copyright (C) 2005-2011  NTT DATA CORPORATION
+ * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
  * Version: 1.8.3+   2011/11/11
  */

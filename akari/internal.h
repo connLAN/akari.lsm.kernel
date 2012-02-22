@@ -1592,7 +1592,7 @@ extern unsigned int ccs_memory_used[CCS_MAX_MEMORY_STAT];
  * @a: Pointer to "struct ccs_path_info".
  * @b: Pointer to "struct ccs_path_info".
  *
- * Returns true if @a == @b, false otherwise.
+ * Returns true if @a != @b, false otherwise.
  */
 static inline bool ccs_pathcmp(const struct ccs_path_info *a,
 			       const struct ccs_path_info *b)

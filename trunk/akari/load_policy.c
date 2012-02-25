@@ -191,7 +191,11 @@ void ccs_load_policy(const char *filename)
 		envp[0] = "HOME=/";
 		envp[1] = "PATH=/sbin:/bin:/usr/sbin:/usr/bin";
 		envp[2] = NULL;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 23) || defined(UMH_WAIT_PROC)
+		call_usermodehelper(argv[0], argv, envp, UMH_WAIT_PROC);
+#else
 		call_usermodehelper(argv[0], argv, envp, 1);
+#endif
 	}
 #elif defined(TASK_DEAD)
 	{

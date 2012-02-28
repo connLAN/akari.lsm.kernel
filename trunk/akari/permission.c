@@ -1896,30 +1896,24 @@ static int __ccs_mount_permission(char *dev_name, struct path *path,
 	if (flags & MS_REMOUNT) {
 		type = ccs_mounts[CCS_MOUNT_REMOUNT];
 		flags &= ~MS_REMOUNT;
-	}
-	if (flags & MS_MOVE) {
-		type = ccs_mounts[CCS_MOUNT_MOVE];
-		flags &= ~MS_MOVE;
-	}
-	if (flags & MS_BIND) {
+	} else if (flags & MS_BIND) {
 		type = ccs_mounts[CCS_MOUNT_BIND];
 		flags &= ~MS_BIND;
-	}
-	if (flags & MS_UNBINDABLE) {
-		type = ccs_mounts[CCS_MOUNT_MAKE_UNBINDABLE];
-		flags &= ~MS_UNBINDABLE;
-	}
-	if (flags & MS_PRIVATE) {
-		type = ccs_mounts[CCS_MOUNT_MAKE_PRIVATE];
-		flags &= ~MS_PRIVATE;
-	}
-	if (flags & MS_SLAVE) {
-		type = ccs_mounts[CCS_MOUNT_MAKE_SLAVE];
-		flags &= ~MS_SLAVE;
-	}
-	if (flags & MS_SHARED) {
+	} else if (flags & MS_SHARED) {
 		type = ccs_mounts[CCS_MOUNT_MAKE_SHARED];
 		flags &= ~MS_SHARED;
+	} else if (flags & MS_PRIVATE) {
+		type = ccs_mounts[CCS_MOUNT_MAKE_PRIVATE];
+		flags &= ~MS_PRIVATE;
+	} else if (flags & MS_SLAVE) {
+		type = ccs_mounts[CCS_MOUNT_MAKE_SLAVE];
+		flags &= ~MS_SLAVE;
+	} else if (flags & MS_UNBINDABLE) {
+		type = ccs_mounts[CCS_MOUNT_MAKE_UNBINDABLE];
+		flags &= ~MS_UNBINDABLE;
+	} else if (flags & MS_MOVE) {
+		type = ccs_mounts[CCS_MOUNT_MOVE];
+		flags &= ~MS_MOVE;
 	}
 	if (!type)
 		type = "<NULL>";

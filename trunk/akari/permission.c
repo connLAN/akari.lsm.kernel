@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2011/11/18
+ * Version: 1.8.3+   2012/02/29
  */
 
 #include "internal.h"
@@ -1900,15 +1900,23 @@ static int __ccs_mount_permission(char *dev_name, struct path *path,
 		type = ccs_mounts[CCS_MOUNT_BIND];
 		flags &= ~MS_BIND;
 	} else if (flags & MS_SHARED) {
+		if (flags & (MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
+			return -EINVAL;
 		type = ccs_mounts[CCS_MOUNT_MAKE_SHARED];
 		flags &= ~MS_SHARED;
 	} else if (flags & MS_PRIVATE) {
+		if (flags & (MS_SHARED | MS_SLAVE | MS_UNBINDABLE))
+			return -EINVAL;
 		type = ccs_mounts[CCS_MOUNT_MAKE_PRIVATE];
 		flags &= ~MS_PRIVATE;
 	} else if (flags & MS_SLAVE) {
+		if (flags & (MS_SHARED | MS_PRIVATE | MS_UNBINDABLE))
+			return -EINVAL;
 		type = ccs_mounts[CCS_MOUNT_MAKE_SLAVE];
 		flags &= ~MS_SLAVE;
 	} else if (flags & MS_UNBINDABLE) {
+		if (flags & (MS_SHARED | MS_PRIVATE | MS_SLAVE))
+			return -EINVAL;
 		type = ccs_mounts[CCS_MOUNT_MAKE_UNBINDABLE];
 		flags &= ~MS_UNBINDABLE;
 	} else if (flags & MS_MOVE) {

@@ -1,0 +1,227 @@
+Notes for AKARI project
+
+AKARI is Access Keeping And Regulating Instrument for Linux 2.6 and later
+kernels.
+
+You can use AKARI for analyzing your system's behavior (i.e. reports which
+application accesses which resources like strace command does) and optionally
+restricting your system's behavior (i.e. controls which application can
+access which resources like TOMOYO/AppArmor does).
+
+AKARI is forked from TOMOYO 1.8 and made as a LKM (loadable kernel module)
+so that you don't need to replace your kernels installed in your system.
+
+This patch is released under the GPLv2.
+
+Project URL: http://akari.sourceforge.jp/
+
+ChangeLog:
+
+Version 1.0   2010/10/10   First release.
+
+Version 1.0.1   2010/10/18   Minor update release.
+
+   Synchronize with TOMOYO revision 4069.
+
+   Fix off-by-two in ccs_check_unix_address().
+
+   Implement post accept() LSM hook.
+
+Version 1.0.2   2010/10/25   Minor update release.
+
+   Synchronize with TOMOYO revision 4090.
+
+   Add getattr() and readdir() checks.
+
+   Use "YYYY/MM/DD hh:mm:ss" format for /proc/ccs/ interface.
+
+   Do not automatically add / for umount().
+
+Version 1.0.3   2010/11/01   Minor update release.
+
+   Synchronize with TOMOYO revision 4104.
+
+   Fix pathname handling in ccs_unix_entry().
+
+Version 1.0.4   2010/11/11   Minor update release.
+
+   Synchronize with TOMOYO 1.8.0 release.
+
+   Add sysctl() check for 2.6.21 to 2.6.32 kernels.
+
+   Fix double new_decode_dev() bug for mknod().
+
+   Fix keyword typo.
+
+   Fix build failure on some kernels.
+
+   Changed pathname prefix priority.
+
+   Use hash table for faster scan.
+
+   Updated function comments.
+
+Version 1.0.5   2010/11/22   Minor update release.
+
+   Make ccs_domain_info/ccs_flags inheritable for 2.6.29 and later kernels.
+
+Version 1.0.6   2010/12/31   Minor update release.
+
+   Synchronize with TOMOYO revision 4280.
+
+   Use same interface for audit logs.
+
+   Split ccs_null_security into ccs_default_security and ccs_oom_security.
+
+Version 1.0.7   2011/01/21   Minor update release.
+
+   Synchronize with TOMOYO revision 4400.
+
+   Use filesystem name for unnamed devices when vfsmount is missing.
+
+Version 1.0.8   2011/02/07   Minor update release.
+
+   Synchronize with TOMOYO revision 4545.
+
+   Fix infinite loop bug when reading /proc/ccs/audit or /proc/ccs/query .
+
+Version 1.0.9   2011/02/14   Minor update release.
+
+   Fix missing permission check for interpreters in 2.6.30 and later kernels.
+
+Version 1.0.10   2011/02/15   Minor update release.
+
+   Fix missing permission check for interpreters in 2.6.23 and earlier kernels.
+
+   Fix wrong execute permission check and domain transition in 2.6.28 and earlier kernels.
+
+Version 1.0.11   2010/04/01   Minor update release.
+
+   Synchronize with TOMOYO 1.8.1 release.
+
+   Run garbage collector without waiting for /proc/ccs/ users.
+
+   Support built-in policy configuration.
+
+   Remove /proc/ccs/meminfo interface.
+
+   Pack policy when printing via /proc/ccs/ interface.
+
+   Fix conditional policy parsing.
+
+   Serialize updating profile's comment line.
+
+Version 1.0.12   2011/04/11   Minor update release.
+
+   Synchronize with TOMOYO revision 4874.
+
+   Fix fcntl(F_SETFL, O_APPEND) handling.
+
+Version 1.0.13   2011/05/05   Minor update release.
+
+   Synchronize with TOMOYO revision 4963.
+
+   Fix wrong profile number in audit logs for "misc env" permission.
+
+Version 1.0.14   2011/05/11   Minor update release.
+
+   Synchronize with TOMOYO revision 4978.
+
+   Fix wrong domainname validation.
+
+Version 1.0.15   2011/06/20   Minor update release.
+
+   Synchronize with TOMOYO 1.8.2 release.
+
+   Add policy namespace support.
+
+Version 1.0.16   2011/07/07   Minor update release.
+
+   Synchronize with TOMOYO revision 5235.
+
+   Remove /proc/ccs/.domain_status interface.
+
+Version 1.0.17   2011/07/13   Minor update release.
+
+   Synchronize with TOMOYO revision 5266.
+
+   Fix /proc/ccs/stat parser.
+
+   Accept "::" notation for IPv6 address.
+
+Version 1.0.18   2011/09/03   Minor update release.
+
+   Synchronize with TOMOYO revision 5401.
+
+   Avoid race when retrying "file execute" permission check.
+
+   Remove unneeded daemonize().
+
+   Fix load failure with !CONFIG_SMP && !CONFIG_DEBUG_SPINLOCK kernels.
+
+Version 1.0.19   2011/09/15   Minor update release.
+
+   Use akari/config.h for choosing build options.
+
+   Fix build error on CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER=y case.
+
+   Use lookup_mnt() rather than __put_namespace(). (2.6.0 to 2.6.2 kernels) 
+
+   Fix unbalanced spin_lock()/spin_unlock() pair in lsm_pin().
+   (2.6.15 to 2.6.35 kernels)
+
+   Fix "struct task_struct" leaks of tasks created before loading akari.ko .
+   (2.6.28 and earlier kernels)
+
+   Use "struct task_struct"->pids[PIDTYPE_PID].pid instead of
+   "struct task_struct" for associating with per "struct task_struct" variables
+   (i.e. "struct ccs_security") in order to reduce amount of dead memory
+   waiting for garbage collection. (2.6.29 and later kernels)
+
+   Add akari_test.ko for checking whether akari.ko seems to work or not.
+
+   Add SH and ARM architectures support. (Needs more testing.)
+
+Version 1.0.20   2011/09/29   Minor update release.
+
+   Synchronize with TOMOYO 1.8.3 release.
+
+   Allow specifying domain transition preference.
+
+   Simplify garbage collector.
+
+Version 1.0.21   2011/10/25   Minor update release.
+
+   Synchronize with TOMOYO revision 5569.
+
+   Fix incomplete read after seek.
+
+   Use query id for reaching target process's domain policy.
+
+   Fix quota counting.
+
+Version 1.0.22   2011/11/11   Minor update release.
+
+   Synchronize with TOMOYO revision 5625.
+
+   Optimize for object's size.
+
+Version 1.0.23   2011/11/18   Minor update release.
+
+   Synchronize with TOMOYO revision 5646.
+
+   Fix kernel config mapping error.
+
+Version 1.0.24   2011/12/13   Minor update release.
+
+   Synchronize with TOMOYO revision 5711.
+
+   Follow __d_path() behavior change. (Only 2.6.36 and later)
+
+Version 1.0.25   2012/02/29   Minor update release.
+
+   Synchronize with TOMOYO revision 5893.
+
+   Follow UMH_WAIT_PROC constant renumbering.
+
+   Fix mount flags checking order.

@@ -217,3 +217,11 @@ Version 1.0.24   2011/12/13   Minor update release.
    Synchronize with TOMOYO revision 5711.
 
    Follow __d_path() behavior change. (Only 2.6.36 and later)
+
+Version 1.0.25   2012/02/29   Minor update release.
+
+   Synchronize with TOMOYO revision 5893.
+
+   Follow UMH_WAIT_PROC constant renumbering.
+
+   Fix mount flags checking order.

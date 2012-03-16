@@ -1438,11 +1438,19 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 		 * But remove_arg_zero() uses kmap_atomic()/kunmap_atomic().
 		 * So do I.
 		 */
+#if LINUX_VERSION >= KERNEL_VERSION(2, 6, 37)
+		char *kaddr = kmap_atomic(page);
+#else
 		char *kaddr = kmap_atomic(page, KM_USER0);
+#endif
 		dump->page = page;
 		memcpy(dump->data + offset, kaddr + offset,
 		       PAGE_SIZE - offset);
+#if LINUX_VERSION >= KERNEL_VERSION(2, 6, 37)
+		kunmap_atomic(kaddr);
+#else
 		kunmap_atomic(kaddr, KM_USER0);
+#endif
 	}
 	/* Same with put_arg_page(page) in fs/exec.c */
 #ifdef CCS_BPRM_MMU

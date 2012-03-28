@@ -225,3 +225,9 @@ Version 1.0.25   2012/02/29   Minor update release.
    Follow UMH_WAIT_PROC constant renumbering.
 
    Fix mount flags checking order.
+
+Version 1.0.26   2012/04/01   Minor update release.
+
+   Synchronize with TOMOYO revision 5893.
+
+   Return appropriate value to poll().

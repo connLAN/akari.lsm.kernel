@@ -9,6 +9,11 @@
 #include "internal.h"
 #include <linux/security.h>
 #include <linux/namei.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#define USE_UMODE_T
+#else
+#include "check_umode_t.h"
+#endif
 
 /* Prototype definition. */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
@@ -649,7 +654,7 @@ static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
 	return original_security_ops.path_chown(path, user, group);
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#if defined(USE_UMODE_T)
 
 /**
  * ccs_path_chmod - Check permission for chmod().
@@ -837,7 +842,7 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 
 #if defined(CONFIG_SECURITY_PATH)
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#if defined(USE_UMODE_T)
 
 /**
  * ccs_path_mknod - Check permission for mknod().
@@ -1186,7 +1191,7 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 
 #else
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#if defined(USE_UMODE_T)
 
 /**
  * ccs_inode_mknod - Check permission for mknod().

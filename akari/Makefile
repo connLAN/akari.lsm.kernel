@@ -47,4 +47,11 @@ $(obj)/builtin-policy.h: $(obj)/policy/profile.conf $(obj)/policy/exception_poli
 
 $(obj)/policy_io.o: $(obj)/builtin-policy.h $(obj)/config.h
 
+$(obj)/check_umode_t.h:
+	@echo Checking whether umode_t is used by include/linux/security.h or not.
+	@grep -q umode_t $(srctree)/include/linux/security.h && echo "#define USE_UMODE_T" > $@.tmp || echo "" > $@.tmp
+	@mv $@.tmp $@
+
+$(obj)/lsm.o: $(obj)/check_umode_t.h $(obj)/config.h
+
 .o: $(obj)/config.h

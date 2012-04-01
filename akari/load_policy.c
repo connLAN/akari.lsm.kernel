@@ -264,7 +264,7 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 	 * /sbin/init. /sbin/ccs-init executes /etc/ccs/ccs-load-module to
 	 * load loadable kernel module. The loadable kernel module modifies
 	 * "struct ccsecurity_ops". Thus, we need to transfer control to
-	 * __ccs_search_binary_handler() in security/ccsecurity/domain.c
+	 * __ccs_search_binary_handler() in security/ccsecurity/permission.c
 	 * if "struct ccsecurity_ops" was modified.
 	 */
 	if (ccsecurity_ops.search_binary_handler

@@ -10,6 +10,10 @@
 #include <linux/security.h>
 #include <linux/namei.h>
 #include <linux/mount.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+#include <linux/fs.h>
+#include <linux/sched.h>
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 #error This module supports only 2.6.0 and later kernels.

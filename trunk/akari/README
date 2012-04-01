@@ -228,6 +228,6 @@ Version 1.0.25   2012/02/29   Minor update release.
 
 Version 1.0.26   2012/04/01   Minor update release.
 
-   Synchronize with TOMOYO revision 5970.
+   Synchronize with TOMOYO revision 5973.
 
    Return appropriate value to poll().

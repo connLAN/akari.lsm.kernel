@@ -76,7 +76,7 @@ Requires kernel 3.2.<br>
 <div class="simple-table-wrap">
 <table>
 <tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
-<tr><td></td><td>Supported kernel version</td><td>2.4.37<br>2.6.27-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.2</td></tr>
+<tr><td></td><td>Supported kernel version</td><td>2.4.37<br>2.6.27-2.6.39<br>3.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-</td><td>3.2-</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>
 <tr><td></td><td>Allow use of absolute pathnames for directory modification operations?</td><td>Y</td><td colspan=3></td><td colspan=3>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>

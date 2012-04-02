@@ -64,15 +64,21 @@
 
 <hr>
 
-<p class="timestamp">13th December, 2011</p>
-<h4>AKARI 1.0.24 released</h4>
-<p class="article">A new version of AKARI accommodates changes to the behaviour of __d_path() in recent kernels. This new behaviour was introduced in Linux 3.2-rc5 but may be backported to 2.6.36 and later kernels. Affected kernels must upgrade to this version of AKARI.</p>
+<p class="timestamp">1st April, 2012</p>
+<h4>AKARI 1.0.26 released</h4>
+<p class="article">A new version of AKARI accommodates build failure caused by changes between Linux 3.3 and Linux 3.4-rc1.</p>
 
 <br>
 
-<p class="timestamp">18th November, 2011</p>
-<h4>AKARI 1.0.23 released</h4>
-<p class="article">A new version of AKARI have been released.</p>
+<p class="timestamp">1st March, 2012</p>
+<h4>AKARI 1.0.25 released</h4>
+<p class="article">A new version of AKARI accommodates changes to the redefinition of UMH_WAIT_PROC constant which is scheduled for Linux 3.4-rc1. This redefinition may be backported to 2.6.23 and later kernels. Affected kernels must upgrade to this version of AKARI.</p>
+
+<br>
+
+<p class="timestamp">13th December, 2011</p>
+<h4>AKARI 1.0.24 released</h4>
+<p class="article">A new version of AKARI accommodates changes to the behaviour of __d_path() in recent kernels. This new behaviour was introduced in Linux 3.2-rc5 but may be backported to 2.6.36 and later kernels. Affected kernels must upgrade to this version of AKARI.</p>
 
 <br>
 

@@ -205,11 +205,11 @@ Please contact the author.
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.3-20120301.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120301.tar.gz'
-$ wget -O ccs-tools-1.8.3-20120301.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120301.tar.gz.asc'
-$ gpg ccs-tools-1.8.3-20120301.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.3-20120301.tar.gz
-$ cd ccstools/
+$ wget -O ccs-tools-1.8.3-20120414.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120414.tar.gz'
+$ wget -O ccs-tools-1.8.3-20120414.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120414.tar.gz.asc'
+$ gpg ccs-tools-1.8.3-20120414.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.3-20120414.tar.gz
+$ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib
 $ su
 # make -s USRLIBDIR=/usr/lib install

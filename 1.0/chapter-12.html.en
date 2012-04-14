@@ -106,7 +106,7 @@ else
 fi
 </pre>
 
-<p>Example authentication programs are listed below. But these programs exist only as examples of how you might design unique authentication methods. Some of the algorithms are poor and should not be used in a production environment. The source code for these programs are included in the ccs-tools source tarball, but can also be found in our <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools/examples/?root=tomoyo">subversion repository</a>.</p>
+<p>Example authentication programs are listed below. But these programs exist only as examples of how you might design unique authentication methods. Some of the algorithms are poor and should not be used in a production environment. The source code for these programs are included in the ccs-tools source tarball, but can also be found in our <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/examples/?root=tomoyo">subversion repository</a>.</p>
 
 <div class="simple-table-wrap">
 <table border="1">

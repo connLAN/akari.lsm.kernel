@@ -106,7 +106,7 @@ else
 fi
 </pre>
 
-<p>ユーザ認証プログラムのサンプルを以下に示します。ただし、これらのプログラムは独自のユーザ認証プログラムを作成する際の参考にしてもらうために用意されているものです。アルゴリズムが貧弱で実際のシステムにそのまま適用するには不向きなものも含まれています。以下のプログラムのソースコードは ccs-tools の tarball 中に含まれていますが、 <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/ccstools/examples/?root=tomoyo">subversion レポジトリ</a>からもダウンロードできます。</p>
+<p>ユーザ認証プログラムのサンプルを以下に示します。ただし、これらのプログラムは独自のユーザ認証プログラムを作成する際の参考にしてもらうために用意されているものです。アルゴリズムが貧弱で実際のシステムにそのまま適用するには不向きなものも含まれています。以下のプログラムのソースコードは ccs-tools の tarball 中に含まれていますが、 <a href="http://sourceforge.jp/projects/tomoyo/svn/view/trunk/1.8.x/ccs-tools/examples/?root=tomoyo">subversion レポジトリ</a>からもダウンロードできます。</p>
 
 <div class="simple-table-wrap">
 <table border="1">

@@ -531,7 +531,26 @@ static int ccs_open(struct file *f)
 
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+/**
+ * ccs_file_open - Check permission for open().
+ *
+ * @f:    Pointer to "struct file".
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_file_open(struct file *f, const struct cred *cred)
+{
+	int rc = ccs_open(f);
+	if (rc)
+		return rc;
+	while (!original_security_ops.file_open);
+	return original_security_ops.file_open(f, cred);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
 /**
  * ccs_dentry_open - Check permission for open().
@@ -2729,7 +2748,9 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 	swap_security_ops(bprm_committing_creds);
 #endif
 	/* Various permission checker. */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	swap_security_ops(file_open);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	swap_security_ops(dentry_open);
 #else
 	swap_security_ops(inode_permission);

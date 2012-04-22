@@ -596,35 +596,6 @@ static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
 	skb_free_datagram(sk, skb);
 }
 
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 12)
-
-/**
- * skb_kill_datagram - Kill a datagram forcibly.
- *
- * @sk:    Pointer to "struct sock".
- * @skb:   Pointer to "struct sk_buff".
- * @flags: Flags passed to skb_recv_datagram().
- *
- * Returns nothing.
- */
-static inline void skb_kill_datagram(struct sock *sk, struct sk_buff *skb,
-				     int flags)
-{
-	/* Clear queue. */
-	if (flags & MSG_PEEK) {
-		int clear = 0;
-		spin_lock_irq(&sk->sk_receive_queue.lock);
-		if (skb == skb_peek(&sk->sk_receive_queue)) {
-			__skb_unlink(skb, &sk->sk_receive_queue);
-			clear = 1;
-		}
-		spin_unlock_irq(&sk->sk_receive_queue.lock);
-		if (clear)
-			kfree_skb(skb);
-	}
-	skb_free_datagram(sk, skb);
-}
-
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 16)
 
 /**

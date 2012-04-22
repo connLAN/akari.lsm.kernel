@@ -3486,12 +3486,18 @@ out:
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 		if (type == SOCK_DGRAM && family != PF_UNIX)
 			lock_sock(sk);
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5 && defined(RHEL_MINOR) && RHEL_MINOR >= 2
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			lock_sock(sk);
 #endif
 		skb_kill_datagram(sk, skb, flags);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35)
 		if (type == SOCK_DGRAM && family != PF_UNIX)
 			unlock_sock_fast(sk, slow);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
+		if (type == SOCK_DGRAM && family != PF_UNIX)
+			release_sock(sk);
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5 && defined(RHEL_MINOR) && RHEL_MINOR >= 2
 		if (type == SOCK_DGRAM && family != PF_UNIX)
 			release_sock(sk);
 #endif

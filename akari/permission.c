@@ -1398,9 +1398,9 @@ static bool ccs_find_execute_handler(struct ccs_execve *ee, const u8 type)
 #ifdef CONFIG_MMU
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 23)
 #define CCS_BPRM_MMU
-#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 5 && defined(RHEL_MINOR) && RHEL_MINOR >= 3
 #define CCS_BPRM_MMU
-#elif defined(AX_MAJOR) && AX_MAJOR == 3
+#elif defined(AX_MAJOR) && AX_MAJOR == 3 && defined(AX_MINOR) && AX_MINOR >= 2
 #define CCS_BPRM_MMU
 #endif
 #endif

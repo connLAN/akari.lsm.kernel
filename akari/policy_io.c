@@ -2865,7 +2865,7 @@ static int ccs_update_manager_entry(const char *manager,
 			return -EINVAL;
 		e->is_domain = true;
 	} else {
-		if (!ccs_correct_path(manager))
+		if (!ccs_correct_word(manager))
 			return -EINVAL;
 	}
 	e->manager = ccs_get_name(manager);

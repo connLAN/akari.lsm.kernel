@@ -1275,7 +1275,6 @@ struct ccs_reserved {
 /* Structure for policy manager. */
 struct ccs_manager {
 	struct ccs_acl_head head;
-	bool is_domain;  /* True if manager is a domainname. */
 	/* A path to program or a domainname. */
 	const struct ccs_path_info *manager;
 };

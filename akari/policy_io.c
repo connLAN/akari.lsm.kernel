@@ -2860,14 +2860,8 @@ static int ccs_update_manager_entry(const char *manager,
 	int error = is_delete ? -ENOENT : -ENOMEM;
 	/* Forced zero clear for using memcmp() at ccs_update_policy(). */
 	memset(&param.e, 0, sizeof(param.e));
-	if (ccs_domain_def(manager)) {
-		if (!ccs_correct_domain(manager))
-			return -EINVAL;
-		e->is_domain = true;
-	} else {
-		if (!ccs_correct_word(manager))
-			return -EINVAL;
-	}
+	if (!ccs_correct_domain(manager) && !ccs_correct_word(manager))
+		return -EINVAL;
 	e->manager = ccs_get_name(manager);
 	if (e->manager) {
 		error = ccs_update_policy(sizeof(*e), &param);
@@ -2931,7 +2925,7 @@ static void ccs_read_manager(struct ccs_io_buffer *head)
 static bool ccs_manager(void)
 {
 	struct ccs_manager *ptr;
-	const char *exe;
+	struct ccs_path_info exe;
 	struct ccs_security *task = ccs_current_security();
 	const struct ccs_path_info *domainname
 		= ccs_current_domain()->domainname;
@@ -2942,19 +2936,18 @@ static bool ccs_manager(void)
 		return true;
 	if (!ccs_manage_by_non_root && (current_uid() || current_euid()))
 		return false;
-	exe = ccs_get_exe();
+	exe.name = ccs_get_exe();
+	if (!exe.name)
+		return false;
+	ccs_fill_path_info(&exe);
 	list_for_each_entry_srcu(ptr, &ccs_kernel_namespace.
 				 policy_list[CCS_ID_MANAGER], head.list,
 				 &ccs_ss) {
 		if (ptr->head.is_deleted)
 			continue;
-		if (ptr->is_domain) {
-			if (ccs_pathcmp(domainname, ptr->manager))
-				continue;
-		} else {
-			if (!exe || strcmp(exe, ptr->manager->name))
-				continue;
-		}
+		if (ccs_pathcmp(domainname, ptr->manager) &&
+		    ccs_pathcmp(&exe, ptr->manager))
+			continue;
 		/* Set manager flag. */
 		task->ccs_flags |= CCS_TASK_IS_MANAGER;
 		found = true;
@@ -2965,11 +2958,12 @@ static bool ccs_manager(void)
 		const pid_t pid = current->pid;
 		if (ccs_last_pid != pid) {
 			printk(KERN_WARNING "%s ( %s ) is not permitted to "
-			       "update policies.\n", domainname->name, exe);
+			       "update policies.\n", domainname->name,
+			       exe.name);
 			ccs_last_pid = pid;
 		}
 	}
-	kfree(exe);
+	kfree(exe.name);
 	return found;
 }
 

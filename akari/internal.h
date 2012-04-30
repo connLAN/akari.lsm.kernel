@@ -1732,11 +1732,13 @@ static inline pid_t ccs_sys_getppid(void)
 {
 	pid_t pid;
 	rcu_read_lock();
+#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 5) || (defined(AX_MAJOR) && AX_MAJOR == 3)
+	pid = rcu_dereference(current->parent)->tgid;
+#elif defined(CONFIG_UTRACE)
 	/*
 	 * RHEL 5.0 kernel does not have RHEL_MAJOR/RHEL_MINOR defined.
-	 * Define them manually when compiling for RHEL 5.0 kernel.
+	 * Assume RHEL 5.0 if CONFIG_UTRACE is defined.
 	 */
-#if (defined(RHEL_MAJOR) && RHEL_MAJOR == 5) || (defined(AX_MAJOR) && AX_MAJOR == 3)
 	pid = rcu_dereference(current->parent)->tgid;
 #else
 	pid = rcu_dereference(current->real_parent)->tgid;

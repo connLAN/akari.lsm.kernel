@@ -231,3 +231,11 @@ Version 1.0.26   2012/04/01   Minor update release.
    Synchronize with TOMOYO revision 5973.
 
    Return appropriate value to poll().
+
+Version 1.0.27   2012/05/05   Minor update release.
+
+   Synchronize with TOMOYO revision 6035.
+
+   Readd RHEL_MINOR/AX_MINOR checks.
+
+   Accept manager programs which do not start with / .

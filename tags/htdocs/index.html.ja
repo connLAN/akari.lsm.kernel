@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">２０１２年５月５日</p>
+<h4>AKARI 1.0.27 がリリースされました。</h4>
+<p class="article">RHEL 4/5/6 カーネルに対応するために AKARI がアップデートされました。</p>
+
+<br>
+
 <p class="timestamp">２０１２年４月１日</p>
 <h4>AKARI 1.0.26 がリリースされました。</h4>
 <p class="article">Linux 3.3 カーネルから Linux 3.4-rc1 カーネルの間に生じた変更によるコンパイルエラーを修正するために AKARI がアップデートされました。</p>

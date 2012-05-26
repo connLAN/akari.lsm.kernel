@@ -84,7 +84,9 @@ Some MAC functionality in TOMOYO Linux 1.8 is not provided.</p></td>
 
 <h3>Documentation for 2.x branch:</h3>
 <ul>
-<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">2.3.x Documentation</a> (Linux 2.6.36 and later)</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">2.5.x Documentation</a> (Linux 3.2 and later) (Backport patch for Linux 2.6.33 to 3.1 is available.)</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.4/index.html.en">2.4.x Documentation</a> (Linux 3.1) (Backport patch for Linux 2.6.33 to 3.0 is available.)</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">2.3.x Documentation</a> (Linux 2.6.36 to 3.0)</li>
 <li><a href="http://tomoyo.sourceforge.jp/2.2/index.html.en">2.2.x Documentation</a> (Linux 2.6.30 to 2.6.35)</li>
 </ul>
 

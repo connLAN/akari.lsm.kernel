@@ -84,7 +84,9 @@ TOMOYO Linux 1.8 で提供されている機能の一部は提供されていま
 
 <h3>２系のドキュメント</h3>
 <ul>
-<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 以降用）</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.5/index.html.ja">2.5.x ドキュメント</a>（ Linux 3.2 以降用）（ Linux 2.6.33 ～ 3.1 用のバックポートパッチを利用できます。）</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">2.4.x ドキュメント</a>（ Linux 3.1 用）（ Linux 2.6.33 ～ 3.0 用のバックポートパッチを利用できます。）</li>
+<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 ～ 3.0 用）</li>
 <li><a href="http://tomoyo.sourceforge.jp/2.2/index.html.ja">2.2.x ドキュメント</a>（ Linux 2.6.30 ～ 2.6.35 用）</li>
 </ul>
 

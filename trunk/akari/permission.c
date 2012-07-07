@@ -252,9 +252,15 @@ static enum ccs_transition_type ccs_transition_type
  const struct ccs_path_info *program);
 static int __ccs_chmod_permission(struct dentry *dentry,
 				  struct vfsmount *vfsmnt, mode_t mode);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+static int __ccs_chown_permission(struct dentry *dentry,
+				  struct vfsmount *vfsmnt, kuid_t user,
+				  kgid_t group);
+#else
 static int __ccs_chown_permission(struct dentry *dentry,
 				  struct vfsmount *vfsmnt, uid_t user,
 				  gid_t group);
+#endif
 static int __ccs_chroot_permission(struct path *path);
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg);
@@ -1219,12 +1225,31 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 
 	/* Set argv[3] */
 	{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+		/*
+		 * Pass uid/gid seen from current user namespace, for these
+		 * values are used by programs in current user namespace in
+		 * order to decide whether to execve() or not (rather than by
+		 * auditing daemon in init's user namespace).
+		 */
+		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1,
+			 "pid=%d uid=%d gid=%d euid=%d egid=%d suid=%d "
+			 "sgid=%d fsuid=%d fsgid=%d", ccs_sys_getpid(),
+			 __kuid_val(current_uid()), __kgid_val(current_gid()),
+			 __kuid_val(current_euid()),
+			 __kgid_val(current_egid()),
+			 __kuid_val(current_suid()),
+			 __kgid_val(current_sgid()),
+			 __kuid_val(current_fsuid()),
+			 __kgid_val(current_fsgid()));
+#else
 		snprintf(ee->tmp, CCS_EXEC_TMPSIZE - 1,
 			 "pid=%d uid=%d gid=%d euid=%d egid=%d suid=%d "
 			 "sgid=%d fsuid=%d fsgid=%d", ccs_sys_getpid(),
 			 current_uid(), current_gid(), current_euid(),
 			 current_egid(), current_suid(), current_sgid(),
 			 current_fsuid(), current_fsgid());
+#endif
 		retval = ccs_copy_argv(ee->tmp, bprm);
 		if (retval < 0)
 			goto out;
@@ -2538,6 +2563,34 @@ static int __ccs_chmod_permission(struct dentry *dentry,
 				    mode & S_IALLUGO);
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+/**
+ * __ccs_chown_permission - Check permission for "chown/chgrp".
+ *
+ * @dentry: Pointer to "struct dentry".
+ * @vfsmnt: Pointer to "struct vfsmount". Maybe NULL.
+ * @user:   User ID.
+ * @group:  Group ID.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_chown_permission(struct dentry *dentry,
+				  struct vfsmount *vfsmnt, kuid_t user,
+				  kgid_t group)
+{
+	int error = 0;
+	if (uid_valid(user))
+		error = ccs_path_number_perm(CCS_TYPE_CHOWN, dentry, vfsmnt,
+					     from_kuid(&init_user_ns, user));
+	if (!error && gid_valid(group))
+		error = ccs_path_number_perm(CCS_TYPE_CHGRP, dentry, vfsmnt,
+					     from_kgid(&init_user_ns, group));
+	return error;
+}
+
+#else
+
 /**
  * __ccs_chown_permission - Check permission for "chown/chgrp".
  *
@@ -2563,6 +2616,8 @@ static int __ccs_chown_permission(struct dentry *dentry,
 					     group);
 	return error;
 }
+
+#endif
 
 /**
  * __ccs_fcntl_permission - Check permission for changing O_APPEND flag.
@@ -4233,28 +4288,36 @@ bool ccs_condition(struct ccs_request_info *r,
 			unsigned long value = 0;
 			switch (index) {
 			case CCS_TASK_UID:
-				value = current_uid();
+				value = from_kuid(&init_user_ns,
+						  current_uid());
 				break;
 			case CCS_TASK_EUID:
-				value = current_euid();
+				value = from_kuid(&init_user_ns,
+						  current_euid());
 				break;
 			case CCS_TASK_SUID:
-				value = current_suid();
+				value = from_kuid(&init_user_ns,
+						  current_suid());
 				break;
 			case CCS_TASK_FSUID:
-				value = current_fsuid();
+				value = from_kuid(&init_user_ns,
+						  current_fsuid());
 				break;
 			case CCS_TASK_GID:
-				value = current_gid();
+				value = from_kgid(&init_user_ns,
+						  current_gid());
 				break;
 			case CCS_TASK_EGID:
-				value = current_egid();
+				value = from_kgid(&init_user_ns,
+						  current_egid());
 				break;
 			case CCS_TASK_SGID:
-				value = current_sgid();
+				value = from_kgid(&init_user_ns,
+						  current_sgid());
 				break;
 			case CCS_TASK_FSGID:
-				value = current_fsgid();
+				value = from_kgid(&init_user_ns,
+						  current_fsgid());
 				break;
 			case CCS_TASK_PID:
 				value = ccs_sys_getpid();
@@ -4395,13 +4458,17 @@ bool ccs_condition(struct ccs_request_info *r,
 					case CCS_PATH2_UID:
 					case CCS_PATH1_PARENT_UID:
 					case CCS_PATH2_PARENT_UID:
-						value = stat->uid;
+						value = from_kuid
+							(&init_user_ns,
+							 stat->uid);
 						break;
 					case CCS_PATH1_GID:
 					case CCS_PATH2_GID:
 					case CCS_PATH1_PARENT_GID:
 					case CCS_PATH2_PARENT_GID:
-						value = stat->gid;
+						value = from_kgid
+							(&init_user_ns,
+							 stat->gid);
 						break;
 					case CCS_PATH1_INO:
 					case CCS_PATH2_INO:

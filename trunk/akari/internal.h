@@ -376,6 +376,41 @@ static inline void __list_del_entry(struct list_head *entry)
 
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+
+/**
+ * from_kuid - Convert kuid_t to uid_t.
+ *
+ * @ns:  Unused.
+ * @uid: Uid seen from current user namespace.
+ *
+ * Returns uid seen from init's user namespace.
+ */
+#define from_kuid(ns, uid) (uid)
+
+/**
+ * from_kgid - Convert lgid_t to gid_t.
+ *
+ * @ns:  Unused.
+ * @gid: Gid seen from current user namespace.
+ *
+ * Returns gid seen from init's user namespace.
+ */
+#define from_kgid(ns, gid) (gid)
+
+/**
+ * uid_eq - Check whether the uids are equals or not.
+ *
+ * @left: Uid seen from current user namespace.
+ * @right: Uid seen from current user namespace.
+ *
+ * Returns true if uid is root in init's user namespace, false otherwise.
+ */
+#define uid_eq(left, right) ((left) == (right))
+#define GLOBAL_ROOT_UID 0
+
+#endif
+
 /*
  * TOMOYO specific part start.
  */
@@ -992,8 +1027,13 @@ struct ccs_address_group {
 
 /* Subset of "struct stat". Used by conditional ACL and audit logs. */
 struct ccs_mini_stat {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	kuid_t uid;
+	kgid_t gid;
+#else
 	uid_t uid;
 	gid_t gid;
+#endif
 	ino_t ino;
 	umode_t mode;
 	dev_t dev;

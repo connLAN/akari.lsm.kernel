@@ -382,17 +382,17 @@ static inline void __list_del_entry(struct list_head *entry)
  * from_kuid - Convert kuid_t to uid_t.
  *
  * @ns:  Unused.
- * @uid: Uid seen from current user namespace.
+ * @uid: kuid_t value.
  *
  * Returns uid seen from init's user namespace.
  */
 #define from_kuid(ns, uid) (uid)
 
 /**
- * from_kgid - Convert lgid_t to gid_t.
+ * from_kgid - Convert kgid_t to gid_t.
  *
  * @ns:  Unused.
- * @gid: Gid seen from current user namespace.
+ * @gid: kgid_t value.
  *
  * Returns gid seen from init's user namespace.
  */
@@ -1027,13 +1027,8 @@ struct ccs_address_group {
 
 /* Subset of "struct stat". Used by conditional ACL and audit logs. */
 struct ccs_mini_stat {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
-	kuid_t uid;
-	kgid_t gid;
-#else
-	uid_t uid;
-	gid_t gid;
-#endif
+	uid_t uid; /* Already converted by from_kuid(&init_user_ns). */
+	gid_t gid; /* Already converted by from_kgid(&init_user_ns). */
 	ino_t ino;
 	umode_t mode;
 	dev_t dev;

@@ -130,8 +130,13 @@ struct ccsecurity_operations {
 					  struct msghdr *msg, int size);
 	int (*socket_post_recvmsg_permission) (struct sock *sk,
 					       struct sk_buff *skb, int flags);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	int (*chown_permission) (struct dentry *dentry, struct vfsmount *mnt,
+				 kuid_t user, kgid_t group);
+#else
 	int (*chown_permission) (struct dentry *dentry, struct vfsmount *mnt,
 				 uid_t user, gid_t group);
+#endif
 	int (*chmod_permission) (struct dentry *dentry, struct vfsmount *mnt,
 				 mode_t mode);
 	int (*getattr_permission) (struct vfsmount *mnt,
@@ -357,6 +362,19 @@ static inline int ccs_uselib_permission(struct dentry *dentry,
 
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+static inline int ccs_chown_permission(struct dentry *dentry,
+				       struct vfsmount *mnt, kuid_t user,
+				       kgid_t group)
+{
+	int (*func) (struct dentry *, struct vfsmount *, kuid_t, kgid_t)
+		= ccsecurity_ops.chown_permission;
+	return func ? func(dentry, mnt, user, group) : 0;
+}
+
+#else
+
 static inline int ccs_chown_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, uid_t user,
 				       gid_t group)
@@ -365,6 +383,8 @@ static inline int ccs_chown_permission(struct dentry *dentry,
 		= ccsecurity_ops.chown_permission;
 	return func ? func(dentry, mnt, user, group) : 0;
 }
+
+#endif
 
 static inline int ccs_chmod_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, mode_t mode)
@@ -537,12 +557,25 @@ static inline int ccs_fcntl_permission(struct file *file, unsigned int cmd,
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+static inline int ccs_chown_permission(struct dentry *dentry,
+				       struct vfsmount *mnt, kuid_t user,
+				       kgid_t group)
+{
+	return 0;
+}
+
+#else
+
 static inline int ccs_chown_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, uid_t user,
 				       gid_t group)
 {
 	return 0;
 }
+
+#endif
 
 static inline int ccs_chmod_permission(struct dentry *dentry,
 				       struct vfsmount *mnt, mode_t mode)

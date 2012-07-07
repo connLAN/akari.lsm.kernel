@@ -653,7 +653,60 @@ static int ccs_inode_permission(struct inode *inode, int mask,
 
 #if defined(CONFIG_SECURITY_PATH)
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+/**
+ * ccs_path_chown - Check permission for chown()/chgrp().
+ *
+ * @path:  Pointer to "struct path".
+ * @user:  User ID.
+ * @group: Group ID.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
+{
+	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chown);
+	return original_security_ops.path_chown(path, user, group);
+}
+
+/**
+ * ccs_path_chmod - Check permission for chmod().
+ *
+ * @path: Pointer to "struct path".
+ * @mode: Mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chmod(struct path *path, umode_t mode)
+{
+	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chmod);
+	return original_security_ops.path_chmod(path, mode);
+}
+
+/**
+ * ccs_path_chroot - Check permission for chroot().
+ *
+ * @path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chroot(struct path *path)
+{
+	int rc = ccs_chroot_permission(path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chroot);
+	return original_security_ops.path_chroot(path);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 
 /**
  * ccs_path_chown - Check permission for chown()/chgrp().
@@ -823,10 +876,17 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 {
 	int rc = 0;
 #if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	if (attr->ia_valid & ATTR_UID)
+		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, INVALID_GID);
+	if (!rc && (attr->ia_valid & ATTR_GID))
+		rc = ccs_chown_permission(dentry, NULL, INVALID_UID, attr->ia_gid);
+#else
 	if (attr->ia_valid & ATTR_UID)
 		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, -1);
 	if (!rc && (attr->ia_valid & ATTR_GID))
 		rc = ccs_chown_permission(dentry, NULL, -1, attr->ia_gid);
+#endif
 	if (!rc && (attr->ia_valid & ATTR_MODE))
 		rc = ccs_chmod_permission(dentry, NULL, attr->ia_mode);
 #endif

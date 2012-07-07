@@ -2934,7 +2934,9 @@ static bool ccs_manager(void)
 		return true;
 	if (task->ccs_flags & CCS_TASK_IS_MANAGER)
 		return true;
-	if (!ccs_manage_by_non_root && (current_uid() || current_euid()))
+	if (!ccs_manage_by_non_root &&
+	    (!uid_eq(current_uid(), GLOBAL_ROOT_UID) ||
+	     !uid_eq(current_euid(), GLOBAL_ROOT_UID)))
 		return false;
 	exe.name = ccs_get_exe();
 	if (!exe.name)
@@ -5324,9 +5326,15 @@ static char *ccs_print_header(struct ccs_request_info *r)
 		       stamp.year, stamp.month, stamp.day, stamp.hour,
 		       stamp.min, stamp.sec, r->profile, ccs_mode[r->mode],
 		       ccs_yesno(r->granted), gpid, ccs_sys_getpid(),
-		       ccs_sys_getppid(), current_uid(), current_gid(),
-		       current_euid(), current_egid(), current_suid(),
-		       current_sgid(), current_fsuid(), current_fsgid(),
+		       ccs_sys_getppid(),
+		       from_kuid(&init_user_ns, current_uid()),
+		       from_kgid(&init_user_ns, current_gid()),
+		       from_kuid(&init_user_ns, current_euid()),
+		       from_kgid(&init_user_ns, current_egid()),
+		       from_kuid(&init_user_ns, current_suid()),
+		       from_kgid(&init_user_ns, current_sgid()),
+		       from_kuid(&init_user_ns, current_fsuid()),
+		       from_kgid(&init_user_ns, current_fsgid()),
 		       ccs_flags & CCS_TASK_IS_EXECUTE_HANDLER ? "" : "!");
 	if (!obj)
 		goto no_obj_info;
@@ -5347,15 +5355,19 @@ static char *ccs_print_header(struct ccs_request_info *r)
 			pos += snprintf(buffer + pos, ccs_buffer_len - 1 - pos,
 					" path%u.parent={ uid=%u gid=%u "
 					"ino=%lu perm=0%o }", (i >> 1) + 1,
-					stat->uid, stat->gid, (unsigned long)
-					stat->ino, stat->mode & S_IALLUGO);
+					from_kuid(&init_user_ns, stat->uid),
+					from_kgid(&init_user_ns, stat->gid),
+					(unsigned long) stat->ino,
+					stat->mode & S_IALLUGO);
 			continue;
 		}
 		pos += snprintf(buffer + pos, ccs_buffer_len - 1 - pos,
 				" path%u={ uid=%u gid=%u ino=%lu major=%u"
 				" minor=%u perm=0%o type=%s", (i >> 1) + 1,
-				stat->uid, stat->gid, (unsigned long)
-				stat->ino, MAJOR(dev), MINOR(dev),
+				from_kuid(&init_user_ns, stat->uid),
+				from_kgid(&init_user_ns, stat->gid),
+				(unsigned long) stat->ino,
+				MAJOR(dev), MINOR(dev),
 				mode & S_IALLUGO, ccs_filetype(mode));
 		if (S_ISCHR(mode) || S_ISBLK(mode)) {
 			dev = stat->rdev;

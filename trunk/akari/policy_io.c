@@ -5355,19 +5355,15 @@ static char *ccs_print_header(struct ccs_request_info *r)
 			pos += snprintf(buffer + pos, ccs_buffer_len - 1 - pos,
 					" path%u.parent={ uid=%u gid=%u "
 					"ino=%lu perm=0%o }", (i >> 1) + 1,
-					from_kuid(&init_user_ns, stat->uid),
-					from_kgid(&init_user_ns, stat->gid),
-					(unsigned long) stat->ino,
-					stat->mode & S_IALLUGO);
+					stat->uid, stat->gid, (unsigned long)
+					stat->ino, stat->mode & S_IALLUGO);
 			continue;
 		}
 		pos += snprintf(buffer + pos, ccs_buffer_len - 1 - pos,
 				" path%u={ uid=%u gid=%u ino=%lu major=%u"
 				" minor=%u perm=0%o type=%s", (i >> 1) + 1,
-				from_kuid(&init_user_ns, stat->uid),
-				from_kgid(&init_user_ns, stat->gid),
-				(unsigned long) stat->ino,
-				MAJOR(dev), MINOR(dev),
+				stat->uid, stat->gid, (unsigned long)
+				stat->ino, MAJOR(dev), MINOR(dev),
 				mode & S_IALLUGO, ccs_filetype(mode));
 		if (S_ISCHR(mode) || S_ISBLK(mode)) {
 			dev = stat->rdev;

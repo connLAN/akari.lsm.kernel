@@ -1027,8 +1027,13 @@ struct ccs_address_group {
 
 /* Subset of "struct stat". Used by conditional ACL and audit logs. */
 struct ccs_mini_stat {
-	uid_t uid; /* Already converted by from_kuid(&init_user_ns). */
-	gid_t gid; /* Already converted by from_kgid(&init_user_ns). */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	kuid_t uid;
+	kgid_t gid;
+#else
+	uid_t uid;
+	gid_t gid;
+#endif
 	ino_t ino;
 	umode_t mode;
 	dev_t dev;

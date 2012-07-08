@@ -4189,8 +4189,8 @@ void ccs_get_attributes(struct ccs_obj_info *obj)
 		inode = dentry->d_inode;
 		if (inode) {
 			struct ccs_mini_stat *stat = &obj->stat[i];
-			stat->uid  = from_kuid(&init_user_ns, inode->i_uid);
-			stat->gid  = from_kgid(&init_user_ns, inode->i_gid);
+			stat->uid  = inode->i_uid;
+			stat->gid  = inode->i_gid;
 			stat->ino  = inode->i_ino;
 			stat->mode = inode->i_mode;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 5, 0)
@@ -4458,13 +4458,17 @@ bool ccs_condition(struct ccs_request_info *r,
 					case CCS_PATH2_UID:
 					case CCS_PATH1_PARENT_UID:
 					case CCS_PATH2_PARENT_UID:
-						value = stat->uid;
+						value = from_kuid
+							(&init_user_ns,
+							 stat->uid);
 						break;
 					case CCS_PATH1_GID:
 					case CCS_PATH2_GID:
 					case CCS_PATH1_PARENT_GID:
 					case CCS_PATH2_PARENT_GID:
-						value = stat->gid;
+						value = from_kgid
+							(&init_user_ns,
+							 stat->gid);
 						break;
 					case CCS_PATH1_INO:
 					case CCS_PATH2_INO:

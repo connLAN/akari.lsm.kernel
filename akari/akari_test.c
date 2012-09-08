@@ -124,12 +124,18 @@ static void *__init ccs_find_symbol(const char *keyline)
 		dput(root);
 		if (IS_ERR(dentry))
 			mntput(mnt);
-		else
+		else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+			struct path path = { mnt, dentry };
+			file = dentry_open(&path, O_RDONLY, current_cred());
+#else
 			file = dentry_open(dentry, mnt, O_RDONLY
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 					   , current_cred()
 #endif
 					   );
+#endif
+		}
 	}
 	if (IS_ERR(file) || !file)
 		goto out;

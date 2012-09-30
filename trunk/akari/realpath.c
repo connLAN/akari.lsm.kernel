@@ -703,11 +703,17 @@ void ccs_fill_path_info(struct ccs_path_info *ptr)
 const char *ccs_get_exe(void)
 {
 	struct mm_struct *mm = current->mm;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
 	struct vm_area_struct *vma;
+#endif
 	const char *cp = NULL;
 	if (!mm)
 		return NULL;
 	down_read(&mm->mmap_sem);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0)
+	if (mm->exe_file)
+		cp = ccs_realpath(&mm->exe_file->f_path);
+#else
 	for (vma = mm->mmap; vma; vma = vma->vm_next) {
 		if ((vma->vm_flags & VM_EXECUTABLE) && vma->vm_file) {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
@@ -720,6 +726,7 @@ const char *ccs_get_exe(void)
 			break;
 		}
 	}
+#endif
 	up_read(&mm->mmap_sem);
 	return cp;
 }

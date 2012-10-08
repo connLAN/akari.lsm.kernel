@@ -33,28 +33,29 @@ int search_binary_handler(struct linux_binprm *bprm, struct pt_regs *regs);
 
 #ifdef CONFIG_CCSECURITY
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-/* Obtain prototype of __d_path() or d_absolute_path(). */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+/* Obtain prototype of __d_path(). */
 #include <linux/dcache.h>
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-/* Obtain prototype of find_task_by_vpid() and find_task_by_pid_ns(). */
-#include <linux/sched.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+/* Obtain definition of kuid_t and kgid_t. */
+#include <linux/uidgid.h>
 #endif
 
 /* For exporting variables and functions. */
 struct ccsecurity_exports {
 	void (*load_policy) (const char *filename);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
-	typeof(d_absolute_path) (*d_absolute_path);
+	char * (*d_absolute_path) (const struct path *, char *, int);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 	typeof(__d_path) (*__d_path);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	spinlock_t *vfsmount_lock;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	typeof(find_task_by_vpid) (*find_task_by_vpid);
-	typeof(find_task_by_pid_ns) (*find_task_by_pid_ns);
+	struct task_struct * (*find_task_by_vpid) (pid_t nr);
+	struct task_struct * (*find_task_by_pid_ns) (pid_t nr,
+						     struct pid_namespace *ns);
 #endif
 };
 

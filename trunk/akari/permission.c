@@ -273,7 +273,7 @@ static int __ccs_mkdir_permission(struct dentry *dentry, struct vfsmount *mnt,
 				  unsigned int mode);
 static int __ccs_mknod_permission(struct dentry *dentry, struct vfsmount *mnt,
 				  const unsigned int mode, unsigned int dev);
-static int __ccs_mount_permission(char *dev_name, struct path *path,
+static int __ccs_mount_permission(const char *dev_name, struct path *path,
 				  const char *type, unsigned long flags,
 				  void *data_page);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
@@ -313,7 +313,7 @@ static int ccs_kern_path(const char *pathname, int flags, struct path *path);
 static int ccs_mkdev_perm(const u8 operation, struct dentry *dentry,
 			  struct vfsmount *mnt, const unsigned int mode,
 			  unsigned int dev);
-static int ccs_mount_acl(struct ccs_request_info *r, char *dev_name,
+static int ccs_mount_acl(struct ccs_request_info *r, const char *dev_name,
 			 struct path *dir, const char *type,
 			 unsigned long flags);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
@@ -321,7 +321,7 @@ static int ccs_new_open_permission(struct file *filp);
 #endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 static int ccs_old_chroot_permission(struct nameidata *nd);
-static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
+static int ccs_old_mount_permission(const char *dev_name, struct nameidata *nd,
 				    const char *type, unsigned long flags,
 				    void *data_page);
 static int ccs_old_pivot_root_permission(struct nameidata *old_nd,
@@ -1781,7 +1781,7 @@ static bool ccs_check_mount_acl(struct ccs_request_info *r,
  *
  * Caller holds ccs_read_lock().
  */
-static int ccs_mount_acl(struct ccs_request_info *r, char *dev_name,
+static int ccs_mount_acl(struct ccs_request_info *r, const char *dev_name,
 			 struct path *dir, const char *type,
 			 unsigned long flags)
 {
@@ -1888,7 +1888,7 @@ out:
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_mount_permission(char *dev_name, struct path *path,
+static int __ccs_mount_permission(const char *dev_name, struct path *path,
 				  const char *type, unsigned long flags,
 				  void *data_page)
 {
@@ -1950,7 +1950,7 @@ static int __ccs_mount_permission(char *dev_name, struct path *path,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_old_mount_permission(char *dev_name, struct nameidata *nd,
+static int ccs_old_mount_permission(const char *dev_name, struct nameidata *nd,
 				    const char *type, unsigned long flags,
 				    void *data_page)
 {

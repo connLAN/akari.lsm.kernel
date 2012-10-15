@@ -1974,7 +1974,7 @@ static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 					      data_page);
 }
 
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
 
 /**
  * ccs_sb_pivotroot - Check permission for pivot_root().
@@ -2006,6 +2006,47 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
  */
 static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
 			unsigned long flags, void *data_page)
+{
+	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_mount);
+	return original_security_ops.sb_mount(dev_name, path, type, flags,
+					      data_page);
+}
+
+#else
+
+/**
+ * ccs_sb_pivotroot - Check permission for pivot_root().
+ *
+ * @old_path: Pointer to "struct path".
+ * @new_path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
+{
+	int rc = ccs_pivot_root_permission(old_path, new_path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_pivotroot);
+	return original_security_ops.sb_pivotroot(old_path, new_path);
+}
+
+/**
+ * ccs_sb_mount - Check permission for mount().
+ *
+ * @dev_name:  Name of device file.
+ * @path:      Pointer to "struct path".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sb_mount(const char *dev_name, struct path *path,
+			const char *type, unsigned long flags, void *data_page)
 {
 	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
 	if (rc)

@@ -1976,6 +1976,14 @@ bool ccs_used_by_cred(const struct ccs_domain_info *domain);
 int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep);
 void ccs_finish_execve(int retval, struct ccs_execve *ee);
 void ccs_load_policy(const char *filename);
+#ifndef CONFIG_AKARI_TRACE_EXECVE_COUNT
+#define ccs_audit_alloc_execve(ee) do { } while (0)
+#define ccs_audit_free_execve(ee, is_current)	do { } while (0)
+#else
+void ccs_audit_alloc_execve(const struct ccs_execve * const ee);
+void ccs_audit_free_execve(const struct ccs_execve * const ee,
+			   const bool is_current);
+#endif
 
 #define CCS_TASK_SECURITY_HASH_BITS 12
 #define CCS_MAX_TASK_SECURITY_HASH (1u << CCS_TASK_SECURITY_HASH_BITS)

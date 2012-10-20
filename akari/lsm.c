@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.27   2012/05/05
+ * Version: 1.0.28   2012/10/20
  */
 
 #include "internal.h"
@@ -80,6 +80,68 @@ static struct security_operations original_security_ops /* = *security_ops; */;
 #define CCS_INODE_HOOK_HAS_MNT
 #elif defined(CONFIG_SECURITY_APPARMOR) && LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 24)
 #define CCS_INODE_HOOK_HAS_MNT
+#endif
+
+#ifdef CONFIG_AKARI_TRACE_EXECVE_COUNT
+
+/**
+ * ccs_update_ee_counter - Update "struct ccs_execve" counter.
+ *
+ * @count: Count to increment or decrement.
+ *
+ * Returns updated counter.
+ */
+static unsigned int ccs_update_ee_counter(int count)
+{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 10) || defined(atomic_add_return)
+	/* Debug counter for detecting "struct ccs_execve" memory leak. */
+	static atomic_t ccs_ee_counter = ATOMIC_INIT(0);
+	return atomic_add_return(count, &ccs_ee_counter);
+#else
+	static DEFINE_SPINLOCK(ccs_ee_lock);
+	static unsigned int ccs_ee_counter;
+	unsigned long flags;
+	spin_lock_irqsave(&ccs_ee_lock, flags);
+	ccs_ee_counter += count;
+	count = ccs_ee_counter;
+	spin_unlock_irqrestore(&ccs_ee_lock, flags);
+	return count;
+#endif
+}
+
+/**
+ * ccs_audit_alloc_execve - Audit allocation of "struct ccs_execve".
+ *
+ * @ee: Pointer to "struct ccs_execve".
+ *
+ * Returns nothing.
+ */
+void ccs_audit_alloc_execve(const struct ccs_execve * const ee)
+{
+	printk(KERN_INFO "AKARI: Allocated %p by pid=%u (count=%u)\n", ee,
+	       current->pid, ccs_update_ee_counter(1) - 1);
+}
+
+/**
+ * ccs_audit_free_execve - Audit release of "struct ccs_execve".
+ *
+ * @ee:   Pointer to "struct ccs_execve".
+ * @task: True if released by current task, false otherwise.
+ *
+ * Returns nothing.
+ */
+void ccs_audit_free_execve(const struct ccs_execve * const ee,
+			   const bool is_current)
+{
+	const unsigned int tmp = ccs_update_ee_counter(-1);
+	if (is_current)
+		printk(KERN_INFO "AKARI: Releasing %p by pid=%u (count=%u)\n",
+		       ee, current->pid, tmp);
+	else
+		printk(KERN_INFO "AKARI: Releasing %p by kernel (count=%u)\n",
+		       ee, tmp);
+}
+
 #endif
 
 /**
@@ -171,6 +233,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 			done = true;
 		}
 #endif
+		ccs_audit_free_execve(ee, false);
 		kfree(ee->handler_path);
 		kfree(ee);
 	}
@@ -2936,7 +2999,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.27   2012/05/05\n");
+	printk(KERN_INFO "AKARI: 1.0.28   2012/10/20\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

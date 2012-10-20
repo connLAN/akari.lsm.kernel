@@ -239,3 +239,9 @@ Version 1.0.27   2012/05/05   Minor update release.
    Readd RHEL_MINOR/AX_MINOR checks.
 
    Accept manager programs which do not start with / .
+
+Version 1.0.28   2012/10/20   Security update release.
+
+   Fix kernel panic caused by double kfree() bug when "struct ccs_execve"
+   pointer was by error duplicated at __ccs_alloc_task_security().
+   This bug affects only 2.6.28 and earlier kernels.

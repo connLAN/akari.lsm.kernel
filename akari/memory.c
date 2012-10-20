@@ -229,7 +229,8 @@ static int __ccs_alloc_task_security(const struct task_struct *task)
 		[hash_ptr((void *) task, CCS_TASK_SECURITY_HASH_BITS)];
 	if (!new_security)
 		return -ENOMEM;
-	*new_security = *old_security;
+	new_security->ccs_domain_info = old_security->ccs_domain_info;
+	new_security->ccs_flags = old_security->ccs_flags;
 	new_security->task = task;
 	ccs_add_task_security(new_security, list);
 	return 0;
@@ -291,6 +292,11 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
+	if (ptr->ee) {
+		ccs_audit_free_execve(ptr->ee, false);
+		kfree(ptr->ee->handler_path);
+		kfree(ptr->ee);
+	}
 	kfree(ptr);
 }
 
@@ -306,6 +312,11 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 static void ccs_rcu_free(void *arg)
 {
 	struct ccs_security *ptr = arg;
+	if (ptr->ee) {
+		ccs_audit_free_execve(ptr->ee, false);
+		kfree(ptr->ee->handler_path);
+		kfree(ptr->ee);
+	}
 	kfree(ptr);
 }
 

@@ -1478,6 +1478,7 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 		kfree(ee);
 		return -ENOMEM;
 	}
+	ccs_audit_alloc_execve(ee);
 	idx = ccs_read_lock();
 	/* ee->dump->data is allocated by ccs_dump_page(). */
 	ee->previous_domain = task->ccs_domain_info;
@@ -1553,6 +1554,7 @@ void ccs_finish_execve(int retval, struct ccs_execve *ee)
 	}
 	/* Tell GC that I finished execve(). */
 	task->ccs_flags &= ~CCS_TASK_IS_IN_EXECVE;
+	ccs_audit_free_execve(ee, true);
 	kfree(ee->handler_path);
 	kfree(ee);
 }

@@ -229,9 +229,9 @@ static int __ccs_alloc_task_security(const struct task_struct *task)
 		[hash_ptr((void *) task, CCS_TASK_SECURITY_HASH_BITS)];
 	if (!new_security)
 		return -ENOMEM;
+	new_security->task = task;
 	new_security->ccs_domain_info = old_security->ccs_domain_info;
 	new_security->ccs_flags = old_security->ccs_flags;
-	new_security->task = task;
 	ccs_add_task_security(new_security, list);
 	return 0;
 }

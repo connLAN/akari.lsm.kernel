@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.28   2012/10/20
+ * Version: 1.0.29   2012/11/04
  */
 
 #include "internal.h"
@@ -57,6 +57,8 @@ static struct ccs_security ccs_default_security = {
 extern struct ccs_security ccs_oom_security;
 /* Dummy security context for avoiding NULL pointer dereference. */
 extern struct ccs_security ccs_default_security;
+/* Dummy marker for calling security_bprm_free(). */
+static const unsigned long ccs_bprm_security;
 #endif
 
 /* For exporting variables and functions. */
@@ -451,6 +453,32 @@ static void ccs_task_free_security(struct task_struct *p)
 }
 
 /**
+ * ccs_bprm_alloc_security - Allocate memory for "struct linux_binprm".
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_bprm_alloc_security(struct linux_binprm *bprm)
+{
+	int rc;
+	while (!original_security_ops.bprm_alloc_security);
+	rc = original_security_ops.bprm_alloc_security(bprm);
+	if (bprm->security || rc)
+		return rc;
+	/*
+	 * Update bprm->security to &ccs_bprm_security so that
+	 * security_bprm_free() is called even if do_execve() failed at
+	 * search_binary_handler() without allocating memory at
+	 * security_bprm_alloc(). This trick assumes that active LSM module
+	 * does not access bprm->security if that module did not allocate
+	 * memory at security_bprm_alloc().
+	 */
+	bprm->security = (void *) &ccs_bprm_security;
+	return 0;
+}
+
+/**
  * ccs_bprm_free_security - Release memory for "struct linux_binprm".
  *
  * @bprm: Pointer to "struct linux_binprm".
@@ -459,8 +487,25 @@ static void ccs_task_free_security(struct task_struct *p)
  */
 static void ccs_bprm_free_security(struct linux_binprm *bprm)
 {
-	while (!original_security_ops.bprm_free_security);
-	original_security_ops.bprm_free_security(bprm);
+	/*
+	 * If do_execve() succeeded, bprm->security will be updated to NULL at
+	 * security_bprm_compute_creds()/security_bprm_apply_creds() if
+	 * bprm->security was set to &ccs_bprm_security at
+	 * security_bprm_alloc().
+	 *
+	 * If do_execve() failed, bprm->security remains at &ccs_bprm_security
+	 * if bprm->security was set to &ccs_bprm_security at
+	 * security_bprm_alloc().
+	 *
+	 * And do_execve() does not call security_bprm_free() if do_execve()
+	 * failed and bprm->security == NULL. Therefore, do not call
+	 * original_security_ops.bprm_free_security() if bprm->security remains
+	 * at &ccs_bprm_security .
+	 */
+	if (bprm->security != &ccs_bprm_security) {
+		while (!original_security_ops.bprm_free_security);
+		original_security_ops.bprm_free_security(bprm);
+	}
 	/*
 	 * If do_execve() succeeded,
 	 * ccs_clear_execve(0, ccs_current_security());
@@ -483,6 +528,8 @@ static void ccs_bprm_free_security(struct linux_binprm *bprm)
  */
 static void ccs_bprm_compute_creds(struct linux_binprm *bprm)
 {
+	if (bprm->security == &ccs_bprm_security)
+		bprm->security = NULL;
 	while (!original_security_ops.bprm_compute_creds);
 	original_security_ops.bprm_compute_creds(bprm);
 	ccs_clear_execve(0, ccs_current_security());
@@ -500,6 +547,8 @@ static void ccs_bprm_compute_creds(struct linux_binprm *bprm)
  */
 static void ccs_bprm_apply_creds(struct linux_binprm *bprm, int unsafe)
 {
+	if (bprm->security == &ccs_bprm_security)
+		bprm->security = NULL;
 	while (!original_security_ops.bprm_apply_creds);
 	original_security_ops.bprm_apply_creds(bprm, unsafe);
 	ccs_clear_execve(0, ccs_current_security());
@@ -2906,6 +2955,7 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
 #else
 	swap_security_ops(task_alloc_security);
 	swap_security_ops(task_free_security);
+	swap_security_ops(bprm_alloc_security);
 	swap_security_ops(bprm_free_security);
 #endif
 	/* Security context updater for successful execve(). */
@@ -2999,7 +3049,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.28   2012/10/20\n");
+	printk(KERN_INFO "AKARI: 1.0.29   2012/11/04\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

@@ -245,3 +245,11 @@ Version 1.0.28   2012/10/20   Security update release.
    Fix kernel panic caused by double kfree() bug when "struct ccs_execve"
    pointer was by error duplicated at __ccs_alloc_task_security().
    This bug affects only 2.6.28 and earlier kernels.
+
+Version 1.0.29   2012/11/04   Minor update release.
+
+   Use dummy pointer as needed in order to make sure that security_bprm_free()
+   (which is used for making the caller of do_execve() return to previous
+   domain when do_execve() failed after domain transition) is always called.
+   Without this fix, domain transition history on 2.6.28 and earlier kernels
+   becomes inaccurate.

@@ -292,11 +292,6 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
-	if (ptr->ee) {
-		ccs_audit_free_execve(ptr->ee, false);
-		kfree(ptr->ee->handler_path);
-		kfree(ptr->ee);
-	}
 	kfree(ptr);
 }
 
@@ -312,11 +307,6 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 static void ccs_rcu_free(void *arg)
 {
 	struct ccs_security *ptr = arg;
-	if (ptr->ee) {
-		ccs_audit_free_execve(ptr->ee, false);
-		kfree(ptr->ee->handler_path);
-		kfree(ptr->ee);
-	}
 	kfree(ptr);
 }
 

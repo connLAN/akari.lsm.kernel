@@ -245,6 +245,36 @@ void ccs_load_policy(const char *filename)
 #endif
 
 #if 0
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+
+/**
+ * __ccs_search_binary_handler - Load policy before calling search_binary_handler().
+ *
+ * @bprm: Pointer to "struct linux_binprm".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_search_binary_handler(struct linux_binprm *bprm)
+{
+#ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
+	ccs_load_policy(bprm->filename);
+#endif
+	/*
+	 * ccs_load_policy() executes /sbin/ccs-init if bprm->filename is
+	 * /sbin/init. /sbin/ccs-init executes /etc/ccs/ccs-load-module to
+	 * load loadable kernel module. The loadable kernel module modifies
+	 * "struct ccsecurity_ops". Thus, we need to transfer control to
+	 * __ccs_search_binary_handler() in security/ccsecurity/permission.c
+	 * if "struct ccsecurity_ops" was modified.
+	 */
+	if (ccsecurity_ops.search_binary_handler
+	    != __ccs_search_binary_handler)
+		return ccsecurity_ops.search_binary_handler(bprm);
+	return search_binary_handler(bprm);
+}
+
+#else
+
 /**
  * __ccs_search_binary_handler - Load policy before calling search_binary_handler().
  *
@@ -272,6 +302,8 @@ static int __ccs_search_binary_handler(struct linux_binprm *bprm,
 		return ccsecurity_ops.search_binary_handler(bprm, regs);
 	return search_binary_handler(bprm, regs);
 }
+
+#endif
 
 /*
  * Some exports for loadable kernel module part.

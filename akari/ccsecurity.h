@@ -29,7 +29,11 @@ struct sock;
 struct sk_buff;
 struct msghdr;
 struct pid_namespace;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+int search_binary_handler(struct linux_binprm *bprm);
+#else
 int search_binary_handler(struct linux_binprm *bprm, struct pt_regs *regs);
+#endif
 
 #ifdef CONFIG_CCSECURITY
 
@@ -144,8 +148,12 @@ struct ccsecurity_operations {
 				   struct dentry *dentry);
 	int (*sigqueue_permission) (pid_t pid, int sig);
 	int (*tgsigqueue_permission) (pid_t tgid, pid_t pid, int sig);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+	int (*search_binary_handler) (struct linux_binprm *bprm);
+#else
 	int (*search_binary_handler) (struct linux_binprm *bprm,
 				      struct pt_regs *regs);
+#endif
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 	int (*alloc_task_security) (const struct task_struct *task);
 	void (*free_task_security) (const struct task_struct *task);
@@ -393,11 +401,22 @@ static inline int ccs_chmod_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt, mode) : 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+
+static inline int ccs_search_binary_handler(struct linux_binprm *bprm)
+{
+	return ccsecurity_ops.search_binary_handler(bprm);
+}
+
+#else
+
 static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 					    struct pt_regs *regs)
 {
 	return ccsecurity_ops.search_binary_handler(bprm, regs);
 }
+
+#endif
 
 #else
 
@@ -582,11 +601,22 @@ static inline int ccs_chmod_permission(struct dentry *dentry,
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+
+static inline int ccs_search_binary_handler(struct linux_binprm *bprm)
+{
+	return search_binary_handler(bprm);
+}
+
+#else
+
 static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 					    struct pt_regs *regs)
 {
 	return search_binary_handler(bprm, regs);
 }
+
+#endif
 
 #endif
 

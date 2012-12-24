@@ -1,5 +1,5 @@
 /*
- * akari-test.c
+ * akari_test.c
  *
  * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  */

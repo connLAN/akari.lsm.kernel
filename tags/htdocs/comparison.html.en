@@ -151,7 +151,7 @@ Requires kernel 3.2.<br>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check filesystem's type when mounting filesystems?</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td></td><td>&nbsp;&nbsp;&nbsp;&nbsp;Check mount flags when mounting filesystems?</td><td>Y</td><td colspan=5>Y<a href="#note2">(*2)</a></td><td>Y</td><td>Y</td></tr>
 <tr><td></td><td>Restrict unmounting filesystems? (file unmount)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
-<tr><td></td><td>Restrict change of root directories? (file chroot)</td><td>Y</td><td colspan=5></td><td>Y</td><td>Y</td></tr>
+<tr><td></td><td>Restrict change of root directories? (file chroot)</td><td>Y</td><td colspan=5></td><td>Y<a href="#note1">(*1)</a></td><td>Y</td></tr>
 <tr><td></td><td>Restrict exchange of root directories? (file pivot_root)</td><td>Y</td><td colspan=6>Y</td><td>Y</td></tr>
 <tr><td colspan=10>Access control for Networks</td></tr>
 <tr><td></td><td>Restrict remote IP addresses and port numbers for outgoing connections?<br>

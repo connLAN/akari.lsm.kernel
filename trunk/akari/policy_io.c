@@ -994,6 +994,7 @@ out:
  * include/net/addrconf.h lib/hexdump.c lib/vsprintf.c and simplified.
  */
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
+#if !defined(RHEL_MAJOR) || RHEL_MAJOR != 5 || !defined(RHEL_MINOR) || RHEL_MINOR != 9
 static const char hex_asc[] = "0123456789abcdef";
 #define hex_asc_lo(x)   hex_asc[((x) & 0x0f)]
 #define hex_asc_hi(x)   hex_asc[((x) & 0xf0) >> 4]
@@ -1004,6 +1005,7 @@ static inline char *pack_hex_byte(char *buf, u8 byte)
 	*buf++ = hex_asc_lo(byte);
 	return buf;
 }
+#endif
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)

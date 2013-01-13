@@ -2619,7 +2619,7 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 #endif
 
 /**
- * ccs_find_find_security_ops - Find address of "struct security_operations *security_ops".
+ * ccs_find_security_ops - Find address of "struct security_operations *security_ops".
  *
  * Returns pointer to "struct security_operations" on success, NULL otherwise.
  */

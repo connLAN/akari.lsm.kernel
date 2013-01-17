@@ -140,7 +140,7 @@ task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /static-
 task manual_domain_transition &lt;kernel&gt; //apache /www.tomoyo00.com /default
 </pre>
 
-<p>If SELinux is enabled, policy must be configured to allow Apache to write to the <a href="policy-specification/proc-interface.html.en#self_domain">/proc/ccs/self_domain</a> interface. On CentOS 5.6, this may be done with the following commands, though this depends on policy configuration, distribution and package versions:</p>
+<p>If SELinux is enabled, policy must be configured to allow Apache to write to the <a href="policy-specification/proc-interface.html.en#self_domain">/proc/ccs/self_domain</a> interface. On CentOS 5.9, this may be done with the following commands, though this depends on policy configuration, distribution and package versions:</p>
 
 <pre class="command">
 # cd /etc/selinux/

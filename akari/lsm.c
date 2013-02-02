@@ -164,12 +164,16 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	if (!ee)
 		return;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
+	security->ccs_flags &= ~CCS_TASK_STARTED_EXECVE;
+#else
 	/*
 	 * Drop refcount on "struct cred" in "struct linux_binprm" and forget
 	 * it.
 	 */
 	put_cred(security->cred);
 	security->cred = NULL;
+#endif
 	atomic_dec(&ccs_in_execve_tasks);
 #endif
 	ccs_finish_execve(ret, ee);
@@ -188,6 +192,28 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
 	struct ccs_execve *ee = ptr->ee;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
+	/*
+	 * If this security context was associated with "struct pid" and
+	 * ptr->ccs_flags has CCS_TASK_STARTED_EXECVE set, it indicates that a
+	 * "struct task_struct" associated with this security context exited
+	 * immediately after do_execve() has failed.
+	 */
+	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE)) {
+#ifdef CONFIG_AKARI_DEBUG
+		static bool done;
+		if (!done) {
+			printk(KERN_INFO "AKARI: Decrementing "
+			       "ccs_in_execve_tasks counter "
+			       "because some \"struct task_struct\" has "
+			       "exit()ed immediately after do_execve() has "
+			       "failed.\n");
+			done = true;
+		}
+#endif
+		atomic_dec(&ccs_in_execve_tasks);
+	}
+#else
 	/*
 	 * If this security context was associated with "struct pid" and
 	 * remembers "struct cred" in "struct linux_binprm", it indicates that
@@ -209,6 +235,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 		put_cred(ptr->cred);
 		atomic_dec(&ccs_in_execve_tasks);
 	}
+#endif
 	/*
 	 * If this security context was associated with "struct pid",
 	 * drop refcount obtained by get_pid() in ccs_find_task_security().
@@ -323,7 +350,17 @@ static int ccs_task_create(unsigned long clone_flags)
 static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 			    gfp_t gfp)
 {
-	int rc = ccs_copy_cred_security(new, old, gfp);
+	int rc;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
+	/*
+	 * For checking whether reverting domain transition is needed or not.
+	 *
+	 * See ccs_find_task_security() for reason.
+	 */
+	if (gfp == GFP_KERNEL)
+		ccs_find_task_security(current);
+#endif
+	rc = ccs_copy_cred_security(new, old, gfp);
 	if (rc)
 		return rc;
 	if (gfp == GFP_KERNEL)
@@ -603,12 +640,16 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		rc = ccs_start_execve(bprm, &security->ee);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 		if (security->ee) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
+			security->ccs_flags |= CCS_TASK_STARTED_EXECVE;
+#else
 			/*
 			 * Get refcount on "struct cred" in
 			 * "struct linux_binprm" and remember it.
 			 */
 			get_cred(bprm->cred);
 			security->cred = bprm->cred;
+#endif
 			atomic_inc(&ccs_in_execve_tasks);
 		}
 #endif
@@ -990,9 +1031,11 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 #if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	if (attr->ia_valid & ATTR_UID)
-		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, INVALID_GID);
+		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid,
+					  INVALID_GID);
 	if (!rc && (attr->ia_valid & ATTR_GID))
-		rc = ccs_chown_permission(dentry, NULL, INVALID_UID, attr->ia_gid);
+		rc = ccs_chown_permission(dentry, NULL, INVALID_UID,
+					  attr->ia_gid);
 #else
 	if (attr->ia_valid & ATTR_UID)
 		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, -1);
@@ -3130,6 +3173,44 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		if (ptr->pid != task->pids[PIDTYPE_PID].pid)
 			continue;
 		rcu_read_unlock();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
+		/*
+		 * Current thread needs to transit from old domain to new
+		 * domain before do_execve() succeeds in order to check
+		 * permission for interpreters and environment variables using
+		 * new domain's ACL rules. The domain transition has to be
+		 * visible from other CPU in order to allow interactive
+		 * enforcing mode. Also, the domain transition has to be
+		 * reverted if do_execve() failed. However, an LSM hook for
+		 * reverting domain transition is missing.
+		 *
+		 * security_prepare_creds() is called from prepare_creds() from
+		 * prepare_bprm_creds() from do_execve() before setting
+		 * current->in_execve flag, and current->in_execve flag is
+		 * cleared by the time next do_execve() request starts.
+		 * This means that we can emulate the missing LSM hook for
+		 * reverting domain transition, by calling this function from
+		 * security_prepare_creds(). 
+		 *
+		 * If current->in_execve is not set but ptr->ccs_flags has
+		 * CCS_TASK_STARTED_EXECVE set, it indicates that do_execve()
+		 * has failed and reverting domain transition is needed.
+		 */
+		if (task == current &&
+		    (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE) &&
+		    !current->in_execve) {
+#ifdef CONFIG_AKARI_DEBUG
+			static bool done;
+			if (!done) {
+				printk(KERN_INFO "AKARI: Reverting domain "
+				       "transition because do_execve() has "
+				       "failed.\n");
+				done = true;
+			}
+#endif
+			ccs_clear_execve(-1, ptr);
+		}
+#else
 		/*
 		 * Current thread needs to transit from old domain to new
 		 * domain before do_execve() succeeds in order to check
@@ -3173,6 +3254,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 #endif
 			ccs_clear_execve(-1, ptr);
 		}
+#endif
 		return ptr;
 	}
 	rcu_read_unlock();

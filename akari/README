@@ -253,3 +253,14 @@ Version 1.0.29   2012/11/04   Minor update release.
    domain when do_execve() failed after domain transition) is always called.
    Without this fix, domain transition history on 2.6.28 and earlier kernels
    becomes inaccurate.
+
+Version 1.0.30   2013/??/??   Minor update release.
+
+   Commit a2a8474c "exec: do not sleep in TASK_TRACED under ->cred_guard_mutex"
+   moved "current->in_execve = 1;" from before prepare_bprm_creds() to after
+   prepare_bprm_creds(). It turned out that, as an unexpected bonus, we can use
+   security_prepare_creds() as a hook for emulating security_bprm_free() hook.
+
+   I updated the logic for security_bprm_free() emulation, and now AKARI should
+   be able to coexist with other AKARI-like LKM-based LSM implementations (e.g.
+   CaitSith) on all kernel versions other than 2.6.29 and 2.6.30.

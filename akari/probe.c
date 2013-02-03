@@ -2,6 +2,18 @@
  * probe.c
  *
  * Copyright (C) 2010-2013  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ *
+ * Functions in this file are doing runtime address resolution based on byte
+ * code comparison in order to allow LKM-based LSM modules to access built-in
+ * functions and variables which are not exported to LKMs.
+ * Since functions in this file are assuming that using identical source code,
+ * identical kernel config and identical compiler generates identical byte code
+ * output, functions in this file may not work on some architectures and/or
+ * environments.
+ *
+ * This file is used by AKARI and CaitSith. This file will become unnecessary
+ * when LKM-based LSM module comes back and TOMOYO 2.x becomes a LKM-based LSM
+ * module.
  */
 
 #include "probe.h"
@@ -138,7 +150,7 @@ out:
  * Dummy variable for finding location of
  * "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
  */
-static struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS] __initdata;
+static struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS];
 
 /**
  * ccs_security_bprm_committed_creds - Dummy function which does identical to security_bprm_committed_creds() in security/security.c.
@@ -147,7 +159,7 @@ static struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS] __initdata;
  *
  * Returns nothing.
  */
-static void __init ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
+static void ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
 {
 	do {
 		struct security_operations *sop;
@@ -165,7 +177,7 @@ static void __init ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
  * Dummy variable for finding address of
  * "struct security_operations *security_ops".
  */
-static struct security_operations *ccs_security_ops __initdata;
+static struct security_operations *ccs_security_ops;
 
 /**
  * ccs_security_file_alloc - Dummy function which does identical to security_file_alloc() in security/security.c.
@@ -174,7 +186,7 @@ static struct security_operations *ccs_security_ops __initdata;
  *
  * Returns return value from security_file_alloc().
  */
-static int __init ccs_security_file_alloc(struct file *file)
+static int ccs_security_file_alloc(struct file *file)
 {
 	return ccs_security_ops->file_alloc_security(file);
 }
@@ -451,12 +463,12 @@ void * __init ccs_find_find_task_by_pid_ns(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock __cacheline_aligned_in_smp __initdata =
+static spinlock_t ccs_vfsmount_lock __cacheline_aligned_in_smp =
 SPIN_LOCK_UNLOCKED;
 
-static struct list_head *ccs_mount_hashtable __initdata;
-static int ccs_hash_mask __initdata;
-static int ccs_hash_bits __initdata;
+static struct list_head *ccs_mount_hashtable;
+static int ccs_hash_mask;
+static int ccs_hash_bits;
 
 /**
  * hash - Copy of hash() in fs/namespace.c.
@@ -482,8 +494,8 @@ static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
  *
  * Returns pointer to "struct vfsmount".
  */
-static struct vfsmount * __init ccs_lookup_mnt(struct vfsmount *mnt,
-					       struct dentry *dentry)
+static struct vfsmount *ccs_lookup_mnt(struct vfsmount *mnt,
+				       struct dentry *dentry)
 {
 	struct list_head *head = ccs_mount_hashtable + hash(mnt, dentry);
 	struct list_head *tmp = head;
@@ -534,7 +546,7 @@ void * __init ccs_find_vfsmount_lock(void)
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock __initdata;
+static spinlock_t ccs_vfsmount_lock;
 
 /**
  * ccs_follow_up - Dummy function which does identical to follow_up() in fs/namei.c.
@@ -544,7 +556,7 @@ static spinlock_t ccs_vfsmount_lock __initdata;
  *
  * Returns 1 if followed up, 0 otehrwise.
  */
-static int __init ccs_follow_up(struct vfsmount **mnt, struct dentry **dentry)
+static int ccs_follow_up(struct vfsmount **mnt, struct dentry **dentry)
 {
 	struct vfsmount *parent;
 	struct dentry *mountpoint;
@@ -593,7 +605,7 @@ void * __init ccs_find_vfsmount_lock(void)
 #else
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock __initdata;
+static spinlock_t ccs_vfsmount_lock;
 
 /**
  * ccs_mnt_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
@@ -602,7 +614,7 @@ static spinlock_t ccs_vfsmount_lock __initdata;
  *
  * Returns nothing.
  */
-static void __init ccs_mnt_pin(struct vfsmount *mnt)
+static void ccs_mnt_pin(struct vfsmount *mnt)
 {
 	spin_lock(&ccs_vfsmount_lock);
 	mnt->mnt_pinned++;

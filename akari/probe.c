@@ -150,7 +150,7 @@ out:
  * Dummy variable for finding location of
  * "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
  */
-static struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS];
+struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS];
 
 /**
  * ccs_security_bprm_committed_creds - Dummy function which does identical to security_bprm_committed_creds() in security/security.c.
@@ -159,7 +159,7 @@ static struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS];
  *
  * Returns nothing.
  */
-static void ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
+void ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
 {
 	do {
 		struct security_operations *sop;
@@ -467,8 +467,7 @@ static spinlock_t ccs_vfsmount_lock __cacheline_aligned_in_smp =
 SPIN_LOCK_UNLOCKED;
 
 static struct list_head *ccs_mount_hashtable;
-static int ccs_hash_mask;
-static int ccs_hash_bits;
+static int ccs_hash_mask, ccs_hash_bits;
 
 /**
  * hash - Copy of hash() in fs/namespace.c.

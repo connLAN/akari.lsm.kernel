@@ -1,7 +1,7 @@
 /*
  * lsm.c
  *
- * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ * Copyright (C) 2010-2013  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
  * Version: 1.0.29   2012/11/04
  */
@@ -163,9 +163,7 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	if (!ee)
 		return;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
-	security->ccs_flags &= ~CCS_TASK_STARTED_EXECVE;
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
 	/*
 	 * Drop refcount on "struct cred" in "struct linux_binprm" and forget
 	 * it.
@@ -194,11 +192,11 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 	/*
 	 * If this security context was associated with "struct pid" and
-	 * ptr->ccs_flags has CCS_TASK_STARTED_EXECVE set, it indicates that a
+	 * ptr->ccs_flags has CCS_TASK_IS_IN_EXECVE set, it indicates that a
 	 * "struct task_struct" associated with this security context exited
 	 * immediately after do_execve() has failed.
 	 */
-	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE)) {
+	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
 #ifdef CONFIG_AKARI_DEBUG
 		static bool done;
 		if (!done) {
@@ -639,9 +637,7 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		rc = ccs_start_execve(bprm, &security->ee);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 		if (security->ee) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
-			security->ccs_flags |= CCS_TASK_STARTED_EXECVE;
-#else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
 			/*
 			 * Get refcount on "struct cred" in
 			 * "struct linux_binprm" and remember it.
@@ -2474,28 +2470,27 @@ static void __init ccs_update_security_ops(struct security_operations *ops)
  */
 static int __init ccs_init(void)
 {
-	struct security_operations *ops = ccs_find_security_ops();
+	struct security_operations *ops = probe_security_ops();
 	if (!ops)
 		goto out;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	ccsecurity_exports.find_task_by_vpid = ccs_find_find_task_by_vpid();
+	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();
 	if (!ccsecurity_exports.find_task_by_vpid)
 		goto out;
-	ccsecurity_exports.find_task_by_pid_ns =
-		ccs_find_find_task_by_pid_ns();
+	ccsecurity_exports.find_task_by_pid_ns = probe_find_task_by_pid_ns();
 	if (!ccsecurity_exports.find_task_by_pid_ns)
 		goto out;
 #endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	ccsecurity_exports.vfsmount_lock = ccs_find_vfsmount_lock();
+	ccsecurity_exports.vfsmount_lock = probe_vfsmount_lock();
 	if (!ccsecurity_exports.vfsmount_lock)
 		goto out;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
-	ccsecurity_exports.__d_path = ccs_find___d_path();
+	ccsecurity_exports.__d_path = probe___d_path();
 	if (!ccsecurity_exports.__d_path)
 		goto out;
 #else
-	ccsecurity_exports.d_absolute_path = ccs_find_d_absolute_path();
+	ccsecurity_exports.d_absolute_path = probe_d_absolute_path();
 	if (!ccsecurity_exports.d_absolute_path)
 		goto out;
 #endif
@@ -2613,11 +2608,11 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 * security_prepare_creds(). 
 		 *
 		 * If current->in_execve is not set but ptr->ccs_flags has
-		 * CCS_TASK_STARTED_EXECVE set, it indicates that do_execve()
+		 * CCS_TASK_IS_IN_EXECVE set, it indicates that do_execve()
 		 * has failed and reverting domain transition is needed.
 		 */
 		if (task == current &&
-		    (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE) &&
+		    (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE) &&
 		    !current->in_execve) {
 #ifdef CONFIG_AKARI_DEBUG
 			static bool done;

@@ -918,8 +918,6 @@ enum ccs_value_type {
 #define CCS_TASK_IS_EXECUTE_HANDLER       8
 /* Current thread is allowed to modify policy via /proc/ccs/ interface? */
 #define CCS_TASK_IS_MANAGER              16
-/* Current thread needs to rollback if do_execve() failed ? */
-#define CCS_TASK_STARTED_EXECVE          32
 
 /*
  * Retry this request. Returned by ccs_supervisor() if policy violation has

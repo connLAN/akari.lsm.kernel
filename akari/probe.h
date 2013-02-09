@@ -25,21 +25,21 @@
 
 #if defined(CONFIG_SECURITY_COMPOSER_MAX)
 struct list_head;
-struct list_head * __init ccs_find_lsm_hooks_list(void);
+struct list_head * __init probe_lsm_hooks_list(void);
 #else
 struct security_operations;
-struct security_operations * __init ccs_find_security_ops(void);
+struct security_operations * __init probe_security_ops(void);
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-void * __init ccs_find_find_task_by_vpid(void);
-void * __init ccs_find_find_task_by_pid_ns(void);
+void * __init probe_find_task_by_vpid(void);
+void * __init probe_find_task_by_pid_ns(void);
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-void * __init ccs_find_vfsmount_lock(void);
+void * __init probe_vfsmount_lock(void);
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
-void * __init ccs_find___d_path(void);
+void * __init probe___d_path(void);
 #else
-void * __init ccs_find_d_absolute_path(void);
+void * __init probe_d_absolute_path(void);
 #endif

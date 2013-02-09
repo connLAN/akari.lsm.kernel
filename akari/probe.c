@@ -21,7 +21,7 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /**
- * ccs_kernel_read - Wrapper for kernel_read().
+ * probe_kernel_read - Wrapper for kernel_read().
  *
  * @file:   Pointer to "struct file".
  * @offset: Starting position.
@@ -30,8 +30,8 @@
  *
  * Returns return value from kernel_read().
  */
-static int __init ccs_kernel_read(struct file *file, unsigned long offset,
-				  char *addr, unsigned long count)
+static int __init probe_kernel_read(struct file *file, unsigned long offset,
+				    char *addr, unsigned long count)
 {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 8)
 	/*
@@ -54,13 +54,13 @@ static int __init ccs_kernel_read(struct file *file, unsigned long offset,
 }
 
 /**
- * ccs_find_symbol - Find function's address from /proc/kallsyms .
+ * probe_find_symbol - Find function's address from /proc/kallsyms .
  *
  * @keyline: Function to find.
  *
  * Returns address of specified function on success, NULL otherwise.
  */
-static void *__init ccs_find_symbol(const char *keyline)
+static void *__init probe_find_symbol(const char *keyline)
 {
 	struct file *file = NULL;
 	char *buf;
@@ -117,8 +117,8 @@ static void *__init ccs_find_symbol(const char *keyline)
 	if (buf) {
 		int len;
 		int offset = 0;
-		while ((len = ccs_kernel_read(file, offset, buf,
-					      PAGE_SIZE - 1)) > 0) {
+		while ((len = probe_kernel_read(file, offset, buf,
+						PAGE_SIZE - 1)) > 0) {
 			char *cp;
 			buf[len] = '\0';
 			cp = strrchr(buf, '\n');
@@ -150,22 +150,22 @@ out:
  * Dummy variable for finding location of
  * "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
  */
-struct list_head ccs_lsm_hooks[LSM_MAX_HOOKS];
+struct list_head probe_lsm_hooks[LSM_MAX_HOOKS];
 
 /**
- * ccs_security_bprm_committed_creds - Dummy function which does identical to security_bprm_committed_creds() in security/security.c.
+ * probe_security_bprm_committed_creds - Dummy function which does identical to security_bprm_committed_creds() in security/security.c.
  *
  * @bprm: Pointer to "struct linux_binprm".
  *
  * Returns nothing.
  */
-void ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
+void probe_security_bprm_committed_creds(struct linux_binprm *bprm)
 {
 	do {
 		struct security_operations *sop;
 		
 		list_for_each_entry(sop,
-				    &ccs_lsm_hooks[lsm_bprm_committed_creds],
+				    &probe_lsm_hooks[lsm_bprm_committed_creds],
 				    list[lsm_bprm_committed_creds])
 			sop->bprm_committed_creds(bprm);
 	} while (0);
@@ -177,35 +177,35 @@ void ccs_security_bprm_committed_creds(struct linux_binprm *bprm)
  * Dummy variable for finding address of
  * "struct security_operations *security_ops".
  */
-static struct security_operations *ccs_security_ops;
+static struct security_operations *probe_dummy_security_ops;
 
 /**
- * ccs_security_file_alloc - Dummy function which does identical to security_file_alloc() in security/security.c.
+ * probe_security_file_alloc - Dummy function which does identical to security_file_alloc() in security/security.c.
  *
  * @file: Pointer to "struct file".
  *
  * Returns return value from security_file_alloc().
  */
-static int ccs_security_file_alloc(struct file *file)
+static int probe_security_file_alloc(struct file *file)
 {
-	return ccs_security_ops->file_alloc_security(file);
+	return probe_dummy_security_ops->file_alloc_security(file);
 }
 
 #if defined(CONFIG_ARM)
 
 /**
- * ccs_find_security_ops_on_arm - Find security_ops on ARM.
+ * probe_security_ops_on_arm - Find security_ops on ARM.
  *
  * @base: Address of security_file_alloc().
  *
  * Returns address of security_ops on success, NULL otherwise.
  */
-static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
+static void * __init probe_security_ops_on_arm(unsigned int *base)
 {
 	static unsigned int *ip4ret;
 	int i;
-	const unsigned long addr = (unsigned long) &ccs_security_ops;
-	unsigned int *ip = (unsigned int *) ccs_security_file_alloc;
+	const unsigned long addr = (unsigned long) &probe_dummy_security_ops;
+	unsigned int *ip = (unsigned int *) probe_security_file_alloc;
 	for (i = 0; i < 32; ip++, i++) {
 		if (*(ip + 2 + ((*ip & 0xFFF) >> 2)) != addr)
 			continue;
@@ -213,7 +213,7 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 		ip4ret = (unsigned int *) (*(ip + 2 + ((*ip & 0xFFF) >> 2)));
 		return &ip4ret;
 	}
-	ip = (unsigned int *) ccs_security_file_alloc;
+	ip = (unsigned int *) probe_security_file_alloc;
 	for (i = 0; i < 32; ip++, i++) {
 		/*
 		 * Find
@@ -242,7 +242,7 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
 
 #if defined(CONFIG_ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 /**
- * ccs_find_vfsmount_lock_on_arm - Find vfsmount_lock spinlock on ARM.
+ * probe_find_vfsmount_lock_on_arm - Find vfsmount_lock spinlock on ARM.
  *
  * @ip:   Address of dummy function's entry point.
  * @addr: Address of the variable which is used within @function.
@@ -250,9 +250,9 @@ static void * __init ccs_find_security_ops_on_arm(unsigned int *base)
  *
  * Returns address of vfsmount_lock on success, NULL otherwise.
  */
-static void * __init ccs_find_vfsmount_lock_on_arm(unsigned int *ip,
-						   unsigned long addr,
-						   unsigned int *base)
+static void * __init probe_find_vfsmount_lock_on_arm(unsigned int *ip,
+						     unsigned long addr,
+						     unsigned int *base)
 {
 	int i;
 	for (i = 0; i < 32; ip++, i++) {
@@ -268,7 +268,7 @@ static void * __init ccs_find_vfsmount_lock_on_arm(unsigned int *ip,
 #endif
 
 /**
- * ccs_find_variable - Find variable's address using dummy.
+ * probe_find_variable - Find variable's address using dummy.
  *
  * @function: Pointer to dummy function's entry point.
  * @addr:     Address of the variable which is used within @function.
@@ -281,27 +281,27 @@ static void * __init ccs_find_vfsmount_lock_on_arm(unsigned int *ip,
  * (2) It is safe to read 128 bytes from @function.
  * (3) @addr != Byte code except @addr.
  */
-static void * __init ccs_find_variable(void *function, unsigned long addr,
-				       const char *symbol)
+static void * __init probe_find_variable(void *function, unsigned long addr,
+					 const char *symbol)
 {
 	int i;
 	u8 *base;
 	u8 *cp = function;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 	if (*symbol == ' ')
-		base = ccs_find_symbol(symbol);
+		base = probe_find_symbol(symbol);
 	else
 #endif
 		base = __symbol_get(symbol);
 	if (!base)
 		return NULL;
 #if defined(CONFIG_ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) && !defined(CONFIG_SECURITY_COMPOSER_MAX)
-	if (function == ccs_security_file_alloc)
-		return ccs_find_security_ops_on_arm((unsigned int *) base);
+	if (function == probe_security_file_alloc)
+		return probe_security_ops_on_arm((unsigned int *) base);
 #endif
 #if defined(CONFIG_ARM) && LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	return ccs_find_vfsmount_lock_on_arm(function, addr,
-					     (unsigned int *) base);
+	return probe_find_vfsmount_lock_on_arm(function, addr,
+					       (unsigned int *) base);
 #endif
 	/* First, assume absolute adressing mode is used. */
 	for (i = 0; i < 128; i++) {
@@ -337,21 +337,21 @@ static void * __init ccs_find_variable(void *function, unsigned long addr,
 
 #if defined(CONFIG_SECURITY_COMPOSER_MAX)
 
-static void * __init ccs_find_variable(void *function, unsigned long addr,
-				       const char *symbol);
+static void * __init probe_find_variable(void *function, unsigned long addr,
+					 const char *symbol);
 
 /**
- * ccs_find_lsm_hooks_list - Find address of "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
+ * probe_lsm_hooks_list - Find address of "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
  *
  * Returns pointer to "struct security_operations" on success, NULL otherwise.
  */
-struct list_head * __init ccs_find_lsm_hooks_list(void)
+struct list_head * __init probe_lsm_hooks_list(void)
 {
 	void *cp;
 	/* Guess "struct list_head lsm_hooks[LSM_MAX_HOOKS];". */
-	cp = ccs_find_variable(ccs_security_bprm_committed_creds,
-			       (unsigned long) ccs_lsm_hooks,
-			       " security_bprm_committed_creds\n");
+	cp = probe_find_variable(probe_security_bprm_committed_creds,
+				 (unsigned long) probe_lsm_hooks,
+				 " security_bprm_committed_creds\n");
 	if (!cp) {
 		printk(KERN_ERR
 		       "Can't resolve security_bprm_committed_creds().\n");
@@ -372,19 +372,20 @@ out:
 #else
 
 /**
- * ccs_find_security_ops - Find address of "struct security_operations *security_ops".
+ * probe_security_ops - Find address of "struct security_operations *security_ops".
  *
  * Returns pointer to "struct security_operations" on success, NULL otherwise.
  */
-struct security_operations * __init ccs_find_security_ops(void)
+struct security_operations * __init probe_security_ops(void)
 {
 	struct security_operations **ptr;
 	struct security_operations *ops;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	void *cp;
 	/* Guess "struct security_operations *security_ops;". */
-	cp = ccs_find_variable(ccs_security_file_alloc, (unsigned long)
-			       &ccs_security_ops, " security_file_alloc\n");
+	cp = probe_find_variable(probe_security_file_alloc, (unsigned long)
+				 &probe_dummy_security_ops,
+				 " security_file_alloc\n");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve security_file_alloc().\n");
 		return NULL;
@@ -413,15 +414,15 @@ struct security_operations * __init ccs_find_security_ops(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 
 /**
- * ccs_find_find_task_by_vpid - Find address of find_task_by_vpid().
+ * probe_find_task_by_vpid - Find address of find_task_by_vpid().
  *
  * Returns address of find_task_by_vpid() on success, NULL otherwise.
  */
-void * __init ccs_find_find_task_by_vpid(void)
+void * __init probe_find_task_by_vpid(void)
 {
 	void *ptr;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
-	ptr = ccs_find_symbol(" find_task_by_vpid\n");
+	ptr = probe_find_symbol(" find_task_by_vpid\n");
 #else
 	ptr = __symbol_get("find_task_by_vpid");
 #endif
@@ -434,15 +435,15 @@ void * __init ccs_find_find_task_by_vpid(void)
 }
 
 /**
- * ccs_find_find_task_by_pid_ns - Find address of find_task_by_pid().
+ * probe_find_task_by_pid_ns - Find address of find_task_by_pid().
  *
  * Returns address of find_task_by_pid_ns() on success, NULL otherwise.
  */
-void * __init ccs_find_find_task_by_pid_ns(void)
+void * __init probe_find_task_by_pid_ns(void)
 {
 	void *ptr;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
-	ptr = ccs_find_symbol(" find_task_by_pid_ns\n");
+	ptr = probe_find_symbol(" find_task_by_pid_ns\n");
 #else
 	ptr = __symbol_get("find_task_by_pid_ns");
 #endif
@@ -463,11 +464,11 @@ void * __init ccs_find_find_task_by_pid_ns(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock __cacheline_aligned_in_smp =
-SPIN_LOCK_UNLOCKED;
+static spinlock_t probe_vfsmount_lock __cacheline_aligned_in_smp =
+	SPIN_LOCK_UNLOCKED;
 
-static struct list_head *ccs_mount_hashtable;
-static int ccs_hash_mask, ccs_hash_bits;
+static struct list_head *probe_mount_hashtable;
+static int probe_hash_mask, probe_hash_bits;
 
 /**
  * hash - Copy of hash() in fs/namespace.c.
@@ -481,26 +482,26 @@ static inline unsigned long hash(struct vfsmount *mnt, struct dentry *dentry)
 {
 	unsigned long tmp = ((unsigned long) mnt / L1_CACHE_BYTES);
 	tmp += ((unsigned long) dentry / L1_CACHE_BYTES);
-	tmp = tmp + (tmp >> ccs_hash_bits);
-	return tmp & ccs_hash_mask;
+	tmp = tmp + (tmp >> probe_hash_bits);
+	return tmp & probe_hash_mask;
 }
 
 /**
- * ccs_lookup_mnt - Dummy function which does identical to lookup_mnt() in fs/namespace.c.
+ * probe_lookup_mnt - Dummy function which does identical to lookup_mnt() in fs/namespace.c.
  *
  * @mnt:    Pointer to "struct vfsmount".
  * @dentry: Pointer to "struct dentry".
  *
  * Returns pointer to "struct vfsmount".
  */
-static struct vfsmount *ccs_lookup_mnt(struct vfsmount *mnt,
-				       struct dentry *dentry)
+static struct vfsmount *probe_lookup_mnt(struct vfsmount *mnt,
+					 struct dentry *dentry)
 {
-	struct list_head *head = ccs_mount_hashtable + hash(mnt, dentry);
+	struct list_head *head = probe_mount_hashtable + hash(mnt, dentry);
 	struct list_head *tmp = head;
 	struct vfsmount *p, *found = NULL;
 
-	spin_lock(&ccs_vfsmount_lock);
+	spin_lock(&probe_vfsmount_lock);
 	for (;;) {
 		tmp = tmp->next;
 		p = NULL;
@@ -512,22 +513,22 @@ static struct vfsmount *ccs_lookup_mnt(struct vfsmount *mnt,
 			break;
 		}
 	}
-	spin_unlock(&ccs_vfsmount_lock);
+	spin_unlock(&probe_vfsmount_lock);
 	return found;
 }
 
 /**
- * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ * probe_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
  *
  * Returns address of vfsmount_lock on success, NULL otherwise.
  */
-void * __init ccs_find_vfsmount_lock(void)
+void * __init probe_vfsmount_lock(void)
 {
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = ccs_find_variable(ccs_lookup_mnt, (unsigned long)
-			       &ccs_vfsmount_lock, " lookup_mnt\n");
+	cp = probe_find_variable(probe_lookup_mnt, (unsigned long)
+				 &probe_vfsmount_lock, " lookup_mnt\n");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve lookup_mnt().\n");
 		return NULL;
@@ -545,29 +546,29 @@ void * __init ccs_find_vfsmount_lock(void)
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock;
+static spinlock_t probe_vfsmount_lock;
 
 /**
- * ccs_follow_up - Dummy function which does identical to follow_up() in fs/namei.c.
+ * probe_follow_up - Dummy function which does identical to follow_up() in fs/namei.c.
  *
  * @mnt:    Pointer to "struct vfsmount *".
  * @dentry: Pointer to "struct dentry *".
  *
  * Returns 1 if followed up, 0 otehrwise.
  */
-static int ccs_follow_up(struct vfsmount **mnt, struct dentry **dentry)
+static int probe_follow_up(struct vfsmount **mnt, struct dentry **dentry)
 {
 	struct vfsmount *parent;
 	struct dentry *mountpoint;
-	spin_lock(&ccs_vfsmount_lock);
+	spin_lock(&probe_vfsmount_lock);
 	parent = (*mnt)->mnt_parent;
 	if (parent == *mnt) {
-		spin_unlock(&ccs_vfsmount_lock);
+		spin_unlock(&probe_vfsmount_lock);
 		return 0;
 	}
 	mntget(parent);
 	mountpoint = dget((*mnt)->mnt_mountpoint);
-	spin_unlock(&ccs_vfsmount_lock);
+	spin_unlock(&probe_vfsmount_lock);
 	dput(*dentry);
 	*dentry = mountpoint;
 	mntput(*mnt);
@@ -576,17 +577,17 @@ static int ccs_follow_up(struct vfsmount **mnt, struct dentry **dentry)
 }
 
 /**
- * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ * probe_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
  *
  * Returns address of vfsmount_lock on success, NULL otherwise.
  */
-void * __init ccs_find_vfsmount_lock(void)
+void * __init probe_vfsmount_lock(void)
 {
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = ccs_find_variable(ccs_follow_up, (unsigned long)
-			       &ccs_vfsmount_lock, "follow_up");
+	cp = probe_find_variable(probe_follow_up, (unsigned long)
+				 &probe_vfsmount_lock, "follow_up");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve follow_up().\n");
 		return NULL;
@@ -604,34 +605,34 @@ void * __init ccs_find_vfsmount_lock(void)
 #else
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t ccs_vfsmount_lock;
+static spinlock_t probe_vfsmount_lock;
 
 /**
- * ccs_mnt_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
+ * probe_mnt_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
  *
  * @mnt: Pointer to "struct vfsmount".
  *
  * Returns nothing.
  */
-static void ccs_mnt_pin(struct vfsmount *mnt)
+static void probe_mnt_pin(struct vfsmount *mnt)
 {
-	spin_lock(&ccs_vfsmount_lock);
+	spin_lock(&probe_vfsmount_lock);
 	mnt->mnt_pinned++;
-	spin_unlock(&ccs_vfsmount_lock);
+	spin_unlock(&probe_vfsmount_lock);
 }
 
 /**
- * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ * probe_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
  *
  * Returns address of vfsmount_lock on success, NULL otherwise.
  */
-void * __init ccs_find_vfsmount_lock(void)
+void * __init probe_vfsmount_lock(void)
 {
 	void *cp;
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = ccs_find_variable(ccs_mnt_pin, (unsigned long) &ccs_vfsmount_lock,
-			       "mnt_pin");
+	cp = probe_find_variable(probe_mnt_pin, (unsigned long)
+				 &probe_vfsmount_lock, "mnt_pin");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve mnt_pin().\n");
 		return NULL;
@@ -652,18 +653,18 @@ void * __init ccs_find_vfsmount_lock(void)
 
 /*
  * Never mark this variable as __initdata , for this variable might be accessed
- * by caller of ccs_find_vfsmount_lock().
+ * by caller of probe_find_vfsmount_lock().
  */
-static spinlock_t ccs_vfsmount_lock;
+static spinlock_t probe_vfsmount_lock;
 
 /**
- * ccs_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
+ * probe_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
  *
  * Returns address of vfsmount_lock.
  */
-void * __init ccs_find_vfsmount_lock(void)
+void * __init probe_vfsmount_lock(void)
 {
-	return &ccs_vfsmount_lock;
+	return &probe_vfsmount_lock;
 }
 
 #endif
@@ -673,13 +674,13 @@ void * __init ccs_find_vfsmount_lock(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
 
 /**
- * ccs_find___d_path - Find address of "__d_path()".
+ * probe___d_path - Find address of "__d_path()".
  *
  * Returns address of __d_path() on success, NULL otherwise.
  */
-void * __init ccs_find___d_path(void)
+void * __init probe___d_path(void)
 {
-	void *ptr = ccs_find_symbol(" __d_path\n");
+	void *ptr = probe_find_symbol(" __d_path\n");
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve __d_path().\n");
 		return NULL;
@@ -693,13 +694,13 @@ void * __init ccs_find___d_path(void)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 
 /**
- * ccs_find_d_absolute_path - Find address of "d_absolute_path()".
+ * probe_d_absolute_path - Find address of "d_absolute_path()".
  *
  * Returns address of d_absolute_path() on success, NULL otherwise.
  */
-void * __init ccs_find_d_absolute_path(void)
+void * __init probe_d_absolute_path(void)
 {
-	void *ptr = ccs_find_symbol(" d_absolute_path\n");
+	void *ptr = probe_find_symbol(" d_absolute_path\n");
 	if (!ptr) {
 		printk(KERN_ERR "Can't resolve d_absolute_path().\n");
 		return NULL;

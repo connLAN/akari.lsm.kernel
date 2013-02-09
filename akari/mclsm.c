@@ -1,14 +1,12 @@
 /*
  * mclsm.c
  *
- * Copyright (C) 2010-2012  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ * Copyright (C) 2010-2013  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
  * Version: 1.0.29   2012/11/04
  */
 
 #include "internal.h"
-//#include <linux/security.h>
-//#include <linux/namei.h>
 #include "probe.h"
 
 /* Prototype definition. */
@@ -124,7 +122,6 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	security->ee = NULL;
 	if (!ee)
 		return;
-	security->ccs_flags &= ~CCS_TASK_STARTED_EXECVE;
 	atomic_dec(&ccs_in_execve_tasks);
 	ccs_finish_execve(ret, ee);
 }
@@ -142,11 +139,11 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	struct ccs_execve *ee = ptr->ee;
 	/*
 	 * If this security context was associated with "struct pid" and
-	 * ptr->ccs_flags has CCS_TASK_STARTED_EXECVE set, it indicates that a
+	 * ptr->ccs_flags has CCS_TASK_IS_IN_EXECVE set, it indicates that a
 	 * "struct task_struct" associated with this security context exited
 	 * immediately after do_execve() has failed.
 	 */
-	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE)) {
+	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
 #ifdef CONFIG_AKARI_DEBUG
 		static bool done;
 		if (!done) {
@@ -406,10 +403,8 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		ccs_load_policy(bprm->filename);
 #endif
 	rc = ccs_start_execve(bprm, &security->ee);
-	if (security->ee) {
-		security->ccs_flags |= CCS_TASK_STARTED_EXECVE;
+	if (security->ee)
 		atomic_inc(&ccs_in_execve_tasks);
-	}
 	return rc;
 }
 
@@ -1305,17 +1300,16 @@ static void __init ccs_update_security_ops(struct list_head *lsm_list)
 static int __init ccs_init(void)
 {
 	int idx;
-	struct list_head *hooks = ccs_find_lsm_hooks_list();
+	struct list_head *hooks = probe_lsm_hooks_list();
 	if (!hooks)
 		goto out;
-	ccsecurity_exports.find_task_by_vpid = ccs_find_find_task_by_vpid();
+	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();
 	if (!ccsecurity_exports.find_task_by_vpid)
 		goto out;
-	ccsecurity_exports.find_task_by_pid_ns =
-		ccs_find_find_task_by_pid_ns();
+	ccsecurity_exports.find_task_by_pid_ns = probe_find_task_by_pid_ns();
 	if (!ccsecurity_exports.find_task_by_pid_ns)
 		goto out;
-	ccsecurity_exports.d_absolute_path = ccs_find_d_absolute_path();
+	ccsecurity_exports.d_absolute_path = probe_d_absolute_path();
 	if (!ccsecurity_exports.d_absolute_path)
 		goto out;
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
@@ -1422,11 +1416,11 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 * security_prepare_creds().
 		 *
 		 * If current->in_execve is not set but ptr->ccs_flags has
-		 * CCS_TASK_STARTED_EXECVE set, it indicates that do_execve()
+		 * CCS_TASK_IS_IN_EXECVE set, it indicates that do_execve()
 		 * has failed and reverting domain transition is needed.
 		 */
 		if (task == current &&
-		    (ptr->ccs_flags & CCS_TASK_STARTED_EXECVE) &&
+		    (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE) &&
 		    !current->in_execve) {
 #ifdef CONFIG_AKARI_DEBUG
 			static bool done;

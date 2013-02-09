@@ -13,26 +13,26 @@
 static int __init ccs_init(void)
 {
 #ifdef CONFIG_SECURITY_COMPOSER_MAX
-	if (!ccs_find_lsm_hooks_list())
+	if (!probe_lsm_hooks_list())
 		goto out;
 #else
-	if (!ccs_find_security_ops())
+	if (!probe_security_ops())
 		goto out;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	if (!ccs_find_find_task_by_vpid())
+	if (!probe_find_task_by_vpid())
 		goto out;
-	if (!ccs_find_find_task_by_pid_ns())
+	if (!probe_find_task_by_pid_ns())
 		goto out;
 #endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	if (!ccs_find_vfsmount_lock())
+	if (!probe_vfsmount_lock())
 		goto out;
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
-	if (!ccs_find___d_path())
+	if (!probe___d_path())
 		goto out;
 #else
-	if (!ccs_find_d_absolute_path())
+	if (!probe_d_absolute_path())
 		goto out;
 #endif
 	printk(KERN_INFO "All dependent symbols have been guessed.\n");

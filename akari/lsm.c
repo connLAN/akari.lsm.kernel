@@ -2770,7 +2770,7 @@ static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
  */
 static void ccs_task_security_gc(void)
 {
-	static DEFINE_MUTEX(lock);
+	static DEFINE_SPINLOCK(lock);
 	static atomic_t gc_counter = ATOMIC_INIT(0);
 	unsigned int idx;
 	/*
@@ -2785,7 +2785,7 @@ static void ccs_task_security_gc(void)
 	    atomic_inc_return(&gc_counter) < 1024)
 		return;
 	atomic_set(&gc_counter, 0);
-	if (mutex_lock_interruptible(&lock))
+	if (!spin_trylock(&lock))
 		return;
 	rcu_read_lock();
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
@@ -2798,7 +2798,7 @@ static void ccs_task_security_gc(void)
 		}
 	}
 	rcu_read_unlock();
-	mutex_unlock(&lock);
+	spin_unlock(&lock);
 }
 
 #endif

@@ -464,7 +464,7 @@ void * __init probe_find_task_by_pid_ns(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t probe_vfsmount_lock __cacheline_aligned_in_smp =
+static spinlock_t probe_dummy_vfsmount_lock __cacheline_aligned_in_smp =
 	SPIN_LOCK_UNLOCKED;
 
 static struct list_head *probe_mount_hashtable;
@@ -501,7 +501,7 @@ static struct vfsmount *probe_lookup_mnt(struct vfsmount *mnt,
 	struct list_head *tmp = head;
 	struct vfsmount *p, *found = NULL;
 
-	spin_lock(&probe_vfsmount_lock);
+	spin_lock(&probe_dummy_vfsmount_lock);
 	for (;;) {
 		tmp = tmp->next;
 		p = NULL;
@@ -513,7 +513,7 @@ static struct vfsmount *probe_lookup_mnt(struct vfsmount *mnt,
 			break;
 		}
 	}
-	spin_unlock(&probe_vfsmount_lock);
+	spin_unlock(&probe_dummy_vfsmount_lock);
 	return found;
 }
 
@@ -528,7 +528,7 @@ void * __init probe_vfsmount_lock(void)
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
 	cp = probe_find_variable(probe_lookup_mnt, (unsigned long)
-				 &probe_vfsmount_lock, " lookup_mnt\n");
+				 &probe_dummy_vfsmount_lock, " lookup_mnt\n");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve lookup_mnt().\n");
 		return NULL;
@@ -546,7 +546,7 @@ void * __init probe_vfsmount_lock(void)
 #elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t probe_vfsmount_lock;
+static spinlock_t probe_dummy_vfsmount_lock;
 
 /**
  * probe_follow_up - Dummy function which does identical to follow_up() in fs/namei.c.
@@ -560,15 +560,15 @@ static int probe_follow_up(struct vfsmount **mnt, struct dentry **dentry)
 {
 	struct vfsmount *parent;
 	struct dentry *mountpoint;
-	spin_lock(&probe_vfsmount_lock);
+	spin_lock(&probe_dummy_vfsmount_lock);
 	parent = (*mnt)->mnt_parent;
 	if (parent == *mnt) {
-		spin_unlock(&probe_vfsmount_lock);
+		spin_unlock(&probe_dummy_vfsmount_lock);
 		return 0;
 	}
 	mntget(parent);
 	mountpoint = dget((*mnt)->mnt_mountpoint);
-	spin_unlock(&probe_vfsmount_lock);
+	spin_unlock(&probe_dummy_vfsmount_lock);
 	dput(*dentry);
 	*dentry = mountpoint;
 	mntput(*mnt);
@@ -587,7 +587,7 @@ void * __init probe_vfsmount_lock(void)
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
 	cp = probe_find_variable(probe_follow_up, (unsigned long)
-				 &probe_vfsmount_lock, "follow_up");
+				 &probe_dummy_vfsmount_lock, "follow_up");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve follow_up().\n");
 		return NULL;
@@ -605,7 +605,7 @@ void * __init probe_vfsmount_lock(void)
 #else
 
 /* Dummy variable for finding address of "spinlock_t vfsmount_lock". */
-static spinlock_t probe_vfsmount_lock;
+static spinlock_t probe_dummy_vfsmount_lock;
 
 /**
  * probe_mnt_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
@@ -616,9 +616,9 @@ static spinlock_t probe_vfsmount_lock;
  */
 static void probe_mnt_pin(struct vfsmount *mnt)
 {
-	spin_lock(&probe_vfsmount_lock);
+	spin_lock(&probe_dummy_vfsmount_lock);
 	mnt->mnt_pinned++;
-	spin_unlock(&probe_vfsmount_lock);
+	spin_unlock(&probe_dummy_vfsmount_lock);
 }
 
 /**
@@ -632,7 +632,7 @@ void * __init probe_vfsmount_lock(void)
 	spinlock_t *ptr;
 	/* Guess "spinlock_t vfsmount_lock;". */
 	cp = probe_find_variable(probe_mnt_pin, (unsigned long)
-				 &probe_vfsmount_lock, "mnt_pin");
+				 &probe_dummy_vfsmount_lock, "mnt_pin");
 	if (!cp) {
 		printk(KERN_ERR "Can't resolve mnt_pin().\n");
 		return NULL;
@@ -655,7 +655,7 @@ void * __init probe_vfsmount_lock(void)
  * Never mark this variable as __initdata , for this variable might be accessed
  * by caller of probe_find_vfsmount_lock().
  */
-static spinlock_t probe_vfsmount_lock;
+static spinlock_t probe_dummy_vfsmount_lock;
 
 /**
  * probe_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
@@ -664,7 +664,7 @@ static spinlock_t probe_vfsmount_lock;
  */
 void * __init probe_vfsmount_lock(void)
 {
-	return &probe_vfsmount_lock;
+	return &probe_dummy_vfsmount_lock;
 }
 
 #endif

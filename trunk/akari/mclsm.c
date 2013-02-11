@@ -105,6 +105,20 @@ void ccs_audit_free_execve(const struct ccs_execve * const ee,
 
 #endif
 
+#if !defined(CONFIG_AKARI_DEBUG)
+#define ccs_debug_trace(pos) do { } while (0)
+#else
+#define ccs_debug_trace(pos)						\
+	do {								\
+		static bool done;					\
+		if (!done) {						\
+			printk(KERN_INFO				\
+			       "AKARI: Debug trace: " pos " of 4\n");	\
+			done = true;					\
+		}							\
+	} while (0)						 
+#endif
+
 /**
  * ccs_clear_execve - Release memory used by do_execve().
  *
@@ -144,17 +158,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	 * immediately after do_execve() has failed.
 	 */
 	if (ptr->pid && (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
-#ifdef CONFIG_AKARI_DEBUG
-		static bool done;
-		if (!done) {
-			printk(KERN_INFO "AKARI: Decrementing "
-			       "ccs_in_execve_tasks counter "
-			       "because some \"struct task_struct\" has "
-			       "exit()ed immediately after do_execve() has "
-			       "failed.\n");
-			done = true;
-		}
-#endif
+		ccs_debug_trace("1");
 		atomic_dec(&ccs_in_execve_tasks);
 	}
 	/*
@@ -162,27 +166,11 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 	 * drop refcount obtained by get_pid() in ccs_find_task_security().
 	 */
 	if (ptr->pid) {
-#ifdef CONFIG_AKARI_DEBUG
-		static bool done;
-		if (!done) {
-			printk(KERN_INFO "AKARI: Dropping refcount on "
-			       "\"struct pid\".\n");
-			done = true;
-		}
-#endif
+		ccs_debug_trace("2");
 		put_pid(ptr->pid);
 	}
 	if (ee) {
-#ifdef CONFIG_AKARI_DEBUG
-		static bool done;
-		if (!done) {
-			printk(KERN_INFO "AKARI: Releasing memory in "
-			       "\"struct ccs_execve\" because some "
-			       "\"struct task_struct\" has exit()ed "
-			       "immediately after do_execve() has failed.\n");
-			done = true;
-		}
-#endif
+		ccs_debug_trace("3");
 		ccs_audit_free_execve(ee, false);
 		kfree(ee->handler_path);
 		kfree(ee);
@@ -1209,9 +1197,9 @@ static struct security_operations akari_security_ops = {
 			add_security_ops(op, lsm_list);			\
 		else {							\
 			struct security_operations *ops =		\
-				container_of(lsm_list,			\
-					     struct security_operations, \
-					     list[0]);			\
+				list_first_entry(&lsm_list[lsm_##op],	\
+						 typeof(*ops),		\
+						 list[lsm_##op]);	\
 			original_security_ops.op = ops->op;		\
 			smp_wmb();					\
 			ops->op = ccs_##op;				\
@@ -1422,15 +1410,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		if (task == current &&
 		    (ptr->ccs_flags & CCS_TASK_IS_IN_EXECVE) &&
 		    !current->in_execve) {
-#ifdef CONFIG_AKARI_DEBUG
-			static bool done;
-			if (!done) {
-				printk(KERN_INFO "AKARI: Reverting domain "
-				       "transition because do_execve() has "
-				       "failed.\n");
-				done = true;
-			}
-#endif
+			ccs_debug_trace("4");
 			ccs_clear_execve(-1, ptr);
 		}
 		return ptr;

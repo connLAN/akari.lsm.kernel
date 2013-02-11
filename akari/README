@@ -254,7 +254,7 @@ Version 1.0.29   2012/11/04   Minor update release.
    Without this fix, domain transition history on 2.6.28 and earlier kernels
    becomes inaccurate.
 
-Version 1.0.30   2013/??/??   Minor update release.
+Version 1.0.30   2013/02/14   Minor update release.
 
    Commit a2a8474c "exec: do not sleep in TASK_TRACED under ->cred_guard_mutex"
    moved "current->in_execve = 1;" from before prepare_bprm_creds() to after

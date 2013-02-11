@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2013  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.29   2012/11/04
+ * Version: 1.0.30   2013/02/14
  */
 
 #include "internal.h"
@@ -2483,7 +2483,7 @@ static int __init ccs_init(void)
 #endif
 	ccs_main_init();
 	ccs_update_security_ops(ops);
-	printk(KERN_INFO "AKARI: 1.0.29   2012/11/04\n");
+	printk(KERN_INFO "AKARI: 1.0.30   2013/02/14\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;
@@ -2746,9 +2746,9 @@ static void ccs_task_security_gc(void)
 	if (!atomic_read(&ccs_in_execve_tasks) &&
 	    atomic_inc_return(&gc_counter) < 1024)
 		return;
-	atomic_set(&gc_counter, 0);
 	if (!spin_trylock(&lock))
 		return;
+	atomic_set(&gc_counter, 0);
 	rcu_read_lock();
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
 		struct ccs_security *ptr;

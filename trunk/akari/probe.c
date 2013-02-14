@@ -337,9 +337,6 @@ static void * __init probe_find_variable(void *function, unsigned long addr,
 
 #if defined(CONFIG_SECURITY_COMPOSER_MAX)
 
-static void * __init probe_find_variable(void *function, unsigned long addr,
-					 const char *symbol);
-
 /**
  * probe_lsm_hooks_list - Find address of "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
  *
@@ -347,11 +344,22 @@ static void * __init probe_find_variable(void *function, unsigned long addr,
  */
 struct list_head * __init probe_lsm_hooks_list(void)
 {
+	unsigned int offset = 0;
 	void *cp;
 	/* Guess "struct list_head lsm_hooks[LSM_MAX_HOOKS];". */
+	/* Try without offset. GCC 4.x seems to use this one. */
 	cp = probe_find_variable(probe_security_bprm_committed_creds,
 				 (unsigned long) probe_lsm_hooks,
 				 " security_bprm_committed_creds\n");
+	if (!cp) {
+		/* Retry with offset. GCC 3.x seems to use this one. */
+		offset = offsetof(struct security_operations,
+				  list[lsm_bprm_committed_creds]);
+		cp = probe_find_variable(probe_security_bprm_committed_creds,
+					 ((unsigned long) probe_lsm_hooks)
+					 + offset,
+					 " security_bprm_committed_creds\n");
+	}
 	if (!cp) {
 		printk(KERN_ERR
 		       "Can't resolve security_bprm_committed_creds().\n");
@@ -363,6 +371,8 @@ struct list_head * __init probe_lsm_hooks_list(void)
 		printk(KERN_ERR "Can't resolve lsm_hooks array.\n");
 		goto out;
 	}
+	/* Adjust if offset is used. */
+	cp -= offset;
 	printk(KERN_INFO "lsm_hooks=%p\n", cp);
 	return cp;
 out:

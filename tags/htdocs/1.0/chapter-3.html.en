@@ -96,12 +96,12 @@
 <p>Run the following commands in order to extract source code of AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.29-20130117.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.29-20130117.tar.gz'
-# wget -O akari-1.0.29-20130117.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.29-20130117.tar.gz.asc'
+# wget -O akari-1.0.30-20130214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130214.tar.gz'
+# wget -O akari-1.0.30-20130214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130214.tar.gz.asc'
 # wget http://I-love.SAKURA.ne.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.29-20130117.tar.gz.asc
-# tar -zxf akari-1.0.29-20130117.tar.gz
+# gpg akari-1.0.30-20130214.tar.gz.asc
+# tar -zxf akari-1.0.30-20130214.tar.gz
 </pre>
 
 <p>If your system is using /bin/systemd rather than /sbin/init, you want to activate AKARI when /bin/systemd was executed rather than when /sbin/init was executed. If you want to activate AKARI when /bin/systemd was executed, you can edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>
@@ -205,10 +205,10 @@ Please contact the author.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.3-20120414.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120414.tar.gz'
-$ wget -O ccs-tools-1.8.3-20120414.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20120414.tar.gz.asc'
-$ gpg ccs-tools-1.8.3-20120414.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.3-20120414.tar.gz
+$ wget -O ccs-tools-1.8.3-20130214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130214.tar.gz'
+$ wget -O ccs-tools-1.8.3-20130214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130214.tar.gz.asc'
+$ gpg ccs-tools-1.8.3-20130214.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.3-20130214.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib
 $ su
@@ -322,7 +322,7 @@ initrd /boot/initrd-2.6.18-238.12.1.e15.img
 <p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
 
 <pre class="output">
-AKARI: 1.0.29   2012/11/04
+AKARI: 1.0.30   2013/02/14
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
 CCSecurity: 1.8.3+   2012/05/05

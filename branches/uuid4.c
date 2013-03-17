@@ -1,5 +1,5 @@
 /*
- * uuid.c
+ * check.c
  *
  * Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
@@ -40,10 +40,15 @@
  * By performance reason, permission to read()/write()/ioctl() etc. are not
  * checked.
  *
- * To compile, put this file on some directory under kernel's source directory
- * (e.g. uuid/ directory) and do "echo 'obj-m := uuid.o' > uuid/Makefile" and
- * do "make -s SUBDIRS=uuid modules modules_install". This file supports kernel
- * 2.6.3 and higher.
+ * To compile, put this file as check.c on some directory under kernel's
+ * source directory (e.g. uuid/check.c ) and also put probe.h and probe.c on
+ * the same directory and run below commands.
+ *
+ * # echo 'uuid-objs := check.o probe.o' > uuid/Makefile 
+ * # echo 'obj-m += uuid.o' >> uuid/Makefile
+ * # make -s SUBDIRS=$PWD/uuid modules
+ * # make -s SUBDIRS=$PWD/uuid modules_install
+ *
  */
 #include <linux/types.h>
 #include <linux/kernel.h>
@@ -65,6 +70,11 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
 #include <linux/namespace.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36) && LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+#include <linux/nsproxy.h>
+#include <linux/mnt_namespace.h>
+#endif
+#include "probe.h"
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 #error This module supports only 2.6.0 and later kernels.
@@ -197,14 +207,15 @@ static inline pid_t uuid_sys_getpid(void)
 #endif
 
 static struct {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
-	char *(*__d_path) (const struct path *path, struct path *root,
-			   char *buf, int buflen);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+	char * (*d_absolute_path) (const struct path *, char *, int);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	typeof(__d_path) (*__d_path);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
 	spinlock_t *vfsmount_lock;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	struct task_struct *(*find_task_by_vpid) (pid_t pid);
+	struct task_struct * (*find_task_by_vpid) (pid_t nr);
 #endif
 } uuid_exports;
 
@@ -638,7 +649,52 @@ static void uuid_print_uuid(const struct uuid_security *ptr,
 	}
 }
 
-static bool uuid_check_task(struct task_struct *task,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+
+static int uuid_check_cred(const struct cred *cred,
+			    const enum uuid_operation_index index)
+{
+	struct uuid_security *sbj;
+	struct uuid_security *obj;
+	int ret = 0;
+	char buf_sbj[UUID_PRINT_SIZE];
+	char buf_obj[UUID_PRINT_SIZE];
+	u16 perm;
+	if (cred == current_cred())
+		return 0;
+	perm = uuid_config[index];
+	rcu_read_lock();
+	sbj = uuid_find_security(current_cred());
+	obj = uuid_find_security(cred);
+	if (!sbj)
+		perm >>= 6;
+	else if (!sbj->uuid_configured)
+		perm >>= 3;
+	if (!obj)
+		perm &= 4;
+	else if (!obj->uuid_configured)
+		perm &= 2;
+	else
+		perm &= 1;
+	if (sbj && sbj->uuid_configured && obj && obj->uuid_configured &&
+	    !uuid_eq(sbj->uuid, obj->uuid))
+		perm = 0;
+	if (perm)
+		goto ok;
+	uuid_print_uuid(sbj, buf_sbj);
+	uuid_print_uuid(obj, buf_obj);
+	printk(KERN_INFO "Prevented task(%s) ('%s',pid=%u) from accessing "
+	       "cred('%s') at %s\n", buf_sbj, current->comm, current->pid,
+	       buf_obj, uuid_prompt[index]);
+	ret = -EPERM;
+ok:
+	rcu_read_unlock();
+	return ret;
+}
+
+#endif
+
+static int uuid_check_task(struct task_struct *task,
 			    const enum uuid_operation_index index)
 {
 	struct uuid_security *sbj;
@@ -794,12 +850,34 @@ static int uuid_capget(struct task_struct *target, kernel_cap_t *effective,
 					    permitted);
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+
+static int uuid_capable(const struct cred *cred, struct user_namespace *ns,
+			int cap, int audit)
+{
+	if (uuid_check_cred(cred, UUID_CAPABLE))
+		return -EPERM;
+	while (!original_security_ops.capable);
+	return original_security_ops.capable(cred, ns, cap, audit);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39)
+
+static int uuid_capable(struct task_struct *tsk, const struct cred *cred,
+			struct user_namespace *ns, int cap, int audit)
+{
+	if (uuid_check_cred(cred, UUID_CAPABLE))
+		return -EPERM;
+	while (!original_security_ops.capable);
+	return original_security_ops.capable(tsk, cred, ns, cap, audit);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
 static int uuid_capable(struct task_struct *tsk, const struct cred *cred,
 			int cap, int audit)
 {
-	if (uuid_check_task(tsk, UUID_CAPABLE))
+	if (uuid_check_cred(cred, UUID_CAPABLE))
 		return -EPERM;
 	while (!original_security_ops.capable);
 	return original_security_ops.capable(tsk, cred, cap, audit);
@@ -1142,7 +1220,37 @@ static int uuid_unix_may_send(struct socket *sock, struct socket *other)
 
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+
+/**
+ * uuid_file_open - Check permission for open().
+ *
+ * @f:    Pointer to "struct file".
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int uuid_file_open(struct file *f, const struct cred *cred)
+{
+	struct uuid_security *uuid;
+	int rc = uuid_check_pipe(f->f_dentry->d_inode, UUID_OPEN_PIPE);
+	if (rc)
+		return rc;
+	uuid = uuid_find_security(current_cred());
+	if (uuid && uuid->uuid_configured && !uuid->uuid_recursive) {
+		struct uuid_query_param p = { };
+		p.uuid = uuid;
+		p.operation = "file open";
+		p.path = f->f_path;
+		rc = uuid_supervisor(&p);
+		if (rc)
+			return rc;
+	}
+	while (!original_security_ops.file_open);
+	return original_security_ops.file_open(f, cred);
+}
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 
 /**
  * uuid_dentry_open - Check permission for open().
@@ -1239,451 +1347,6 @@ static int uuid_inode_permission(struct inode *inode, int mask,
 
 #endif
 
-/**
- * uuid_kernel_read - Wrapper for kernel_read().
- *
- * @file:   Pointer to "struct file".
- * @offset: Starting position.
- * @addr:   Buffer.
- * @count:  Size of @addr.
- *
- * Returns return value from kernel_read().
- */
-static int __init uuid_kernel_read(struct file *file, unsigned long offset,
-				   char *addr, unsigned long count)
-{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 8)
-	/*
-	 * I can't use kernel_read() because seq_read() returns -EPIPE
-	 * if &pos != &file->f_pos .
-	 */
-	mm_segment_t old_fs;
-	unsigned long pos = file->f_pos;
-	int result;
-	file->f_pos = offset;
-	old_fs = get_fs();
-	set_fs(get_ds());
-	result = vfs_read(file, (void __user *)addr, count, &file->f_pos);
-	set_fs(old_fs);
-	file->f_pos = pos;
-	return result;
-#else
-	return kernel_read(file, offset, addr, count);
-#endif
-}
-
-/**
- * uuid_find_symbol - Find function's address from /proc/kallsyms .
- *
- * @keyline: Function to find.
- *
- * Returns address of specified function on success, NULL otherwise.
- */
-static void *__init uuid_find_symbol(const char *keyline)
-{
-	struct file *file = NULL;
-	char *buf;
-	unsigned long entry = 0;
-	{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 18)
-		struct file_system_type *fstype = get_fs_type("proc");
-		struct vfsmount *mnt = vfs_kern_mount(fstype, 0, "proc", NULL);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 8)
-		struct file_system_type *fstype = NULL;
-		struct vfsmount *mnt = do_kern_mount("proc", 0, "proc", NULL);
-#else
-		struct file_system_type *fstype = get_fs_type("proc");
-		struct vfsmount *mnt = kern_mount(fstype);
-#endif
-		struct dentry *root;
-		struct dentry *dentry;
-		/*
-		 * We embed put_filesystem() here because it is not exported.
-		 */
-		if (fstype)
-			module_put(fstype->owner);
-		if (IS_ERR(mnt))
-			goto out;
-		root = dget(mnt->mnt_root);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
-		mutex_lock(&root->d_inode->i_mutex);
-		dentry = lookup_one_len("kallsyms", root, 8);
-		mutex_unlock(&root->d_inode->i_mutex);
-#else
-		down(&root->d_inode->i_sem);
-		dentry = lookup_one_len("kallsyms", root, 8);
-		up(&root->d_inode->i_sem);
-#endif
-		dput(root);
-		if (IS_ERR(dentry))
-			mntput(mnt);
-		else
-			file = dentry_open(dentry, mnt, O_RDONLY
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-					   , current_cred()
-#endif
-					   );
-	}
-	if (IS_ERR(file) || !file)
-		goto out;
-	buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
-	if (buf) {
-		int len;
-		unsigned long offset = 0;
-		while ((len = uuid_kernel_read(file, offset, buf,
-					       PAGE_SIZE - 1)) > 0) {
-			char *cp;
-			buf[len] = '\0';
-			cp = strrchr(buf, '\n');
-			if (!cp)
-				break;
-			*(cp + 1) = '\0';
-			offset += strlen(buf);
-			cp = strstr(buf, keyline);
-			if (!cp)
-				continue;
-			*cp = '\0';
-			while (cp > buf && *(cp - 1) != '\n')
-				cp--;
-			entry = simple_strtoul(cp, NULL, 16);
-			break;
-		}
-		kfree(buf);
-	}
-	filp_close(file, NULL);
-out:
-	return (void *) entry;
-}
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-
-/* Never mark this variable as __initdata . */
-static struct security_operations *uuid_security_ops;
-
-/**
- * lsm_addr_calculator - Dummy function which does identical to security_file_alloc() in security/security.c.
- *
- * @file: Pointer to "struct file".
- *
- * Returns return value fromfrom security_file_alloc().
- *
- * Never mark this function as __init in order to make sure that compiler
- * generates identical code for security_file_alloc() and this function.
- */
-static int lsm_addr_calculator(struct file *file)
-{
-	return uuid_security_ops->file_alloc_security(file);
-}
-
-#endif
-
-/**
- * uuid_find_variable - Find variable's address using dummy.
- *
- * @function: Pointer to dummy function's entry point.
- * @addr:     Address of the variable which is used within @function.
- * @symbol:   Name of symbol to resolve.
- *
- * This trick depends on below assumptions.
- *
- * (1) @addr is found within 128 bytes from @function, even if additional
- *     code (e.g. debug symbols) is added.
- * (2) It is safe to read 128 bytes from @function.
- * (3) @addr != Byte code except @addr.
- */
-static void * __init uuid_find_variable(void *function, unsigned long addr,
-					const char *symbol)
-{
-	int i;
-	u8 *base;
-	u8 *cp = function;
-	if (*symbol == ' ')
-		base = uuid_find_symbol(symbol);
-	else
-		base = __symbol_get(symbol);
-	if (!base)
-		return NULL;
-	/* First, assume absolute adressing mode is used. */
-	for (i = 0; i < 128; i++) {
-		if (*(unsigned long *) cp == addr)
-			return base + i;
-		cp++;
-	}
-	/* Next, assume PC-relative addressing mode is used. */
-	cp = function;
-	for (i = 0; i < 128; i++) {
-		if ((unsigned long) (cp + sizeof(int) + *(int *) cp) == addr) {
-			static void *cp4ret;
-			cp = base + i;
-			cp += sizeof(int) + *(int *) cp;
-			cp4ret = cp;
-			return &cp4ret;
-		}
-		cp++;
-	}
-	cp = function;
-	for (i = 0; i < 128; i++) {
-		if ((unsigned long) (long) (*(int *) cp) == addr) {
-			static void *cp4ret;
-			cp = base + i;
-			cp = (void *) (long) (*(int *) cp);
-			cp4ret = cp;
-			return &cp4ret;
-		}
-		cp++;
-	}
-	return NULL;
-}
-
-/**
- * uuid_find_find_security_ops - Find address of "struct security_operations *security_ops".
- *
- * Returns pointer to "struct security_operations" on success, NULL otherwise.
- */
-static struct security_operations * __init uuid_find_security_ops(void)
-{
-	struct security_operations **ptr;
-	struct security_operations *ops;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	void *cp;
-	/* Guess "struct security_operations *security_ops;". */
-	cp = uuid_find_variable(lsm_addr_calculator, (unsigned long)
-				&uuid_security_ops, " security_file_alloc\n");
-	if (!cp) {
-		printk(KERN_ERR "Can't resolve security_file_alloc().\n");
-		goto out;
-	}
-	/* This should be "struct security_operations *security_ops;". */
-	ptr = *(struct security_operations ***) cp;
-#else
-	/* This is "struct security_operations *security_ops;". */
-	ptr = (struct security_operations **) __symbol_get("security_ops");
-#endif
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve security_ops structure.\n");
-		goto out;
-	}
-	printk(KERN_INFO "&security_ops=%p\n", ptr);
-	ops = *ptr;
-	if (!ops) {
-		printk(KERN_ERR "No security_operations registered.\n");
-		goto out;
-	}
-	return ops;
-out:
-	return NULL;
-}
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
-
-/* Never mark this variable as __initdata . */
-static spinlock_t ccs_vfsmount_lock;
-
-/**
- * lsm_umnt_tr - Dummy function which prototype is identical to umount_tree() in fs/namespace.c.
- *
- * @mnt: Pointer to "struct vfsmount *".
- *
- * Returns nothing.
- */
-static void lsm_umnt_tr(struct vfsmount *mnt)
-{
-	/* Nothing to do because this function is not called. */
-}
-
-/**
- * lsm__put_nmspce - Dummy function which does identical to __put_namespace() in fs/namespace.c.
- *
- * @mnt: Pointer to "struct vfsmount *".
- *
- * Returns nothing.
- *
- * Never mark this function as __init in order to make sure that compiler
- * generates identical code for __put_namespace() and this function.
- */
-static void lsm__put_nmspce(struct namespace *namespace)
-{
-	down_write(&namespace->sem);
-	spin_lock(&ccs_vfsmount_lock);
-	lsm_umnt_tr(namespace->root);
-	spin_unlock(&ccs_vfsmount_lock);
-	up_write(&namespace->sem);
-	kfree(namespace);
-}
-
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-
-/* Never mark this variable as __initdata . */
-static spinlock_t uuid_vfsmount_lock;
-
-/**
- * lsm_flwup - Dummy function which does identical to follow_up() in fs/namei.c.
- *
- * @mnt:    Pointer to "struct vfsmount *".
- * @dentry: Pointer to "struct dentry *".
- *
- * Returns 1 if followed up, 0 otehrwise.
- *
- * Never mark this function as __init in order to make sure that compiler
- * generates identical code for follow_up() and this function.
- */
-static int lsm_flwup(struct vfsmount **mnt, struct dentry **dentry)
-{
-	struct vfsmount *parent;
-	struct dentry *mountpoint;
-	spin_lock(&uuid_vfsmount_lock);
-	parent = (*mnt)->mnt_parent;
-	if (parent == *mnt) {
-		spin_unlock(&uuid_vfsmount_lock);
-		return 0;
-	}
-	mntget(parent);
-	mountpoint = dget((*mnt)->mnt_mountpoint);
-	spin_unlock(&uuid_vfsmount_lock);
-	dput(*dentry);
-	*dentry = mountpoint;
-	mntput(*mnt);
-	*mnt = parent;
-	return 1;
-}
-
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-
-/* Never mark this variable as __initdata . */
-static spinlock_t uuid_vfsmount_lock;
-
-/**
- * lsm_pin - Dummy function which does identical to mnt_pin() in fs/namespace.c.
- *
- * @mnt: Pointer to "struct vfsmount".
- *
- * Returns nothing.
- *
- * Never mark this function as __init in order to make sure that compiler
- * generates identical code for mnt_pin() and this function.
- */
-static void lsm_pin(struct vfsmount *mnt)
-{
-	spin_lock(&uuid_vfsmount_lock);
-	mnt->mnt_pinned++;
-	spin_unlock(&uuid_vfsmount_lock);
-}
-
-#endif
-
-/**
- * uuid_find_vfsmount_lock - Find address of "spinlock_t vfsmount_lock".
- *
- * Returns true on success, false otherwise.
- */
-static bool __init uuid_find_vfsmount_lock(void)
-{
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 3)
-	void *cp;
-	spinlock_t *ptr;
-	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = uuid_find_variable(lsm__put_nmspce,
-				(unsigned long) &ccs_vfsmount_lock,
-				" __put_namespace\n");
-	if (!cp) {
-		printk(KERN_ERR "Can't resolve __put_namespace().\n");
-		goto out;
-	}
-	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = *(spinlock_t **) cp;
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
-		goto out;
-	}
-	uuid_exports.vfsmount_lock = ptr;
-	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
-	return true;
-out:
-	/*
-	 * Dummy call for preventing lsm_umnt_tr() from being inlined into
-	 * lsm__put_nmspce().
-	 */
-	cp = uuid_find_variable(lsm_umnt_tr,
-				(unsigned long) &ccs_vfsmount_lock,
-				" __put_namespace\n");
-	return false;
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 15)
-	void *cp;
-	spinlock_t *ptr;
-	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = uuid_find_variable(lsm_flwup, (unsigned long) &uuid_vfsmount_lock,
-			       "follow_up");
-	if (!cp) {
-		printk(KERN_ERR "Can't resolve follow_up().\n");
-		goto out;
-	}
-	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = *(spinlock_t **) cp;
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
-		goto out;
-	}
-	uuid_exports.vfsmount_lock = ptr;
-	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
-	return true;
-out:
-	return false;
-#elif LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
-	void *cp;
-	spinlock_t *ptr;
-	/* Guess "spinlock_t vfsmount_lock;". */
-	cp = uuid_find_variable(lsm_pin, (unsigned long) &uuid_vfsmount_lock,
-			       "mnt_pin");
-	if (!cp) {
-		printk(KERN_ERR "Can't resolve mnt_pin().\n");
-		goto out;
-	}
-	/* This should be "spinlock_t *vfsmount_lock;". */
-	ptr = *(spinlock_t **) cp;
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve vfsmount_lock .\n");
-		goto out;
-	}
-	uuid_exports.vfsmount_lock = ptr;
-	printk(KERN_INFO "vfsmount_lock=%p\n", ptr);
-	return true;
-out:
-	return false;
-#else
-	void *ptr = uuid_find_symbol(" __d_path\n");
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve __d_path().\n");
-		return false;
-	}
-	uuid_exports.__d_path = ptr;
-	printk(KERN_INFO "__d_path=%p\n", ptr);
-	return true;
-#endif
-}
-
-static bool __init uuid_find_find_task_by_pid(void)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
-	void *ptr;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
-	ptr = uuid_find_symbol(" find_task_by_vpid\n");
-#else
-	ptr = __symbol_get("find_task_by_vpid");
-#endif
-	if (!ptr) {
-		printk(KERN_ERR "Can't resolve find_task_by_vpid().\n");
-		goto out;
-	}
-	uuid_exports.find_task_by_vpid = ptr;
-	printk(KERN_INFO "find_task_by_vpid=%p\n", ptr);
-	return true;
-out:
-	return false;
-#else
-	return true;
-#endif
-}
-
 /*
  * Why not to copy all operations by "original_security_ops = *ops" ?
  * Because copying byte array is not atomic. Reader checks
@@ -1761,7 +1424,9 @@ static void __init uuid_update_security_ops(struct security_operations *ops)
 	swap_security_ops(unix_may_send);
 	swap_security_ops(unix_stream_connect);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	swap_security_ops(file_open);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
 	swap_security_ops(dentry_open);
 #else
 	swap_security_ops(inode_permission);
@@ -2061,11 +1726,62 @@ static inline void uuid_realpath_unlock(void)
 static char *uuid_get_absolute_path(struct path *path, char * const buffer,
 				    const int buflen)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 	char *pos = ERR_PTR(-ENOMEM);
 	if (buflen >= 256) {
-		struct path root = { };
-		pos = uuid_exports.__d_path(path, &root, buffer, buflen - 1);
+		pos = uuid_exports.d_absolute_path(path, buffer, buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
+			struct inode *inode = path->dentry->d_inode;
+			if (inode && S_ISDIR(inode->i_mode)) {
+				buffer[buflen - 2] = '/';
+				buffer[buflen - 1] = '\0';
+			}
+		}
+	}
+	return pos;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
+	/*
+	 * __d_path() will start returning NULL by backporting commit 02125a82
+	 * "fix apparmor dereferencing potentially freed dentry, sanitize
+	 * __d_path() API".
+	 *
+	 * Unfortunately, __d_path() after applying that commit always returns
+	 * NULL when root is empty. d_absolute_path() is provided for TOMOYO
+	 * 2.x and AppArmor but TOMOYO 1.x does not use it, for TOMOYO 1.x
+	 * might be built as a loadable kernel module and there is no warrantee
+	 * that TOMOYO 1.x is recompiled after applying that commit. Also,
+	 * I don't want to search /proc/kallsyms for d_absolute_path() because
+	 * I want to keep TOMOYO 1.x architecture independent. Thus, supply
+	 * non empty root like AppArmor's d_namespace_path() did.
+	 */
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		static bool uuid_no_empty;
+		if (!uuid_no_empty) {
+			struct path root = { };
+			pos = uuid_exports.__d_path(path, &root, buffer,
+						    buflen - 1);
+		} else {
+			pos = NULL;
+		}
+		if (!pos) {
+			struct task_struct *task = current;
+			struct path root;
+			struct path tmp;
+			spin_lock(&task->fs->lock);
+			root.mnt = task->nsproxy->mnt_ns->root;
+			root.dentry = root.mnt->mnt_root;
+			path_get(&root);
+			spin_unlock(&task->fs->lock);
+			tmp = root;
+			pos = uuid_exports.__d_path(path, &tmp, buffer,
+						    buflen - 1);
+			path_put(&root);
+			if (!pos)
+				return ERR_PTR(-EINVAL);
+			/* Remember if __d_path() needs non empty root. */
+			uuid_no_empty = true;
+		}
 		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
 			struct inode *inode = path->dentry->d_inode;
 			if (inode && S_ISDIR(inode->i_mode)) {
@@ -2834,7 +2550,7 @@ restart:
 		} 
 	}
 skip:
-	if (file == file1) {
+	if (file == file1 && file1 != file2) {
 		file = file2;
 		goto restart;
 	}
@@ -3023,14 +2739,28 @@ struct file_operations uuid_status_operations = {
 static int __init uuid_init(void)
 {
 	int idx;
-	struct security_operations *ops = uuid_find_security_ops();
+	struct security_operations *ops = probe_security_ops();
 	struct proc_dir_entry *entry;
 	if (!ops)
 		return -EINVAL;
-	if (!uuid_find_vfsmount_lock())
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
+	uuid_exports.find_task_by_vpid = probe_find_task_by_vpid();
+	if (!uuid_exports.find_task_by_vpid)
 		return -EINVAL;
-	if (!uuid_find_find_task_by_pid())
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+	uuid_exports.vfsmount_lock = probe_vfsmount_lock();
+	if (!uuid_exports.vfsmount_lock)
 		return -EINVAL;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+	uuid_exports.__d_path = probe___d_path();
+	if (!uuid_exports.__d_path)
+		return -EINVAL;
+#else
+	uuid_exports.d_absolute_path = probe_d_absolute_path();
+	if (!uuid_exports.d_absolute_path)
+		return -EINVAL;
+#endif
 	for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&uuid_security_list[idx]);
 	entry = create_proc_entry("uuid", 0666, NULL);

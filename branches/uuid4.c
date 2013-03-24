@@ -1144,28 +1144,24 @@ static int uuid_key_alloc(struct key *key, struct task_struct *tsk,
 
 static int uuid_inode_alloc_security(struct inode *inode)
 {
-	int rc;
-	if (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode)) {
-		/*
-		char buf_sbj[UUID_PRINT_SIZE];
-		char buf_obj[UUID_PRINT_SIZE];
-		*/
-		rc = uuid_copy_security(inode, current_cred(), GFP_KERNEL);
-		if (rc)
-			return rc;
-		/*
-		uuid_print_uuid(uuid_find_security(current_cred()), buf_sbj);
-		uuid_print_uuid(uuid_find_security(inode), buf_obj);
-		printk(KERN_DEBUG "Allocated %s(%s) by "
-		       "task(%s) ('%s',pid=%u) (%p)\n",
-		       S_ISSOCK(inode->i_mode) ? "socket" : "pipe",
-		       buf_obj, buf_sbj, current->comm,
-		       current->pid, inode);
-		*/
-	}
+	/*
+	char buf_sbj[UUID_PRINT_SIZE];
+	char buf_obj[UUID_PRINT_SIZE];
+	*/
+	int rc = uuid_copy_security(inode, current_cred(), GFP_NOFS);
+	if (rc)
+		return rc;
+	/*
+	uuid_print_uuid(uuid_find_security(current_cred()), buf_sbj);
+	uuid_print_uuid(uuid_find_security(inode), buf_obj);
+	printk(KERN_DEBUG "Allocated inode(%s) by "
+	       "task(%s) ('%s',pid=%u) (%p)\n",
+	       buf_obj, buf_sbj, current->comm,
+	       current->pid, inode);
+	*/
 	while (!original_security_ops.inode_alloc_security);
 	rc = original_security_ops.inode_alloc_security(inode);
-	if (rc && (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode)))
+	if (rc)
 		uuid_del_security(uuid_find_security(inode));
 	return rc;
 }
@@ -1174,8 +1170,7 @@ static void uuid_inode_free_security(struct inode *inode)
 {
 	while (!original_security_ops.inode_free_security);
 	original_security_ops.inode_free_security(inode);
-	if (S_ISSOCK(inode->i_mode) || S_ISFIFO(inode->i_mode))
-		uuid_del_security(uuid_find_security(inode));
+	uuid_del_security(uuid_find_security(inode));
 }
 
 #ifdef CONFIG_SECURITY_NETWORK

@@ -2735,7 +2735,9 @@ static int __init uuid_init(void)
 {
 	int idx;
 	struct security_operations *ops = probe_security_ops();
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct proc_dir_entry *entry;
+#endif
 	if (!ops)
 		return -EINVAL;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
@@ -2758,6 +2760,12 @@ static int __init uuid_init(void)
 #endif
 	for (idx = 0; idx < UUID_MAX_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&uuid_security_list[idx]);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	if (!proc_create("uuid", 0600, NULL, &uuid_operations) ||
+	    !proc_create("uuid_config", 0600, NULL, &uuid_config_operations) ||
+	    !proc_create("uuid_status", 0600, NULL, &uuid_status_operations))
+		goto out_clean;
+#else
 	entry = create_proc_entry("uuid", 0666, NULL);
 	if (!entry)
 		goto out_clean;
@@ -2770,6 +2778,7 @@ static int __init uuid_init(void)
 	if (!entry)
 		goto out_clean;
 	entry->proc_fops = &uuid_status_operations;
+#endif
 	uuid_update_security_ops(ops);
 	printk(KERN_INFO "UUID: 0.0.0   2011/02/04\n");
 	return 0;

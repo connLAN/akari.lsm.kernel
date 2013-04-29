@@ -6017,7 +6017,11 @@ static ssize_t ccs_read_self(struct file *file, char __user *buf, size_t count,
  */
 static int ccs_open(struct inode *inode, struct file *file)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
+	const u8 type = (unsigned long) PDE_DATA(inode);
+#else
 	const u8 type = (unsigned long) PDE(inode)->data;
+#endif
 	struct ccs_io_buffer *head = kzalloc(sizeof(*head), CCS_GFP_FLAGS);
 	if (!head)
 		return -ENOMEM;
@@ -6347,6 +6351,10 @@ static void __init ccs_create_entry(const char *name, const umode_t mode,
 				    struct proc_dir_entry *parent,
 				    const u8 key)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	proc_create_data(name, mode, parent, &ccs_operations,
+			 ((u8 *) NULL) + key);
+#else
 	struct proc_dir_entry *entry = create_proc_entry(name, mode, parent);
 	if (entry) {
 		entry->proc_fops = &ccs_operations;
@@ -6359,6 +6367,7 @@ static void __init ccs_create_entry(const char *name, const umode_t mode,
 		entry->proc_iops = &ccs_file_inode_operations;
 #endif
 	}
+#endif
 }
 
 /**
@@ -6391,12 +6400,16 @@ static void __init ccs_proc_init(void)
 	ccs_create_entry(".execute_handler", 0666, ccs_dir,
 			 CCS_EXECUTE_HANDLER);
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	proc_create("self_domain", 0666, ccs_dir, &ccs_self_operations);
+#else
 	{
 		struct proc_dir_entry *e = create_proc_entry("self_domain",
 							     0666, ccs_dir);
 		if (e)
 			e->proc_fops = &ccs_self_operations;
 	}
+#endif
 }
 
 /**

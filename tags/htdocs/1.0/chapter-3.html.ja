@@ -96,12 +96,12 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールのソースコードを展開してください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.30-20130310.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130310.tar.gz'
-# wget -O akari-1.0.30-20130310.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130310.tar.gz.asc'
+# wget -O akari-1.0.30-20130430.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130430.tar.gz'
+# wget -O akari-1.0.30-20130430.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20130430.tar.gz.asc'
 # wget http://I-love.SAKURA.ne.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.30-20130310.tar.gz.asc
-# tar -zxf akari-1.0.30-20130310.tar.gz
+# gpg akari-1.0.30-20130430.tar.gz.asc
+# tar -zxf akari-1.0.30-20130430.tar.gz
 </pre>
 
 <p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、 /sbin/init が実行されるタイミングではなく /bin/systemd が実行されるタイミングで AKARI を有効化したいことでしょう。もし、 /bin/systemd が実行されるタイミングで AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
@@ -205,10 +205,10 @@ Please contact the author.
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.3-20130214.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130214.tar.gz'
-$ wget -O ccs-tools-1.8.3-20130214.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130214.tar.gz.asc'
-$ gpg ccs-tools-1.8.3-20130214.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.3-20130214.tar.gz
+$ wget -O ccs-tools-1.8.3-20130406.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130406.tar.gz'
+$ wget -O ccs-tools-1.8.3-20130406.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20130406.tar.gz.asc'
+$ gpg ccs-tools-1.8.3-20130406.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.3-20130406.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib
 $ su

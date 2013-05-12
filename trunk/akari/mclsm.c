@@ -1506,9 +1506,9 @@ static struct ccs_security *ccs_find_cred_security(const struct cred *cred)
  *
  * Returns nothing.
  *
- * Since security_task_free_security() is missing, I can't release memory
- * associated with "struct task_struct" when a task dies. Therefore, I hold
- * a reference on "struct pid" and runs garbage collection when associated
+ * Since security_task_free() is missing, I can't release memory associated
+ * with "struct task_struct" when a task dies. Therefore, I hold a reference on
+ * "struct pid" and runs garbage collection when associated
  * "struct task_struct" has gone.
  */
 static void ccs_task_security_gc(void)

@@ -56,6 +56,9 @@
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 6)
 #include <linux/kthread.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
+#include <linux/magic.h>
+#endif
 #include <stdarg.h>
 #include <asm/uaccess.h>
 #include <net/sock.h>

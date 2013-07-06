@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">14th Feb, 2013</p>
+<h4>AKARI 1.0.30 released</h4>
+<p class="article">AKARI and CaitSith can now work together (other than on Linux 2.6.29 and 2.6.30 kernels).</p>
+
+<br>
+
 <p class="timestamp">4th Nov, 2012</p>
 <h4>AKARI 1.0.29 released</h4>
 <p class="article">A new version of AKARI fixes a bug where domain transition history becomes inaccurate after certain type of program is executed in Linux 2.6.28 and earlier kernels.</p>

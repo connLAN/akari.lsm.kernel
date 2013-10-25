@@ -310,6 +310,19 @@ static void * __init probe_find_variable(void *function, unsigned long addr,
 		cp++;
 	}
 	/* Next, assume PC-relative addressing mode is used. */
+#if defined(CONFIG_S390)
+	cp = function;
+	for (i = 0; i < 128; i++) {
+		if ((unsigned long) (cp + (*(int *) cp) * 2 - 2) == addr) {
+			static void *cp4ret;
+			cp = base + i;
+			cp += (*(int *) cp) * 2 - 2;
+			cp4ret = cp;
+			return &cp4ret;
+		}
+		cp++;
+	}
+#endif
 	cp = function;
 	for (i = 0; i < 128; i++) {
 		if ((unsigned long) (cp + sizeof(int) + *(int *) cp) == addr) {

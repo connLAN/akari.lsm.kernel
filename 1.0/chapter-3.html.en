@@ -205,10 +205,10 @@ Please contact the author.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.3-20131225.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20131225.tar.gz'
-$ wget -O ccs-tools-1.8.3-20131225.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20131225.tar.gz.asc'
-$ gpg ccs-tools-1.8.3-20131225.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.3-20131225.tar.gz
+$ wget -O ccs-tools-1.8.3-20140105.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20140105.tar.gz'
+$ wget -O ccs-tools-1.8.3-20140105.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20140105.tar.gz.asc'
+$ gpg ccs-tools-1.8.3-20140105.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.3-20140105.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib
 $ su

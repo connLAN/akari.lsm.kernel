@@ -1,0 +1,121 @@
+About this package:
+
+  When troubleshooting system freeze problems, obtaining SysRq messages
+  is commonly used. However, sometimes it is impossible to let syslog
+  daemon save the messages. In that case, serial console can be used.
+
+  However, in already-deployed enterprise servers, it is difficult to
+  reboot the system in order to add the serial console to the list of
+  consoles. Also, speak of virtualized servers in the cloud environment,
+  it may be difficult to add the virtual serial console which would
+  require FTP-like access to the log files saved on the virtualization
+  host. In that case, netconsole can be used.
+
+  It would be easy to configure the sender side; just load the netconsole
+  kernel module with appropriate arguments. However, it is not always easy
+  to configure the receiver side.
+
+  This package contains a utility for receiving netconsole messages.
+
+  This utility records timestamp and source IP:port in front of each line,
+  allowing you to monitor multiple servers with single log file.
+  You can easily pick up specific server's messages using awk(1).
+
+  This utility automatically switches the log file if the latest log
+  crosses the midnight, allowing you to rotate log files without
+  restarting this utility.
+
+  This utility waits for the newline of each message, allowing you to
+  record messages without emitting unnecessary timestamp and IP:port.
+
+  This utility uses larger receive buffer, allowing you to catch
+  burst messages like SysRq-T.
+
+  This utility can be run as an unprivileged user provided that the
+  receive buffer size is sufficient.
+
+  This package is released under the GPLv2.
+
+How to use this utility:
+
+  There are 10 command line arguments. They are all optional.
+
+    ip=$listen_ip
+
+      $listen_ip specifies the local IPv4 or IPv6 address to listen to.
+      Default value is :: if IPv6 is available, 0.0.0.0 otherwise.
+
+    port=$listen_port
+
+      $listen_port specifies the local port number to listen to.
+      Default value is 6666.
+
+      You need to run this program as the root user (or with
+      CAP_NET_BIND_SERVICE capability) if you want to specify a value
+      between 1 and 1023.
+
+    dir=$log_dir
+
+      $log_dir specifies the directory to create log files.
+      Default value is current directory.
+
+      The log files are created as YYYY-MM-DD.log where YYYY/MM/DD are
+      the date of the message received.
+
+    timeout=$seconds_waiting_for_newline
+
+      $seconds_waiting_for_newline specifies the max seconds to wait for
+      a new line if already received message does not have a new line.
+      The value should be between 5 and 600. Default value is 10.
+
+    clients=$max_clients
+
+      $max_clients specifies the max number of clients to accept. The value
+      should be between 10 and 65536. Default value is 1024.
+
+    wbuf=$write_buffer_size
+
+      $write_buffer_size specifies the max buffer size for receiving a line of
+      message. The value should be between 1024 and 1048576. Default value is
+      65536.
+
+    rbuf=$receive_buffer_size
+
+      $receive_buffer_size specifies the max buffer size for receiving UDP
+      datagrams. The value should be between 65536 and 1073741824. Default
+      value is 8388608 but actual size might be adjusted by the kernel.
+
+      You need to run this program as the root user (or with CAP_NET_ADMIN
+      capability) if you want to ignore /proc/sys/net/core/rmem_max limit.
+
+    uid=$user_id
+
+      $user_id specifies the UID to run this program and the owner of the log
+      files. Default value is the UID who executed this program.
+
+      You need to run this program as the root user (or with CAP_SETUID
+      capability) if you want to change this value.
+
+    gid=$group_id
+
+      $group_id specifies the GID to run this program and the group of the log
+      files. Default value is the GID who executed this program.
+
+      You need to run this program as the root user (or with CAP_SETGID
+      capability) if you want to change this value.
+
+    perm=$log_perm
+
+      $log_perm specifies the protection mode of the log files.
+      The value should be between 0000 and 0666. Default value is 0600.
+
+ChangeLog:
+
+  Version 1.0   2014/03/10   Initial packaging.
+
+    The following enhancements are added to the draft version posted to
+    https://lkml.org/lkml/2013/10/24/278 .
+
+      Listen to IPv6 address.
+      Run with given UID and/or GID.
+      Create log files with given protection mode.

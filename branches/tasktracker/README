@@ -1,0 +1,72 @@
+About this module:
+
+  When an unexpected system event (e.g. reboot) occurs, the administrator
+  may want to identify which application triggered the event. System call
+  auditing could be used for recording such event. However, the audit log
+  may not be able to provide sufficient information for identifying the
+  application because the audit log does not reflect how the program was
+  executed.
+
+  I sometimes receive "which application triggered the event" questions
+  on RHEL systems. TOMOYO security module can track how the program was
+  executed, but TOMOYO is not yet available in Fedora/RHEL distributions.
+
+  Although subj= field is added to the audit log if SELinux is not
+  disabled, SELinux is too difficult to customize as fine grained as
+  I expect in order to reflect how the program was executed. Therefore,
+  I wrote a LSM module which is implemented as a loadable kernel module
+  which emits TOMOYO-like information into the audit logs.
+
+  This module is released under the GPLv2.
+
+How to compile this module:
+
+  This module can run on Linux 2.6.26 and later kernels built with
+  CONFIG_SECURITY=y CONFIG_KALLSYMS=y CONFIG_PROC_FS=y CONFIG_MODULES=y
+  CONFIG_AUDITSYSCALL=y .
+
+  Follow 3.2.1. of http://akari.sourceforge.jp/1.0/chapter-3.html .
+  Then, extract this module under tasktracker subdirectory and run
+  the following commands.
+
+    # make SUBDIRS=$PWD/tasktracker modules
+    # make SUBDIRS=$PWD/tasktracker modules_install
+    # depmod ${VERSION}
+
+How to run this module:
+
+  If you want to trace from now on, you just load the compiled module.
+
+    # modprobe tasktracker
+
+  If you want to trace from the beginning of global /sbin/init process,
+  you need to load the compiled module before the /sbin/init process
+  starts. For example, create /sbin/tt-init like shown below and pass
+  init=/sbin/tt-init to the kernel command line parameters. Also, pass
+  security=none to the kernel command line parameters if you disable
+  SELinux.
+
+    # echo '#! /bin/sh' > /sbin/tt-init
+    # echo '/sbin/modprobe tasktracker && exec /sbin/init "$@"' >> /sbin/tt-init
+    # chmod 755 /sbin/tt-init
+
+  You will get history of current thread in the form of comm name and
+  time stamp pairs in the subj= field of audit logs like an example
+  shown below.
+
+    type=SYSCALL msg=audit(1397568834.719:20): arch=40000003 syscall=11
+    success=yes exit=0 a0=881e4e8 a1=882a500 a2=8820248 a3=882a500 items=2
+    ppid=1151 pid=1168 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
+    sgid=0 fsgid=0 tty=pts0 ses=1 comm="reboot" exe="/sbin/reboot"
+    subj="tt-init(2014/04/15-22:32:04)=>init(2014/04/15-22:32:04)=>
+    sh(2014/04/15-13:32:06)=>rc(2014/04/15-13:32:06)=>
+    S55sshd(2014/04/15-13:32:20)=>sshd(2014/04/15-13:32:20)=>
+    sshd(2014/04/15-13:32:33)=>bash(2014/04/15-13:32:37)=>
+    reboot(2014/04/15-13:33:54)" key=(null)
+
+ChangeLog:
+
+  Version 0.1   2014/04/15   Initial backport.
+
+    Backported the version posted to Linux Security Module ML (readable
+    at http://lwn.net/Articles/575044/ ) as a loadable kernel module.

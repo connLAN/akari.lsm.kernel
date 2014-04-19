@@ -70,3 +70,11 @@ ChangeLog:
 
     Backported the version posted to Linux Security Module ML (readable
     at http://lwn.net/Articles/575044/ ) as a loadable kernel module.
+
+  Version 0.2   2014/04/20   Bug fix.
+
+    Allocate and print current thread's history rather than printing
+    "(null)" when current thread's record is not yet allocated after
+    loading this kernel module.
+
+    Make conversion of time stamp a bit faster.

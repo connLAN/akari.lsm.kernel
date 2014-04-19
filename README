@@ -119,3 +119,8 @@ ChangeLog:
       Listen to IPv6 address.
       Run with given UID and/or GID.
       Create log files with given protection mode.
+
+  Version 1.1   2014/04/20   Typo fix.
+
+    The option name to print is not "user_id=" but "uid=" .
+    The option name to print is not "group_id=" but "gid=" .

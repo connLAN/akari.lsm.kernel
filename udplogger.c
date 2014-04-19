@@ -545,8 +545,8 @@ static int do_init(int argc, char *argv[])
 	       tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
 	       tm->tm_min, tm->tm_sec, pwd, filename);
 	printf("using options ip=%s port=%u dir=%s timeout=%u clients=%u "
-	       "wbuf=%u rbuf=%u user_id=%u group_id=%u perm=0%03o\n", ip, port,
-	       pwd, wait_timeout, max_clients, wbuf_size, rbuf_size, user_id,
+	       "wbuf=%u rbuf=%u uid=%u gid=%u perm=0%03o\n", ip, port, pwd,
+	       wait_timeout, max_clients, wbuf_size, rbuf_size, user_id,
 	       group_id, log_perm);
 	return fd;
 }

@@ -2,7 +2,7 @@ INSTALL         := install
 USRBINDIR       := /usr/bin
 USRDOCDIR       := /usr/share/doc
 ifndef CFLAGS
-CFLAGS          := -Wall -O2 -D_FORTIFY_SOURCE=2
+CFLAGS          := -Wall -O2 -g -D_FORTIFY_SOURCE=2
 endif
 
 all: udplogger

@@ -60,7 +60,7 @@ static void tt_get_time(struct tt_time *stamp)
 		{ 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
 		{ 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
 	};
-	u16 y;
+	u16 y = 1970;
 	u8 m;
 	bool r;
 	time_t time;
@@ -72,11 +72,17 @@ static void tt_get_time(struct tt_time *stamp)
 	time /= 60;
 	stamp->hour = time % 24;
 	time /= 24;
-	for (y = 1970;; y++) {
+	if (time >= 16071) {
+		/* Start from 2014/01/01 rather than 1970/01/01. */
+		time -= 16071;
+		y += 44;
+	}
+	while (1) {
 		const unsigned short days = (y & 3) ? 365 : 366;
 		if (time < days)
 			break;
 		time -= days;
+		y++;
 	}
 	r = (y & 3) == 0;
 	for (m = 0; m < 11 && time >= tt_eom[r][m]; m++)
@@ -463,21 +469,36 @@ static void tt_task_getsecid(struct task_struct *p, u32 *secid)
  * @secdata: Pointer to allocate memory.
  * @seclen:  Unused.
  *
- * Returns 0.
+ * Returns 0 on success, -EINVAL otherwise.
+ *
+ * This function does not return -ENOMEM in order to avoid audit_panic().
  */
 static int tt_secid_to_secctx(u32 secid, char **secdata, u32 *seclen)
 {
+	struct tt_record *record;
+	/* Ignore unless current thread's record is requested. */
+	if (secid != 1)
+		return -EINVAL;
+	/*
+	 * record == NULL can happen when this function is called before
+	 * tt_current_record() is called and tt_current_record() failed to
+	 * allocate memory for current thread's record.
+	 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	record = tt_current_record(current->real_cred, GFP_ATOMIC);
+#else
+	record = tt_current_record(current, GFP_ATOMIC);
+#endif
+	if (unlikely(!record))
+		return -EINVAL;
 	/*
 	 * We don't need to duplicate the string because current thread's
 	 * record is updated upon only boot up and successful execve()
 	 * operation, even if current thread's record is shared between
 	 * multiple threads.
 	 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	*secdata = tt_find_record(current->real_cred)->history;
-#else
-	*secdata = tt_find_record(current)->history;
-#endif
+	*secdata = record->history;
+	*seclen = strlen(record->history);
 	return 0;
 }
 
@@ -542,7 +563,7 @@ static int __init tt_init(void)
 	for (idx = 0; idx < TT_MAX_RECORD_HASH; idx++)
 		INIT_LIST_HEAD(&tt_record_list[idx]);
 	tt_update_security_ops(ops);
-	printk(KERN_INFO "TaskTracker: 0.1   2014/04/15\n");
+	printk(KERN_INFO "TaskTracker: 0.2   2014/04/20\n");
 	return 0;
 }
 

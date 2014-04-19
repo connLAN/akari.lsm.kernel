@@ -1,15 +1,15 @@
 Summary: A utility for receiving netconsole messages.
 Name: udplogger
-Version: 1.0
+Version: 1.1
 Release: 1
 License: GPLv2
 Group: Applications/System
 ExclusiveOS: Linux
 Autoreqprov: no
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Conflicts: udplogger < 1.0-1
+Conflicts: udplogger < 1.1-1
 
-Source0: udplogger-1.0.tar.gz
+Source0: udplogger.tar.gz
 
 %description
 This package contains a utility for receiving netconsole messages.
@@ -38,5 +38,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc /usr/share/doc/udplogger/COPYING
 
 %changelog
+* Sun Apr 20 2014 1.1-1
+- Typo fix.
+
 * Mon Mar 10 2014 1.0-1
 - Initial packaging.

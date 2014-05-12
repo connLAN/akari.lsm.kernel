@@ -589,13 +589,16 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
  * @old_dentry: Pointer to "struct dentry".
  * @new_dir:    Pointer to "struct path".
  * @new_dentry: Pointer to "struct dentry".
+ * @flags:      Rename flags.
  *
  * Returns 0 on success, negative value otherwise.
  */
 static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
-			   struct path *new_dir, struct dentry *new_dentry)
+			   struct path *new_dir, struct dentry *new_dentry,
+			   unsigned int flags)
 {
-	return ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
+	return ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt,
+				     flags);
 }
 
 /**
@@ -694,13 +697,15 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
  * @old_dentry: Pointer to "struct dentry".
  * @new_dir:    Pointer to "struct inode".
  * @new_dentry: Pointer to "struct dentry".
+ * @flags:      Rename flags.
  *
  * Returns 0 on success, negative value otherwise.
  */
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
-			    struct inode *new_dir, struct dentry *new_dentry)
+			    struct inode *new_dir, struct dentry *new_dentry,
+			    unsigned int flags)
 {
-	return ccs_rename_permission(old_dentry, new_dentry, NULL);
+	return ccs_rename_permission(old_dentry, new_dentry, NULL, flags);
 }
 
 /**

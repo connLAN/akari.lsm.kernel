@@ -288,9 +288,15 @@ static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 #endif
 static int __ccs_pivot_root_permission(struct path *old_path,
 				       struct path *new_path);
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
 static int __ccs_rename_permission(struct dentry *old_dentry,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt);
+#else
+static int __ccs_rename_permission(struct dentry *old_dentry,
+				   struct dentry *new_dentry,
+				   struct vfsmount *mnt, unsigned int flags);
+#endif
 static int __ccs_rmdir_permission(struct dentry *dentry, struct vfsmount *mnt);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 static int __ccs_search_binary_handler(struct linux_binprm *bprm);
@@ -2856,6 +2862,7 @@ static int __ccs_truncate_permission(struct dentry *dentry,
 	return ccs_path_perm(CCS_TYPE_TRUNCATE, dentry, mnt, NULL);
 }
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
 /**
  * __ccs_rename_permission - Check permission for vfs_rename().
  *
@@ -2872,6 +2879,29 @@ static int __ccs_rename_permission(struct dentry *old_dentry,
 	return ccs_path2_perm(CCS_TYPE_RENAME, old_dentry, mnt, new_dentry,
 			      mnt);
 }
+#else
+/**
+ * __ccs_rename_permission - Check permission for vfs_rename().
+ *
+ * @old_dentry: Pointer to "struct dentry".
+ * @new_dentry: Pointer to "struct dentry".
+ * @mnt:        Pointer to "struct vfsmount". Maybe NULL.
+ * @flags:      Rename flags.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int __ccs_rename_permission(struct dentry *old_dentry,
+				   struct dentry *new_dentry,
+				   struct vfsmount *mnt, unsigned int flags)
+{
+	int err = ccs_path2_perm(CCS_TYPE_RENAME, old_dentry, mnt, new_dentry,
+				 mnt);
+	if (!err && (flags & RENAME_EXCHANGE))
+		err = ccs_path2_perm(CCS_TYPE_RENAME, new_dentry, mnt,
+				     old_dentry, mnt);
+	return err;
+}
+#endif
 
 /**
  * __ccs_link_permission - Check permission for vfs_link().

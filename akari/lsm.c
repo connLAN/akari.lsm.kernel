@@ -1185,7 +1185,7 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 	return original_security_ops.path_symlink(dir, dentry, old_name);
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 /**
  * ccs_path_rename - Check permission for rename().
  *
@@ -1559,7 +1559,7 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	return original_security_ops.inode_symlink(dir, dentry, old_name);
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 /**
  * ccs_inode_rename - Check permission for rename().
  *

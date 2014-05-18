@@ -288,7 +288,7 @@ static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 #endif
 static int __ccs_pivot_root_permission(struct path *old_path,
 				       struct path *new_path);
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 static int __ccs_rename_permission(struct dentry *old_dentry,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt);
@@ -2862,7 +2862,7 @@ static int __ccs_truncate_permission(struct dentry *dentry,
 	return ccs_path_perm(CCS_TYPE_TRUNCATE, dentry, mnt, NULL);
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 /**
  * __ccs_rename_permission - Check permission for vfs_rename().
  *

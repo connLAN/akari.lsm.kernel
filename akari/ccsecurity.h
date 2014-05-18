@@ -107,7 +107,7 @@ struct ccsecurity_operations {
 				   const char *from);
 	int (*truncate_permission) (struct dentry *dentry,
 				    struct vfsmount *mnt);
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 	int (*rename_permission) (struct dentry *old_dentry,
 				  struct dentry *new_dentry,
 				  struct vfsmount *mnt);
@@ -337,7 +337,7 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt) : 0;
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
@@ -561,7 +561,7 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return 0;
 }
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3, 14, 0)
+#if 1
 static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)

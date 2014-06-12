@@ -104,7 +104,7 @@
 # tar -zxf akari-1.0.30-20131225.tar.gz
 </pre>
 
-<p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、 /sbin/init が実行されるタイミングではなく /bin/systemd が実行されるタイミングで AKARI を有効化したいことでしょう。もし、 /bin/systemd が実行されるタイミングで AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
+<p>systemd を利用している環境では、 <code>/sbin/init</code> ではなく <code>/usr/lib/systemd/systemd</code> が実行されます。 systemd を利用しているシステムの場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
 
 <p>変更前：</p>
 <pre>
@@ -113,7 +113,7 @@
 
 <p>変更後：</p>
 <pre>
-#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/bin/systemd"
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/usr/lib/systemd/systemd"
 </pre>
 
 <p>もし、カーネルモジュールがロードされるのと同時に AKARI を有効化したい場合、以下のように akari/config.h の CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER 行を定義してください。（ただし、 CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER を定義する場合、 akari/policy/ ディレクトリにカーネルモジュール内に埋め込むためのポリシーを提供する必要があります。忘れた場合、カーネルモジュールがロードされるのと同時にカーネルパニックになります。）：</p>
@@ -219,7 +219,7 @@ $ su
 
 <h3><a name="3.4">3.4. 設定の初期化</a></h3>
 
-<p>管理ツールを実行するときに便利なように、管理ツールのインストールされているディレクトリ（ /usr/sbin ）を環境変数 PATH に追加したいと思うかもしれません。 <code>/bin/bash</code> を使用している場合、以下の行を ~/.bashrc に追加してください：</p>
+<p>管理ツールを実行するときに便利なように、管理ツールのインストールされているディレクトリ（ /usr/sbin ）を環境変数 PATH に追加したいと思うかもしれません。 bash を使用している場合、以下の行を ~/.bashrc に追加してください：</p>
 
 <pre>
 export PATH=$PATH:/usr/sbin
@@ -261,7 +261,46 @@ Creating configuration file for ccs-patternize ... OK
 Creating configuration file for ccs-notifyd ... OK
 </pre>
 
-<p>（<a href="#3.5">ブートローダの設定</a>で指定するプログラムである） /sbin/ccs-init は、カーネルモジュールのロードに失敗した場合には、 AKARI がサポートされていないものと考えて起動処理を先に進めます。もし、カーネルモジュールのロードに失敗した場合には起動させないようにしたい場合、以下のように /sbin/akari-init を作成してください。 （ modprobe が /sbin ではなく /bin にあるシステムの場合、 /bin/modprobe を指定してください。）：</p>
+<h3><a name="3.5">3.5. ブートローダの設定</a></h3>
+
+<p>カーネルに対するコマンドラインオプションで init= パラメータを指定することで正常に起動できなくなるシステム（例えば RHEL 7 ）では、 <a href="#3.5.1">initramfs 内で AKARI のカーネルモジュールをロードする</a>ように構成する必要があります。正常に起動できるシステム（例えば RHEL 6 ）では、 <a href="#3.5.2">init プロセス内で AKARI のカーネルモジュールをロードする</a>ように構成できます。</p>
+
+<h4><a name="3.5.1">3.5.1.  initramfs 内で AKARI のカーネルモジュールをロードする場合</a></h4>
+
+<p>dracut を利用しているシステムの場合、以下のように /etc/dracut.conf.d/akari.conf を作成の上、 initramfs を再構成してください：</p>
+
+<pre class=command>
+# echo 'add_drivers+=" akari "' &gt; /etc/dracut.conf.d/akari.conf
+# dracut -f
+</pre>
+
+<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 rd.driver.pre=akari というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します：</p>
+
+<p>変更前：</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+</pre>
+
+<p>変更後：</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
+</pre>
+
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを dracut が無効化してしまうためです：</p>
+
+<p>変更前：</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+</pre>
+
+<p>変更後：</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari selinux=0
+</pre>
+
+<h4><a name="3.5.2">3.5.2.  init プロセス内で AKARI のカーネルモジュールをロードする</a></h4>
+
+<p><code>/sbin/akari-init</code> を、以下のように作成してください。 （ modprobe が /sbin ではなく /bin にあるシステムの場合、 /bin/modprobe を指定してください。）：</p>
 
 <pre class=command>
 # echo '#! /bin/sh' &gt; /sbin/akari-init
@@ -269,57 +308,43 @@ Creating configuration file for ccs-notifyd ... OK
 # chmod 755 /sbin/akari-init
 </pre>
 
-<p>/sbin/init の代わりに /bin/systemd を利用しているシステムの場合、以下のように /sbin/akari-init を作成してください。（また、 <a href="#3.2.2">AKARI カーネルモジュールのコンパイルとインストール</a>で CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER を定義しなかった場合には、 CONFIG_CCSECURITY_ACTIVATION_TRIGGER を /sbin/init から /bin/systemd に変更したことを確認してください。）：</p>
+<p><code>/sbin/init</code> の代わりに <code>/usr/lib/systemd/systemd</code> を利用しているシステムの場合、以下のように <code>/sbin/akari-init</code> を作成してください：</p>
 
 <pre class=command>
 # echo '#! /bin/sh' &gt; /sbin/akari-init
-# echo '/sbin/modprobe akari &amp;&amp; exec /bin/systemd "$@"' &gt;&gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /usr/lib/systemd/systemd "$@"' &gt;&gt; /sbin/akari-init
 # chmod 755 /sbin/akari-init
 </pre>
 
-<h3><a name="3.5">3.5. ブートローダの設定</a></h3>
-
-<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します。（ /sbin/akari-init を作成した場合、 init=/sbin/ccs-init の代わりに init=/sbin/akari-init を指定してください。）</p>
+<p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 init=/sbin/akari-init というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します：</p>
 
 <p>変更前：</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15)
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
 </pre>
 
 <p>変更後：</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15) with AKARI
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ init=/sbin/akari-init
 </pre>
 
-<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを /sbin/init が無効化してしまうためです。</p>
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを <code>/sbin/init</code> が無効化してしまうためです：</p>
 
 <p>変更前：</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15)
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
 </pre>
 
 <p>変更後：</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15) with AKARI
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ selinux=0 init=/sbin/akari-init
 </pre>
 
 <h3><a name="3.6">3.6. システムの再起動</a></h3>
 
 <p>ここまでで準備は完了です。（お疲れさまでした。）それでは、新しくインストールされたカーネルを使用してみましょう。システムを再起動し、 GRUB の画面（あるいは使用している他のブートローダの画面）で AKARI カーネルを選択してください。</p>
 
-<p>/sbin/init が開始される直前に以下のようなメッセージが表示されるはずです。（表示される内容は環境により異なります。）</p>
+<p><code>/usr/lib/systemd/systemd</code> または <code>/sbin/init</code> が開始される直前に以下のようなメッセージが表示される筈です。（表示される内容は環境により異なります。）：</p>
 
 <pre class="output">
 AKARI: 1.0.30   2013/02/14
@@ -333,7 +358,7 @@ Mandatory Access Control activated.
 
 <h3><a name="3.7">3.7. どのようにすれば AKARI を無効化またはアンインストールできますか？</a></h3>
 
-<p>もし、このガイドに従って操作している間またはそれ以降にシステムが起動しなくなってしまった場合、ポリシーの設定が不適切である場合を含めて AKARI に原因があるかもしれません。その場合、 init=/sbin/ccs-init というパラメータをカーネルに対するコマンドラインオプションから削除することにより、 AKARI が無効な状態でカーネルがロードされます。</p>
+<p>もし、このガイドに従って操作している間またはそれ以降にシステムが起動しなくなってしまった場合、ポリシーの設定が不適切である場合を含めて AKARI に原因があるかもしれません。その場合、 rd.driver.pre=akari または init=/sbin/akari-init というパラメータをカーネルに対するコマンドラインオプションから削除することにより、 AKARI が無効な状態でカーネルがロードされます。</p>
 
 </div><!-- documentation -->
 

@@ -104,7 +104,7 @@
 # tar -zxf akari-1.0.30-20131225.tar.gz
 </pre>
 
-<p>If your system is using /bin/systemd rather than /sbin/init, you want to activate AKARI when /bin/systemd was executed rather than when /sbin/init was executed. If you want to activate AKARI when /bin/systemd was executed, you can edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>
+<p>On systemd environments, <code>/usr/lib/systemd/systemd</code> will be executed rather than <code>/sbin/init</code>. If your system is using systemd, please edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>
 
 <p>Before:</p>
 <pre>
@@ -113,7 +113,7 @@
 
 <p>After:</p>
 <pre>
-#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/bin/systemd"
+#define CONFIG_CCSECURITY_ACTIVATION_TRIGGER "/usr/lib/systemd/systemd"
 </pre>
 
 <p>If you want to activate AKARI as soon as the kernel module is loaded, you can define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER line in akari/config.h like below. (But be sure to supply built-in policy configuration located at akari/policy/ directory if you define CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER, or the system will panic as soon as the kernel module is loaded.):</p>
@@ -219,7 +219,7 @@ $ su
 
 <h3><a name="3.4">3.4. Initializing configuration</a></h3>
 
-<p>You will probably want to add the location of the userspace tools (/usr/sbin) to your PATH so that the commands can be run easily. If you are using <code>/bin/bash</code>, append the following line to ~/.bashrc:</p>
+<p>You will probably want to add the location of the userspace tools (/usr/sbin) to your PATH so that the commands can be run easily. If you are using bash, append the following line to ~/.bashrc:</p>
 
 <pre>
 export PATH=$PATH:/usr/sbin
@@ -261,7 +261,46 @@ Creating configuration file for ccs-patternize ... OK
 Creating configuration file for ccs-notifyd ... OK
 </pre>
 
-<p>You may create /sbin/akari-init like below if you want to prevent your system from booting when loading the kernel module has failed, for /sbin/ccs-init (the program you specify at <a href="#3.5">Configuring your bootloader</a>) will assume that AKARI is not supported and continue boot procedure when loading the kernel module has failed. (Please use /bin/modprobe if modprobe in your system is located at /bin rather than /sbin.):</p>
+<h3><a name="3.5">3.5. Configuring your bootloader</a></h3>
+
+<p>On systems where use of init= kernel boot option causes boot failures (e.g. RHEL 7), you need to choose <a href="#3.5.1">Loading AKARI's module from initramfs</a>. On systems where it does not cause boot failures (e.g. RHEL 6), you can choose <a href="#3.5.2">Loading AKARI's module from the init process</a>.</p>
+
+<h4><a name="3.5.1">3.5.1.  Loading AKARI's module from initramfs</a></h4>
+
+<p>If your system is using dracut, create /etc/dracut.conf.d/akari.conf like below and rebuild the initramfs:</p>
+
+<pre class=command>
+# echo 'add_drivers+=" akari "' &gt; /etc/dracut.conf.d/akari.conf
+# dracut -f
+</pre>
+
+<p>Now edit your bootloader (e.g. GRUB) to add "rd.driver.pre=akari" to the kernel boot options. An example is shown below:</p>
+
+<p>Before:</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+</pre>
+
+<p>After:</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
+</pre>
+
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because dracut unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
+
+<p>Before:</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+</pre>
+
+<p>After:</p>
+<pre>
+linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari selinux=0
+</pre>
+
+<h4><a name="3.5.2">3.5.2.  Loading AKARI's module from the init process</a></h4>
+
+<p>Create <code>/sbin/akari-init</code> like below. (Please use /bin/modprobe if modprobe in your system is located at /bin rather than /sbin.):</p>
 
 <pre class=command>
 # echo '#! /bin/sh' &gt; /sbin/akari-init
@@ -269,57 +308,43 @@ Creating configuration file for ccs-notifyd ... OK
 # chmod 755 /sbin/akari-init
 </pre>
 
-<p>Please create /sbin/akari-init like below if your system is using /bin/systemd rather than /sbin/init. (Also, check that you have changed CONFIG_CCSECURITY_ACTIVATION_TRIGGER from /sbin/init to /bin/systemd at <a href="#3.2.2">Building and installing the AKARI module</a> unless you have defined CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER.):</p>
+<p>Please create <code>/sbin/akari-init</code> like below if your system is using <code>/usr/lib/systemd/systemd</code> rather than <code>/sbin/init</code>:</p>
 
 <pre class=command>
 # echo '#! /bin/sh' &gt; /sbin/akari-init
-# echo '/sbin/modprobe akari &amp;&amp; exec /bin/systemd "$@"' &gt;&gt; /sbin/akari-init
+# echo '/sbin/modprobe akari &amp;&amp; exec /usr/lib/systemd/systemd "$@"' &gt;&gt; /sbin/akari-init
 # chmod 755 /sbin/akari-init
 </pre>
 
-<h3><a name="3.5">3.5. Configuring your bootloader</a></h3>
-
-<p>Now edit your bootloader (e.g. GRUB) to add "init=/sbin/ccs-init" to the kernel boot options. An example is shown below. (If you created /sbin/akari-init, please add init=/sbin/akari-init rather than init=/sbin/ccs-init.)</p>
+<p>Now edit your bootloader (e.g. GRUB) to add "init=/sbin/akari-init" to the kernel boot options. An example is shown below:</p>
 
 <p>Before:</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15)
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
 </pre>
 
 <p>After:</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15) with AKARI
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ init=/sbin/akari-init
 </pre>
 
-<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because /sbin/init unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because <code>/sbin/init</code> unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
 
 <p>Before:</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15)
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
 </pre>
 
 <p>After:</p>
 <pre>
-title CentOS (2.6.18-238.12.1.e15) with AKARI
-root (hd0,0)
-kernel /boot/vmlinux-2.6.18-238.12.1.e15 ro root=LABEL=/ selinux=0 init=/sbin/ccs-init
-initrd /boot/initrd-2.6.18-238.12.1.e15.img
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ selinux=0 init=/sbin/akari-init
 </pre>
 
 <h3><a name="3.6">3.6. Rebooting your system</a></h3>
 
 <p>Now you have finished all preparation. You can't wait any more? Now it's time to make use of your newly installed kernel. Reboot your system and choose the entry with AKARI kernel at the GRUB screen, or at whatever other bootloader you have installed.</p>
 
-<p>You will find messages like below when /sbin/init starts. (The content of messages depends on your environment.)</p>
+<p>You will find messages like below when <code>/usr/lib/systemd/systemd</code>  or <code>/sbin/init</code> starts. (The content of messages depends on your environment.):</p>
 
 <pre class="output">
 AKARI: 1.0.30   2013/02/14
@@ -333,7 +358,7 @@ Mandatory Access Control activated.
 
 <h3><a name="3.7">3.7. How can I disable/uninstall AKARI?</a></h3>
 
-<p>If your system becomes unable to boot during the course of this guide or any time in the future, it may be due to policy configuration or something related to AKARI. If this is the case, it is possible that the kernel can still be booted by disabling AKARI. This can be done by removing "init=/sbin/ccs-init" at the kernel command-line parameters.</p>
+<p>If your system becomes unable to boot during the course of this guide or any time in the future, it may be due to policy configuration or something related to AKARI. If this is the case, it is possible that the kernel can still be booted by disabling AKARI. This can be done by removing "rd.driver.pre=akari" or "init=/sbin/akari-init" at the kernel command-line parameters.</p>
 
 </div><!-- documentation -->
 

@@ -285,7 +285,7 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
 linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
 </pre>
 
-<p>It is recommended that you also modify GRUB_CMDLINE_LINUX line in <code>/etc/default/grub</code> file like below in case you update kernel packages in the future:</p>
+<p>You may directly edit /boot/grub2/grub.cfg file. But it is recommended that you also edit GRUB_CMDLINE_LINUX line in <code>/etc/default/grub</code> file like below in case you update kernel packages in the future:</p>
 
 <p>Before:</p>
 <pre>

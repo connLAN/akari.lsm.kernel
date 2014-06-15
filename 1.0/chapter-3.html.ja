@@ -160,10 +160,11 @@ You must choose CONFIG_MODULES=y for building this module.
 # dmesg
 </pre>
 <pre class="output">
-security_ops=c0baa1ec
-find_task_by_vpid=c046d860
-find_task_by_pid_ns=c046d840
-vfsmount_lock=c09de340
+akari_test: module verification failed: signature and/or required key missing - tainting kernel
+security_ops=ffffffff81df6c80
+find_task_by_vpid=ffffffff810821a0
+find_task_by_pid_ns=ffffffff81082170
+d_absolute_path=ffffffff811c8f10
 All dependent symbols have been guessed.
 Please verify these addresses using System.map for this kernel (e.g. /boot/System.map-`uname -r` ).
 If these addresses are correct, you can try loading AKARI module on this kernel.</pre>
@@ -171,13 +172,13 @@ If these addresses are correct, you can try loading AKARI module on this kernel.
 <p>akari_test.ko のロードに成功した場合、上記のように推定されたシンボルのアドレスが表示されますので、実際の System.map ファイルの内容と比較して一致していることを確認してください。（表示されるシンボルの種類やアドレスは環境により異なります。）：</p>
 
 <pre class="command">
-# for i in c0baa1ec c046d860 c046d840 c09de340; do grep $i /boot/System.map-${VERSION}; done
+# for i in ffffffff81df6c80 ffffffff810821a0 ffffffff81082170 ffffffff811c8f10; do grep $i /boot/System.map-${VERSION}; done
 </pre>
 <pre class="output">
-c0baa1ec B security_ops
-c046d860 T find_task_by_vpid
-c046d840 T find_task_by_pid_ns
-c09de340 D vfsmount_lock
+ffffffff81df6c80 b security_ops
+ffffffff810821a0 T find_task_by_vpid
+ffffffff81082170 T find_task_by_pid_ns
+ffffffff811c8f10 T d_absolute_path
 </pre>
 
 <p>一致している場合には先へ進んでください。一致しなかった場合、このまま続行しても正常に動作しないので、作者にご連絡ください。</p>
@@ -202,7 +203,7 @@ Please contact the author.
 
 <h3><a name="3.3">3.3. 管理ツールのインストール</a></h3>
 
-<p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます：</p>
+<p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます。（必要に応じて、 USRLIBDIR=/usr/lib または USRLIBDIR=/usr/lib32 に変更してください。）：</p>
 
 <pre class="command">
 $ wget -O ccs-tools-1.8.3-20140601.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20140601.tar.gz'
@@ -210,12 +211,10 @@ $ wget -O ccs-tools-1.8.3-20140601.tar.gz.asc 'http://sourceforge.jp/frs/redir.p
 $ gpg ccs-tools-1.8.3-20140601.tar.gz.asc
 $ tar -zxf ccs-tools-1.8.3-20140601.tar.gz
 $ cd ccs-tools/
-$ make -s USRLIBDIR=/usr/lib
+$ make -s USRLIBDIR=/usr/lib64
 $ su
-# make -s USRLIBDIR=/usr/lib install
+# make -s USRLIBDIR=/usr/lib64 install
 </pre>
-
-<p>必要に応じて、 USRLIBDIR=/usr/lib を USRLIBDIR=/usr/lib64 （６４ビット用の場合）または USRLIBDIR=/usr/lib32 （３２ビット用の場合）に変更してください。</p>
 
 <h3><a name="3.4">3.4. 設定の初期化</a></h3>
 
@@ -225,26 +224,26 @@ $ su
 export PATH=$PATH:/usr/sbin
 </pre>
 
-<p>AKARI を使うためには、初期設定の手順を行う必要があります。この手順により、ポリシーを保存するディレクトリが作成されます。全てのポリシーファイルは <strong>/etc/ccs/ ディレクトリに保存されます</strong>。</p>
+<p>AKARI を使うためには、初期設定の手順を行う必要があります。この手順により、ポリシーを保存するディレクトリが作成されます。全てのポリシーファイルは /etc/ccs/ ディレクトリに保存されます。</p>
 
 <p>初期設定を行うには２つのコマンドのどちらかを使用します。どの機能について解析および制限を行いたいかによりどちらのコマンドを使用するかが決まります。</p>
 
 <p>ファイルの読み書きやプログラムの実行のように<strong>ファイルに関する機能だけを制限</strong>したいと思うユーザもいることでしょう。これは、ポリシーをシンプルにしたいユーザや AKARI が提供する全部の機能を必要とはしないユーザに適しています。ファイルに関する機能だけを制限する場合、このガイドで説明されている例えばネットワークに関する機能などの無関係な部分を無視することができます。ファイルに関する機能だけを使う場合、以下のコマンドを実行してください：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
+# /usr/lib64/ccs/init_policy --file-only-profile --module_name=akari
 </pre>
 
 <p><strong>AKARI が提供する全部の機能</strong>を使ってファイルやネットワークや環境変数といった操作を解析したり制限したいと思うユーザもいることでしょう。これは、可能な限りシステムのセキュリティを高めたいと考えているユーザに適しています。このガイドでは全部の機能を使うことを想定して作成されています。全部の機能を使う場合、以下のコマンドを実行してください：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --module_name=akari
+# /usr/lib64/ccs/init_policy --module_name=akari
 </pre>
 
 <p>上記のコマンドを実行することで、以下のような出力が表示される筈です：</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --module_name=akari
+# /usr/lib64/ccs/init_policy --module_name=akari
 </pre>
 <pre class="output">
 Creating policy directory... OK
@@ -286,16 +285,16 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
 linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
 </pre>
 
-<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを dracut が無効化してしまうためです：</p>
+<p>今後カーネルパッケージをアップデートした場合に備えて、以下に示すように <code>/etc/default/grub</code> の GRUB_CMDLINE_LINUX 行にも追加しておくことをお勧めします：</p>
 
 <p>変更前：</p>
 <pre>
-linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+GRUB_CMDLINE_LINUX="vconsole.keymap=jp106 crashkernel=auto  vconsole.font=latarcyrheb-sun16 rhgb quiet"
 </pre>
 
 <p>変更後：</p>
 <pre>
-linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari selinux=0
+GRUB_CMDLINE_LINUX="vconsole.keymap=jp106 crashkernel=auto  vconsole.font=latarcyrheb-sun16 rhgb quiet rd.driver.pre=akari"
 </pre>
 
 <h4><a name="3.5.2">3.5.2.  init プロセス内で AKARI のカーネルモジュールをロードする</a></h4>
@@ -320,24 +319,12 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=ak
 
 <p>変更前：</p>
 <pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/
 </pre>
 
 <p>変更後：</p>
 <pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ init=/sbin/akari-init
-</pre>
-
-<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、以下のように selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを <code>/sbin/init</code> が無効化してしまうためです：</p>
-
-<p>変更前：</p>
-<pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
-</pre>
-
-<p>変更後：</p>
-<pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ selinux=0 init=/sbin/akari-init
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/ init=/sbin/akari-init
 </pre>
 
 <h3><a name="3.6">3.6. システムの再起動</a></h3>
@@ -354,7 +341,11 @@ CCSecurity: 1.8.3+   2012/05/05
 Mandatory Access Control activated.
 </pre>
 
+<p>quiet または rhgb オプションが指定されていると、カーネルメッセージの大部分が表示されなくなるため、 AKARI のメッセージが表示されなくなります。</p>
+
 <p>カーネルコンパイル時の設定や起動時のオプションによっては、上記のメッセージが表示されないかもしれません。その場合、 /proc/ccs/ ディレクトリをチェックしてください。もし、 /proc/ccs/ ディレクトリが作成されていた場合、 AKARI モジュールは正常に登録されています。</p>
+
+<p>AKARI はＬＳＭモジュールですが、他のＬＳＭモジュールと同時に利用することができます。しかし、 /etc/selinux/config に SELINUX=disabled という指定を行うことにより SELinux を無効にしている場合には、コマンドラインオプションに selinux=0 も追加する必要があります。これは、 /etc/selinux/config の中で SELINUX=disabled という指定が行われている場合、 AKARI が依存しているＬＳＭフックを dracut が無効化してしまうためです。</p>
 
 <h3><a name="3.7">3.7. どのようにすれば AKARI を無効化またはアンインストールできますか？</a></h3>
 

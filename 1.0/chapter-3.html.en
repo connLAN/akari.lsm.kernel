@@ -160,10 +160,11 @@ You must choose CONFIG_MODULES=y for building this module.
 # dmesg
 </pre>
 <pre class="output">
-security_ops=c0baa1ec
-find_task_by_vpid=c046d860
-find_task_by_pid_ns=c046d840
-vfsmount_lock=c09de340
+akari_test: module verification failed: signature and/or required key missing - tainting kernel
+security_ops=ffffffff81df6c80
+find_task_by_vpid=ffffffff810821a0
+find_task_by_pid_ns=ffffffff81082170
+d_absolute_path=ffffffff811c8f10
 All dependent symbols have been guessed.
 Please verify these addresses using System.map for this kernel (e.g. /boot/System.map-`uname -r` ).
 If these addresses are correct, you can try loading AKARI module on this kernel.</pre>
@@ -171,13 +172,13 @@ If these addresses are correct, you can try loading AKARI module on this kernel.
 <p>If akari_test.ko was loaded successfully, guessed addresses like above are printed. Therefore, please compare guessed addresses from akari_test.ko and actual addresses from System.map file. (Number of symbols and addresses printed depends on your environment.):</p>
 
 <pre class="command">
-# for i in c0baa1ec c046d860 c046d840 c09de340; do grep $i /boot/System.map-${VERSION}; done
+# for i in ffffffff81df6c80 ffffffff810821a0 ffffffff81082170 ffffffff811c8f10; do grep $i /boot/System.map-${VERSION}; done
 </pre>
 <pre class="output">
-c0baa1ec B security_ops
-c046d860 T find_task_by_vpid
-c046d840 T find_task_by_pid_ns
-c09de340 D vfsmount_lock
+ffffffff81df6c80 b security_ops
+ffffffff810821a0 T find_task_by_vpid
+ffffffff81082170 T find_task_by_pid_ns
+ffffffff811c8f10 T d_absolute_path
 </pre>
 
 <p>Please proceed if these addresses are correct. Otherwise, please contact the author since AKARI module will not work even if you continue.</p>
@@ -202,7 +203,7 @@ Please contact the author.
 
 <h3><a name="3.3">3.3. Install the userspace tools</a></h3>
 
-<p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands:</p>
+<p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands. (Please use USRLIBDIR=<code>/usr/lib</code> or USRLIBDIR=<code>/usr/lib32</code> if needed):</p>
 
 <pre class="command">
 $ wget -O ccs-tools-1.8.3-20140601.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20140601.tar.gz'
@@ -210,12 +211,10 @@ $ wget -O ccs-tools-1.8.3-20140601.tar.gz.asc 'http://sourceforge.jp/frs/redir.p
 $ gpg ccs-tools-1.8.3-20140601.tar.gz.asc
 $ tar -zxf ccs-tools-1.8.3-20140601.tar.gz
 $ cd ccs-tools/
-$ make -s USRLIBDIR=/usr/lib
+$ make -s USRLIBDIR=/usr/lib64
 $ su
-# make -s USRLIBDIR=/usr/lib install
+# make -s USRLIBDIR=/usr/lib64 install
 </pre>
-
-<p>Please change USRLIBDIR=/usr/lib to USRLIBDIR=/usr/lib64 (for 64bits userspace) or USRLIBDIR=/usr/lib32 (for 32bits userspace) if needed.</p>
 
 <h3><a name="3.4">3.4. Initializing configuration</a></h3>
 
@@ -225,26 +224,26 @@ $ su
 export PATH=$PATH:/usr/sbin
 </pre>
 
-<p>Before you can make use of AKARI, an initialization procedure must take place. This prepares the files in which policy information will be stored. All policy files are <strong>stored in the "/etc/ccs/" directory</strong>.</p>
+<p>Before you can make use of AKARI, an initialization procedure must take place. This prepares the files in which policy information will be stored. All policy files are stored in the "/etc/ccs/" directory.</p>
 
 <p>One of two commands can be used to initialize configuration. The command you use depends on what operations you wish to analyze or restrict.</p>
 
 <p>Some users may wish to <strong>restrict only file-related operations</strong>, such as read, write and execute. This is suitable for users wanting to keep policy simpler or do not require the full functionality of AKARI. If you chose to restrict only file-related operations, then you may ignore parts of this guide that are not relevant, such as network operations. In this case, policy can be initialized using this command:</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --file-only-profile --module_name=akari
+# /usr/lib64/ccs/init_policy --file-only-profile --module_name=akari
 </pre>
 
 <p>Other users may wish to <strong>make use of all the restrictive capabilities of AKARI</strong>, and may want to analyze or restrict all possible operations (e.g. files, networks, environment variables). This is suitable for users wanting to secure their system as much as possible. This is also what this guide generally assumes the reader has chosen. In this case, run the following command:</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --module_name=akari
+# /usr/lib64/ccs/init_policy --module_name=akari
 </pre>
 
 <p>After running one of the above commands, you should see the following output:</p>
 
 <pre class="command">
-# /usr/lib/ccs/init_policy --module_name=akari
+# /usr/lib64/ccs/init_policy --module_name=akari
 </pre>
 <pre class="output">
 Creating policy directory... OK
@@ -286,16 +285,16 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
 linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
 </pre>
 
-<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because dracut unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
+<p>It is recommended that you also modify GRUB_CMDLINE_LINUX line in <code>/etc/default/grub</code> file like below in case you update kernel packages in the future:</p>
 
 <p>Before:</p>
 <pre>
-linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
+GRUB_CMDLINE_LINUX="vconsole.keymap=us crashkernel=auto  vconsole.font=latarcyrheb-sun16 rhgb quiet"
 </pre>
 
 <p>After:</p>
 <pre>
-linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari selinux=0
+GRUB_CMDLINE_LINUX="vconsole.keymap=us crashkernel=auto  vconsole.font=latarcyrheb-sun16 rhgb quiet rd.driver.pre=akari"
 </pre>
 
 <h4><a name="3.5.2">3.5.2.  Loading AKARI's module from the init process</a></h4>
@@ -320,24 +319,12 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=ak
 
 <p>Before:</p>
 <pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/
 </pre>
 
 <p>After:</p>
 <pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ init=/sbin/akari-init
-</pre>
-
-<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to add "selinux=0" like below if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because <code>/sbin/init</code> unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config :</p>
-
-<p>Before:</p>
-<pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/
-</pre>
-
-<p>After:</p>
-<pre>
-kernel /boot/vmlinuz-2.6.32-431.17.1.el6.i686 ro root=LABEL=/ selinux=0 init=/sbin/akari-init
+kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/ init=/sbin/akari-init
 </pre>
 
 <h3><a name="3.6">3.6. Rebooting your system</a></h3>
@@ -354,7 +341,9 @@ CCSecurity: 1.8.3+   2012/05/05
 Mandatory Access Control activated.
 </pre>
 
-<p>You may not be able to find these messages depending on kernel configuration and kernel boot parameters. In that case, you can check for /proc/ccs/ directory. If /proc/ccs/ directory exists, AKARI module was successfully registered.</p>
+<p>Note that you won't be able to see AKARI's messages if you are using "quiet" or "rhgb" kernel boot option because these options prevent most of kernel messages from being printed.</p>
+
+<p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to also add "selinux=0" to the kernel boot options if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because the init process unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config .</p>
 
 <h3><a name="3.7">3.7. How can I disable/uninstall AKARI?</a></h3>
 

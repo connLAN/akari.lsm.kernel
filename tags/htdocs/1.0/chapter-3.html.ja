@@ -285,7 +285,7 @@ linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/
 linux16 /boot/vmlinuz-3.10.0-123.1.2.el7.x86_64 ro root=LABEL=/ rd.driver.pre=akari
 </pre>
 
-<p>今後カーネルパッケージをアップデートした場合に備えて、以下に示すように <code>/etc/default/grub</code> の GRUB_CMDLINE_LINUX 行にも追加しておくことをお勧めします：</p>
+<p>/boot/grub2/grub.cfg を直接編集するだけでも構いません。しかし、将来カーネルパッケージをアップデートする場合のために、以下のように /etc/default/grub の GRUB_CMDLINE_LINUX 行も編集しておくことを推奨します：</p>
 
 <p>変更前：</p>
 <pre>

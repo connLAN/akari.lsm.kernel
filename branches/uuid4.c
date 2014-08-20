@@ -1940,8 +1940,13 @@ static char *uuid_get_local_path(struct dentry *dentry, char * const buffer,
 		 * Use filesystem name if filesystems does not support rename()
 		 * operation.
 		 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
 		if (inode->i_op && !inode->i_op->rename)
 			goto prepend_filesystem_name;
+#else
+		if (!inode->i_op->rename && !inode->i_op->rename2)
+			goto prepend_filesystem_name;
+#endif
 	}
 	/* Prepend device name. */
 	{
@@ -2048,11 +2053,20 @@ static char *uuid_realpath_from_path(struct path *path)
 		 * Get local name for filesystems without rename() operation
 		 * or dentry without vfsmount.
 		 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
 		if (!path->mnt || (inode->i_op && !inode->i_op->rename)) {
 			pos = uuid_get_local_path(path->dentry, buf,
 						  buf_len - 1);
 			goto encode;
 		}
+#else
+		if (!path->mnt ||
+		    (!inode->i_op->rename && !inode->i_op->rename2)) {
+			pos = uuid_get_local_path(path->dentry, buf,
+						  buf_len - 1);
+			goto encode;
+		}
+#endif
 		/* Get absolute name for the rest. */
 		uuid_realpath_lock();
 		pos = uuid_get_absolute_path(path, buf, buf_len - 1);

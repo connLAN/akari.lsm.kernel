@@ -430,8 +430,13 @@ static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 		 * Use filesystem name if filesystems does not support rename()
 		 * operation.
 		 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
 		if (inode->i_op && !inode->i_op->rename)
 			goto prepend_filesystem_name;
+#else
+		if (!inode->i_op->rename && !inode->i_op->rename2)
+			goto prepend_filesystem_name;
+#endif
 	}
 	/* Prepend device name. */
 	{
@@ -539,6 +544,7 @@ char *ccs_realpath(struct path *path)
 		 * or "path without vfsmount" or "absolute name is unavailable"
 		 * cases.
 		 */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
 		if (!path->mnt || (inode->i_op && !inode->i_op->rename))
 			pos = ERR_PTR(-EINVAL);
 		else {
@@ -550,6 +556,14 @@ char *ccs_realpath(struct path *path)
 		if (pos == ERR_PTR(-EINVAL))
 			pos = ccs_get_local_path(path->dentry, buf,
 						 buf_len - 1);
+#else
+		if (!path->mnt ||
+		    (!inode->i_op->rename && !inode->i_op->rename2))
+			pos = ccs_get_local_path(path->dentry, buf,
+						 buf_len - 1);
+		else
+			pos = ccs_get_absolute_path(path, buf, buf_len - 1);
+#endif
 encode:
 		if (IS_ERR(pos))
 			continue;

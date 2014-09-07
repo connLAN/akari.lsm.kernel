@@ -5091,6 +5091,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
  */
 static void ccs_update_stat(const u8 index)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 	struct timeval tv;
 	do_gettimeofday(&tv);
 	/*
@@ -5098,6 +5099,13 @@ static void ccs_update_stat(const u8 index)
 	 */
 	ccs_stat_updated[index]++;
 	ccs_stat_modified[index] = tv.tv_sec;
+#else
+	/*
+	 * I don't use atomic operations because race condition is not fatal.
+	 */
+	ccs_stat_updated[index]++;
+	ccs_stat_modified[index] = get_seconds();
+#endif
 }
 
 /**
@@ -5315,11 +5323,15 @@ static char *ccs_print_header(struct ccs_request_info *r)
 	u8 i;
 	if (!buffer)
 		return NULL;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 	{
 		struct timeval tv;
 		do_gettimeofday(&tv);
 		ccs_convert_time(tv.tv_sec, &stamp);
 	}
+#else
+	ccs_convert_time(get_seconds(), &stamp);
+#endif
 	pos = snprintf(buffer, ccs_buffer_len - 1,
 		       "#%04u/%02u/%02u %02u:%02u:%02u# profile=%u mode=%s "
 		       "granted=%s (global-pid=%u) task={ pid=%u ppid=%u "

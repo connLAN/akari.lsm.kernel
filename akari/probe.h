@@ -6,6 +6,9 @@
 #include <linux/namei.h>
 #include <linux/fs.h>
 #include <linux/security.h>
+#ifndef __init
+#include <linux/init.h>
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 #error This module supports only 2.6.0 and later kernels.

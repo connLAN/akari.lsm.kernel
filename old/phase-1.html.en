@@ -73,10 +73,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.14-20110511.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz'<br>
-# wget -O akari-1.0.14-20110511.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.14-20110511.tar.gz.asc'<br>
-# gpg akari-1.0.14-20110511.tar.gz.asc<br>
-# tar -zxf akari-1.0.14-20110511.tar.gz<br>
+# wget -O akari-1.0.30-20140915.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
+# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
+# gpg akari-1.0.30-20140915.tar.gz.asc<br>
+# tar -zxf akari-1.0.30-20140915.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
 # make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}

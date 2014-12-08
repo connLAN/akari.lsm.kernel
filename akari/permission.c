@@ -1351,8 +1351,12 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 		retval = PTR_ERR(filp);
 		goto out;
 	}
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+	ee->obj.path1 = filp->f_path;
+#else
 	ee->obj.path1.dentry = filp->f_dentry;
 	ee->obj.path1.mnt = filp->f_vfsmnt;
+#endif
 	bprm->file = filp;
 	bprm->filename = ee->handler_path;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 0)
@@ -1499,8 +1503,12 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 	ee->r.ee = ee;
 	ee->bprm = bprm;
 	ee->r.obj = &ee->obj;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+	ee->obj.path1 = bprm->file->f_path;
+#else
 	ee->obj.path1.dentry = bprm->file->f_dentry;
 	ee->obj.path1.mnt = bprm->file->f_vfsmnt;
+#endif
 #ifdef CONFIG_CCSECURITY_TASK_EXECUTE_HANDLER
 	/*
 	 * No need to call ccs_environ() for execute handler because envp[] is
@@ -2589,8 +2597,13 @@ out:
 static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 				  unsigned long arg)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+	return ccs_path_number_perm(CCS_TYPE_IOCTL, filp->f_path.dentry,
+				    filp->f_path.mnt, cmd);
+#else
 	return ccs_path_number_perm(CCS_TYPE_IOCTL, filp->f_dentry,
 				    filp->f_vfsmnt, cmd);
+#endif
 }
 
 /**
@@ -2682,7 +2695,7 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 	if (!(cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND)))
 		return 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
+	return __ccs_open_permission(file->f_path.dentry, file->f_path.mnt,
 				     O_WRONLY | (arg & O_APPEND));
 #elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
 	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,

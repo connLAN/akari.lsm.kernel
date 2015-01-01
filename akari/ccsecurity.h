@@ -107,15 +107,9 @@ struct ccsecurity_operations {
 				   const char *from);
 	int (*truncate_permission) (struct dentry *dentry,
 				    struct vfsmount *mnt);
-#if 1
 	int (*rename_permission) (struct dentry *old_dentry,
 				  struct dentry *new_dentry,
 				  struct vfsmount *mnt);
-#else
-	int (*rename_permission) (struct dentry *old_dentry,
-				  struct dentry *new_dentry,
-				  struct vfsmount *mnt, unsigned int flags);
-#endif
 	int (*link_permission) (struct dentry *old_dentry,
 				struct dentry *new_dentry,
 				struct vfsmount *mnt);
@@ -337,7 +331,6 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return func ? func(dentry, mnt) : 0;
 }
 
-#if 1
 static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
@@ -346,17 +339,6 @@ static inline int ccs_rename_permission(struct dentry *old_dentry,
 		= ccsecurity_ops.rename_permission;
 	return func ? func(old_dentry, new_dentry, mnt) : 0;
 }
-#else
-static inline int ccs_rename_permission(struct dentry *old_dentry,
-					struct dentry *new_dentry,
-					struct vfsmount *mnt,
-					unsigned int flags)
-{
-	int (*func) (struct dentry *, struct dentry *, struct vfsmount *,
-		     unsigned int) = ccsecurity_ops.rename_permission;
-	return func ? func(old_dentry, new_dentry, mnt, flags) : 0;
-}
-#endif
 
 static inline int ccs_link_permission(struct dentry *old_dentry,
 				      struct dentry *new_dentry,
@@ -561,22 +543,12 @@ static inline int ccs_truncate_permission(struct dentry *dentry,
 	return 0;
 }
 
-#if 1
 static inline int ccs_rename_permission(struct dentry *old_dentry,
 					struct dentry *new_dentry,
 					struct vfsmount *mnt)
 {
 	return 0;
 }
-#else
-static inline int ccs_rename_permission(struct dentry *old_dentry,
-					struct dentry *new_dentry,
-					struct vfsmount *mnt,
-					unsigned int flags)
-{
-	return 0;
-}
-#endif
 
 static inline int ccs_link_permission(struct dentry *old_dentry,
 				      struct dentry *new_dentry,

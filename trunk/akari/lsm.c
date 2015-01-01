@@ -1185,7 +1185,6 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 	return original_security_ops.path_symlink(dir, dentry, old_name);
 }
 
-#if 1
 /**
  * ccs_path_rename - Check permission for rename().
  *
@@ -1206,30 +1205,6 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 	return original_security_ops.path_rename(old_dir, old_dentry, new_dir,
 						 new_dentry);
 }
-#else
-/**
- * ccs_path_rename - Check permission for rename().
- *
- * @old_dir:    Pointer to "struct path".
- * @old_dentry: Pointer to "struct dentry".
- * @new_dir:    Pointer to "struct path".
- * @new_dentry: Pointer to "struct dentry".
- * @flags:      Rename flags.
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
-			   struct path *new_dir, struct dentry *new_dentry,
-			   unsigned int flags)
-{
-	int rc = ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
-	if (rc)
-		return rc;
-	while (!original_security_ops.path_rename);
-	return original_security_ops.path_rename(old_dir, old_dentry, new_dir,
-						 new_dentry, flags);
-}
-#endif
 
 /**
  * ccs_path_link - Check permission for link().
@@ -1559,7 +1534,6 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	return original_security_ops.inode_symlink(dir, dentry, old_name);
 }
 
-#if 1
 /**
  * ccs_inode_rename - Check permission for rename().
  *
@@ -1580,30 +1554,6 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 	return original_security_ops.inode_rename(old_dir, old_dentry, new_dir,
 						  new_dentry);
 }
-#else
-/**
- * ccs_inode_rename - Check permission for rename().
- *
- * @old_dir:    Pointer to "struct inode".
- * @old_dentry: Pointer to "struct dentry".
- * @new_dir:    Pointer to "struct inode".
- * @new_dentry: Pointer to "struct dentry".
- * @flags:      Rename flags.
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
-			    struct inode *new_dir, struct dentry *new_dentry,
-			    unsigned int flags)
-{
-	int rc = ccs_rename_permission(old_dentry, new_dentry, NULL, flags);
-	if (rc)
-		return rc;
-	while (!original_security_ops.inode_rename);
-	return original_security_ops.inode_rename(old_dir, old_dentry, new_dir,
-						  new_dentry, flags);
-}
-#endif
 
 /**
  * ccs_inode_link - Check permission for link().

@@ -280,12 +280,8 @@ static int __ccs_mount_permission(const char *dev_name, struct path *path,
 static int __ccs_open_exec_permission(struct dentry *dentry,
 				      struct vfsmount *mnt);
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-static int __ccs_open_permission(struct file *filp);
-#else
 static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 				 const int flag);
-#endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 18) || (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL))
 static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 			     void __user *newval, struct ctl_table *table);
@@ -330,6 +326,9 @@ static int ccs_mkdev_perm(const u8 operation, struct dentry *dentry,
 static int ccs_mount_acl(struct ccs_request_info *r, const char *dev_name,
 			 struct path *dir, const char *type,
 			 unsigned long flags);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+static int ccs_new_open_permission(struct file *filp);
+#endif
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 24)
 static int ccs_old_chroot_permission(struct nameidata *nd);
 static int ccs_old_mount_permission(const char *dev_name, struct nameidata *nd,
@@ -1656,8 +1655,10 @@ void __init ccs_permission_init(void)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32)
 	ccsecurity_ops.save_open_mode = __ccs_save_open_mode;
 	ccsecurity_ops.clear_open_mode = __ccs_clear_open_mode;
-#endif
 	ccsecurity_ops.open_permission = __ccs_open_permission;
+#else
+	ccsecurity_ops.open_permission = ccs_new_open_permission;
+#endif
 	ccsecurity_ops.fcntl_permission = __ccs_fcntl_permission;
 	ccsecurity_ops.ioctl_permission = __ccs_ioctl_permission;
 	ccsecurity_ops.chmod_permission = __ccs_chmod_permission;
@@ -2270,59 +2271,6 @@ static void __ccs_clear_open_mode(void)
 
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-
-/**
- * __ccs_open_permission - Check permission for "read" and "write".
- *
- * @filp: Pointer to "struct file".
- *
- * Returns 0 on success, negative value otherwise.
- */
-static int __ccs_open_permission(struct file *filp)
-{
-	struct ccs_request_info r;
-	struct ccs_obj_info obj = {
-		.path1 = filp->f_path,
-	};
-	const u32 ccs_flags = ccs_current_flags();
-	const u8 acc_mode = (flag & 3) == 3 ? 0 : ACC_MODE(flag);
-	int error = 0;
-	struct ccs_path_info buf;
-	int idx;
-	if (current->in_execve && !(ccs_flags & CCS_TASK_IS_IN_EXECVE))
-		return 0;
-#ifndef CONFIG_CCSECURITY_FILE_GETATTR
-	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
-		return 0;
-#endif
-	buf.name = NULL;
-	r.mode = CCS_CONFIG_DISABLED;
-	idx = ccs_read_lock();
-	if (acc_mode && ccs_init_request_info(&r, CCS_MAC_FILE_OPEN)
-	    != CCS_CONFIG_DISABLED) {
-		if (!ccs_get_realpath(&buf, &obj.path1)) {
-			error = -ENOMEM;
-			goto out;
-		}
-		r.obj = &obj;
-		if (acc_mode & MAY_READ)
-			error = ccs_path_permission(&r, CCS_TYPE_READ, &buf);
-		if (!error && (acc_mode & MAY_WRITE))
-			error = ccs_path_permission(&r, (flag & O_APPEND) ?
-						    CCS_TYPE_APPEND :
-						    CCS_TYPE_WRITE, &buf);
-	}
-out:
-	kfree(buf.name);
-	ccs_read_unlock(idx);
-	if (r.mode != CCS_CONFIG_ENFORCING)
-		error = 0;
-	return error;
-}
-
-#else
-
 /**
  * __ccs_open_permission - Check permission for "read" and "write".
  *
@@ -2341,11 +2289,15 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 		.path1.mnt = mnt,
 	};
 	const u32 ccs_flags = ccs_current_flags();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+	const u8 acc_mode = (flag & 3) == 3 ? 0 : ACC_MODE(flag);
+#else
 	const u8 acc_mode = (ccs_flags & CCS_OPEN_FOR_IOCTL_ONLY) ? 0 :
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 14)
 		(ccs_flags & CCS_OPEN_FOR_READ_TRUNCATE) ? 4 :
 #endif
 		ACC_MODE(flag);
+#endif
 	int error = 0;
 	struct ccs_path_info buf;
 	int idx;
@@ -2392,6 +2344,21 @@ out:
 	if (r.mode != CCS_CONFIG_ENFORCING)
 		error = 0;
 	return error;
+}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+
+/**
+ * ccs_new_open_permission - Check permission for "read" and "write".
+ *
+ * @filp: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_new_open_permission(struct file *filp)
+{
+	return __ccs_open_permission(filp->f_path.dentry, filp->f_path.mnt,
+				     filp->f_flags);
 }
 
 #endif
@@ -2728,7 +2695,8 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 	if (!(cmd == F_SETFL && ((arg ^ file->f_flags) & O_APPEND)))
 		return 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
-	return __ccs_open_permission(file);
+	return __ccs_open_permission(file->f_path.dentry, file->f_path.mnt,
+				     O_WRONLY | (arg & O_APPEND));
 #elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
 	return __ccs_open_permission(file->f_dentry, file->f_vfsmnt,
 				     O_WRONLY | (arg & O_APPEND));

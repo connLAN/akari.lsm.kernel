@@ -264,3 +264,11 @@ Version 1.0.30   2013/02/14   Minor update release.
    I updated the logic for security_bprm_free() emulation, and now AKARI should
    be able to coexist with other AKARI-like LKM-based LSM implementations (e.g.
    CaitSith) on all kernel versions other than 2.6.29 and 2.6.30.
+
+Version 1.0.31   2015/??/??   Minor update release.
+
+   Synchronize with TOMOYO revision 6367.
+
+   Fix missing chmod(-1) check in Linux 3.1 and later kernels.
+
+   Fix potentially using bogus attributes when stat() fails.

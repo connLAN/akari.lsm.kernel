@@ -1198,6 +1198,8 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	/* Close the requested program's dentry. */
 	ee->obj.path1.dentry = NULL;
 	ee->obj.path1.mnt = NULL;
+	ee->obj.path1_valid = false;
+	ee->obj.path1_parent_valid = false;
 	ee->obj.validate_done = false;
 	allow_write_access(bprm->file);
 	fput(bprm->file);
@@ -2618,8 +2620,6 @@ static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
 static int __ccs_chmod_permission(struct dentry *dentry,
 				  struct vfsmount *vfsmnt, mode_t mode)
 {
-	if (mode == (mode_t) -1)
-		return 0;
 	return ccs_path_number_perm(CCS_TYPE_CHMOD, dentry, vfsmnt,
 				    mode & S_IALLUGO);
 }

@@ -1192,8 +1192,8 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 	/* Close the requested program's dentry. */
 	ee->obj.path1.dentry = NULL;
 	ee->obj.path1.mnt = NULL;
-	ee->obj.path1_valid = false;
-	ee->obj.path1_parent_valid = false;
+	ee->obj.stat_valid[CCS_PATH1] = false;
+	ee->obj.stat_valid[CCS_PATH1_PARENT] = false;
 	ee->obj.validate_done = false;
 	allow_write_access(bprm->file);
 	fput(bprm->file);

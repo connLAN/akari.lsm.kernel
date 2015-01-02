@@ -1,0 +1,36 @@
+Notes for kportreserve
+
+This module reserves local port like /proc/sys/net/ipv4/ip_local_reserved_ports
+does, but this module is designed for stopping bind() requests with non-zero
+local port numbers from unwanted programs.
+
+This patch is released under the GPLv2.
+
+How to use:
+
+(1) Compile this module and load.
+
+    # cd /lib/modules/`uname -r`/build/
+    # tar -zxf /path/to/this/module.tar.gz
+    # make -s SUBDIRS=$PWD/kportreserve
+    # insmod kportreserve/kportreserve.ko
+
+(2) Use "add $port $program" format to add reservation.
+    The $port is a single port number between 0 and 65535.
+    The $program is the content of /proc/self/exe in TOMOYO's pathname
+    representation rule (i.e. consists with only ASCII printable
+    characters, and seen from the current thread's namespace's root (e.g.
+    /var/chroot/bin/bash for /bin/bash running inside /var/chroot/
+    chrooted environment)). The <kernel> means kernel threads).
+    For example,
+
+    # echo "add 10000 /bin/bash" > /proc/reserved_local_port
+    # echo "add 20000 <kernel>" > /proc/reserved_local_port
+
+    allows bind() on port 10000 to /bin/bash and allows bind() on port
+    20000 to kernel threads.
+
+    Use "del $port $program" format to remove reservation.
+
+    Note that only port numbers which have at least one reservation are
+    checked by this module.

@@ -25,9 +25,29 @@ How to compile this module:
   CONFIG_SECURITY=y CONFIG_KALLSYMS=y CONFIG_PROC_FS=y CONFIG_MODULES=y
   CONFIG_AUDITSYSCALL=y .
 
-  Follow 3.2.1. of http://akari.sourceforge.jp/1.0/chapter-3.html .
-  Then, extract this module under tasktracker subdirectory and run
-  the following commands.
+  Install the kernel development package and go to the directory that it
+  has installed into.
+
+    RedHat distributions
+
+      # VERSION=$(uname -r)
+      # yum -y install kernel-devel-${VERSION}
+      # cd /usr/src/kernels/${VERSION}/
+
+    Debian distributions
+
+      # VERSION=$(uname -r)
+      # apt-get -y install linux-headers-${VERSION}
+      # cd /usr/src/linux-headers-${VERSION}/
+
+    SUSE distributions
+
+      # VERSION=$(uname -r)
+      # yast -i kernel-devel
+      # cd /lib/modules/${VERSION}/build/
+
+  Then, extract this module's source code under tasktracker subdirectory
+  and run the following commands.
 
     # make SUBDIRS=$PWD/tasktracker modules
     # make SUBDIRS=$PWD/tasktracker modules_install
@@ -42,27 +62,40 @@ How to run this module:
   If you want to trace from the beginning of global /sbin/init process,
   you need to load the compiled module before the /sbin/init process
   starts. For example, create /sbin/tt-init like shown below and pass
-  init=/sbin/tt-init to the kernel command line parameters. Also, pass
-  security=none to the kernel command line parameters if you disable
-  SELinux.
+  security=none init=/sbin/tt-init to the kernel command line parameters.
 
     # echo '#! /bin/sh' > /sbin/tt-init
     # echo '/sbin/modprobe tasktracker && exec /sbin/init "$@"' >> /sbin/tt-init
     # chmod 755 /sbin/tt-init
 
-  You will get history of current thread in the form of comm name and
-  time stamp pairs in the subj= field of audit logs like an example
-  shown below.
+  If you are using systemd-based distributions where passing init=/sbin/tt-init
+  does not work, include tasktracker.ko into initramfs and load from initramfs.
+  For example, create /etc/dracut.conf.d/tasktracker.conf like shown below and
+  recreate initramfs and pass security=none rd.driver.pre=tasktracker to the
+  kernel command line parameters. 
 
-    type=SYSCALL msg=audit(1397568834.719:20): arch=40000003 syscall=11
-    success=yes exit=0 a0=881e4e8 a1=882a500 a2=8820248 a3=882a500 items=2
-    ppid=1151 pid=1168 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
-    sgid=0 fsgid=0 tty=pts0 ses=1 comm="reboot" exe="/sbin/reboot"
-    subj="tt-init(2014/04/15-22:32:04)=>init(2014/04/15-22:32:04)=>
-    sh(2014/04/15-13:32:06)=>rc(2014/04/15-13:32:06)=>
-    S55sshd(2014/04/15-13:32:20)=>sshd(2014/04/15-13:32:20)=>
-    sshd(2014/04/15-13:32:33)=>bash(2014/04/15-13:32:37)=>
-    reboot(2014/04/15-13:33:54)" key=(null)
+    # echo 'add_drivers+=" tasktracker "' > /etc/dracut.conf.d/tasktracker.conf
+    # dracut -f
+
+  You will get history of current thread in the subj= field of audit logs
+  in the form of comm=$commname;start=$YYYYMMDDhhmmss delimited by => like
+  an example shown below.
+
+    time->Sun Jan 11 11:15:32 2015
+    type=PATH msg=audit(1420942532.497:367): item=1 name=(null) inode=382165972
+    dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 objtype=NORMAL
+    type=PATH msg=audit(1420942532.497:367): item=0 name="/sbin/reboot"
+    inode=97095 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 objtype=NORMAL
+    type=CWD msg=audit(1420942532.497:367):  cwd="/root"
+    type=EXECVE msg=audit(1420942532.497:367): argc=1 a0="reboot"
+    type=SYSCALL msg=audit(1420942532.497:367): arch=c000003e syscall=59
+    success=yes exit=0 a0=12f1aa0 a1=1317bd0 a2=12fa580 a3=7fff9cdcb7d0 items=2
+    ppid=3399 pid=3420 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0
+    fsgid=0 tty=pts0 ses=1 comm="reboot" exe="/usr/bin/systemctl"
+    subj="comm=systemd;start=20150111111450=>comm=systemd;start=20150111111452
+    =>comm=sshd;start=20150111021459=>comm=sshd;start=20150111021505
+    =>comm=bash;start=20150111021509=>comm=reboot;start=20150111021532"
+    key=(null)
 
 ChangeLog:
 
@@ -78,3 +111,9 @@ ChangeLog:
     loading this kernel module.
 
     Make conversion of time stamp a bit faster.
+
+  Version 0.3   2015/01/11   Bug fix.
+
+    Change the history format.
+
+    Add a check at load time for known conflicting modules.

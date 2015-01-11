@@ -10,6 +10,7 @@
 #include <linux/sched.h>
 #include <linux/binfmts.h>
 #include <linux/hash.h>
+#include <linux/ctype.h>
 
 /* Structure for holding string buffer. */
 struct tt_record {
@@ -111,14 +112,12 @@ static void tt_update_record(struct tt_record *record)
 	 * modified by other thread is not a fatal problem.
 	 */
 	cp = buf;
-	cp += snprintf(buf, sizeof(buf) - 1, "comm=");
+	cp += snprintf(buf, sizeof(buf) - 1, "name=");
 	for (i = 0; i < TASK_COMM_LEN; i++) {
 		const unsigned char c = current->comm[i];
 		if (!c)
 			break;
-		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-		    (c >= '0' && c <= '9') || c == '.' || c == '_' ||
-		    c == '-') {
+		if (isalnum(c) || c == '.' || c == '_' || c == '-') {
 			*cp++ = c;
 			continue;
 		}
@@ -127,7 +126,10 @@ static void tt_update_record(struct tt_record *record)
 		*cp++ = ((c >> 3) & 7)+ '0';
 		*cp++ = (c & 7) + '0';
 	}
-	/* Insert timestamp. */
+	/* Append PID. */
+	cp += snprintf(cp, buf - cp + sizeof(buf) - 1, ";pid=%u",
+		       current->pid);
+	/* Append timestamp. */
 	{
 		struct tt_time stamp;
 		tt_get_time(&stamp);
@@ -148,13 +150,12 @@ static void tt_update_record(struct tt_record *record)
 	 * successful execve() operation.
 	 */
 	cp = record->history;
-	i = strlen(cp);
-	while (i >= sizeof(record->history) - 10 - required) {
-		char *cp2 = strstr(cp + 2, "=>");
-		if (!cp2)
+	while (i = strlen(cp), i + required >= sizeof(record->history) - 10) {
+		char *cp2 = memchr(cp + 3, '>', i - 3);
+		if (WARN_ON_ONCE(!cp2))
 			return;
+		cp2--;
 		memmove(cp + 1, cp2, strlen(cp2) + 1);
-		i = strlen(cp);
 	}
 	if (!i)
 		sprintf(cp, "\"%s\"", buf);

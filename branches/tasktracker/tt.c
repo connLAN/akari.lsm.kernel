@@ -1,7 +1,7 @@
 /*
  * tt.c - Simplified thread information tracker.
  *
- * Copyright (C) 2010-2014  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+ * Copyright (C) 2010-2015  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  */
 
 #include "probe.h"
@@ -55,7 +55,6 @@ struct tt_time {
  */
 static void tt_get_time(struct tt_time *stamp)
 {
-	struct timeval tv;
 	static const u16 tt_eom[2][12] = {
 		{ 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
 		{ 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
@@ -63,19 +62,17 @@ static void tt_get_time(struct tt_time *stamp)
 	u16 y = 1970;
 	u8 m;
 	bool r;
-	time_t time;
-	do_gettimeofday(&tv);
-	time = tv.tv_sec;
+	time_t time = get_seconds();
 	stamp->sec = time % 60;
 	time /= 60;
 	stamp->min = time % 60;
 	time /= 60;
 	stamp->hour = time % 24;
 	time /= 24;
-	if (time >= 16071) {
-		/* Start from 2014/01/01 rather than 1970/01/01. */
-		time -= 16071;
-		y += 44;
+	if (time >= 16436) {
+		/* Start from 2015/01/01 rather than 1970/01/01. */
+		time -= 16436;
+		y += 45;
 	}
 	while (1) {
 		const unsigned short days = (y & 3) ? 365 : 366;
@@ -105,10 +102,45 @@ static void tt_update_record(struct tt_record *record)
 {
 	char *cp;
 	int i;
-	struct tt_time stamp;
+	int required;
+	char buf[256];
 	if (!record)
 		return;
-	tt_get_time(&stamp);
+	/*
+	 * Lockless read because this is current thread and being unexpectedly
+	 * modified by other thread is not a fatal problem.
+	 */
+	cp = buf;
+	cp += snprintf(buf, sizeof(buf) - 1, "comm=");
+	for (i = 0; i < TASK_COMM_LEN; i++) {
+		const unsigned char c = current->comm[i];
+		if (!c)
+			break;
+		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+		    (c >= '0' && c <= '9') || c == '.' || c == '_' ||
+		    c == '-') {
+			*cp++ = c;
+			continue;
+		}
+		*cp++ = '\\';
+		*cp++ = (c >> 6) + '0';
+		*cp++ = ((c >> 3) & 7)+ '0';
+		*cp++ = (c & 7) + '0';
+	}
+	/* Insert timestamp. */
+	{
+		struct tt_time stamp;
+		tt_get_time(&stamp);
+		cp += snprintf(cp, buf - cp + sizeof(buf) - 1,
+			       ";start=%04u%02u%02u%02u%02u%02u", stamp.year,
+			       stamp.month, stamp.day, stamp.hour, stamp.min,
+			       stamp.sec);
+	}
+	/* Terminate the buffer. */
+	if (cp >= buf + sizeof(buf))
+		cp = buf + sizeof(buf) - 1;
+	*cp = '\0';
+	required = cp - buf;
 	/*
 	 * Lockless update because current thread's record is not concurrently
 	 * accessible, for "struct cred"->security is not visible from other
@@ -117,11 +149,7 @@ static void tt_update_record(struct tt_record *record)
 	 */
 	cp = record->history;
 	i = strlen(cp);
-	while (i >= sizeof(record->history) - (TASK_COMM_LEN * 4 + 30)) {
-		/*
-		 * Since this record is not for making security decision,
-		 * I don't care by-chance matching "=>" in task's commname.
-		 */
+	while (i >= sizeof(record->history) - 10 - required) {
 		char *cp2 = strstr(cp + 2, "=>");
 		if (!cp2)
 			return;
@@ -129,30 +157,9 @@ static void tt_update_record(struct tt_record *record)
 		i = strlen(cp);
 	}
 	if (!i)
-		*cp++ = '"';
-	else {
-		cp += i - 1;
-		*cp++ = '=';
-		*cp++ = '>';
-	}
-	/*
-	 * Lockless read because this is current thread and being unexpectedly
-	 * modified by other thread is not a fatal problem.
-	 */
-	for (i = 0; i < TASK_COMM_LEN; i++) {
-		const unsigned char c = current->comm[i];
-		if (!c)
-			break;
-		else if (c == '"' || c == '\\' || c < 0x21 || c > 0x7e) {
-			*cp++ = '\\';
-			*cp++ = (c >> 6) + '0';
-			*cp++ = ((c >> 3) & 7)+ '0';
-			*cp++ = (c & 7) + '0';
-		} else
-			*cp++ = c;
-	}
-	sprintf(cp, "(%04u/%02u/%02u-%02u:%02u:%02u)\"", stamp.year,
-		stamp.month, stamp.day, stamp.hour, stamp.min, stamp.sec);
+		sprintf(cp, "\"%s\"", buf);
+	else
+		sprintf(cp + i - 1, "=>%s\"", buf);
 }
 
 /**
@@ -560,10 +567,16 @@ static int __init tt_init(void)
 	struct security_operations *ops = probe_security_ops();
 	if (!ops)
 		return -EINVAL;
+	if (!strcmp(ops->name, "selinux") || !strcmp(ops->name, "smack")) {
+		printk(KERN_INFO "TaskTracker module conflicts with %s. "
+		       "Please restart the system with security=none kernel "
+		       "command line option.\n", ops->name);
+		return -EINVAL;
+	}
 	for (idx = 0; idx < TT_MAX_RECORD_HASH; idx++)
 		INIT_LIST_HEAD(&tt_record_list[idx]);
 	tt_update_security_ops(ops);
-	printk(KERN_INFO "TaskTracker: 0.2   2014/04/20\n");
+	printk(KERN_INFO "TaskTracker: 0.3   2015/01/11\n");
 	return 0;
 }
 

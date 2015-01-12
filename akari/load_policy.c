@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2012/05/05
+ * Version: 1.8.3+   2015/01/12
  */
 
 #include <linux/version.h>

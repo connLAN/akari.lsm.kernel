@@ -265,9 +265,9 @@ Version 1.0.30   2013/02/14   Minor update release.
    be able to coexist with other AKARI-like LKM-based LSM implementations (e.g.
    CaitSith) on all kernel versions other than 2.6.29 and 2.6.30.
 
-Version 1.0.31   2015/??/??   Minor update release.
+Version 1.0.31   2015/01/12   Minor update release.
 
-   Synchronize with TOMOYO revision 6367.
+   Synchronize with TOMOYO revision 6373.
 
    Fix missing chmod(-1) check in Linux 3.1 and later kernels.
 

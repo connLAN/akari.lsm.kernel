@@ -1594,7 +1594,7 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 bool ccs_memory_ok(const void *ptr, const unsigned int size);
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
-char *ccs_realpath(struct path *path);
+char *ccs_realpath(const struct path *path);
 const char *ccs_get_exe(void);
 const struct ccs_path_info *ccs_get_name(const char *name);
 int ccs_audit_log(struct ccs_request_info *r);

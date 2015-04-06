@@ -1030,6 +1030,26 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+
+/**
+ * ccs_inode_getattr - Check permission for stat().
+ *
+ * @path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_getattr(const struct path *path)
+{
+	int rc = ccs_getattr_permission(path->mnt, path->dentry);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_getattr);
+	return original_security_ops.inode_getattr(path);
+}
+
+#else
+
 /**
  * ccs_inode_getattr - Check permission for stat().
  *
@@ -1046,6 +1066,8 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 	while (!original_security_ops.inode_getattr);
 	return original_security_ops.inode_getattr(mnt, dentry);
 }
+
+#endif
 
 #if defined(CONFIG_SECURITY_PATH)
 

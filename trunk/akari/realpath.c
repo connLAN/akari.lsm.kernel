@@ -27,17 +27,17 @@
 
 char *ccs_encode(const char *str);
 char *ccs_encode2(const char *str, int str_len);
-char *ccs_realpath(struct path *path);
+char *ccs_realpath(const struct path *path);
 const char *ccs_get_exe(void);
 void ccs_fill_path_info(struct ccs_path_info *ptr);
 
-static char *ccs_get_absolute_path(struct path *path, char * const buffer,
-				   const int buflen);
+static char *ccs_get_absolute_path(const struct path *path,
+				   char * const buffer, const int buflen);
 static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 				 const int buflen);
 static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 				const int buflen);
-static char *ccs_get_socket_name(struct path *path, char * const buffer,
+static char *ccs_get_socket_name(const struct path *path, char * const buffer,
 				 const int buflen);
 static int ccs_const_part_length(const char *filename);
 
@@ -213,8 +213,8 @@ static inline void ccs_realpath_unlock(void)
  *
  * If dentry is a directory, trailing '/' is appended.
  */
-static char *ccs_get_absolute_path(struct path *path, char * const buffer,
-				   const int buflen)
+static char *ccs_get_absolute_path(const struct path *path,
+				   char * const buffer, const int buflen)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 	char *pos = ERR_PTR(-ENOMEM);
@@ -343,7 +343,18 @@ out:
 static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 				 const int buflen)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+	char *pos = ERR_PTR(-ENOMEM);
+	if (buflen >= 256) {
+		pos = dentry_path_raw(dentry, buffer, buflen - 1);
+		if (!IS_ERR(pos) && *pos == '/' && pos[1] &&
+		    d_is_dir(dentry)) {
+			buffer[buflen - 2] = '/';
+			buffer[buflen - 1] = '\0';
+		}
+	}
+	return pos;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 	char *pos = ERR_PTR(-ENOMEM);
 	if (buflen >= 256) {
 		/* rename_lock is locked/unlocked by dentry_path_raw(). */
@@ -478,7 +489,7 @@ out:
  *
  * Returns the buffer.
  */
-static char *ccs_get_socket_name(struct path *path, char * const buffer,
+static char *ccs_get_socket_name(const struct path *path, char * const buffer,
 				 const int buflen)
 {
 	struct inode *inode = path->dentry->d_inode;
@@ -506,7 +517,7 @@ static char *ccs_get_socket_name(struct path *path, char * const buffer,
  * This function uses kzalloc(), so caller must kfree() if this function
  * didn't return NULL.
  */
-char *ccs_realpath(struct path *path)
+char *ccs_realpath(const struct path *path)
 {
 	char *buf = NULL;
 	char *name = NULL;
@@ -717,30 +728,40 @@ void ccs_fill_path_info(struct ccs_path_info *ptr)
 const char *ccs_get_exe(void)
 {
 	struct mm_struct *mm = current->mm;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26)
 	struct vm_area_struct *vma;
 #endif
-	const char *cp = NULL;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
+	struct path path;
+#endif
+	struct file *exe_file = NULL;
+	const char *cp;
 	if (!mm)
 		return NULL;
 	down_read(&mm->mmap_sem);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0)
-	if (mm->exe_file)
-		cp = ccs_realpath(&mm->exe_file->f_path);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 26)
+	/* Not using get_mm_exe_file() as it is not exported. */
+	exe_file = mm->exe_file;
 #else
 	for (vma = mm->mmap; vma; vma = vma->vm_next) {
 		if ((vma->vm_flags & VM_EXECUTABLE) && vma->vm_file) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
-			struct path path = { vma->vm_file->f_vfsmnt,
-					     vma->vm_file->f_dentry };
-			cp = ccs_realpath(&path);
-#else
-			cp = ccs_realpath(&vma->vm_file->f_path);
-#endif
+			exe_file = vma->vm_file;
 			break;
 		}
 	}
 #endif
+	if (exe_file)
+		get_file(exe_file);
 	up_read(&mm->mmap_sem);
+	if (!exe_file)
+		return NULL;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+	cp = ccs_realpath(&exe_file->f_path);
+#else
+	path.mnt = exe_file->f_vfsmnt;
+	path.dentry = exe_file->f_dentry;
+	cp = ccs_realpath(&path);
+#endif
+	fput(exe_file);
 	return cp;
 }

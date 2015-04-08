@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2015/01/12
+ * Version: 1.8.3+   2015/04/08
  */
 
 #include "internal.h"
@@ -2301,7 +2301,7 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 	if (current->in_execve && !(ccs_flags & CCS_TASK_IS_IN_EXECVE))
 		return 0;
 #endif
-#ifndef CONFIG_CCSECURITY_FILE_GETATTR
+#ifndef CONFIG_CCSECURITY_FILE_READDIR
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
 	if (d_is_dir(dentry))
 		return 0;

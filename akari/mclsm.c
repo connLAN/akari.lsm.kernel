@@ -52,7 +52,9 @@ struct ccsecurity_exports ccsecurity_exports;
 struct ccsecurity_operations ccsecurity_ops;
 
 /* Original hooks. */
-static struct security_operations original_security_ops;
+static union security_list_options original_cred_prepare;
+static union security_list_options original_cred_free;
+static union security_list_options original_cred_alloc_blank;
 
 #ifdef CONFIG_AKARI_TRACE_EXECVE_COUNT
 
@@ -263,8 +265,8 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 	rc1 = ccs_copy_cred_security(new, old, gfp);
 	if (gfp == GFP_KERNEL)
 		ccs_task_security_gc();
-	if (original_security_ops.cred_prepare) {
-		const int rc2 = original_security_ops.cred_prepare(new, old,
+	if (original_cred_prepare.cred_prepare) {
+		const int rc2 = original_cred_prepare.cred_prepare(new, old,
 								   gfp);
 		if (rc2) {
 			ccs_del_security(ccs_find_cred_security(new));
@@ -283,8 +285,8 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
  */
 static void ccs_cred_free(struct cred *cred)
 {
-	if (original_security_ops.cred_free)
-		original_security_ops.cred_free(cred);
+	if (original_cred_free.cred_free)
+		original_cred_free.cred_free(cred);
 	ccs_del_security(ccs_find_cred_security(cred));
 }
 
@@ -318,9 +320,9 @@ static int ccs_alloc_cred_security(const struct cred *cred, gfp_t gfp)
 static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 {
 	const int rc1 = ccs_alloc_cred_security(new, gfp);
-	if (original_security_ops.cred_alloc_blank) {
-		const int rc2 = original_security_ops.cred_alloc_blank(new,
-								       gfp);
+	if (original_cred_alloc_blank.cred_alloc_blank) {
+		const int rc2 = original_cred_alloc_blank.
+			cred_alloc_blank(new, gfp);
 		if (rc2) {
 			ccs_del_security(ccs_find_cred_security(new));
 			return rc2;
@@ -1136,149 +1138,114 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 	return ccs_ioctl_permission(filp, cmd, arg);
 }
 
-static struct security_operations akari_security_ops = {
-	.name = "akari",
-	.task_create = ccs_task_create,
-	.cred_prepare = ccs_cred_prepare,
-	.cred_free = ccs_cred_free,
-	.cred_alloc_blank = ccs_cred_alloc_blank,
-	.cred_transfer = ccs_cred_transfer,
-	.bprm_check_security = ccs_bprm_check_security,
-	.bprm_committing_creds = ccs_bprm_committing_creds,
-	.file_open = ccs_file_open,
-	.file_fcntl = ccs_file_fcntl,
-	.file_ioctl = ccs_file_ioctl,
-	.sb_pivotroot = ccs_sb_pivotroot,
-	.sb_mount = ccs_sb_mount,
-	.sb_umount = ccs_sb_umount,
+#define MY_HOOK_INIT(HEAD, HOOK)				\
+	{ .head = &probe_dummy_security_hook_heads.HEAD,	\
+			.hook = { .HEAD = HOOK } }
+
+static struct security_hook_list akari_hooks[] = {
+	/* Security context allocator. */
+	MY_HOOK_INIT(cred_free, ccs_cred_free),
+	MY_HOOK_INIT(cred_prepare, ccs_cred_prepare),
+	MY_HOOK_INIT(cred_alloc_blank, ccs_cred_alloc_blank),
+	MY_HOOK_INIT(cred_transfer, ccs_cred_transfer),
+	MY_HOOK_INIT(task_create, ccs_task_create),
+	/* Security context updater for successful execve(). */
+	MY_HOOK_INIT(bprm_check_security, ccs_bprm_check_security),
+	MY_HOOK_INIT(bprm_committing_creds, ccs_bprm_committing_creds),
+	/* Various permission checker. */
+	MY_HOOK_INIT(file_open, ccs_file_open),
+	MY_HOOK_INIT(file_fcntl, ccs_file_fcntl),
+	MY_HOOK_INIT(file_ioctl, ccs_file_ioctl),
+	MY_HOOK_INIT(sb_pivotroot, ccs_sb_pivotroot),
+	MY_HOOK_INIT(sb_mount, ccs_sb_mount),
+	MY_HOOK_INIT(sb_umount, ccs_sb_umount),
 #ifdef CONFIG_SECURITY_PATH
-	.path_mknod = ccs_path_mknod,
-	.path_mkdir = ccs_path_mkdir,
-	.path_rmdir = ccs_path_rmdir,
-	.path_unlink = ccs_path_unlink,
-	.path_symlink = ccs_path_symlink,
-	.path_rename = ccs_path_rename,
-	.path_link = ccs_path_link,
-	.path_truncate = ccs_path_truncate,
-	.path_chmod = ccs_path_chmod,
-	.path_chown = ccs_path_chown,
-	.path_chroot = ccs_path_chroot,
+	MY_HOOK_INIT(path_mknod, ccs_path_mknod),
+	MY_HOOK_INIT(path_mkdir, ccs_path_mkdir),
+	MY_HOOK_INIT(path_rmdir, ccs_path_rmdir),
+	MY_HOOK_INIT(path_unlink, ccs_path_unlink),
+	MY_HOOK_INIT(path_symlink, ccs_path_symlink),
+	MY_HOOK_INIT(path_rename, ccs_path_rename),
+	MY_HOOK_INIT(path_link, ccs_path_link),
+	MY_HOOK_INIT(path_truncate, ccs_path_truncate),
+	MY_HOOK_INIT(path_chmod, ccs_path_chmod),
+	MY_HOOK_INIT(path_chown, ccs_path_chown),
+	MY_HOOK_INIT(path_chroot, ccs_path_chroot),
 #else
-	.inode_mknod = ccs_inode_mknod,
-	.inode_mkdir = ccs_inode_mkdir,
-	.inode_rmdir = ccs_inode_rmdir,
-	.inode_unlink = ccs_inode_unlink,
-	.inode_symlink = ccs_inode_symlink,
-	.inode_rename = ccs_inode_rename,
-	.inode_link = ccs_inode_link,
-	.inode_create = ccs_inode_create,
-	.inode_setattr = ccs_inode_setattr,
+	MY_HOOK_INIT(inode_mknod, ccs_inode_mknod),
+	MY_HOOK_INIT(inode_mkdir, ccs_inode_mkdir),
+	MY_HOOK_INIT(inode_rmdir, ccs_inode_rmdir),
+	MY_HOOK_INIT(inode_unlink, ccs_inode_unlink),
+	MY_HOOK_INIT(inode_symlink, ccs_inode_symlink),
+	MY_HOOK_INIT(inode_rename, ccs_inode_rename),
+	MY_HOOK_INIT(inode_link, ccs_inode_link),
+	MY_HOOK_INIT(inode_create, ccs_inode_create),
+	MY_HOOK_INIT(inode_setattr, ccs_inode_setattr),
 #endif
-	.inode_getattr = ccs_inode_getattr,
+	MY_HOOK_INIT(inode_getattr, ccs_inode_getattr),
 #ifdef CONFIG_SECURITY_NETWORK
-	.socket_bind = ccs_socket_bind,
-	.socket_connect = ccs_socket_connect,
-	.socket_listen = ccs_socket_listen,
-	.socket_sendmsg = ccs_socket_sendmsg,
-	.socket_recvmsg = ccs_socket_recvmsg,
-	.socket_getsockname = ccs_socket_getsockname,
-	.socket_getpeername = ccs_socket_getpeername,
-	.socket_getsockopt = ccs_socket_getsockopt,
-	.socket_setsockopt = ccs_socket_setsockopt,
-	.socket_shutdown = ccs_socket_shutdown,
-	.socket_accept = ccs_socket_accept,
-	.inode_free_security = ccs_inode_free_security,
+	MY_HOOK_INIT(socket_bind, ccs_socket_bind),
+	MY_HOOK_INIT(socket_connect, ccs_socket_connect),
+	MY_HOOK_INIT(socket_listen, ccs_socket_listen),
+	MY_HOOK_INIT(socket_sendmsg, ccs_socket_sendmsg),
+	MY_HOOK_INIT(socket_recvmsg, ccs_socket_recvmsg),
+	MY_HOOK_INIT(socket_getsockname, ccs_socket_getsockname),
+	MY_HOOK_INIT(socket_getpeername, ccs_socket_getpeername),
+	MY_HOOK_INIT(socket_getsockopt, ccs_socket_getsockopt),
+	MY_HOOK_INIT(socket_setsockopt, ccs_socket_setsockopt),
+	MY_HOOK_INIT(socket_shutdown, ccs_socket_shutdown),
+	MY_HOOK_INIT(socket_accept, ccs_socket_accept),
+	MY_HOOK_INIT(inode_free_security, ccs_inode_free_security),
 #endif
 };
 
-#define swap_security_ops(op, lsm_list)					\
-	do {								\
-		if (list_empty(&lsm_list[lsm_##op]))			\
-			add_security_ops(op, lsm_list);			\
-		else {							\
-			struct security_operations *ops =		\
-				list_first_entry(&lsm_list[lsm_##op],	\
-						 typeof(*ops),		\
-						 list[lsm_##op]);	\
-			original_security_ops.op = ops->op;		\
-			smp_wmb();					\
-			ops->op = ccs_##op;				\
-		}							\
-	} while (0)
+static void __init add_hook(struct security_hook_list *hook,
+			    struct security_hook_heads *head)
+{
+	const unsigned int offset = (unsigned long) hook->head
+		- (unsigned long) &probe_dummy_security_hook_heads;
+	struct list_head *list = ((void *) head) + offset;
+	struct security_hook_list *shp =
+		list_last_entry(list, struct security_hook_list, list);
+	hook->head = shp->head;
+	list_add_rcu(&hook->list, list);
+}
 
-#define add_security_ops(op, lsm_list)					\
-	do {								\
-		list_add_tail_rcu(&akari_security_ops.list[lsm_##op],	\
-				  &lsm_list[lsm_##op]);			\
-	} while (0)
+static void __init swap_hook(struct security_hook_list *hook,
+			     struct security_hook_heads *head,
+			     union security_list_options *original)
+{
+	const unsigned int offset = (unsigned long) hook->head
+		- (unsigned long) &probe_dummy_security_hook_heads;
+	struct list_head *list = ((void *) head) + offset;
+	struct security_hook_list *shp =
+		list_last_entry(list, struct security_hook_list, list);
+	hook->head = shp->head;
+	if (list_empty(list)) {
+		list_add_rcu(&hook->list, list);
+	} else {
+		*original = shp->hook;
+		smp_wmb();
+		shp->hook = hook->hook;
+	}
+}
 
 /**
  * ccs_update_security_ops - Overwrite original "struct security_operations".
  *
- * @lsm_list: Pointer to "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
+ * @lsm_list: Pointer to "struct security_hook_heads security_hook_heads".
  *
  * Returns nothing.
  */
-static void __init ccs_update_security_ops(struct list_head *lsm_list)
+static void __init ccs_update_security_ops(struct security_hook_heads *hooks)
 {
-	/* Security context allocator. */
-	swap_security_ops(cred_free, lsm_list);
-	swap_security_ops(cred_prepare, lsm_list);
-	swap_security_ops(cred_alloc_blank, lsm_list);
-	add_security_ops(cred_transfer, lsm_list);
-	add_security_ops(task_create, lsm_list);
-	/* Security context updater for successful execve(). */
-	add_security_ops(bprm_check_security, lsm_list);
-	add_security_ops(bprm_committing_creds, lsm_list);
-	/* Various permission checker. */
-	add_security_ops(file_open, lsm_list);
-	add_security_ops(file_fcntl, lsm_list);
-	add_security_ops(file_ioctl, lsm_list);
-	add_security_ops(sb_pivotroot, lsm_list);
-	add_security_ops(sb_mount, lsm_list);
-	add_security_ops(sb_umount, lsm_list);
-#ifdef CONFIG_SECURITY_PATH
-	add_security_ops(path_mknod, lsm_list);
-	add_security_ops(path_mkdir, lsm_list);
-	add_security_ops(path_rmdir, lsm_list);
-	add_security_ops(path_unlink, lsm_list);
-	add_security_ops(path_symlink, lsm_list);
-	add_security_ops(path_rename, lsm_list);
-	add_security_ops(path_link, lsm_list);
-	add_security_ops(path_truncate, lsm_list);
-	add_security_ops(path_chmod, lsm_list);
-	add_security_ops(path_chown, lsm_list);
-	add_security_ops(path_chroot, lsm_list);
-#else
-	add_security_ops(inode_mknod, lsm_list);
-	add_security_ops(inode_mkdir, lsm_list);
-	add_security_ops(inode_rmdir, lsm_list);
-	add_security_ops(inode_unlink, lsm_list);
-	add_security_ops(inode_symlink, lsm_list);
-	add_security_ops(inode_rename, lsm_list);
-	add_security_ops(inode_link, lsm_list);
-	add_security_ops(inode_create, lsm_list);
-	add_security_ops(inode_setattr, lsm_list);
-#endif
-	add_security_ops(inode_getattr, lsm_list);
-#ifdef CONFIG_SECURITY_NETWORK
-	add_security_ops(inode_free_security, lsm_list);
-	add_security_ops(socket_bind, lsm_list);
-	add_security_ops(socket_connect, lsm_list);
-	add_security_ops(socket_listen, lsm_list);
-	add_security_ops(socket_sendmsg, lsm_list);
-	add_security_ops(socket_recvmsg, lsm_list);
-	add_security_ops(socket_getsockname, lsm_list);
-	add_security_ops(socket_getpeername, lsm_list);
-	add_security_ops(socket_getsockopt, lsm_list);
-	add_security_ops(socket_setsockopt, lsm_list);
-	add_security_ops(socket_shutdown, lsm_list);
-	add_security_ops(socket_accept, lsm_list);
-#endif
+	int idx;
+	swap_hook(&akari_hooks[0], hooks, &original_cred_free);
+	swap_hook(&akari_hooks[1], hooks, &original_cred_prepare);
+	swap_hook(&akari_hooks[2], hooks, &original_cred_alloc_blank);
+	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
+		add_hook(&akari_hooks[idx], hooks);
 }
-
-#undef swap_security_ops
-#undef add_security_ops
 
 /**
  * ccs_init - Initialize this module.
@@ -1288,7 +1255,7 @@ static void __init ccs_update_security_ops(struct list_head *lsm_list)
 static int __init ccs_init(void)
 {
 	int idx;
-	struct list_head *hooks = probe_lsm_hooks_list();
+	struct security_hook_heads *hooks = probe_security_hook_heads();
 	if (!hooks)
 		goto out;
 	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();

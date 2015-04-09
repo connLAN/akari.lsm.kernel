@@ -12,8 +12,8 @@
  */
 static int __init ccs_init(void)
 {
-#ifdef CONFIG_SECURITY_COMPOSER_MAX
-	if (!probe_lsm_hooks_list())
+#if defined(LSM_HOOK_INIT)
+	if (!probe_security_hook_heads())
 		goto out;
 #else
 	if (!probe_security_ops())

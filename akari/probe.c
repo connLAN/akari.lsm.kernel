@@ -144,13 +144,13 @@ out:
 
 #endif
 
-#if defined(CONFIG_SECURITY_COMPOSER_MAX)
+#if defined(LSM_HOOK_INIT)
 
 /*
  * Dummy variable for finding location of
- * "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
+ * "struct security_hook_heads security_hook_heads".
  */
-struct list_head probe_lsm_hooks[LSM_MAX_HOOKS];
+struct security_hook_heads probe_dummy_security_hook_heads;
 
 /**
  * probe_security_bprm_committed_creds - Dummy function which does identical to security_bprm_committed_creds() in security/security.c.
@@ -162,12 +162,10 @@ struct list_head probe_lsm_hooks[LSM_MAX_HOOKS];
 void probe_security_bprm_committed_creds(struct linux_binprm *bprm)
 {
 	do {
-		struct security_operations *sop;
-		
-		list_for_each_entry(sop,
-				    &probe_lsm_hooks[lsm_bprm_committed_creds],
-				    list[lsm_bprm_committed_creds])
-			sop->bprm_committed_creds(bprm);
+		struct security_hook_list *p;
+		list_for_each_entry(p, &probe_dummy_security_hook_heads.
+				    bprm_committed_creds, list)
+			p->hook.bprm_committed_creds(bprm);
 	} while (0);
 }
 
@@ -295,7 +293,7 @@ static void * __init probe_find_variable(void *function, unsigned long addr,
 		base = __symbol_get(symbol);
 	if (!base)
 		return NULL;
-#if defined(CONFIG_ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) && !defined(CONFIG_SECURITY_COMPOSER_MAX)
+#if defined(CONFIG_ARM) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) && !defined(LSM_HOOK_INIT)
 	if (function == probe_security_file_alloc)
 		return probe_security_ops_on_arm((unsigned int *) base);
 #endif
@@ -348,48 +346,32 @@ static void * __init probe_find_variable(void *function, unsigned long addr,
 	return NULL;
 }
 
-#if defined(CONFIG_SECURITY_COMPOSER_MAX)
+#if defined(LSM_HOOK_INIT)
 
 /**
- * probe_lsm_hooks_list - Find address of "struct list_head lsm_hooks[LSM_MAX_HOOKS]".
+ * probe_security_hook_heads - Find address of "struct security_hook_heads security_hook_heads".
  *
- * Returns pointer to "struct security_operations" on success, NULL otherwise.
+ * Returns pointer to "struct security_hook_heads" on success, NULL otherwise.
  */
-struct list_head * __init probe_lsm_hooks_list(void)
+struct security_hook_heads * __init probe_security_hook_heads(void)
 {
-	unsigned int offset = 0;
+	const unsigned int offset = offsetof(struct security_hook_heads,
+					     bprm_committed_creds);
 	void *cp;
-	/* Guess "struct list_head lsm_hooks[LSM_MAX_HOOKS];". */
-	/* Try without offset. GCC 4.x seems to use this one. */
+	/* Guess "struct security_hook_heads security_hook_heads;". */
 	cp = probe_find_variable(probe_security_bprm_committed_creds,
-				 (unsigned long) probe_lsm_hooks,
+				 ((unsigned long)
+				  &probe_dummy_security_hook_heads) + offset,
 				 " security_bprm_committed_creds\n");
-	if (!cp) {
-		/* Retry with offset. GCC 3.x seems to use this one. */
-		offset = offsetof(struct security_operations,
-				  list[lsm_bprm_committed_creds]);
-		cp = probe_find_variable(probe_security_bprm_committed_creds,
-					 ((unsigned long) probe_lsm_hooks)
-					 + offset,
-					 " security_bprm_committed_creds\n");
-	}
 	if (!cp) {
 		printk(KERN_ERR
 		       "Can't resolve security_bprm_committed_creds().\n");
-		goto out;
+		return NULL;
 	}
-	/* This should be "struct list_head lsm_hooks[LSM_MAX_HOOKS];". */
-	cp = (struct list_head *) (*(unsigned long *) cp);
-	if (!cp) {
-		printk(KERN_ERR "Can't resolve lsm_hooks array.\n");
-		goto out;
-	}
-	/* Adjust if offset is used. */
-	cp -= offset;
-	printk(KERN_INFO "lsm_hooks=%p\n", cp);
+	/* This should be "struct security_hook_heads security_hook_heads;". */
+	cp = ((void *) (*(unsigned long *) cp)) - offset;
+	printk(KERN_INFO "security_hook_heads=%p\n", cp);
 	return cp;
-out:
-	return NULL;
 }
 
 #else

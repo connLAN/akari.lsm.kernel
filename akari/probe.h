@@ -26,9 +26,10 @@
 #error You must choose CONFIG_MODULES=y for building this module.
 #endif
 
-#if defined(CONFIG_SECURITY_COMPOSER_MAX)
-struct list_head;
-struct list_head * __init probe_lsm_hooks_list(void);
+#if 0
+#include <linux/lsm_hooks.h>
+extern struct security_hook_heads probe_dummy_security_hook_heads;
+struct security_hook_heads * __init probe_security_hook_heads(void);
 #else
 struct security_operations;
 struct security_operations * __init probe_security_ops(void);

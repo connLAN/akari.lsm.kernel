@@ -1199,52 +1199,24 @@ static struct security_hook_list akari_hooks[] = {
 #endif
 };
 
-static void __init add_hook(struct security_hook_list *hook,
-			    struct security_hook_heads *head)
+static inline void add_hook(struct security_hook_list *hook)
 {
-	const unsigned int offset = (unsigned long) hook->head
-		- (unsigned long) &probe_dummy_security_hook_heads;
-	struct list_head *list = ((void *) head) + offset;
-	struct security_hook_list *shp =
-		list_last_entry(list, struct security_hook_list, list);
-	hook->head = shp->head;
-	list_add_rcu(&hook->list, list);
+	list_add_tail_rcu(&hook->list, hook->head);
 }
 
 static void __init swap_hook(struct security_hook_list *hook,
-			     struct security_hook_heads *head,
 			     union security_list_options *original)
 {
-	const unsigned int offset = (unsigned long) hook->head
-		- (unsigned long) &probe_dummy_security_hook_heads;
-	struct list_head *list = ((void *) head) + offset;
-	struct security_hook_list *shp =
-		list_last_entry(list, struct security_hook_list, list);
-	hook->head = shp->head;
+	struct list_head *list = hook->head;
 	if (list_empty(list)) {
-		list_add_rcu(&hook->list, list);
+		add_hook(hook);
 	} else {
+		struct security_hook_list *shp =
+			list_last_entry(list, struct security_hook_list, list);
 		*original = shp->hook;
 		smp_wmb();
 		shp->hook = hook->hook;
 	}
-}
-
-/**
- * ccs_update_security_ops - Overwrite original "struct security_operations".
- *
- * @lsm_list: Pointer to "struct security_hook_heads security_hook_heads".
- *
- * Returns nothing.
- */
-static void __init ccs_update_security_ops(struct security_hook_heads *hooks)
-{
-	int idx;
-	swap_hook(&akari_hooks[0], hooks, &original_cred_free);
-	swap_hook(&akari_hooks[1], hooks, &original_cred_prepare);
-	swap_hook(&akari_hooks[2], hooks, &original_cred_alloc_blank);
-	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
-		add_hook(&akari_hooks[idx], hooks);
 }
 
 /**
@@ -1258,6 +1230,10 @@ static int __init ccs_init(void)
 	struct security_hook_heads *hooks = probe_security_hook_heads();
 	if (!hooks)
 		goto out;
+	for (idx = 0; idx < ARRAY_SIZE(akari_hooks); idx++)
+		akari_hooks[idx].head = ((void *) hooks)
+			+ ((unsigned long) akari_hooks[idx].head)
+			- ((unsigned long) &probe_dummy_security_hook_heads);
 	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();
 	if (!ccsecurity_exports.find_task_by_vpid)
 		goto out;
@@ -1272,7 +1248,11 @@ static int __init ccs_init(void)
 		INIT_LIST_HEAD(&ccs_task_security_list[idx]);
 	}
 	ccs_main_init();
-	ccs_update_security_ops(hooks);
+	swap_hook(&akari_hooks[0], &original_cred_free);
+	swap_hook(&akari_hooks[1], &original_cred_prepare);
+	swap_hook(&akari_hooks[2], &original_cred_alloc_blank);
+	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
+		add_hook(&akari_hooks[idx]);
 	printk(KERN_INFO "AKARI: 1.0.32   2015/04/08\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");

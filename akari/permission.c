@@ -770,10 +770,10 @@ int ccs_check_acl(struct ccs_request_info *r)
 {
 	const struct ccs_domain_info *domain = ccs_current_domain();
 	int error;
-	bool retried = false;
 	do {
 		struct ccs_acl_info *ptr;
 		const struct list_head *list = &domain->acl_info_list;
+		bool retried = false;
 retry:
 		list_for_each_entry_srcu(ptr, list, list, &ccs_ss) {
 			if (!ccs_check_entry(r, ptr))

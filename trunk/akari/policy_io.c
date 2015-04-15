@@ -3524,7 +3524,7 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 	struct ccs_domain_info *domain = head->w.domain;
 	const bool is_delete = head->w.is_delete;
 	const bool is_select = !is_delete && ccs_str_starts(&data, "select ");
-	unsigned int profile;
+	unsigned int idx;
 	if (*data == '<') {
 		domain = NULL;
 		if (is_delete)
@@ -3539,24 +3539,24 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 	if (!domain)
 		return -EINVAL;
 	ns = domain->ns;
-	if (sscanf(data, "use_profile %u\n", &profile) == 1
-	    && profile < CCS_MAX_PROFILES) {
-		if (!ccs_policy_loaded || ns->profile_ptr[(u8) profile])
+	if (sscanf(data, "use_profile %u\n", &idx) == 1 &&
+	    idx < CCS_MAX_PROFILES) {
+		if (!ccs_policy_loaded || ns->profile_ptr[(u8) idx])
 			if (!is_delete)
-				domain->profile = (u8) profile;
+				domain->profile = (u8) idx;
 		return 0;
 	}
-	if (sscanf(data, "use_group %u\n", &profile) == 1
-	    && profile < CCS_MAX_ACL_GROUPS) {
+	if (sscanf(data, "use_group %u\n", &idx) == 1 &&
+	    idx < CCS_MAX_ACL_GROUPS) {
 		if (!is_delete)
-			domain->group = (u8) profile;
+			domain->group = (u8) idx;
 		return 0;
 	}
-	for (profile = 0; profile < CCS_MAX_DOMAIN_INFO_FLAGS; profile++) {
-		const char *cp = ccs_dif[profile];
+	for (idx = 0; idx < CCS_MAX_DOMAIN_INFO_FLAGS; idx++) {
+		const char *cp = ccs_dif[idx];
 		if (strncmp(data, cp, strlen(cp) - 1))
 			continue;
-		domain->flags[profile] = !is_delete;
+		domain->flags[idx] = !is_delete;
 		return 0;
 	}
 	return ccs_write_acl(ns, &domain->acl_info_list, data, is_delete);

@@ -791,11 +791,7 @@ retry:
 			goto retry;
 		}
 		r->granted = false;
-		if (r->mode != CCS_CONFIG_DISABLED ||
-		    r->type != CCS_MAC_FILE_EXECUTE)
-			error = ccs_audit_log(r);
-		else
-			error = 0;
+		error = ccs_audit_log(r);
 	} while (error == CCS_RETRY_REQUEST &&
 		 r->type != CCS_MAC_FILE_EXECUTE);
 	return error;
@@ -4281,8 +4277,8 @@ void ccs_get_attributes(struct ccs_obj_info *obj)
  *
  * Caller holds ccs_read_lock().
  */
-bool ccs_condition(struct ccs_request_info *r,
-		   const struct ccs_condition *cond)
+static bool ccs_condition(struct ccs_request_info *r,
+			  const struct ccs_condition *cond)
 {
 	const u32 ccs_flags = ccs_current_flags();
 	u32 i;

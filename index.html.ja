@@ -64,6 +64,18 @@
 
 <hr>
 
+<p class="timestamp">２０１５年４月８日</p>
+<h4>AKARI 1.0.32 がリリースされました。</h4>
+<p class="article">条件付きコンパイルの間違いを修正しました。</p>
+
+<br>
+
+<p class="timestamp">２０１５年１月１２日</p>
+<h4>AKARI 1.0.31 がリリースされました。</h4>
+<p class="article">chmod(-1) パーミッションのチェック漏れを修正しました。</p>
+
+<br>
+
 <p class="timestamp">２０１３年２月１４日</p>
 <h4>AKARI 1.0.30 がリリースされました。</h4>
 <p class="article">（カーネル 2.6.29 と 2.6.30 を除いて） AKARI と CaitSith を同時に使えるように修正しました。</p>
@@ -79,30 +91,6 @@
 <p class="timestamp">２０１２年１０月２０日</p>
 <h4>AKARI 1.0.28 がリリースされました。</h4>
 <p class="article">Linux 2.6.28 カーネル以前で、ある種のプログラムを実行した後にカーネルパニックが発生する問題を修正しました。この問題は悪意が無くとも発生するため、 Linux 2.6.28 カーネル以前で AKARI を利用されている方は、このバージョンにアップデートすることを忘れないでください。</p>
-
-<br>
-
-<p class="timestamp">２０１２年５月５日</p>
-<h4>AKARI 1.0.27 がリリースされました。</h4>
-<p class="article">RHEL 4/5/6 カーネルに対応するために AKARI がアップデートされました。</p>
-
-<br>
-
-<p class="timestamp">２０１２年４月１日</p>
-<h4>AKARI 1.0.26 がリリースされました。</h4>
-<p class="article">Linux 3.3 カーネルから Linux 3.4-rc1 カーネルの間に生じた変更によるコンパイルエラーを修正するために AKARI がアップデートされました。</p>
-
-<br>
-
-<p class="timestamp">２０１２年３月１日</p>
-<h4>AKARI 1.0.25 がリリースされました。</h4>
-<p class="article">Linux 3.4-rc1 カーネルで導入される予定の UMH_WAIT_PROC 定数の再定義に対応するために AKARI がアップデートされました。この再定義は、 Linux 2.6.23 以降のカーネルに対してもバックポートされる可能性があります。この再定義の影響を受けるカーネルを利用する場合、このバージョンにアップデートすることを忘れないでください。</p>
-
-<br>
-
-<p class="timestamp">２０１１年５月１７日</p>
-<h4>ウェブサイトがリニューアルされました。</h4>
-<p class="article">AKARI のウェブサイトが大きくリニューアルされました。気に入っていただけると嬉しいです。お気づきの点がありましたら、<a href="mailto:tomoyo-users@lists.sourceforge.jp">メーリングリスト</a>宛にお知らせください。</p>
 
 </div><!-- news -->
 

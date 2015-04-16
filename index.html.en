@@ -64,45 +64,33 @@
 
 <hr>
 
-<p class="timestamp">14th Feb, 2013</p>
+<p class="timestamp">8th April, 2015</p>
+<h4>AKARI 1.0.32 released</h4>
+<p class="article">A new version of AKARI fixes a bug where conditional compilation was wrong.</p>
+
+<br>
+
+<p class="timestamp">12th January, 2015</p>
+<h4>AKARI 1.0.31 released</h4>
+<p class="article">A new version of AKARI fixes a bug where chmod(-1) permission check was missing.</p>
+
+<br>
+
+<p class="timestamp">14th February, 2013</p>
 <h4>AKARI 1.0.30 released</h4>
 <p class="article">AKARI and CaitSith can now work together (other than on Linux 2.6.29 and 2.6.30 kernels).</p>
 
 <br>
 
-<p class="timestamp">4th Nov, 2012</p>
+<p class="timestamp">4th November, 2012</p>
 <h4>AKARI 1.0.29 released</h4>
 <p class="article">A new version of AKARI fixes a bug where domain transition history becomes inaccurate after certain type of program is executed in Linux 2.6.28 and earlier kernels.</p>
 
 <br>
 
-<p class="timestamp">20th Oct, 2012</p>
+<p class="timestamp">20th October, 2012</p>
 <h4>AKARI 1.0.28 released</h4>
 <p class="article">A new version of AKARI fixes kernel panic bug in Linux 2.6.28 and earlier kernels which occurs after certain type of program is executed. Since this bug can be triggered without malicious intent, whoever using AKARI on Linux 2.6.28 and earlier kernels must upgrade to this version of AKARI.</p>
-
-<br>
-
-<p class="timestamp">5th May, 2012</p>
-<h4>AKARI 1.0.27 released</h4>
-<p class="article">A new version of AKARI accommodates support for any RHEL 4/5/6 kernels.</p>
-
-<br>
-
-<p class="timestamp">1st April, 2012</p>
-<h4>AKARI 1.0.26 released</h4>
-<p class="article">A new version of AKARI accommodates build failure caused by changes between Linux 3.3 and Linux 3.4-rc1.</p>
-
-<br>
-
-<p class="timestamp">13th December, 2011</p>
-<h4>AKARI 1.0.24 released</h4>
-<p class="article">A new version of AKARI accommodates changes to the behaviour of __d_path() in recent kernels. This new behaviour was introduced in Linux 3.2-rc5 but may be backported to 2.6.36 and later kernels. Affected kernels must upgrade to this version of AKARI.</p>
-
-<br>
-
-<p class="timestamp">17th May, 2011</p>
-<h4>Website and documentation update</h4>
-<p class="article">Both our website and documentation have been given a major revamp! We hope that you like the new design, and find the documentation informative and easy to read. If you have any comments, please send an email to our <a href="mailto:tomoyo-users-en@lists.sourceforge.jp">Mailing List</a>.</p>
 
 </div><!-- news -->
 

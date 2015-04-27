@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">２０１５年４月２１日</p>
+<h4>AKARI 1.0.33 がリリースされました。</h4>
+<p class="article">リトライ処理の間違いを修正しました。</p>
+
+<br>
+
 <p class="timestamp">２０１５年４月８日</p>
 <h4>AKARI 1.0.32 がリリースされました。</h4>
 <p class="article">条件付きコンパイルの間違いを修正しました。</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">２０１３年２月１４日</p>
 <h4>AKARI 1.0.30 がリリースされました。</h4>
 <p class="article">（カーネル 2.6.29 と 2.6.30 を除いて） AKARI と CaitSith を同時に使えるように修正しました。</p>
-
-<br>
-
-<p class="timestamp">２０１２年１１月４日</p>
-<h4>AKARI 1.0.29 がリリースされました。</h4>
-<p class="article">Linux 2.6.28 カーネル以前で、ある種のプログラムを実行した後のドメイン遷移が不正確になる問題を修正しました。</p>
 
 <br>
 

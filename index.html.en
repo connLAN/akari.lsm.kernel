@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">21th April, 2015</p>
+<h4>AKARI 1.0.33 released</h4>
+<p class="article">A new version of AKARI fixes a bug where retry request check was wrong.</p>
+
+<br>
+
 <p class="timestamp">8th April, 2015</p>
 <h4>AKARI 1.0.32 released</h4>
 <p class="article">A new version of AKARI fixes a bug where conditional compilation was wrong.</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">14th February, 2013</p>
 <h4>AKARI 1.0.30 released</h4>
 <p class="article">AKARI and CaitSith can now work together (other than on Linux 2.6.29 and 2.6.30 kernels).</p>
-
-<br>
-
-<p class="timestamp">4th November, 2012</p>
-<h4>AKARI 1.0.29 released</h4>
-<p class="article">A new version of AKARI fixes a bug where domain transition history becomes inaccurate after certain type of program is executed in Linux 2.6.28 and earlier kernels.</p>
 
 <br>
 

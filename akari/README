@@ -284,3 +284,9 @@ Version 1.0.33   2015/04/21   Minor update release.
    Synchronize with TOMOYO revision 6407.
 
    Fix incorrect retry request check.
+
+Version 1.0.34   2015/05/05   Minor update release.
+
+   Synchronize with TOMOYO 1.8.4 release.
+
+   Support multiple use_group entries.

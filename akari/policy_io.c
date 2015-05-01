@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2015/04/21
+ * Version: 1.8.4   2015/05/05
  */
 
 #include "internal.h"
@@ -2342,7 +2342,7 @@ static void ccs_init_policy_namespace(struct ccs_policy_namespace *ns)
 		INIT_LIST_HEAD(&ns->group_list[idx]);
 	for (idx = 0; idx < CCS_MAX_POLICY; idx++)
 		INIT_LIST_HEAD(&ns->policy_list[idx]);
-	ns->profile_version = 20100903;
+	ns->profile_version = 20150505;
 	ccs_namespace_enabled = !list_empty(&ccs_namespace_list);
 	list_add_tail_rcu(&ns->namespace_list, &ccs_namespace_list);
 }
@@ -2416,11 +2416,19 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	printk(KERN_INFO "CCSecurity: 1.8.3+   2015/04/21\n");
+	printk(KERN_INFO "CCSecurity: 1.8.4   2015/05/05\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
-		const struct ccs_policy_namespace *ns = domain->ns;
-		if (ns->profile_version != 20100903)
+		struct ccs_policy_namespace *ns = domain->ns;
+		if (ns->profile_version == 20100903) {
+			static bool done;
+			if (!done)
+				printk(KERN_INFO "Converting profile version "
+				       "from %u to %u.\n", 20100903, 20150505);
+			done = true;
+			ns->profile_version = 20150505;
+		}
+		if (ns->profile_version != 20150505)
 			printk(KERN_ERR
 			       "Profile version %u is not supported.\n",
 			       ns->profile_version);
@@ -3549,7 +3557,9 @@ static int ccs_write_domain(struct ccs_io_buffer *head)
 	if (sscanf(data, "use_group %u\n", &idx) == 1 &&
 	    idx < CCS_MAX_ACL_GROUPS) {
 		if (!is_delete)
-			domain->group = (u8) idx;
+			set_bit(idx, domain->group);
+		else
+			clear_bit(idx, domain->group);
 		return 0;
 	}
 	for (idx = 0; idx < CCS_MAX_DOMAIN_INFO_FLAGS; idx++) {
@@ -4086,21 +4096,33 @@ static void ccs_read_domain(struct ccs_io_buffer *head)
 			ccs_set_lf(head);
 			ccs_io_printf(head, "use_profile %u\n",
 				      domain->profile);
-			ccs_io_printf(head, "use_group %u\n", domain->group);
 			for (i = 0; i < CCS_MAX_DOMAIN_INFO_FLAGS; i++)
 				if (domain->flags[i])
 					ccs_set_string(head, ccs_dif[i]);
+			head->r.index = 0;
+			head->r.step++;
+			/* fall through */
+		case 1:
+			while (head->r.index < CCS_MAX_ACL_GROUPS) {
+				i = head->r.index++;
+				if (!test_bit(i, domain->group))
+					continue;
+				ccs_io_printf(head, "use_group %u\n", i);
+				if (!ccs_flush(head))
+					return;
+			}
+			head->r.index = 0;
 			head->r.step++;
 			ccs_set_lf(head);
 			/* fall through */
-		case 1:
+		case 2:
 			if (!ccs_read_acl(head, &domain->acl_info_list))
 				return;
 			head->r.step++;
 			if (!ccs_set_lf(head))
 				return;
 			/* fall through */
-		case 2:
+		case 3:
 			head->r.step = 0;
 			if (head->r.print_this_domain_only)
 				goto done;
@@ -5078,7 +5100,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	ccs_set_string(head, "1.8.3");
+	ccs_set_string(head, "1.8.4");
 	head->r.eof = true;
 }
 
@@ -5835,7 +5857,7 @@ struct ccs_domain_info *ccs_assign_domain(const char *domainname,
 		const struct ccs_domain_info *domain =
 			security->ccs_domain_info;
 		e.profile = domain->profile;
-		e.group = domain->group;
+		memcpy(e.group, domain->group, sizeof(e.group));
 	}
 	e.domainname = ccs_get_name(domainname);
 	if (!e.domainname)
@@ -5858,10 +5880,13 @@ out:
 		security->ccs_domain_info = entry;
 		if (created) {
 			struct ccs_request_info r;
+			int i;
 			ccs_init_request_info(&r, CCS_MAC_FILE_EXECUTE);
 			r.granted = false;
 			ccs_write_log(&r, "use_profile %u\n", entry->profile);
-			ccs_write_log(&r, "use_group %u\n", entry->group);
+			for (i = 0; i < CCS_MAX_ACL_GROUPS; i++)
+				if (test_bit(i, entry->group))
+					ccs_write_log(&r, "use_group %u\n", i);
 			ccs_update_stat(CCS_STAT_POLICY_UPDATES);
 		}
 	}

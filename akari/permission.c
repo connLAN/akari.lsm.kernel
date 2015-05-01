@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2015/04/21
+ * Version: 1.8.4   2015/05/05
  */
 
 #include "internal.h"
@@ -773,7 +773,7 @@ int ccs_check_acl(struct ccs_request_info *r)
 	do {
 		struct ccs_acl_info *ptr;
 		const struct list_head *list = &domain->acl_info_list;
-		bool retried = false;
+		u16 i = 0;
 retry:
 		list_for_each_entry_srcu(ptr, list, list, &ccs_ss) {
 			if (!ccs_check_entry(r, ptr))
@@ -785,9 +785,10 @@ retry:
 			ccs_audit_log(r);
 			return 0;
 		}
-		if (!retried) {
-			retried = true;
-			list = &domain->ns->acl_group[domain->group];
+		for (; i < CCS_MAX_ACL_GROUPS; i++) {
+			if (!test_bit(i, domain->group))
+				continue;
+			list = &domain->ns->acl_group[i++];
 			goto retry;
 		}
 		r->granted = false;

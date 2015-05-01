@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.3+   2015/04/21
+ * Version: 1.8.4   2015/05/05
  */
 
 #ifndef _SECURITY_CCSECURITY_INTERNAL_H
@@ -1292,8 +1292,9 @@ struct ccs_domain_info {
 	const struct ccs_path_info *domainname;
 	/* Namespace for this domain. Never NULL. */
 	struct ccs_policy_namespace *ns;
+	/* Group numbers to use. */
+	unsigned long group[CCS_MAX_ACL_GROUPS / BITS_PER_LONG];
 	u8 profile;        /* Profile number to use. */
-	u8 group;          /* Group number to use.   */
 	bool is_deleted;   /* Delete flag.           */
 	bool flags[CCS_MAX_DOMAIN_INFO_FLAGS];
 };
@@ -1576,7 +1577,7 @@ struct ccs_policy_namespace {
 	struct list_head acl_group[CCS_MAX_ACL_GROUPS];
 	/* List for connecting to ccs_namespace_list list. */
 	struct list_head namespace_list;
-	/* Profile version. Currently only 20100903 is defined. */
+	/* Profile version. Currently only 20150505 is supported. */
 	unsigned int profile_version;
 	/* Name of this namespace (e.g. "<kernel>", "</usr/sbin/httpd>" ). */
 	const char *name;

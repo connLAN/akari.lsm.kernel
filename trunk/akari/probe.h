@@ -26,7 +26,7 @@
 #error You must choose CONFIG_MODULES=y for building this module.
 #endif
 
-#if 0
+#ifndef SECURITY_NAME_MAX
 #include <linux/lsm_hooks.h>
 extern struct security_hook_heads probe_dummy_security_hook_heads;
 struct security_hook_heads * __init probe_security_hook_heads(void);

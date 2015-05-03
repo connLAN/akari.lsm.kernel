@@ -500,14 +500,13 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 /**
  * ccs_inode_getattr - Check permission for stat().
  *
- * @mnt:    Pointer to "struct vfsmount".
- * @dentry: Pointer to "struct dentry".
+ * @path: Pointer to "struct path".
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
+static int ccs_inode_getattr(const struct path *path)
 {
-	return ccs_getattr_permission(mnt, dentry);
+	return ccs_getattr_permission(path->mnt, path->dentry);
 }
 
 #ifdef CONFIG_SECURITY_PATH

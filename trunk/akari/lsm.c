@@ -2605,7 +2605,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		 * cleared by the time next do_execve() request starts.
 		 * This means that we can emulate the missing LSM hook for
 		 * reverting domain transition, by calling this function from
-		 * security_prepare_creds(). 
+		 * security_prepare_creds().
 		 *
 		 * If current->in_execve is not set but ptr->ccs_flags has
 		 * CCS_TASK_IS_IN_EXECVE set, it indicates that do_execve()

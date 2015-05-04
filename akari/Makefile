@@ -1,9 +1,4 @@
-akari-objs := permission.o gc.o memory.o policy_io.o realpath.o load_policy.o probe.o
-ifdef CONFIG_SECURITY_COMPOSER_MAX
-akari-objs += mclsm.o
-else
-akari-objs += lsm.o
-endif
+akari-objs := permission.o gc.o memory.o policy_io.o realpath.o load_policy.o probe.o lsm.o
 akari_test-objs := test.o probe.o
 obj-m += akari_test.o akari.o
 

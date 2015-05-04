@@ -1,5 +1,5 @@
 /*
- * mclsm.c
+ * lsm.c
  *
  * Copyright (C) 2010-2015  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
@@ -8,6 +8,11 @@
 
 #include "internal.h"
 #include "probe.h"
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#define USE_UMODE_T
+#else
+#include "check_umode_t.h"
+#endif
 
 /* Prototype definition. */
 static void ccs_task_security_gc(void);
@@ -51,10 +56,8 @@ struct ccsecurity_exports ccsecurity_exports;
 /* Members are updated by loadable kernel module. */
 struct ccsecurity_operations ccsecurity_ops;
 
-/* Original hooks. */
-static union security_list_options original_cred_prepare;
-static union security_list_options original_cred_free;
-static union security_list_options original_cred_alloc_blank;
+/* Function pointers originally registered by register_security(). */
+static struct security_operations original_security_ops /* = *security_ops; */;
 
 #ifdef CONFIG_AKARI_TRACE_EXECVE_COUNT
 
@@ -138,6 +141,14 @@ static void ccs_clear_execve(int ret, struct ccs_security *security)
 	security->ee = NULL;
 	if (!ee)
 		return;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
+	/*
+	 * Drop refcount on "struct cred" in "struct linux_binprm" and forget
+	 * it.
+	 */
+	put_cred(security->cred);
+	security->cred = NULL;
+#endif
 	atomic_dec(&ccs_in_execve_tasks);
 	ccs_finish_execve(ret, ee);
 }
@@ -153,6 +164,7 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 {
 	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
 	struct ccs_execve *ee = ptr->ee;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 	/*
 	 * If this security context was associated with "struct pid" and
 	 * ptr->ccs_flags has CCS_TASK_IS_IN_EXECVE set, it indicates that a
@@ -163,6 +175,19 @@ static void ccs_rcu_free(struct rcu_head *rcu)
 		ccs_debug_trace("1");
 		atomic_dec(&ccs_in_execve_tasks);
 	}
+#else
+	/*
+	 * If this security context was associated with "struct pid" and
+	 * remembers "struct cred" in "struct linux_binprm", it indicates that
+	 * a "struct task_struct" associated with this security context exited
+	 * immediately after do_execve() has failed.
+	 */
+	if (ptr->pid && ptr->cred) {
+		ccs_debug_trace("1");
+		put_cred(ptr->cred);
+		atomic_dec(&ccs_in_execve_tasks);
+	}
+#endif
 	/*
 	 * If this security context was associated with "struct pid",
 	 * drop refcount obtained by get_pid() in ccs_find_task_security().
@@ -230,11 +255,18 @@ static void ccs_add_cred_security(struct ccs_security *ptr)
  */
 static int ccs_task_create(unsigned long clone_flags)
 {
+	int rc;
 	struct ccs_security *old_security;
 	struct ccs_security *new_security;
 	struct cred *cred = prepare_creds();
 	if (!cred)
 		return -ENOMEM;
+	while (!original_security_ops.task_create);
+	rc = original_security_ops.task_create(clone_flags);
+	if (rc) {
+		abort_creds(cred);
+		return rc;
+	}
 	old_security = ccs_find_task_security(current);
 	new_security = ccs_find_cred_security(cred);
 	new_security->ccs_domain_info = old_security->ccs_domain_info;
@@ -254,7 +286,8 @@ static int ccs_task_create(unsigned long clone_flags)
 static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 			    gfp_t gfp)
 {
-	int rc1;
+	int rc;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 	/*
 	 * For checking whether reverting domain transition is needed or not.
 	 *
@@ -262,18 +295,17 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 	 */
 	if (gfp == GFP_KERNEL)
 		ccs_find_task_security(current);
-	rc1 = ccs_copy_cred_security(new, old, gfp);
+#endif
+	rc = ccs_copy_cred_security(new, old, gfp);
+	if (rc)
+		return rc;
 	if (gfp == GFP_KERNEL)
 		ccs_task_security_gc();
-	if (original_cred_prepare.cred_prepare) {
-		const int rc2 = original_cred_prepare.cred_prepare(new, old,
-								   gfp);
-		if (rc2) {
-			ccs_del_security(ccs_find_cred_security(new));
-			return rc2;
-		}
-	}
-	return rc1;
+	while (!original_security_ops.cred_prepare);
+	rc = original_security_ops.cred_prepare(new, old, gfp);
+	if (rc)
+		ccs_del_security(ccs_find_cred_security(new));
+	return rc;
 }
 
 /**
@@ -285,10 +317,12 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
  */
 static void ccs_cred_free(struct cred *cred)
 {
-	if (original_cred_free.cred_free)
-		original_cred_free.cred_free(cred);
+	while (!original_security_ops.cred_free);
+	original_security_ops.cred_free(cred);
 	ccs_del_security(ccs_find_cred_security(cred));
 }
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
 
 /**
  * ccs_alloc_cred_security - Allocate memory for new credentials.
@@ -319,16 +353,14 @@ static int ccs_alloc_cred_security(const struct cred *cred, gfp_t gfp)
  */
 static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 {
-	const int rc1 = ccs_alloc_cred_security(new, gfp);
-	if (original_cred_alloc_blank.cred_alloc_blank) {
-		const int rc2 = original_cred_alloc_blank.
-			cred_alloc_blank(new, gfp);
-		if (rc2) {
-			ccs_del_security(ccs_find_cred_security(new));
-			return rc2;
-		}
-	}
-	return rc1;
+	int rc = ccs_alloc_cred_security(new, gfp);
+	if (rc)
+		return rc;
+	while (!original_security_ops.cred_alloc_blank);
+	rc = original_security_ops.cred_alloc_blank(new, gfp);
+	if (rc)
+		ccs_del_security(ccs_find_cred_security(new));
+	return rc;
 }
 
 /**
@@ -341,8 +373,12 @@ static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
  */
 static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 {
-	struct ccs_security *new_security = ccs_find_cred_security(new);
-	struct ccs_security *old_security = ccs_find_cred_security(old);
+	struct ccs_security *new_security;
+	struct ccs_security *old_security;
+	while (!original_security_ops.cred_transfer);
+	original_security_ops.cred_transfer(new, old);
+	new_security = ccs_find_cred_security(new);
+	old_security = ccs_find_cred_security(old);
 	if (new_security == &ccs_default_security ||
 	    new_security == &ccs_oom_security ||
 	    old_security == &ccs_default_security ||
@@ -351,6 +387,8 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 	new_security->ccs_flags = old_security->ccs_flags;
 	new_security->ccs_domain_info = old_security->ccs_domain_info;
 }
+
+#endif
 
 /**
  * ccs_bprm_committing_creds - A hook which is called when do_execve() succeeded.
@@ -361,8 +399,11 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
  */
 static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 {
-	struct ccs_security *old_security = ccs_current_security();
+	struct ccs_security *old_security;
 	struct ccs_security *new_security;
+	while (!original_security_ops.bprm_committing_creds);
+	original_security_ops.bprm_committing_creds(bprm);
+	old_security = ccs_current_security();
 	if (old_security == &ccs_default_security ||
 	    old_security == &ccs_oom_security)
 		return;
@@ -383,20 +424,54 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 static int ccs_bprm_check_security(struct linux_binprm *bprm)
 {
 	struct ccs_security *security = ccs_current_security();
-	int rc;
 	if (security == &ccs_default_security || security == &ccs_oom_security)
 		return -ENOMEM;
-	if (security->ee)
-		return 0;
+	if (!security->ee) {
+		int rc;
 #ifndef CONFIG_CCSECURITY_OMIT_USERSPACE_LOADER
-	if (!ccs_policy_loaded)
-		ccs_load_policy(bprm->filename);
+		if (!ccs_policy_loaded)
+			ccs_load_policy(bprm->filename);
 #endif
-	rc = ccs_start_execve(bprm, &security->ee);
-	if (security->ee)
-		atomic_inc(&ccs_in_execve_tasks);
-	return rc;
+		rc = ccs_start_execve(bprm, &security->ee);
+		if (security->ee) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
+			/*
+			 * Get refcount on "struct cred" in
+			 * "struct linux_binprm" and remember it.
+			 */
+			get_cred(bprm->cred);
+			security->cred = bprm->cred;
+#endif
+			atomic_inc(&ccs_in_execve_tasks);
+		}
+		if (rc)
+			return rc;
+	}
+	while (!original_security_ops.bprm_check_security);
+	return original_security_ops.bprm_check_security(bprm);
 }
+
+/**
+ * ccs_open - Check permission for open().
+ *
+ * @f: Pointer to "struct file".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_open(struct file *f)
+{
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+	return ccs_open_permission(f);
+#elif defined(RHEL_MAJOR) && RHEL_MAJOR == 6
+	return ccs_open_permission(f->f_path.dentry, f->f_path.mnt,
+				   f->f_flags);
+#else
+	return ccs_open_permission(f->f_path.dentry, f->f_path.mnt,
+				   f->f_flags + 1);
+#endif
+}
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 
 /**
  * ccs_file_open - Check permission for open().
@@ -408,10 +483,37 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
  */
 static int ccs_file_open(struct file *f, const struct cred *cred)
 {
-	return ccs_open_permission(f);
+	int rc = ccs_open(f);
+	if (rc)
+		return rc;
+	while (!original_security_ops.file_open);
+	return original_security_ops.file_open(f, cred);
 }
 
-#ifdef CONFIG_SECURITY_PATH
+#else
+
+/**
+ * ccs_dentry_open - Check permission for open().
+ *
+ * @f:    Pointer to "struct file".
+ * @cred: Pointer to "struct cred".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_dentry_open(struct file *f, const struct cred *cred)
+{
+	int rc = ccs_open(f);
+	if (rc)
+		return rc;
+	while (!original_security_ops.dentry_open);
+	return original_security_ops.dentry_open(f, cred);
+}
+
+#endif
+
+#if defined(CONFIG_SECURITY_PATH)
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 
 /**
  * ccs_path_chown - Check permission for chown()/chgrp().
@@ -424,7 +526,11 @@ static int ccs_file_open(struct file *f, const struct cred *cred)
  */
 static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
 {
-	return ccs_chown_permission(path->dentry, path->mnt, user, group);
+	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chown);
+	return original_security_ops.path_chown(path, user, group);
 }
 
 /**
@@ -437,7 +543,11 @@ static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
  */
 static int ccs_path_chmod(struct path *path, umode_t mode)
 {
-	return ccs_chmod_permission(path->dentry, path->mnt, mode);
+	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chmod);
+	return original_security_ops.path_chmod(path, mode);
 }
 
 /**
@@ -449,8 +559,94 @@ static int ccs_path_chmod(struct path *path, umode_t mode)
  */
 static int ccs_path_chroot(struct path *path)
 {
-	return ccs_chroot_permission(path);
+	int rc = ccs_chroot_permission(path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chroot);
+	return original_security_ops.path_chroot(path);
 }
+
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+
+/**
+ * ccs_path_chown - Check permission for chown()/chgrp().
+ *
+ * @path:  Pointer to "struct path".
+ * @user:  User ID.
+ * @group: Group ID.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
+{
+	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chown);
+	return original_security_ops.path_chown(path, user, group);
+}
+
+#if defined(USE_UMODE_T)
+
+/**
+ * ccs_path_chmod - Check permission for chmod().
+ *
+ * @path: Pointer to "struct path".
+ * @mode: Mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chmod(struct path *path, umode_t mode)
+{
+	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chmod);
+	return original_security_ops.path_chmod(path, mode);
+}
+
+#else
+
+/**
+ * ccs_path_chmod - Check permission for chmod().
+ *
+ * @dentry: Pointer to "struct dentry".
+ * @vfsmnt: Pointer to "struct vfsmount".
+ * @mode:   Mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
+			  mode_t mode)
+{
+	int rc = ccs_chmod_permission(dentry, vfsmnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chmod);
+	return original_security_ops.path_chmod(dentry, vfsmnt, mode);
+}
+
+#endif
+
+/**
+ * ccs_path_chroot - Check permission for chroot().
+ *
+ * @path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_chroot(struct path *path)
+{
+	int rc = ccs_chroot_permission(path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_chroot);
+	return original_security_ops.path_chroot(path);
+}
+
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 
 /**
  * ccs_path_truncate - Check permission for truncate().
@@ -461,10 +657,37 @@ static int ccs_path_chroot(struct path *path)
  */
 static int ccs_path_truncate(struct path *path)
 {
-	return ccs_truncate_permission(path->dentry, path->mnt);
+	int rc = ccs_truncate_permission(path->dentry, path->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_truncate);
+	return original_security_ops.path_truncate(path);
 }
 
 #else
+
+/**
+ * ccs_path_truncate - Check permission for truncate().
+ *
+ * @path:       Pointer to "struct path".
+ * @length:     New length.
+ * @time_attrs: New time attributes.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_truncate(struct path *path, loff_t length,
+			     unsigned int time_attrs)
+{
+	int rc = ccs_truncate_permission(path->dentry, path->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_truncate);
+	return original_security_ops.path_truncate(path, length, time_attrs);
+}
+
+#endif
+
+#endif
 
 /**
  * ccs_inode_setattr - Check permission for chown()/chgrp()/chmod()/truncate().
@@ -476,26 +699,35 @@ static int ccs_path_truncate(struct path *path)
  */
 static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 {
-	const int rc1 = (attr->ia_valid & ATTR_UID) ?
-		ccs_chown_permission(dentry, NULL, attr->ia_uid, INVALID_GID) :
-		0;
-	const int rc2 = (attr->ia_valid & ATTR_GID) ?
-		ccs_chown_permission(dentry, NULL, INVALID_UID, attr->ia_gid) :
-		0;
-	const int rc3 = (attr->ia_valid & ATTR_MODE) ?
-		ccs_chmod_permission(dentry, NULL, attr->ia_mode) : 0;
-	const int rc4 = (attr->ia_valid & ATTR_SIZE) ?
-		ccs_truncate_permission(dentry, NULL) : 0;
-	if (rc4)
-		return rc4;
-	if (rc3)
-		return rc3;
-	if (rc2)
-		return rc2;
-	return rc1;
+	int rc = 0;
+#if !defined(CONFIG_SECURITY_PATH) || LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	if (attr->ia_valid & ATTR_UID)
+		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid,
+					  INVALID_GID);
+	if (!rc && (attr->ia_valid & ATTR_GID))
+		rc = ccs_chown_permission(dentry, NULL, INVALID_UID,
+					  attr->ia_gid);
+#else
+	if (attr->ia_valid & ATTR_UID)
+		rc = ccs_chown_permission(dentry, NULL, attr->ia_uid, -1);
+	if (!rc && (attr->ia_valid & ATTR_GID))
+		rc = ccs_chown_permission(dentry, NULL, -1, attr->ia_gid);
+#endif
+	if (!rc && (attr->ia_valid & ATTR_MODE))
+		rc = ccs_chmod_permission(dentry, NULL, attr->ia_mode);
+#endif
+#if !defined(CONFIG_SECURITY_PATH)
+	if (!rc && (attr->ia_valid & ATTR_SIZE))
+		rc = ccs_truncate_permission(dentry, NULL);
+#endif
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_setattr);
+	return original_security_ops.inode_setattr(dentry, attr);
 }
 
-#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
 
 /**
  * ccs_inode_getattr - Check permission for stat().
@@ -506,10 +738,37 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
  */
 static int ccs_inode_getattr(const struct path *path)
 {
-	return ccs_getattr_permission(path->mnt, path->dentry);
+	int rc = ccs_getattr_permission(path->mnt, path->dentry);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_getattr);
+	return original_security_ops.inode_getattr(path);
 }
 
-#ifdef CONFIG_SECURITY_PATH
+#else
+
+/**
+ * ccs_inode_getattr - Check permission for stat().
+ *
+ * @mnt:    Pointer to "struct vfsmount".
+ * @dentry: Pointer to "struct dentry".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
+{
+	int rc = ccs_getattr_permission(mnt, dentry);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_getattr);
+	return original_security_ops.inode_getattr(mnt, dentry);
+}
+
+#endif
+
+#if defined(CONFIG_SECURITY_PATH)
+
+#if defined(USE_UMODE_T)
 
 /**
  * ccs_path_mknod - Check permission for mknod().
@@ -524,7 +783,11 @@ static int ccs_inode_getattr(const struct path *path)
 static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
 			  umode_t mode, unsigned int dev)
 {
-	return ccs_mknod_permission(dentry, dir->mnt, mode, dev);
+	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mknod);
+	return original_security_ops.path_mknod(dir, dentry, mode, dev);
 }
 
 /**
@@ -539,8 +802,54 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
 static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
 			  umode_t mode)
 {
-	return ccs_mkdir_permission(dentry, dir->mnt, mode);
+	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mkdir);
+	return original_security_ops.path_mkdir(dir, dentry, mode);
 }
+
+#else
+
+/**
+ * ccs_path_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
+			  unsigned int dev)
+{
+	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mknod);
+	return original_security_ops.path_mknod(dir, dentry, mode, dev);
+}
+
+/**
+ * ccs_path_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct path".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
+{
+	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_mkdir);
+	return original_security_ops.path_mkdir(dir, dentry, mode);
+}
+
+#endif
 
 /**
  * ccs_path_rmdir - Check permission for rmdir().
@@ -552,7 +861,11 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
  */
 static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
 {
-	return ccs_rmdir_permission(dentry, dir->mnt);
+	int rc = ccs_rmdir_permission(dentry, dir->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_rmdir);
+	return original_security_ops.path_rmdir(dir, dentry);
 }
 
 /**
@@ -565,7 +878,11 @@ static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
  */
 static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 {
-	return ccs_unlink_permission(dentry, dir->mnt);
+	int rc = ccs_unlink_permission(dentry, dir->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_unlink);
+	return original_security_ops.path_unlink(dir, dentry);
 }
 
 /**
@@ -580,7 +897,11 @@ static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 			    const char *old_name)
 {
-	return ccs_symlink_permission(dentry, dir->mnt, old_name);
+	int rc = ccs_symlink_permission(dentry, dir->mnt, old_name);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_symlink);
+	return original_security_ops.path_symlink(dir, dentry, old_name);
 }
 
 /**
@@ -596,7 +917,12 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 			   struct path *new_dir, struct dentry *new_dentry)
 {
-	return ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
+	int rc = ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_rename);
+	return original_security_ops.path_rename(old_dir, old_dentry, new_dir,
+						 new_dentry);
 }
 
 /**
@@ -611,10 +937,17 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 			 struct dentry *new_dentry)
 {
-	return ccs_link_permission(old_dentry, new_dentry, new_dir->mnt);
+	int rc = ccs_link_permission(old_dentry, new_dentry, new_dir->mnt);
+	if (rc)
+		return rc;
+	while (!original_security_ops.path_link);
+	return original_security_ops.path_link(old_dentry, new_dir,
+					       new_dentry);
 }
 
 #else
+
+#if defined(USE_UMODE_T)
 
 /**
  * ccs_inode_mknod - Check permission for mknod().
@@ -629,7 +962,11 @@ static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 			   umode_t mode, dev_t dev)
 {
-	return ccs_mknod_permission(dentry, NULL, mode, dev);
+	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mknod);
+	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
 }
 
 /**
@@ -644,8 +981,54 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 			   umode_t mode)
 {
-	return ccs_mkdir_permission(dentry, NULL, mode);
+	int rc = ccs_mkdir_permission(dentry, NULL, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mkdir);
+	return original_security_ops.inode_mkdir(dir, dentry, mode);
 }
+
+#else
+
+/**
+ * ccs_inode_mknod - Check permission for mknod().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ * @dev:    Device major/minor number.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
+			   dev_t dev)
+{
+	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mknod);
+	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
+}
+
+/**
+ * ccs_inode_mkdir - Check permission for mkdir().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
+{
+	int rc = ccs_mkdir_permission(dentry, NULL, mode);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_mkdir);
+	return original_security_ops.inode_mkdir(dir, dentry, mode);
+}
+
+#endif
 
 /**
  * ccs_inode_rmdir - Check permission for rmdir().
@@ -657,7 +1040,11 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
  */
 static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
 {
-	return ccs_rmdir_permission(dentry, NULL);
+	int rc = ccs_rmdir_permission(dentry, NULL);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_rmdir);
+	return original_security_ops.inode_rmdir(dir, dentry);
 }
 
 /**
@@ -670,7 +1057,11 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
  */
 static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 {
-	return ccs_unlink_permission(dentry, NULL);
+	int rc = ccs_unlink_permission(dentry, NULL);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_unlink);
+	return original_security_ops.inode_unlink(dir, dentry);
 }
 
 /**
@@ -685,7 +1076,11 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 			     const char *old_name)
 {
-	return ccs_symlink_permission(dentry, NULL, old_name);
+	int rc = ccs_symlink_permission(dentry, NULL, old_name);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_symlink);
+	return original_security_ops.inode_symlink(dir, dentry, old_name);
 }
 
 /**
@@ -701,7 +1096,12 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 			    struct inode *new_dir, struct dentry *new_dentry)
 {
-	return ccs_rename_permission(old_dentry, new_dentry, NULL);
+	int rc = ccs_rename_permission(old_dentry, new_dentry, NULL);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_rename);
+	return original_security_ops.inode_rename(old_dir, old_dentry, new_dir,
+						  new_dentry);
 }
 
 /**
@@ -716,8 +1116,14 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 			  struct dentry *new_dentry)
 {
-	return ccs_link_permission(old_dentry, new_dentry, NULL);
+	int rc = ccs_link_permission(old_dentry, new_dentry, NULL);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_link);
+	return original_security_ops.inode_link(old_dentry, dir, new_dentry);
 }
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
 
 /**
  * ccs_inode_create - Check permission for creat().
@@ -731,8 +1137,35 @@ static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 			    umode_t mode)
 {
-	return ccs_mknod_permission(dentry, NULL, mode, 0);
+	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_create);
+	return original_security_ops.inode_create(dir, dentry, mode);
 }
+
+#else
+
+/**
+ * ccs_inode_create - Check permission for creat().
+ *
+ * @dir:    Pointer to "struct inode".
+ * @dentry: Pointer to "struct dentry".
+ * @mode:   Create mode.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
+			    int mode)
+{
+	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
+	if (rc)
+		return rc;
+	while (!original_security_ops.inode_create);
+	return original_security_ops.inode_create(dir, dentry, mode);
+}
+
+#endif
 
 #endif
 
@@ -874,12 +1307,18 @@ static int ccs_validate_socket(struct socket *sock)
 static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
 {
 	struct ccs_socket_tag *ptr;
-	const int rc = ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
 	ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
 		return -ENOMEM;
+	while (!original_security_ops.socket_accept);
+	rc = original_security_ops.socket_accept(sock, newsock);
+	if (rc) {
+		kfree(ptr);
+		return rc;
+	}
 	/*
 	 * Subsequent LSM hooks will receive "newsock". Therefore, I mark
 	 * "newsock" as "an accept()ed socket but post accept() permission
@@ -904,10 +1343,14 @@ static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
  */
 static int ccs_socket_listen(struct socket *sock, int backlog)
 {
-	const int rc = ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	return ccs_socket_listen_permission(sock);
+	rc = ccs_socket_listen_permission(sock);
+	if (rc)
+		return rc;
+	while (!original_security_ops.socket_listen);
+	return original_security_ops.socket_listen(sock, backlog);
 }
 
 /**
@@ -922,10 +1365,14 @@ static int ccs_socket_listen(struct socket *sock, int backlog)
 static int ccs_socket_connect(struct socket *sock, struct sockaddr *addr,
 			      int addr_len)
 {
-	const int rc = ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	return ccs_socket_connect_permission(sock, addr, addr_len);
+	rc = ccs_socket_connect_permission(sock, addr, addr_len);
+	if (rc)
+		return rc;
+	while (!original_security_ops.socket_connect);
+	return original_security_ops.socket_connect(sock, addr, addr_len);
 }
 
 /**
@@ -940,10 +1387,14 @@ static int ccs_socket_connect(struct socket *sock, struct sockaddr *addr,
 static int ccs_socket_bind(struct socket *sock, struct sockaddr *addr,
 			   int addr_len)
 {
-	const int rc = ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	return ccs_socket_bind_permission(sock, addr, addr_len);
+	rc = ccs_socket_bind_permission(sock, addr, addr_len);
+	if (rc)
+		return rc;
+	while (!original_security_ops.socket_bind);
+	return original_security_ops.socket_bind(sock, addr, addr_len);
 }
 
 /**
@@ -958,10 +1409,14 @@ static int ccs_socket_bind(struct socket *sock, struct sockaddr *addr,
 static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 			      int size)
 {
-	const int rc = ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	return ccs_socket_sendmsg_permission(sock, msg, size);
+	rc = ccs_socket_sendmsg_permission(sock, msg, size);
+	if (rc)
+		return rc;
+	while (!original_security_ops.socket_sendmsg);
+	return original_security_ops.socket_sendmsg(sock, msg, size);
 }
 
 /**
@@ -977,7 +1432,11 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 static int ccs_socket_recvmsg(struct socket *sock, struct msghdr *msg,
 			      int size, int flags)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_recvmsg);
+	return original_security_ops.socket_recvmsg(sock, msg, size, flags);
 }
 
 /**
@@ -989,7 +1448,11 @@ static int ccs_socket_recvmsg(struct socket *sock, struct msghdr *msg,
  */
 static int ccs_socket_getsockname(struct socket *sock)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_getsockname);
+	return original_security_ops.socket_getsockname(sock);
 }
 
 /**
@@ -1001,7 +1464,11 @@ static int ccs_socket_getsockname(struct socket *sock)
  */
 static int ccs_socket_getpeername(struct socket *sock)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_getpeername);
+	return original_security_ops.socket_getpeername(sock);
 }
 
 /**
@@ -1015,7 +1482,11 @@ static int ccs_socket_getpeername(struct socket *sock)
  */
 static int ccs_socket_getsockopt(struct socket *sock, int level, int optname)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_getsockopt);
+	return original_security_ops.socket_getsockopt(sock, level, optname);
 }
 
 /**
@@ -1029,7 +1500,11 @@ static int ccs_socket_getsockopt(struct socket *sock, int level, int optname)
  */
 static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_setsockopt);
+	return original_security_ops.socket_setsockopt(sock, level, optname);
 }
 
 /**
@@ -1042,7 +1517,11 @@ static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
  */
 static int ccs_socket_shutdown(struct socket *sock, int how)
 {
-	return ccs_validate_socket(sock);
+	int rc = ccs_validate_socket(sock);
+	if (rc < 0)
+		return rc;
+	while (!original_security_ops.socket_shutdown);
+	return original_security_ops.socket_shutdown(sock, how);
 }
 
 #define SOCKFS_MAGIC 0x534F434B
@@ -1058,11 +1537,15 @@ static int ccs_socket_shutdown(struct socket *sock, int how)
  */
 static void ccs_inode_free_security(struct inode *inode)
 {
+	while (!original_security_ops.inode_free_security);
+	original_security_ops.inode_free_security(inode);
 	if (inode->i_sb && inode->i_sb->s_magic == SOCKFS_MAGIC)
 		ccs_update_socket_tag(inode, 0);
 }
 
 #endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 7, 0)
 
 /**
  * ccs_sb_pivotroot - Check permission for pivot_root().
@@ -1074,7 +1557,52 @@ static void ccs_inode_free_security(struct inode *inode)
  */
 static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 {
-	return ccs_pivot_root_permission(old_path, new_path);
+	int rc = ccs_pivot_root_permission(old_path, new_path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_pivotroot);
+	return original_security_ops.sb_pivotroot(old_path, new_path);
+}
+
+/**
+ * ccs_sb_mount - Check permission for mount().
+ *
+ * @dev_name:  Name of device file.
+ * @path:      Pointer to "struct path".
+ * @type:      Name of filesystem type. Maybe NULL.
+ * @flags:     Mount options.
+ * @data_page: Optional data. Maybe NULL.
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
+			unsigned long flags, void *data_page)
+{
+	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_mount);
+	return original_security_ops.sb_mount(dev_name, path, type, flags,
+					      data_page);
+}
+
+#else
+
+/**
+ * ccs_sb_pivotroot - Check permission for pivot_root().
+ *
+ * @old_path: Pointer to "struct path".
+ * @new_path: Pointer to "struct path".
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
+{
+	int rc = ccs_pivot_root_permission(old_path, new_path);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_pivotroot);
+	return original_security_ops.sb_pivotroot(old_path, new_path);
 }
 
 /**
@@ -1091,8 +1619,15 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 static int ccs_sb_mount(const char *dev_name, struct path *path,
 			const char *type, unsigned long flags, void *data_page)
 {
-	return ccs_mount_permission(dev_name, path, type, flags, data_page);
+	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_mount);
+	return original_security_ops.sb_mount(dev_name, path, type, flags,
+					      data_page);
 }
+
+#endif
 
 /**
  * ccs_sb_umount - Check permission for umount().
@@ -1104,7 +1639,11 @@ static int ccs_sb_mount(const char *dev_name, struct path *path,
  */
 static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 {
-	return ccs_umount_permission(mnt, flags);
+	int rc = ccs_umount_permission(mnt, flags);
+	if (rc)
+		return rc;
+	while (!original_security_ops.sb_umount);
+	return original_security_ops.sb_umount(mnt, flags);
 }
 
 /**
@@ -1119,7 +1658,11 @@ static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 			  unsigned long arg)
 {
-	return ccs_fcntl_permission(file, cmd, arg);
+	int rc = ccs_fcntl_permission(file, cmd, arg);
+	if (rc)
+		return rc;
+	while (!original_security_ops.file_fcntl);
+	return original_security_ops.file_fcntl(file, cmd, arg);
 }
 
 /**
@@ -1134,89 +1677,197 @@ static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 			  unsigned long arg)
 {
-	return ccs_ioctl_permission(filp, cmd, arg);
+	int rc = ccs_ioctl_permission(filp, cmd, arg);
+	if (rc)
+		return rc;
+	while (!original_security_ops.file_ioctl);
+	return original_security_ops.file_ioctl(filp, cmd, arg);
 }
 
-#define MY_HOOK_INIT(HEAD, HOOK)				\
-	{ .head = &probe_dummy_security_hook_heads.HEAD,	\
-			.hook = { .HEAD = HOOK } }
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
+int ccs_path_permission(struct ccs_request_info *r, u8 operation,
+			const struct ccs_path_info *filename);
 
-static struct security_hook_list akari_hooks[] = {
-	/* Security context allocator. */
-	MY_HOOK_INIT(cred_free, ccs_cred_free),
-	MY_HOOK_INIT(cred_prepare, ccs_cred_prepare),
-	MY_HOOK_INIT(cred_alloc_blank, ccs_cred_alloc_blank),
-	MY_HOOK_INIT(cred_transfer, ccs_cred_transfer),
-	MY_HOOK_INIT(task_create, ccs_task_create),
-	/* Security context updater for successful execve(). */
-	MY_HOOK_INIT(bprm_check_security, ccs_bprm_check_security),
-	MY_HOOK_INIT(bprm_committing_creds, ccs_bprm_committing_creds),
-	/* Various permission checker. */
-	MY_HOOK_INIT(file_open, ccs_file_open),
-	MY_HOOK_INIT(file_fcntl, ccs_file_fcntl),
-	MY_HOOK_INIT(file_ioctl, ccs_file_ioctl),
-	MY_HOOK_INIT(sb_pivotroot, ccs_sb_pivotroot),
-	MY_HOOK_INIT(sb_mount, ccs_sb_mount),
-	MY_HOOK_INIT(sb_umount, ccs_sb_umount),
-#ifdef CONFIG_SECURITY_PATH
-	MY_HOOK_INIT(path_mknod, ccs_path_mknod),
-	MY_HOOK_INIT(path_mkdir, ccs_path_mkdir),
-	MY_HOOK_INIT(path_rmdir, ccs_path_rmdir),
-	MY_HOOK_INIT(path_unlink, ccs_path_unlink),
-	MY_HOOK_INIT(path_symlink, ccs_path_symlink),
-	MY_HOOK_INIT(path_rename, ccs_path_rename),
-	MY_HOOK_INIT(path_link, ccs_path_link),
-	MY_HOOK_INIT(path_truncate, ccs_path_truncate),
-	MY_HOOK_INIT(path_chmod, ccs_path_chmod),
-	MY_HOOK_INIT(path_chown, ccs_path_chown),
-	MY_HOOK_INIT(path_chroot, ccs_path_chroot),
-#else
-	MY_HOOK_INIT(inode_mknod, ccs_inode_mknod),
-	MY_HOOK_INIT(inode_mkdir, ccs_inode_mkdir),
-	MY_HOOK_INIT(inode_rmdir, ccs_inode_rmdir),
-	MY_HOOK_INIT(inode_unlink, ccs_inode_unlink),
-	MY_HOOK_INIT(inode_symlink, ccs_inode_symlink),
-	MY_HOOK_INIT(inode_rename, ccs_inode_rename),
-	MY_HOOK_INIT(inode_link, ccs_inode_link),
-	MY_HOOK_INIT(inode_create, ccs_inode_create),
-	MY_HOOK_INIT(inode_setattr, ccs_inode_setattr),
-#endif
-	MY_HOOK_INIT(inode_getattr, ccs_inode_getattr),
-#ifdef CONFIG_SECURITY_NETWORK
-	MY_HOOK_INIT(socket_bind, ccs_socket_bind),
-	MY_HOOK_INIT(socket_connect, ccs_socket_connect),
-	MY_HOOK_INIT(socket_listen, ccs_socket_listen),
-	MY_HOOK_INIT(socket_sendmsg, ccs_socket_sendmsg),
-	MY_HOOK_INIT(socket_recvmsg, ccs_socket_recvmsg),
-	MY_HOOK_INIT(socket_getsockname, ccs_socket_getsockname),
-	MY_HOOK_INIT(socket_getpeername, ccs_socket_getpeername),
-	MY_HOOK_INIT(socket_getsockopt, ccs_socket_getsockopt),
-	MY_HOOK_INIT(socket_setsockopt, ccs_socket_setsockopt),
-	MY_HOOK_INIT(socket_shutdown, ccs_socket_shutdown),
-	MY_HOOK_INIT(socket_accept, ccs_socket_accept),
-	MY_HOOK_INIT(inode_free_security, ccs_inode_free_security),
-#endif
-};
-
-static inline void add_hook(struct security_hook_list *hook)
+/**
+ * ccs_prepend - Copy of prepend() in fs/dcache.c.
+ *
+ * @buffer: Pointer to "struct char *".
+ * @buflen: Pointer to int which holds size of @buffer.
+ * @str:    String to copy.
+ *
+ * Returns 0 on success, negative value otherwise.
+ *
+ * @buffer and @buflen are updated upon success.
+ */
+static int ccs_prepend(char **buffer, int *buflen, const char *str)
 {
-	list_add_tail_rcu(&hook->list, hook->head);
+	int namelen = strlen(str);
+	if (*buflen < namelen)
+		return -ENOMEM;
+	*buflen -= namelen;
+	*buffer -= namelen;
+	memcpy(*buffer, str, namelen);
+	return 0;
 }
 
-static void __init swap_hook(struct security_hook_list *hook,
-			     union security_list_options *original)
+/**
+ * ccs_sysctl_permission - Check permission for sysctl().
+ *
+ * @table: Pointer to "struct ctl_table".
+ * @op:    Operation. (MAY_READ and/or MAY_WRITE)
+ *
+ * Returns 0 on success, negative value otherwise.
+ */
+static int ccs_sysctl(struct ctl_table *table, int op)
 {
-	struct list_head *list = hook->head;
-	if (list_empty(list)) {
-		add_hook(hook);
-	} else {
-		struct security_hook_list *shp =
-			list_last_entry(list, struct security_hook_list, list);
-		*original = shp->hook;
-		smp_wmb();
-		shp->hook = hook->hook;
+	int error;
+	struct ccs_path_info buf;
+	struct ccs_request_info r;
+	int buflen;
+	char *buffer;
+	int idx;
+	while (!original_security_ops.sysctl);
+	error = original_security_ops.sysctl(table, op);
+	if (error)
+		return error;
+	op &= MAY_READ | MAY_WRITE;
+	if (!op)
+		return 0;
+	buffer = NULL;
+	buf.name = NULL;
+	idx = ccs_read_lock();
+	if (ccs_init_request_info(&r, CCS_MAC_FILE_OPEN)
+	    == CCS_CONFIG_DISABLED)
+		goto out;
+	error = -ENOMEM;
+	buflen = 4096;
+	buffer = kmalloc(buflen, CCS_GFP_FLAGS);
+	if (buffer) {
+		char *end = buffer + buflen;
+		*--end = '\0';
+		buflen--;
+		while (table) {
+			char num[32];
+			const char *sp = table->procname;
+			if (!sp) {
+				memset(num, 0, sizeof(num));
+				snprintf(num, sizeof(num) - 1, "=%d=",
+					 table->ctl_name);
+				sp = num;
+			}
+			if (ccs_prepend(&end, &buflen, sp) ||
+			    ccs_prepend(&end, &buflen, "/"))
+				goto out;
+			table = table->parent;
+		}
+		if (ccs_prepend(&end, &buflen, "proc:/sys"))
+			goto out;
+		buf.name = ccs_encode(end);
 	}
+	if (buf.name) {
+		ccs_fill_path_info(&buf);
+		if (op & MAY_READ)
+			error = ccs_path_permission(&r, CCS_TYPE_READ, &buf);
+		else
+			error = 0;
+		if (!error && (op & MAY_WRITE))
+			error = ccs_path_permission(&r, CCS_TYPE_WRITE, &buf);
+	}
+out:
+	ccs_read_unlock(idx);
+	kfree(buf.name);
+	kfree(buffer);
+	return error;
 }
+
+#endif
+
+/*
+ * Why not to copy all operations by "original_security_ops = *ops" ?
+ * Because copying byte array is not atomic. Reader checks
+ * original_security_ops.op != NULL before doing original_security_ops.op().
+ * Thus, modifying original_security_ops.op has to be atomic.
+ */
+#define swap_security_ops(op)						\
+	original_security_ops.op = ops->op; smp_wmb(); ops->op = ccs_##op;
+
+/**
+ * ccs_update_security_ops - Overwrite original "struct security_operations".
+ *
+ * @ops: Pointer to "struct security_operations".
+ *
+ * Returns nothing.
+ */
+static void __init ccs_update_security_ops(struct security_operations *ops)
+{
+	/* Security context allocator. */
+	swap_security_ops(task_create);
+	swap_security_ops(cred_prepare);
+	swap_security_ops(cred_free);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
+	swap_security_ops(cred_alloc_blank);
+	swap_security_ops(cred_transfer);
+#endif
+	/* Security context updater for successful execve(). */
+	swap_security_ops(bprm_check_security);
+	swap_security_ops(bprm_committing_creds);
+	/* Various permission checker. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+	swap_security_ops(file_open);
+#else
+	swap_security_ops(dentry_open);
+#endif
+	swap_security_ops(file_fcntl);
+	swap_security_ops(file_ioctl);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33) && defined(CONFIG_SYSCTL_SYSCALL)
+	swap_security_ops(sysctl);
+#endif
+	swap_security_ops(sb_pivotroot);
+	swap_security_ops(sb_mount);
+	swap_security_ops(sb_umount);
+#if defined(CONFIG_SECURITY_PATH)
+	swap_security_ops(path_mknod);
+	swap_security_ops(path_mkdir);
+	swap_security_ops(path_rmdir);
+	swap_security_ops(path_unlink);
+	swap_security_ops(path_symlink);
+	swap_security_ops(path_rename);
+	swap_security_ops(path_link);
+	swap_security_ops(path_truncate);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
+	swap_security_ops(path_chmod);
+	swap_security_ops(path_chown);
+	swap_security_ops(path_chroot);
+#endif
+#else
+	swap_security_ops(inode_mknod);
+	swap_security_ops(inode_mkdir);
+	swap_security_ops(inode_rmdir);
+	swap_security_ops(inode_unlink);
+	swap_security_ops(inode_symlink);
+	swap_security_ops(inode_rename);
+	swap_security_ops(inode_link);
+	swap_security_ops(inode_create);
+#endif
+	swap_security_ops(inode_setattr);
+	swap_security_ops(inode_getattr);
+#ifdef CONFIG_SECURITY_NETWORK
+	swap_security_ops(socket_bind);
+	swap_security_ops(socket_connect);
+	swap_security_ops(socket_listen);
+	swap_security_ops(socket_sendmsg);
+	swap_security_ops(socket_recvmsg);
+	swap_security_ops(socket_getsockname);
+	swap_security_ops(socket_getpeername);
+	swap_security_ops(socket_getsockopt);
+	swap_security_ops(socket_setsockopt);
+	swap_security_ops(socket_shutdown);
+	swap_security_ops(socket_accept);
+	swap_security_ops(inode_free_security);
+#endif
+}
+
+#undef swap_security_ops
 
 /**
  * ccs_init - Initialize this module.
@@ -1225,33 +1876,37 @@ static void __init swap_hook(struct security_hook_list *hook,
  */
 static int __init ccs_init(void)
 {
-	int idx;
-	struct security_hook_heads *hooks = probe_security_hook_heads();
-	if (!hooks)
+	struct security_operations *ops = probe_security_ops();
+	if (!ops)
 		goto out;
-	for (idx = 0; idx < ARRAY_SIZE(akari_hooks); idx++)
-		akari_hooks[idx].head = ((void *) hooks)
-			+ ((unsigned long) akari_hooks[idx].head)
-			- ((unsigned long) &probe_dummy_security_hook_heads);
 	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();
 	if (!ccsecurity_exports.find_task_by_vpid)
 		goto out;
 	ccsecurity_exports.find_task_by_pid_ns = probe_find_task_by_pid_ns();
 	if (!ccsecurity_exports.find_task_by_pid_ns)
 		goto out;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
+	ccsecurity_exports.vfsmount_lock = probe_vfsmount_lock();
+	if (!ccsecurity_exports.vfsmount_lock)
+		goto out;
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0)
+	ccsecurity_exports.__d_path = probe___d_path();
+	if (!ccsecurity_exports.__d_path)
+		goto out;
+#else
 	ccsecurity_exports.d_absolute_path = probe_d_absolute_path();
 	if (!ccsecurity_exports.d_absolute_path)
 		goto out;
-	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
-		INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
-		INIT_LIST_HEAD(&ccs_task_security_list[idx]);
+#endif
+	{
+		int idx;
+		for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++) {
+			INIT_LIST_HEAD(&ccs_cred_security_list[idx]);
+			INIT_LIST_HEAD(&ccs_task_security_list[idx]);
+		}
 	}
 	ccs_main_init();
-	swap_hook(&akari_hooks[0], &original_cred_free);
-	swap_hook(&akari_hooks[1], &original_cred_prepare);
-	swap_hook(&akari_hooks[2], &original_cred_alloc_blank);
-	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
-		add_hook(&akari_hooks[idx]);
+	ccs_update_security_ops(ops);
 	printk(KERN_INFO "AKARI: 1.0.34   2015/05/05\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
@@ -1331,6 +1986,7 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 		if (ptr->pid != task->pids[PIDTYPE_PID].pid)
 			continue;
 		rcu_read_unlock();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 		/*
 		 * Current thread needs to transit from old domain to new
 		 * domain before do_execve() succeeds in order to check
@@ -1359,6 +2015,43 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 			ccs_debug_trace("4");
 			ccs_clear_execve(-1, ptr);
 		}
+#else
+		/*
+		 * Current thread needs to transit from old domain to new
+		 * domain before do_execve() succeeds in order to check
+		 * permission for interpreters and environment variables using
+		 * new domain's ACL rules. The domain transition has to be
+		 * visible from other CPU in order to allow interactive
+		 * enforcing mode. Also, the domain transition has to be
+		 * reverted if do_execve() failed. However, an LSM hook for
+		 * reverting domain transition is missing.
+		 *
+		 * When do_execve() failed, "struct cred" in
+		 * "struct linux_binprm" is scheduled for destruction.
+		 * But current thread returns to userspace without waiting for
+		 * destruction. The security_cred_free() LSM hook is called
+		 * after an RCU grace period has elapsed. Since some CPU may be
+		 * doing long long RCU read side critical section, there is
+		 * no guarantee that security_cred_free() is called before
+		 * current thread again calls do_execve().
+		 *
+		 * To be able to revert domain transition before processing
+		 * next do_execve() request, current thread gets a refcount on
+		 * "struct cred" in "struct linux_binprm" and memorizes it.
+		 * Current thread drops the refcount and forgets it when
+		 * do_execve() succeeded.
+		 *
+		 * Therefore, if current thread hasn't forgotten it and
+		 * current thread is the last one using that "struct cred",
+		 * it indicates that do_execve() has failed and reverting
+		 * domain transition is needed.
+		 */
+		if (task == current && ptr->cred &&
+		    atomic_read(&ptr->cred->usage) == 1) {
+			ccs_debug_trace("4");
+			ccs_clear_execve(-1, ptr);
+		}
+#endif
 		return ptr;
 	}
 	rcu_read_unlock();

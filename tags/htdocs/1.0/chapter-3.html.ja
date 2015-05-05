@@ -96,12 +96,12 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールのソースコードを展開してください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.33-20150421.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.33-20150421.tar.gz'
-# wget -O akari-1.0.33-20150421.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.33-20150421.tar.gz.asc'
+# wget -O akari-1.0.34-20150505.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz'
+# wget -O akari-1.0.34-20150505.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz.asc'
 # wget http://I-love.SAKURA.ne.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.33-20150421.tar.gz.asc
-# tar -zxf akari-1.0.33-20150421.tar.gz
+# gpg akari-1.0.34-20150505.tar.gz.asc
+# tar -zxf akari-1.0.34-20150505.tar.gz
 </pre>
 
 <p>systemd を利用している環境では、 <code>/sbin/init</code> ではなく <code>/usr/lib/systemd/systemd</code> が実行されます。 systemd を利用しているシステムの場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>
@@ -206,10 +206,10 @@ Please contact the author.
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます。（必要に応じて、 USRLIBDIR=/usr/lib または USRLIBDIR=/usr/lib32 に変更してください。）：</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.3-20150421.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20150421.tar.gz'
-$ wget -O ccs-tools-1.8.3-20150421.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.3-20150421.tar.gz.asc'
-$ gpg ccs-tools-1.8.3-20150421.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.3-20150421.tar.gz
+$ wget -O ccs-tools-1.8.4-20150505.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz'
+$ wget -O ccs-tools-1.8.4-20150505.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz.asc'
+$ gpg ccs-tools-1.8.4-20150505.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.4-20150505.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib64
 $ su
@@ -270,7 +270,7 @@ Creating configuration file for ccs-notifyd ... OK
 
 <pre class=command>
 # echo 'add_drivers+=" akari "' &gt; /etc/dracut.conf.d/akari.conf
-# dracut -f
+# dracut -f --kver ${VERSION}
 </pre>
 
 <p>ブートローダ（ GRUB 等）の設定ファイルを編集し、 rd.driver.pre=akari というパラメータをカーネルに対するコマンドラインオプションに追加してください。以下に例を示します：</p>
@@ -334,10 +334,10 @@ kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/ init=/sbin/akari
 <p><code>/usr/lib/systemd/systemd</code> または <code>/sbin/init</code> が開始される直前に以下のようなメッセージが表示される筈です。（表示される内容は環境により異なります。）：</p>
 
 <pre class="output">
-AKARI: 1.0.33   2015/04/21
+AKARI: 1.0.34   2015/05/05
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.3+   2015/04/21
+CCSecurity: 1.8.4   2015/05/05
 Mandatory Access Control activated.
 </pre>
 

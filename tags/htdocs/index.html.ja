@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">２０１５年５月５日</p>
+<h4>AKARI 1.0.34 がリリースされました。</h4>
+<p class="article">複数の use_group 指定ができるようになりました。</p>
+
+<br>
+
 <p class="timestamp">２０１５年４月２１日</p>
 <h4>AKARI 1.0.33 がリリースされました。</h4>
 <p class="article">リトライ処理の間違いを修正しました。</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">２０１５年１月１２日</p>
 <h4>AKARI 1.0.31 がリリースされました。</h4>
 <p class="article">chmod(-1) パーミッションのチェック漏れを修正しました。</p>
-
-<br>
-
-<p class="timestamp">２０１３年２月１４日</p>
-<h4>AKARI 1.0.30 がリリースされました。</h4>
-<p class="article">（カーネル 2.6.29 と 2.6.30 を除いて） AKARI と CaitSith を同時に使えるように修正しました。</p>
 
 <br>
 

@@ -2441,7 +2441,7 @@ static void ccs_check_profile(void)
 		printk(KERN_ERR
 		       "Userland tools for TOMOYO 1.8 must be installed and "
 		       "policy must be initialized.\n");
-		printk(KERN_ERR "Please see http://tomoyo.sourceforge.jp/1.8/ "
+		printk(KERN_ERR "Please see http://tomoyo.osdn.jp/1.8/ "
 		       "for more information.\n");
 		panic("STOP!");
 	}

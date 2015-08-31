@@ -32,9 +32,9 @@
 
 <h3>Official</h3>
 <ul>
-<li><a href="http://sourceforge.jp/projects/akari/">AKARI プロジェクトページ</a></li>
-<li><a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux ホームページ</a></li>
-<li><a href="http://sourceforge.jp/projects/tomoyo/">TOMOYO Linux プロジェクトページ</a></li>
+<li><a href="http://osdn.jp/projects/akari/">AKARI プロジェクトページ</a></li>
+<li><a href="http://tomoyo.osdn.jp/">TOMOYO Linux ホームページ</a></li>
+<li><a href="http://osdn.jp/projects/tomoyo/">TOMOYO Linux プロジェクトページ</a></li>
 <li><a href="faq.html.ja">FAQ</a></li>
 </ul>
 
@@ -56,7 +56,7 @@
 <p class="language">Go to <a href="links.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

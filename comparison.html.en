@@ -36,7 +36,7 @@
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
+<tr><td></td><td><a href="http://tomoyo.osdn.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.osdn.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.osdn.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
 <tr><td>Advantages</td><td>Complete functionality and syntax are supported.</td><td>No need to replace kernel package.</td><td>Included in upstream kernels.<br>No need to replace kernel package if built into the kernel.</td></tr>
 <tr><td>Disadvantages</td><td>Need to replace kernel package.</td><td>Supported functionality and syntax depend on kernel's version and kernel's configuration options.</td><td>Supported functionality and syntax depend on kernel's version.</td>
 </tr>
@@ -75,7 +75,7 @@ Requires kernel 3.2.<br>
 
 <div class="simple-table-wrap">
 <table>
-<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
+<tr><td></td><td></td><td><a href="http://tomoyo.osdn.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.osdn.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.osdn.jp/2.5/index.html.en">TOMOYO 2.5</a></td></tr>
 <tr><td></td><td>Supported kernel version</td><td>2.4.37<br>2.6.27-2.6.39<br>3.0-3.19<br>4.0-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-2.6.39<br>3.0-3.19<br>4.0-</td><td>3.2-3.19<br>4.0-</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>
@@ -201,7 +201,7 @@ Requires kernel 3.2.<br>
 <p class="language">Go to <a href="comparison.html.ja">Japanese page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

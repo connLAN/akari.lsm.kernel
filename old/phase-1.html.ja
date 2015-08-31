@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>AKARI 導入手順書</title>
-<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+<link rel="stylesheet" href="http://tomoyo.osdn.jp/tomoyo.css" media="all" type="text/css">
 </head>
 <body>
 <p style="text-align:right;"><a href="phase-1.html.en">English Page</a></p>
@@ -73,8 +73,8 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.30-20140915.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
-# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
+# wget -O akari-1.0.30-20140915.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
+# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
 # gpg akari-1.0.30-20140915.tar.gz.asc<br>
 # tar -zxf akari-1.0.30-20140915.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
@@ -83,7 +83,7 @@
 </td></tr>
 </table>
 
-<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
+<p>もし、以下の何れかのエラーメッセージが表示された場合、ご利用のカーネルは AKARI に対応できませんのでご了承ください（代わりに <a href="http://tomoyo.osdn.jp/1.8/index.html.ja">TOMOYO Linux</a> を利用してください）。その他のエラーメッセージが表示された場合は作者（ penguin-kernel&#64;I-love.SAKURA.ne.jp ）にご連絡ください。</p>
 
 <pre>
 This module supports only 2.6.0 and later kernels.
@@ -103,8 +103,8 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <table border="1">
 <tr><td>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz'<br>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz.asc'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz.asc'<br>
 [user@tomoyo ~]$ gpg ccs-tools-1.8.1-20110401.tar.gz.asc<br>
 [user@tomoyo ~]$ tar -zxf ccs-tools-1.8.1-20110401.tar.gz<br>
 [user@tomoyo ~]$ cd ccstools/<br>
@@ -223,7 +223,7 @@ Mandatory Access Control activated.
 <tr><td width="33%" align="left" valign="top">
 </td>
 <td width="34%" align="center" valign="top">
-<a href="http://tomoyo.sourceforge.jp/">ホームへ</a>
+<a href="http://tomoyo.osdn.jp/">ホームへ</a>
 </td>
 <td width="33%" align="right" valign="top">
 第２節： AKARI を理解する
@@ -232,6 +232,6 @@ Mandatory Access Control activated.
 </table>
 </div>
 
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </body>
 </html>

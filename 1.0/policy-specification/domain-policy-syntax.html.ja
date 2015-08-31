@@ -607,10 +607,10 @@ ipc signal 10 &lt;kernel&gt; /sbin/init /etc/rc.sysinit /sbin/udevadm
 </table>
 </div>
 
-<p>以下の例ではＩＰアドレス 202.221.179.21 のポート 80 番に対して接続要求を送信することを許可しています：</p>
+<p>以下の例ではＩＰアドレス 202.221.179.11 のポート 80 番に対して接続要求を送信することを許可しています：</p>
 
 <pre>
-network inet stream connect 202.221.179.21 80
+network inet stream connect 202.221.179.11 80
 </pre>
 
 <p>参照：</p>
@@ -801,7 +801,7 @@ task auto_domain_transition &lt;kernel&gt; //non-root-session task.uid!=0
 <p class="language">Go to <a href="domain-policy-syntax.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

@@ -69,7 +69,7 @@ TOMOYO Linux 1.8 で提供されている機能の一部は提供されていま
 </table>
 </div>
 
-<p><a href="http://tomoyo.sourceforge.jp/comparison.html.ja">この比較表</a>に、１系と２系との詳細な違いが説明されています。また、<a href="comparison.html.ja">この比較表</a>には、 AKARI と TOMOYO Linux １系／２系との詳細な違いが説明されています。</p>
+<p><a href="http://tomoyo.osdn.jp/comparison.html.ja">この比較表</a>に、１系と２系との詳細な違いが説明されています。また、<a href="comparison.html.ja">この比較表</a>には、 AKARI と TOMOYO Linux １系／２系との詳細な違いが説明されています。</p>
 
 <p>アクセス制御機能の豊富さよりもパッチを適用せずに使えることを重視する場合、あるいは１系にしか存在しない機能を必要としない場合には、２系をご利用ください。２系は既に標準の Linux カーネルのソースの中に含まれてはいますが、 TOMOYO Linux が組み込まれていない状態でカーネルを提供しているディストリビューションも存在します。 TOMOYO Linux が組み込まれていないカーネルの場合、 TOMOYO Linux を組み込むためにカーネルをコンパイルする必要があります。</p>
 
@@ -84,16 +84,16 @@ TOMOYO Linux 1.8 で提供されている機能の一部は提供されていま
 
 <h3>２系のドキュメント</h3>
 <ul>
-<li><a href="http://tomoyo.sourceforge.jp/2.5/index.html.ja">2.5.x ドキュメント</a>（ Linux 3.2 以降用）（ Linux 2.6.33 ～ 3.1 用のバックポートパッチを利用できます。）</li>
-<li><a href="http://tomoyo.sourceforge.jp/2.4/index.html.ja">2.4.x ドキュメント</a>（ Linux 3.1 用）（ Linux 2.6.33 ～ 3.0 用のバックポートパッチを利用できます。）</li>
-<li><a href="http://tomoyo.sourceforge.jp/2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 ～ 3.0 用）</li>
-<li><a href="http://tomoyo.sourceforge.jp/2.2/index.html.ja">2.2.x ドキュメント</a>（ Linux 2.6.30 ～ 2.6.35 用）</li>
+<li><a href="http://tomoyo.osdn.jp/2.5/index.html.ja">2.5.x ドキュメント</a>（ Linux 3.2 以降用）（ Linux 2.6.33 ～ 3.1 用のバックポートパッチを利用できます。）</li>
+<li><a href="http://tomoyo.osdn.jp/2.4/index.html.ja">2.4.x ドキュメント</a>（ Linux 3.1 用）（ Linux 2.6.33 ～ 3.0 用のバックポートパッチを利用できます。）</li>
+<li><a href="http://tomoyo.osdn.jp/2.3/index.html.ja">2.3.x ドキュメント</a>（ Linux 2.6.36 ～ 3.0 用）</li>
+<li><a href="http://tomoyo.osdn.jp/2.2/index.html.ja">2.2.x ドキュメント</a>（ Linux 2.6.30 ～ 2.6.35 用）</li>
 </ul>
 
 <h3>１系のドキュメント</h3>
 <ul>
-<li><a href="http://tomoyo.sourceforge.jp/1.8/index.html.ja">1.8.x ドキュメント</a>（最新版）</li>
-<li><a href="http://tomoyo.sourceforge.jp/1.7/index.html.ja">1.7.x ドキュメント</a>（安定版）</li>
+<li><a href="http://tomoyo.osdn.jp/1.8/index.html.ja">1.8.x ドキュメント</a>（最新版）</li>
+<li><a href="http://tomoyo.osdn.jp/1.7/index.html.ja">1.7.x ドキュメント</a>（安定版）</li>
 </ul>
 
 </div><!-- regular-content -->
@@ -104,7 +104,7 @@ TOMOYO Linux 1.8 で提供されている機能の一部は提供されていま
 <p class="language">Go to <a href="documentation.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

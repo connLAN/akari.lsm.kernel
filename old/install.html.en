@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>AKARI Install manual</title>
-<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+<link rel="stylesheet" href="http://tomoyo.osdn.jp/tomoyo.css" media="all" type="text/css">
 </head>
 <body>
 <p style="text-align:right;"><a href="install.html.ja">Japanese Page</a></p>
@@ -47,8 +47,8 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.30-20140915.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
-# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
+# wget -O akari-1.0.30-20140915.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
+# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
 # gpg akari-1.0.30-20140915.tar.gz.asc<br>
 # tar -zxf akari-1.0.30-20140915.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
@@ -80,8 +80,8 @@ You must choose CONFIG_MODULES=y for building this module.
 <table border="1">
 <tr><td>
 # cd /tmp/<br>
-# wget -O ccs-tools-1.8.1-20110401.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz'<br>
-# wget -O ccs-tools-1.8.1-20110401.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz.asc'<br>
+# wget -O ccs-tools-1.8.1-20110401.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz'<br>
+# wget -O ccs-tools-1.8.1-20110401.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz.asc'<br>
 # gpg ccs-tools-1.8.1-20110401.tar.gz.asc<br>
 # tar -zxf ccs-tools-1.8.1-20110401.tar.gz<br>
 # cd ccstools/<br>
@@ -134,6 +134,6 @@ title CentOS (2.6.18-238.5.1.el5)<br>
 <hr>
 
 <p><a href="index.html.en">Return to index page.</a></p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </body>
 </html>

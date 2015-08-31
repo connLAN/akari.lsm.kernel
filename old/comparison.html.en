@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>AKARI / TOMOYO functionality comparison table</title>
-<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+<link rel="stylesheet" href="http://tomoyo.osdn.jp/tomoyo.css" media="all" type="text/css">
 </head>
 <body>
 <p style="text-align:right;"><a href="comparison.html.ja">Japanese Page</a></p>
@@ -15,7 +15,7 @@
 <p>Since AKARI is based on TOMOYO Linux 1.8, AKARI provides similar functionality and syntax which TOMOYO Linux 1.8 provides. This page describes the difference.</p>
 
 <table summary="comparison" border="1">
-<tr><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
+<tr><td></td><td><a href="http://tomoyo.osdn.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td><a href="http://akari.osdn.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.osdn.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
 <tr><td>Advantages</td><td>Complete functionality and syntax are supported.</td><td>No need to replace kernel package.</td><td>Included in upstream kernels.<br>No need to replace kernel package if built into the kernel.</td></tr>
 <tr><td>Disadvantages</td><td>Need to replace kernel package.</td><td>Supported functionality and syntax depend on kernel's version and kernel's configuration options.</td><td>Supported functionality and syntax depend on kernel's version.</td>
 </tr>
@@ -50,7 +50,7 @@ Requires kernel 2.6.36 or later.<br>
 <p>Below table describes detailed functionality / syntax difference.</p>
 
 <table summary="comparison" border="1">
-<tr><td></td><td></td><td><a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.sourceforge.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.sourceforge.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
+<tr><td></td><td></td><td><a href="http://tomoyo.osdn.jp/1.8/index.html.en">TOMOYO 1.8</a></td><td colspan=6><a href="http://akari.osdn.jp/index.html.en">AKARI</a></td><td><a href="http://tomoyo.osdn.jp/2.3/index.html.en">TOMOYO 2.3</a></td></tr>
 <tr><td></td><td>Kernel version</td><td>2.4.30-/2.6.11-</td><td>2.6.0-2.6.20</td><td>2.6.21-2.6.23</td><td>2.6.24-2.6.28</td><td>2.6.29</td><td>2.6.30-2.6.32</td><td>2.6.33-</td><td>2.6.36-</td></tr>
 <tr><td>Type</td><td>Function</td><td colspan=8></td></tr>
 <tr><td colspan=10>Accuracy of pathnames</td></tr>

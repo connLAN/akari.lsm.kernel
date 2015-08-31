@@ -96,8 +96,8 @@
 <p>Run the following commands in order to extract source code of AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.34-20150505.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz'
-# wget -O akari-1.0.34-20150505.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz.asc'
+# wget -O akari-1.0.34-20150505.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz'
+# wget -O akari-1.0.34-20150505.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz.asc'
 # wget http://I-love.SAKURA.ne.jp/kumaneko-key
 # gpg --import kumaneko-key
 # gpg akari-1.0.34-20150505.tar.gz.asc
@@ -136,7 +136,7 @@
 # depmod ${VERSION}
 </pre>
 
-<p>If you encountered one of errors listed below, you cannot use AKARI for your kernel. You may instead wish to try <a href="http://tomoyo.sourceforge.jp/1.8/index.html.en">TOMOYO Linux</a>. For other errors, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
+<p>If you encountered one of errors listed below, you cannot use AKARI for your kernel. You may instead wish to try <a href="http://tomoyo.osdn.jp/1.8/index.html.en">TOMOYO Linux</a>. For other errors, please contact the author ( penguin-kernel&#64;I-love.SAKURA.ne.jp ).</p>
 
 <pre class="output">
 This module supports only 2.6.0 and later kernels.
@@ -206,8 +206,8 @@ Please contact the author.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands. (Please use USRLIBDIR=<code>/usr/lib</code> or USRLIBDIR=<code>/usr/lib32</code> if needed):</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.4-20150505.tar.gz 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz'
-$ wget -O ccs-tools-1.8.4-20150505.tar.gz.asc 'http://sourceforge.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz.asc'
+$ wget -O ccs-tools-1.8.4-20150505.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz'
+$ wget -O ccs-tools-1.8.4-20150505.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz.asc'
 $ gpg ccs-tools-1.8.4-20150505.tar.gz.asc
 $ tar -zxf ccs-tools-1.8.4-20150505.tar.gz
 $ cd ccs-tools/
@@ -384,7 +384,7 @@ Mandatory Access Control activated.
 <p class="language">Go to <a href="chapter-3.html.ja">Japanese page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; is a registered trademark of Linus Torvalds world-wide. TOMOYO&reg; is a registered trademark of <a href="http://www.nttdata.co.jp/en/">NTT DATA Corporation</a>.</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

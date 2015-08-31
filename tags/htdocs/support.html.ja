@@ -38,8 +38,8 @@
 
 <p>リリース告知メールを受け取りたい場合や質問を送りたい場合には、以下のメーリングリストのどちらかをご利用ください。</p>
 <ul>
-<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users">TOMOYO Users （日本語）</a></li>
-<li><a href="http://lists.sourceforge.jp/mailman/listinfo/tomoyo-users-en">TOMOYO Users （英語）</a></li>
+<li><a href="http://lists.osdn.me/mailman/listinfo/tomoyo-users">TOMOYO Users （日本語）</a></li>
+<li><a href="http://lists.osdn.me/mailman/listinfo/tomoyo-users-en">TOMOYO Users （英語）</a></li>
 </ul>
 
 <h3>連絡先</h3>
@@ -54,7 +54,7 @@
 <p class="language">Go to <a href="support.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

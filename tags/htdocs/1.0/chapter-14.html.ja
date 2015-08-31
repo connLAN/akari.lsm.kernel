@@ -65,7 +65,7 @@
 <p>mod_ccs モジュールのソースコードをダウンロードします：</p>
 
 <pre class="command">
-# wget -O mod_ccs.c 'http://sourceforge.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=5673&amp;root=tomoyo'
+# wget -O mod_ccs.c 'http://osdn.jp/projects/tomoyo/svn/view/branches/mod_ccs.c?revision=5673&amp;root=tomoyo'
 </pre>
 
 <p>mod_ccs モジュールをコンパイル／インストール／有効化します：</p>
@@ -271,7 +271,7 @@ EOF
 <p class="language">Go to <a href="chapter-14.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Content-Style-Type" content="text/css">
 <title>AKARI プロジェクト</title>
-<link rel="stylesheet" href="http://tomoyo.sourceforge.jp/tomoyo.css" media="all" type="text/css">
+<link rel="stylesheet" href="http://tomoyo.osdn.jp/tomoyo.css" media="all" type="text/css">
 </head>
 <body>
 <p style="text-align:right;"><a href="index.html.en">English Page</a></p>
@@ -74,9 +74,9 @@
 
 <hr>
 
-<address><a href="http://akari.sourceforge.jp/">AKARI</a> is a personal project  supported by the author of <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a>.<br>
+<address><a href="http://akari.osdn.jp/">AKARI</a> is a personal project  supported by the author of <a href="http://tomoyo.osdn.jp/">TOMOYO Linux</a>.<br>
 <!--#include virtual="/cgi-bin/counter.pl" -->
 </address>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </body>
 </html>

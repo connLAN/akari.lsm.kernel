@@ -32,7 +32,7 @@
 
 <h3><a name="about">AKARI 詳細</a></h3>
 
-<p>AKARI は Linux 向けの強制アクセス制御（ MAC ）の実装で、システムのセキュリティを高める用途は勿論、システムの解析を行う用途でも使えるツールです。AKARI は２００３年に始まった <a href="http://tomoyo.sourceforge.jp/">TOMOYO Linux</a> をベースとして作成された、 Linux カーネルモジュールです。</p>
+<p>AKARI は Linux 向けの強制アクセス制御（ MAC ）の実装で、システムのセキュリティを高める用途は勿論、システムの解析を行う用途でも使えるツールです。AKARI は２００３年に始まった <a href="http://tomoyo.osdn.jp/">TOMOYO Linux</a> をベースとして作成された、 Linux カーネルモジュールです。</p>
 
 <p>AKARI はシステムの振る舞いに注目します。プロセスは何かの目的を達成するために生成されます。 AKARI は（出入国審査官のように）それぞれのプロセスに対して目的を達成するのに必要な振る舞いや資源について報告させることができます。また、保護モードを有効にすることにより、（運用監視人のように）システム管理者により承認された振る舞いと資源へのアクセスのみを許可することもできます。</p>
 
@@ -72,7 +72,7 @@
 <p class="language">Go to <a href="about.html.en">English page</a>.</p>
 <p class="timestamp">Last modified: $Date$</p>
 <p class="trademark">Linux&reg; は世界各国における Linus Torvalds の登録商標です。 TOMOYO&reg; は<a href="http://www.nttdata.co.jp/">株式会社ＮＴＴデータ</a>の登録商標です。</p>
-<p><a href="http://sourceforge.jp/"><img src="http://sourceforge.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
+<p><a href="http://osdn.jp/"><img src="http://osdn.jp/sflogo.php?group_id=5310" width="96" height="31" alt="sflogo.php" title="SourceForge.jp"></a></p>
 </div>
 
 </body>

@@ -939,24 +939,6 @@ enum ccs_value_type {
  */
 #define CCS_RETRY_REQUEST 1
 
-/* Ignore gfp flags which are not supported. */
-#ifndef __GFP_HIGHIO
-#define __GFP_HIGHIO 0
-#endif
-#ifndef __GFP_NOWARN
-#define __GFP_NOWARN 0
-#endif
-#ifndef __GFP_NORETRY
-#define __GFP_NORETRY 0
-#endif
-#ifndef __GFP_NOMEMALLOC
-#define __GFP_NOMEMALLOC 0
-#endif
-
-/* The gfp flags used by TOMOYO. */
-#define CCS_GFP_FLAGS (__GFP_WAIT | __GFP_IO | __GFP_HIGHIO | __GFP_NOWARN | \
-		       __GFP_NORETRY | __GFP_NOMEMALLOC)
-
 /* Size of read buffer for /proc/ccs/ interface. */
 #define CCS_MAX_IO_READ_QUEUE 64
 
@@ -1277,7 +1259,7 @@ struct ccs_execve {
 	const struct ccs_path_info *transition;
 	/* For execute_handler */
 	const struct ccs_path_info *handler;
-	char *handler_path; /* = kstrdup(handler->name, CCS_GFP_FLAGS) */
+	char *handler_path; /* = kstrdup(handler->name, GFP_NOFS) */
 	/* For dumping argv[] and envp[]. */
 	struct ccs_page_dump dump;
 	/* For temporary use. */

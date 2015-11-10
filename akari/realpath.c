@@ -532,7 +532,7 @@ char *ccs_realpath(const struct path *path)
 		struct inode *inode;
 		buf_len <<= 1;
 		kfree(buf);
-		buf = kmalloc(buf_len, GFP_NOFS);
+		buf = kmalloc(buf_len, CCS_GFP_FLAGS);
 		if (!buf)
 			break;
 		/* To make sure that pos is '\0' terminated. */
@@ -618,7 +618,7 @@ char *ccs_encode2(const char *str, int str_len)
 	}
 	len++;
 	/* Reserve space for appending "/". */
-	cp = kzalloc(len + 10, GFP_NOFS);
+	cp = kzalloc(len + 10, CCS_GFP_FLAGS);
 	if (!cp)
 		return NULL;
 	cp0 = cp;

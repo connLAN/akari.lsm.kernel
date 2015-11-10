@@ -1231,7 +1231,7 @@ static int ccs_sysctl(struct ctl_table *table, int op)
 		goto out;
 	error = -ENOMEM;
 	buflen = 4096;
-	buffer = kmalloc(buflen, GFP_NOFS);
+	buffer = kmalloc(buflen, CCS_GFP_FLAGS);
 	if (buffer) {
 		char *end = buffer + buflen;
 		*--end = '\0';

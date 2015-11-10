@@ -133,7 +133,7 @@ bool ccs_memory_ok(const void *ptr, const unsigned int size)
  */
 void *ccs_commit_ok(void *data, const unsigned int size)
 {
-	void *ptr = kmalloc(size, GFP_NOFS);
+	void *ptr = kmalloc(size, CCS_GFP_FLAGS);
 	if (ccs_memory_ok(ptr, size)) {
 		memmove(ptr, data, size);
 		memset(data, 0, size);
@@ -177,7 +177,7 @@ const struct ccs_path_info *ccs_get_name(const char *name)
 		goto out;
 	}
 	allocated_len = sizeof(*ptr) + len;
-	ptr = kzalloc(allocated_len, GFP_NOFS);
+	ptr = kzalloc(allocated_len, CCS_GFP_FLAGS);
 	if (ccs_memory_ok(ptr, allocated_len)) {
 		ptr->entry.name = ((char *) ptr) + sizeof(*ptr);
 		memmove((char *) ptr->entry.name, name, len);

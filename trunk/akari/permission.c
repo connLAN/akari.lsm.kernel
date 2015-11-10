@@ -1312,7 +1312,7 @@ static int ccs_try_alt_exec(struct ccs_execve *ee)
 			goto out;
 		}
 		handler_len = ee->handler->total_len + 1;
-		cp = kmalloc(handler_len, GFP_NOFS);
+		cp = kmalloc(handler_len, CCS_GFP_FLAGS);
 		if (!cp) {
 			retval = -ENOMEM;
 			goto out;
@@ -1423,7 +1423,7 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 	struct page *page;
 	/* dump->data is released by ccs_start_execve(). */
 	if (!dump->data) {
-		dump->data = kzalloc(PAGE_SIZE, GFP_NOFS);
+		dump->data = kzalloc(PAGE_SIZE, CCS_GFP_FLAGS);
 		if (!dump->data)
 			return false;
 	}
@@ -1477,10 +1477,10 @@ int ccs_start_execve(struct linux_binprm *bprm, struct ccs_execve **eep)
 	struct ccs_execve *ee;
 	int idx;
 	*eep = NULL;
-	ee = kzalloc(sizeof(*ee), GFP_NOFS);
+	ee = kzalloc(sizeof(*ee), CCS_GFP_FLAGS);
 	if (!ee)
 		return -ENOMEM;
-	ee->tmp = kzalloc(CCS_EXEC_TMPSIZE, GFP_NOFS);
+	ee->tmp = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);
 	if (!ee->tmp) {
 		kfree(ee);
 		return -ENOMEM;
@@ -2979,7 +2979,7 @@ static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 		error = 0;
 		goto out;
 	}
-	buffer = kmalloc(PAGE_SIZE, GFP_NOFS);
+	buffer = kmalloc(PAGE_SIZE, CCS_GFP_FLAGS);
 	if (!buffer)
 		goto out;
 	snprintf(buffer, PAGE_SIZE - 1, "proc:/sys");
@@ -3914,7 +3914,7 @@ static int ccs_environ(struct ccs_execve *ee)
 	ee->r.mode = ccs_get_mode(ee->r.profile, CCS_MAC_ENVIRON);
 	if (!r->mode || !envp_count)
 		return 0;
-	arg_ptr = kzalloc(CCS_EXEC_TMPSIZE, GFP_NOFS);
+	arg_ptr = kzalloc(CCS_EXEC_TMPSIZE, CCS_GFP_FLAGS);
 	if (!arg_ptr)
 		goto out;
 	while (error == -ENOMEM) {
@@ -4079,7 +4079,7 @@ static bool ccs_scan_bprm(struct ccs_execve *ee,
 		checked = local_checked;
 		memset(local_checked, 0, sizeof(local_checked));
 	} else {
-		checked = kzalloc(argc + envc, GFP_NOFS);
+		checked = kzalloc(argc + envc, CCS_GFP_FLAGS);
 		if (!checked)
 			return false;
 	}

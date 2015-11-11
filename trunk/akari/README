@@ -290,3 +290,11 @@ Version 1.0.34   2015/05/05   Minor update release.
    Synchronize with TOMOYO 1.8.4 release.
 
    Support multiple use_group entries.
+
+Version 1.0.35   2015/11/11   Minor update release.
+
+   Synchronize with TOMOYO 1.8.5 release.
+
+   Use memory allocation flags used by TOMOYO 2.x.
+
+   Limit wildcard recursion depth.

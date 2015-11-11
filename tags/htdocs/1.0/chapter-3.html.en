@@ -96,12 +96,12 @@
 <p>Run the following commands in order to extract source code of AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.34-20150505.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz'
-# wget -O akari-1.0.34-20150505.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.34-20150505.tar.gz.asc'
+# wget -O akari-1.0.35-20151111.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20151111.tar.gz'
+# wget -O akari-1.0.35-20151111.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20151111.tar.gz.asc'
 # wget https://tomoyo.osdn.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.34-20150505.tar.gz.asc
-# tar -zxf akari-1.0.34-20150505.tar.gz
+# gpg akari-1.0.35-20151111.tar.gz.asc
+# tar -zxf akari-1.0.35-20151111.tar.gz
 </pre>
 
 <p>On systemd environments, <code>/usr/lib/systemd/systemd</code> will be executed rather than <code>/sbin/init</code>. If your system is using systemd, please edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>
@@ -206,10 +206,10 @@ Please contact the author.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands. (Please use USRLIBDIR=<code>/usr/lib</code> or USRLIBDIR=<code>/usr/lib32</code> if needed):</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.4-20150505.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz'
-$ wget -O ccs-tools-1.8.4-20150505.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.4-20150505.tar.gz.asc'
-$ gpg ccs-tools-1.8.4-20150505.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.4-20150505.tar.gz
+$ wget -O ccs-tools-1.8.5-20151111.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz'
+$ wget -O ccs-tools-1.8.5-20151111.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz.asc'
+$ gpg ccs-tools-1.8.5-20151111.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.5-20151111.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib64
 $ su
@@ -334,10 +334,10 @@ kernel /boot/vmlinuz-2.6.32-431.17.1.el6.x86_64 ro root=LABEL=/ init=/sbin/akari
 <p>You will find messages like below when <code>/usr/lib/systemd/systemd</code>  or <code>/sbin/init</code> starts. (The content of messages depends on your environment.):</p>
 
 <pre class="output">
-AKARI: 1.0.34   2015/05/05
+AKARI: 1.0.35   2015/11/11
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.4   2015/05/05
+CCSecurity: 1.8.5   2015/11/11
 Mandatory Access Control activated.
 </pre>
 

@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2005-2012  NTT DATA CORPORATION
  *
- * Version: 1.8.4   2015/05/05
+ * Version: 1.8.5   2015/11/11
  */
 
 #include "internal.h"
@@ -2419,7 +2419,7 @@ static void ccs_check_profile(void)
 	struct ccs_domain_info *domain;
 	const int idx = ccs_read_lock();
 	ccs_policy_loaded = true;
-	printk(KERN_INFO "CCSecurity: 1.8.4   2015/05/05\n");
+	printk(KERN_INFO "CCSecurity: 1.8.5   2015/11/11\n");
 	list_for_each_entry_srcu(domain, &ccs_domain_list, list, &ccs_ss) {
 		const u8 profile = domain->profile;
 		struct ccs_policy_namespace *ns = domain->ns;
@@ -5103,7 +5103,7 @@ static void ccs_read_version(struct ccs_io_buffer *head)
 {
 	if (head->r.eof)
 		return;
-	ccs_set_string(head, "1.8.4");
+	ccs_set_string(head, "1.8.5");
 	head->r.eof = true;
 }
 

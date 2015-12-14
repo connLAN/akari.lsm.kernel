@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">11th November, 2015</p>
+<h4>AKARI 1.0.35 released</h4>
+<p class="article">A new version of AKARI changed memory allocation rules.</p>
+
+<br>
+
 <p class="timestamp">5th May, 2015</p>
 <h4>AKARI 1.0.34 released</h4>
 <p class="article">A new version of AKARI supports multiple use_group entries.</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">8th April, 2015</p>
 <h4>AKARI 1.0.32 released</h4>
 <p class="article">A new version of AKARI fixes a bug where conditional compilation was wrong.</p>
-
-<br>
-
-<p class="timestamp">12th January, 2015</p>
-<h4>AKARI 1.0.31 released</h4>
-<p class="article">A new version of AKARI fixes a bug where chmod(-1) permission check was missing.</p>
 
 <br>
 

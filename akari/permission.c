@@ -261,7 +261,7 @@ static int __ccs_chown_permission(struct dentry *dentry,
 				  struct vfsmount *vfsmnt, uid_t user,
 				  gid_t group);
 #endif
-static int __ccs_chroot_permission(struct path *path);
+static int __ccs_chroot_permission(const struct path *path);
 static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
 				  unsigned long arg);
 static int __ccs_ioctl_permission(struct file *filp, unsigned int cmd,
@@ -273,9 +273,9 @@ static int __ccs_mkdir_permission(struct dentry *dentry, struct vfsmount *mnt,
 				  unsigned int mode);
 static int __ccs_mknod_permission(struct dentry *dentry, struct vfsmount *mnt,
 				  const unsigned int mode, unsigned int dev);
-static int __ccs_mount_permission(const char *dev_name, struct path *path,
-				  const char *type, unsigned long flags,
-				  void *data_page);
+static int __ccs_mount_permission(const char *dev_name,
+				  const struct path *path, const char *type,
+				  unsigned long flags, void *data_page);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 30)
 static int __ccs_open_exec_permission(struct dentry *dentry,
 				      struct vfsmount *mnt);
@@ -286,8 +286,8 @@ static int __ccs_open_permission(struct dentry *dentry, struct vfsmount *mnt,
 static int __ccs_parse_table(int __user *name, int nlen, void __user *oldval,
 			     void __user *newval, struct ctl_table *table);
 #endif
-static int __ccs_pivot_root_permission(struct path *old_path,
-				       struct path *new_path);
+static int __ccs_pivot_root_permission(const struct path *old_path,
+				       const struct path *new_path);
 static int __ccs_rename_permission(struct dentry *old_dentry,
 				   struct dentry *new_dentry,
 				   struct vfsmount *mnt);
@@ -318,7 +318,7 @@ static int ccs_mkdev_perm(const u8 operation, struct dentry *dentry,
 			  struct vfsmount *mnt, const unsigned int mode,
 			  unsigned int dev);
 static int ccs_mount_acl(struct ccs_request_info *r, const char *dev_name,
-			 struct path *dir, const char *type,
+			 const struct path *dir, const char *type,
 			 unsigned long flags);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33)
 static int ccs_new_open_permission(struct file *filp);
@@ -1429,8 +1429,14 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 	}
 	/* Same with get_arg_page(bprm, pos, 0) in fs/exec.c */
 #ifdef CCS_BPRM_MMU
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0)
+	if (get_user_pages_remote(current, bprm->mm, pos, 1, 0, 1, &page,
+				  NULL) <= 0)
+		return false;
+#else
 	if (get_user_pages(current, bprm->mm, pos, 1, 0, 1, &page, NULL) <= 0)
 		return false;
+#endif
 #else
 	page = bprm->page[pos / PAGE_SIZE];
 #endif
@@ -1831,7 +1837,7 @@ static bool ccs_check_mount_acl(struct ccs_request_info *r,
  * Caller holds ccs_read_lock().
  */
 static int ccs_mount_acl(struct ccs_request_info *r, const char *dev_name,
-			 struct path *dir, const char *type,
+			 const struct path *dir, const char *type,
 			 unsigned long flags)
 {
 	struct ccs_obj_info obj = { };
@@ -1937,9 +1943,9 @@ out:
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_mount_permission(const char *dev_name, struct path *path,
-				  const char *type, unsigned long flags,
-				  void *data_page)
+static int __ccs_mount_permission(const char *dev_name,
+				  const struct path *path, const char *type,
+				  unsigned long flags, void *data_page)
 {
 	struct ccs_request_info r;
 	int error = 0;
@@ -2715,8 +2721,8 @@ static int __ccs_fcntl_permission(struct file *file, unsigned int cmd,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_pivot_root_permission(struct path *old_path,
-				       struct path *new_path)
+static int __ccs_pivot_root_permission(const struct path *old_path,
+				       const struct path *new_path)
 {
 	return ccs_path2_perm(CCS_TYPE_PIVOT_ROOT, new_path->dentry,
 			      new_path->mnt, old_path->dentry, old_path->mnt);
@@ -2729,7 +2735,7 @@ static int __ccs_pivot_root_permission(struct path *old_path,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int __ccs_chroot_permission(struct path *path)
+static int __ccs_chroot_permission(const struct path *path)
 {
 	return ccs_path_perm(CCS_TYPE_CHROOT, path->dentry, path->mnt, NULL);
 }

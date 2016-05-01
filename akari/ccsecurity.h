@@ -67,10 +67,10 @@ struct ccsecurity_exports {
 struct ccsecurity_operations {
 	void (*check_profile) (void);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
-	int (*chroot_permission) (struct path *path);
-	int (*pivot_root_permission) (struct path *old_path,
-				      struct path *new_path);
-	int (*mount_permission) (const char *dev_name, struct path *path,
+	int (*chroot_permission) (const struct path *path);
+	int (*pivot_root_permission) (const struct path *old_path,
+				      const struct path *new_path);
+	int (*mount_permission) (const char *dev_name, const struct path *path,
 				 const char *type, unsigned long flags,
 				 void *data_page);
 #else
@@ -165,26 +165,27 @@ extern struct ccsecurity_operations ccsecurity_ops;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 
-static inline int ccs_chroot_permission(struct path *path)
+static inline int ccs_chroot_permission(const struct path *path)
 {
-	int (*func) (struct path *) = ccsecurity_ops.chroot_permission;
+	int (*func) (const struct path *) = ccsecurity_ops.chroot_permission;
 	return func ? func(path) : 0;
 }
 
-static inline int ccs_pivot_root_permission(struct path *old_path,
-					    struct path *new_path)
+static inline int ccs_pivot_root_permission(const struct path *old_path,
+					    const struct path *new_path)
 {
-	int (*func) (struct path *, struct path *)
+	int (*func) (const struct path *, const struct path *)
 		= ccsecurity_ops.pivot_root_permission;
 	return func ? func(old_path, new_path) : 0;
 }
 
-static inline int ccs_mount_permission(const char *dev_name, struct path *path,
+static inline int ccs_mount_permission(const char *dev_name,
+				       const struct path *path,
 				       const char *type, unsigned long flags,
 				       void *data_page)
 {
-	int (*func) (const char *, struct path *, const char *, unsigned long,
-		     void *) = ccsecurity_ops.mount_permission;
+	int (*func) (const char *, const struct path *, const char *,
+		     unsigned long, void *) = ccsecurity_ops.mount_permission;
 	return func ? func(dev_name, path, type, flags, data_page) : 0;
 }
 
@@ -422,18 +423,19 @@ static inline int ccs_search_binary_handler(struct linux_binprm *bprm,
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)
 
-static inline int ccs_chroot_permission(struct path *path)
+static inline int ccs_chroot_permission(const struct path *path)
 {
 	return 0;
 }
 
-static inline int ccs_pivot_root_permission(struct path *old_path,
-					    struct path *new_path)
+static inline int ccs_pivot_root_permission(const struct path *old_path,
+					    const struct path *new_path)
 {
 	return 0;
 }
 
-static inline int ccs_mount_permission(const char *dev_name, struct path *path,
+static inline int ccs_mount_permission(const char *dev_name,
+				       const struct path *path,
 				       const char *type, unsigned long flags,
 				       void *data_page)
 {

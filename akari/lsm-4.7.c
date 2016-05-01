@@ -422,7 +422,7 @@ static int ccs_file_open(struct file *f, const struct cred *cred)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
+static int ccs_path_chown(const struct path *path, kuid_t user, kgid_t group)
 {
 	return ccs_chown_permission(path->dentry, path->mnt, user, group);
 }
@@ -435,7 +435,7 @@ static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_chmod(struct path *path, umode_t mode)
+static int ccs_path_chmod(const struct path *path, umode_t mode)
 {
 	return ccs_chmod_permission(path->dentry, path->mnt, mode);
 }
@@ -447,7 +447,7 @@ static int ccs_path_chmod(struct path *path, umode_t mode)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_chroot(struct path *path)
+static int ccs_path_chroot(const struct path *path)
 {
 	return ccs_chroot_permission(path);
 }
@@ -459,7 +459,7 @@ static int ccs_path_chroot(struct path *path)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_truncate(struct path *path)
+static int ccs_path_truncate(const struct path *path)
 {
 	return ccs_truncate_permission(path->dentry, path->mnt);
 }
@@ -521,7 +521,7 @@ static int ccs_inode_getattr(const struct path *path)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
+static int ccs_path_mknod(const struct path *dir, struct dentry *dentry,
 			  umode_t mode, unsigned int dev)
 {
 	return ccs_mknod_permission(dentry, dir->mnt, mode, dev);
@@ -536,7 +536,7 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
+static int ccs_path_mkdir(const struct path *dir, struct dentry *dentry,
 			  umode_t mode)
 {
 	return ccs_mkdir_permission(dentry, dir->mnt, mode);
@@ -550,7 +550,7 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
+static int ccs_path_rmdir(const struct path *dir, struct dentry *dentry)
 {
 	return ccs_rmdir_permission(dentry, dir->mnt);
 }
@@ -563,7 +563,7 @@ static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
+static int ccs_path_unlink(const struct path *dir, struct dentry *dentry)
 {
 	return ccs_unlink_permission(dentry, dir->mnt);
 }
@@ -577,7 +577,7 @@ static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
+static int ccs_path_symlink(const struct path *dir, struct dentry *dentry,
 			    const char *old_name)
 {
 	return ccs_symlink_permission(dentry, dir->mnt, old_name);
@@ -593,8 +593,10 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
-			   struct path *new_dir, struct dentry *new_dentry)
+static int ccs_path_rename(const struct path *old_dir,
+			   struct dentry *old_dentry,
+			   const struct path *new_dir,
+			   struct dentry *new_dentry)
 {
 	return ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
 }
@@ -608,7 +610,7 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
+static int ccs_path_link(struct dentry *old_dentry, const struct path *new_dir,
 			 struct dentry *new_dentry)
 {
 	return ccs_link_permission(old_dentry, new_dentry, new_dir->mnt);
@@ -1072,7 +1074,8 @@ static void ccs_inode_free_security(struct inode *inode)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
+static int ccs_sb_pivotroot(const struct path *old_path,
+			    const struct path *new_path)
 {
 	return ccs_pivot_root_permission(old_path, new_path);
 }
@@ -1088,7 +1091,7 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
  *
  * Returns 0 on success, negative value otherwise.
  */
-static int ccs_sb_mount(const char *dev_name, struct path *path,
+static int ccs_sb_mount(const char *dev_name, const struct path *path,
 			const char *type, unsigned long flags, void *data_page)
 {
 	return ccs_mount_permission(dev_name, path, type, flags, data_page);

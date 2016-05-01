@@ -121,7 +121,7 @@ void ccs_audit_free_execve(const struct ccs_execve * const ee,
 			       "AKARI: Debug trace: " pos " of 4\n");	\
 			done = true;					\
 		}							\
-	} while (0)						 
+	} while (0)
 #endif
 
 /**

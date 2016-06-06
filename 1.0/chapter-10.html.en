@@ -183,12 +183,12 @@ Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">pat
 <tr>
 <td><p>path2.dev_major</p></td>
 <td><p>Major device number of the second object, assuming it is a device file.<br>
-Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+Can be combined with <a href="#10.5">path2.type=block</a> or <a href="#10.5">path2.type=char</a> conditions.</p></td>
 </tr>
 <tr>
 <td><p>path2.dev_minor</p></td>
 <td><p>Minor device number of the second object, assuming it is a device file.<br>
-Can be combined with <a href="#10.5">path1.type=block</a> or <a href="#10.5">path1.type=char</a> conditions.</p></td>
+Can be combined with <a href="#10.5">path2.type=block</a> or <a href="#10.5">path2.type=char</a> conditions.</p></td>
 </tr>
 <tr>
 <td><p>path2.parent.uid</p></td>

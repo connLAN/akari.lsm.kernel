@@ -422,6 +422,14 @@ static inline void __list_del_entry(struct list_head *entry)
 
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
+#define d_backing_inode(upper) (upper)->d_inode
+#endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0)
+#define d_is_dir(dentry) ({ struct inode *inode = d_backing_inode(dentry); \
+			inode && S_ISDIR(inode->i_mode); })
+#endif
+
 /*
  * TOMOYO specific part start.
  */

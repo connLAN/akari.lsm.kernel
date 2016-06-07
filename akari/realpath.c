@@ -222,7 +222,7 @@ static char *ccs_get_absolute_path(const struct path *path,
 		pos = ccsecurity_exports.d_absolute_path(path, buffer,
 							 buflen - 1);
 		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
-			struct inode *inode = path->dentry->d_inode;
+			struct inode *inode = d_backing_inode(path->dentry);
 			if (inode && S_ISDIR(inode->i_mode)) {
 				buffer[buflen - 2] = '/';
 				buffer[buflen - 1] = '\0';
@@ -274,7 +274,7 @@ static char *ccs_get_absolute_path(const struct path *path,
 			ccs_no_empty = true;
 		}
 		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
-			struct inode *inode = path->dentry->d_inode;
+			struct inode *inode = d_backing_inode(path->dentry);
 			if (inode && S_ISDIR(inode->i_mode)) {
 				buffer[buflen - 2] = '/';
 				buffer[buflen - 1] = '\0';
@@ -293,7 +293,7 @@ static char *ccs_get_absolute_path(const struct path *path,
 		goto out;
 
 	*pos = '\0';
-	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
+	if (d_is_dir(dentry))
 		*--pos = '/';
 	for (;;) {
 		struct dentry *parent;
@@ -343,9 +343,10 @@ out:
 static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 				 const int buflen)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 	char *pos = ERR_PTR(-ENOMEM);
 	if (buflen >= 256) {
+		/* rename_lock is locked/unlocked by dentry_path_raw(). */
 		pos = dentry_path_raw(dentry, buffer, buflen - 1);
 		if (!IS_ERR(pos) && *pos == '/' && pos[1] &&
 		    d_is_dir(dentry)) {
@@ -354,26 +355,12 @@ static char *ccs_get_dentry_path(struct dentry *dentry, char * const buffer,
 		}
 	}
 	return pos;
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
-	char *pos = ERR_PTR(-ENOMEM);
-	if (buflen >= 256) {
-		/* rename_lock is locked/unlocked by dentry_path_raw(). */
-		pos = dentry_path_raw(dentry, buffer, buflen - 1);
-		if (!IS_ERR(pos) && *pos == '/' && pos[1]) {
-			struct inode *inode = dentry->d_inode;
-			if (inode && S_ISDIR(inode->i_mode)) {
-				buffer[buflen - 2] = '/';
-				buffer[buflen - 1] = '\0';
-			}
-		}
-	}
-	return pos;
 #else
 	char *pos = buffer + buflen - 1;
 	if (buflen < 256)
 		return ERR_PTR(-ENOMEM);
 	*pos = '\0';
-	if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode))
+	if (d_is_dir(dentry))
 		*--pos = '/';
 	spin_lock(&dcache_lock);
 	while (!IS_ROOT(dentry)) {
@@ -436,7 +423,7 @@ static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 	if (!MAJOR(sb->s_dev))
 		goto prepend_filesystem_name;
 	{
-		struct inode *inode = sb->s_root->d_inode;
+		struct inode *inode = d_backing_inode(sb->s_root);
 		/*
 		 * Use filesystem name if filesystems does not support rename()
 		 * operation.
@@ -492,7 +479,7 @@ out:
 static char *ccs_get_socket_name(const struct path *path, char * const buffer,
 				 const int buflen)
 {
-	struct inode *inode = path->dentry->d_inode;
+	struct inode *inode = d_backing_inode(path->dentry);
 	struct socket *sock = inode ? SOCKET_I(inode) : NULL;
 	struct sock *sk = sock ? sock->sk : NULL;
 	if (sk) {
@@ -549,7 +536,7 @@ char *ccs_realpath(const struct path *path)
 			goto encode;
 		}
 #endif
-		inode = sb->s_root->d_inode;
+		inode = d_backing_inode(sb->s_root);
 		/*
 		 * Use local name for "filesystems without rename() operation"
 		 * or "path without vfsmount" or "absolute name is unavailable"

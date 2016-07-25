@@ -86,7 +86,11 @@ static void *__init probe_find_symbol(const char *keyline)
 		if (IS_ERR(mnt))
 			goto out;
 		root = dget(mnt->mnt_root);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0)
+		inode_lock(root->d_inode);
+		dentry = lookup_one_len("kallsyms", root, 8);
+		inode_unlock(root->d_inode);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 16)
 		mutex_lock(&root->d_inode->i_mutex);
 		dentry = lookup_one_len("kallsyms", root, 8);
 		mutex_unlock(&root->d_inode->i_mutex);

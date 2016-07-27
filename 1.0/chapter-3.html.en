@@ -206,10 +206,10 @@ Please contact the author.
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands. (Please use USRLIBDIR=<code>/usr/lib</code> or USRLIBDIR=<code>/usr/lib32</code> if needed):</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.5-20160727.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20160727.tar.gz'
-$ wget -O ccs-tools-1.8.5-20160727.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20160727.tar.gz.asc'
-$ gpg ccs-tools-1.8.5-20160727.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.5-20160727.tar.gz
+$ wget -O ccs-tools-1.8.5-20151111.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz'
+$ wget -O ccs-tools-1.8.5-20151111.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz.asc'
+$ gpg ccs-tools-1.8.5-20151111.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.5-20151111.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib64
 $ su

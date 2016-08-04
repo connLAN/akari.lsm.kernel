@@ -701,7 +701,11 @@ void ccs_fill_path_info(struct ccs_path_info *ptr)
 	ptr->const_len = ccs_const_part_length(name);
 	ptr->is_dir = len && (name[len - 1] == '/');
 	ptr->is_patterned = (ptr->const_len < len);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0)
+	ptr->hash = full_name_hash(NULL, name, len);
+#else
 	ptr->hash = full_name_hash(name, len);
+#endif
 }
 
 /**

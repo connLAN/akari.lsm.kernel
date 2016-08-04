@@ -161,7 +161,11 @@ const struct ccs_path_info *ccs_get_name(const char *name)
 	if (!name)
 		return NULL;
 	len = strlen(name) + 1;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0)
+	hash = full_name_hash(NULL, name, len - 1);
+#else
 	hash = full_name_hash((const unsigned char *) name, len - 1);
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0) || defined(RHEL_MAJOR)
 	head = &ccs_name_list[hash_long(hash, CCS_HASH_BITS)];
 #else

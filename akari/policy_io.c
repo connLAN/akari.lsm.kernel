@@ -6242,6 +6242,7 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 	int error;
 	if (!count || count >= CCS_EXEC_TMPSIZE - 10)
 		return -ENOMEM;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0)
 	data = kzalloc(count + 1, CCS_GFP_FLAGS);
 	if (!data)
 		return -ENOMEM;
@@ -6249,6 +6250,11 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 		error = -EFAULT;
 		goto out;
 	}
+#else
+	data = memdup_user_nul(buf, count);
+	if (IS_ERR(data))
+		return PTR_ERR(data);
+#endif
 	ccs_normalize_line(data);
 	if (ccs_correct_domain(data)) {
 		const int idx = ccs_read_lock();
@@ -6268,7 +6274,9 @@ static ssize_t ccs_write_self(struct file *file, const char __user *buf,
 		ccs_read_unlock(idx);
 	} else
 		error = -EINVAL;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0)
 out:
+#endif
 	kfree(data);
 	return error ? error : count;
 }

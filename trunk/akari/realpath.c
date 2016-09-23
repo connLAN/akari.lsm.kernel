@@ -431,8 +431,11 @@ static char *ccs_get_local_path(struct dentry *dentry, char * const buffer,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
 		if (inode->i_op && !inode->i_op->rename)
 			goto prepend_filesystem_name;
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(4, 9, 0)
 		if (!inode->i_op->rename && !inode->i_op->rename2)
+			goto prepend_filesystem_name;
+#else
+		if (!inode->i_op->rename)
 			goto prepend_filesystem_name;
 #endif
 	}
@@ -554,9 +557,15 @@ char *ccs_realpath(const struct path *path)
 		if (pos == ERR_PTR(-EINVAL))
 			pos = ccs_get_local_path(path->dentry, buf,
 						 buf_len - 1);
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(4, 9, 0)
 		if (!path->mnt ||
 		    (!inode->i_op->rename && !inode->i_op->rename2))
+			pos = ccs_get_local_path(path->dentry, buf,
+						 buf_len - 1);
+		else
+			pos = ccs_get_absolute_path(path, buf, buf_len - 1);
+#else
+		if (!path->mnt || !inode->i_op->rename)
 			pos = ccs_get_local_path(path->dentry, buf,
 						 buf_len - 1);
 		else

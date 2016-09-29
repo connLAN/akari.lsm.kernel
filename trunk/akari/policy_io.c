@@ -5899,7 +5899,7 @@ out:
 /**
  * ccs_parse_policy - Parse a policy line.
  *
- * @head: Poiter to "struct ccs_io_buffer".
+ * @head: Pointer to "struct ccs_io_buffer".
  * @line: Line to parse.
  *
  * Returns 0 on success, negative value otherwise.

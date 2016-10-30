@@ -1,151 +1,117 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html lang="en-US">
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="content-style-type" content="text/css">
-<TITLE>TOMOYO Linux : ccs-setprofile man page</TITLE>
+<title>ccs-setprofile</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
 </head>
 
-<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
-<!-- .\" -->
-<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
-<!-- .\" -->
-<!-- .\" You may distribute under the terms of the GNU General Public -->
-<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
-<!-- .\" ccs-tools source tarball. -->
-<!-- .\" -->
-<!-- .TH "CCS-SETPROFILE" "8" "April 2011" "ccs-setprofile 1.8.1" "System Administration Utilities" -->
-<CENTER>
-<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>CCS-SETPROFILE (8)</NOBR><HR></H1>
-</CENTER>
-<!-- .SH "NAME" -->
-<A name=>
+<body style="background-color: white">
 
-     <H3>NAME</H3>
 
-</A>
-<BLOCKQUOTE>
-ccs-setprofile - profile assignment utility for TOMOYO Linux
-<!-- .SH "SYNOPSIS" -->
-</BLOCKQUOTE>
-<A name=1>
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-     <H3>SYNOPSIS</H3>
+<ul>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B ccs-setprofile [options] <number> <domain> [<domain> ...] -->
-<B>ccs-setprofile [options] &lt;number&gt; &lt;domain&gt; [&lt;domain&gt; ...]</B> <!-- .SH "DESCRIPTION" -->
-</BLOCKQUOTE>
-<A name=>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#examples">EXAMPLES</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 
-     <H3>DESCRIPTION</H3>
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
-</A>
-<BLOCKQUOTE>
-This program assigns the specified profile number to the specified domain.
-<!-- .SH "OPTIONS" -->
-</BLOCKQUOTE>
-<A name=>
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>ccs-setprofile - profile assignment utility for TOMOYO Linux</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p><strong>ccs-setprofile</strong> [<em>option</em>] <em>number</em> <em>&lt;domain&gt;</em> [<em>&lt;domain&gt; ...</em>]</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>This program assigns the specified profile number to the specified domain.</p>
+<p>Before this program can be invoked, you must register it in <em class="file">/proc/ccs/manager</em>. After initializing policy, this is usually as simple as rebooting the system.</p>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<dl>
+<dt><strong><a name="r" class="item"><strong>-r</strong></a></strong></dt>
 
-     <H3>OPTIONS</H3>
+<dd>
+<p>Apply the specified profile number to all domains whose domain name starts with the specified string.</p>
+</dd>
+<dt><strong><a name="number" class="item"><em>number</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<B>-r</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Apply the specified profile number to all domains whose domain name starts with the specified string.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>&lt;number&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-The profile number must be an integer between 0 and 255.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>&lt;domain&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-The string must be quoted or escaped in order to avoid misinterpretation by the shell. It only matches an exact string unless the <I>-r</I> option is specified.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .SH "EXAMPLES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>The profile number must be an integer between 0 and 255.</p>
+</dd>
+<dt><strong><a name="domain" class="item"><em>&lt;domain&gt;</em></a></strong></dt>
 
-     <H3>EXAMPLES</H3>
+<dd>
+<p>The string must be quoted or escaped to avoid misinterpretation by the shell. It only matches an exact string unless the <a href="#r"><code>-r</code></a> option is specified.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="examples">EXAMPLES</a></h1>
+<dl>
+<dt><strong><a name="assign_profile_0_to_all_domains" class="item"><strong>Assign profile 0 to all domains</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B Assign profile 0 to all domains: -->
-<B>Assign profile 0 to all domains:</B> <!-- .nf -->
-<PRE>
-ccs-setprofile -r 0 &#146;&lt;kernel&gt;&#146;
-<!-- .fi -->
-</PRE>
-<!-- .PP -->
-<P>
-<!-- .B Assign profile 1 to sshd and httpd domains: -->
-<B>Assign profile 1 to sshd and httpd domains:</B> <!-- .nf -->
-<PRE>
-ccs-setprofile 1 &#146;&lt;kernel&gt; /usr/sbin/sshd&#146; &#146;&lt;kernel&gt; /usr/sbin/httpd&#146;
-<!-- .fi -->
-</PRE>
-<!-- .SH "NOTES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<pre>
+  ccs-setprofile -r 0 '&lt;kernel&gt;'</pre>
+</dd>
+<dt><strong><a name="assign_profile_1_to_sshd_and_httpd_domains" class="item"><strong>Assign profile 1 to sshd and httpd domains</strong></a></strong></dt>
 
-     <H3>NOTES</H3>
+<dd>
+<pre>
+  ccs-setprofile 1 '&lt;kernel&gt; /usr/sbin/sshd' '&lt;kernel&gt; /usr/sbin/httpd'</pre>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>If you find any bugs, send an email to &lt;<a href="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</a>&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<dl>
+<dt><strong><a name="tetsuo_handa_penguin_kernel_i_love_sakura_ne_jp" class="item">Tetsuo Handa &lt;<a href="mailto:penguin-kernel@I-love.SAKURA.ne.jp">penguin-kernel@I-love.SAKURA.ne.jp</a>&gt;</a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-Before this program can be invoked, it must be registered in <I>/proc/ccs/manager</I>. After initializing policy, this is usually as simple as rebooting the system.
-<!-- .SH "BUGS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Main author.</p>
+</dd>
+<dt><strong><a name="jamie_nguyen_jamie_tomoyolinux_co_uk" class="item">Jamie Nguyen &lt;<a href="mailto:jamie@tomoyolinux.co.uk">jamie@tomoyolinux.co.uk</a>&gt;</a></strong></dt>
 
-     <H3>BUGS</H3>
+<dd>
+<p>Documentation and website.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><strong>ccs-pstree</strong>(8)</p>
+<p>See &lt;<a href="http://tomoyo.osdn.jp">http://tomoyo.osdn.jp</a>&gt; for more information.</p>
 
-</A>
-<BLOCKQUOTE>
-If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</A>
-<!-- .SH "AUTHORS" -->
-</BLOCKQUOTE>
-<A name=>
+</body>
 
-     <H3>AUTHORS</H3>
-
-</A>
-<BLOCKQUOTE>
-<!-- .sp -->
-Main authors:
-<BLOCKQUOTE>
-Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<BLOCKQUOTE>
-Other contributers:
-<BLOCKQUOTE>
-<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
-<P>Man pages, documentation and website.</P>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<A name=>
-
-     <H3>SEE ALSO</H3>
-
-</A>
-<BLOCKQUOTE>
-<B>ccs-pstree</B>(8)
-<!-- .sp -->
-<P>
-See <A HREF="http://tomoyo.osdn.jp/">http://tomoyo.osdn.jp/</A> for more information.
-</BLOCKQUOTE>
-<P><HR>
-<TABLE width=100%><TR> <TD width=33%><I>ccs-setprofile 1.8.1</I></TD> <TD width=33% align=center>CCS-SETPROFILE (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from ccs-setprofile using man macros.</FONT>
-</BODY></HTML>
+</html>

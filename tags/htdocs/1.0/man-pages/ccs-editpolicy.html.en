@@ -1,223 +1,172 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html lang="en-US">
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="content-style-type" content="text/css">
-<TITLE>TOMOYO Linux : ccs-editpolicy man page</TITLE>
+<title>ccs-editpolicy</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
 </head>
 
-<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
-<!-- .\" -->
-<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
-<!-- .\" -->
-<!-- .\" You may distribute under the terms of the GNU General Public -->
-<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
-<!-- .\" ccs-tools source tarball. -->
-<!-- .\" -->
-<!-- .TH "CCS-EDITPOLICY" "8" "April 2011" "ccs-editpolicy 1.8.1" "System Administration Utilities" -->
-<CENTER>
-<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>CCS-EDITPOLICY (8)</NOBR><HR></H1>
-</CENTER>
-<!-- .SH "NAME" -->
-<A name=>
+<body style="background-color: white">
 
-     <H3>NAME</H3>
 
-</A>
-<BLOCKQUOTE>
-ccs-editpolicy - policy editor utility for TOMOYO Linux
-<!-- .SH "SYNOPSIS" -->
-</BLOCKQUOTE>
-<A name=1>
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-     <H3>SYNOPSIS</H3>
+<ul>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B ccs-editpolicy [options] -->
-<B>ccs-editpolicy [options]</B> <!-- .sp -->
-<P>
-<!-- .B ccs-editpolicy [options] <directory> -->
-<B>ccs-editpolicy [options] &lt;directory&gt;</B> <!-- .sp -->
-<P>
-<!-- .B ccs-editpolicy [options] <remote_ip:remote_port> -->
-<B>ccs-editpolicy [options] &lt;remote_ip:remote_port&gt;</B> <!-- .SH "DESCRIPTION" -->
-</BLOCKQUOTE>
-<A name=>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#examples">EXAMPLES</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 
-     <H3>DESCRIPTION</H3>
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
-</A>
-<BLOCKQUOTE>
-This program is the primary tool through which TOMOYO Linux policy can be managed. It uses an ncurses interface, and can be used to either edit policy saved to disk or policy currently loaded into kernel memory.
-<!-- .PP -->
-<P>
-If no directory or remote address is specified, the policy loaded in kernel memory will be edited.
-<!-- .SH "OPTIONS" -->
-</BLOCKQUOTE>
-<A name=>
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>ccs-editpolicy - policy editor for TOMOYO Linux</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p><strong>ccs-editpolicy</strong> [<em>options</em>]</p>
+<p><strong>ccs-editpolicy</strong> [<em>options</em>] [<em>directory</em>]</p>
+<p><strong>ccs-editpolicy</strong> [<em>options</em>] [<em>remote_ip:remote_port</em>]</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>This program is the primary tool for policy management. It provides an ncurses interface for editing either policy saved to disk, or policy currently loaded into kernel memory.</p>
+<p>If no directory or remote address is specified, the policy loaded in kernel memory will be edited.</p>
+<p>Before this program can be invoked, you must register it in <em class="file">/proc/ccs/manager</em>. After initializing policy, this is usually as simple as rebooting the system.</p>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<dl>
+<dt><strong><a name="e" class="item"><strong>e</strong></a></strong></dt>
 
-     <H3>OPTIONS</H3>
+<dd>
+<p>Set initial screen to be the Exception Policy Editor.</p>
+</dd>
+<dt><strong><a name="d" class="item"><strong>d</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<B>e</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set initial screen to be the Exception Policy Editor.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>d</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set initial screen to be the Domain Transition Editor [default].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>p</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set initial screen to be the Profile Editor.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>m</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set initial screen to be the Manager Editor.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>s</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set initial screen to be the Statistics screen.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>readonly</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Start the policy editor in browse-mode. No editing is allowed.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>refresh=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Refresh the screen automatically at the interval specified in seconds.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>&lt;directory&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Instead of editing policy loaded in the kernel, edit policy stored in the <I>&lt;directory&gt;/policy/current/</I> directory.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>&lt;remote_ip:remote_port&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Instead of editing policy loaded in the kernel, edit policy via an agent waiting at port <I>&lt;remote_port&gt;</I> on IP address <I>&lt;remote_ip&gt;</I>.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .SH "EXAMPLES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set initial screen to be the Domain Transition Editor [default].</p>
+</dd>
+<dt><strong><a name="p" class="item"><strong>p</strong></a></strong></dt>
 
-     <H3>EXAMPLES</H3>
+<dd>
+<p>Set initial screen to be the Profile Editor.</p>
+</dd>
+<dt><strong><a name="m" class="item"><strong>m</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B Start the policy editor: -->
-<B>Start the policy editor:</B> <!-- .nf -->
-<PRE>
-ccs-editpolicy
-<!-- .fi -->
-</PRE>
-<!-- .PP -->
-<P>
-<!-- .B Edit policy stored in the \&"/etc/ccs/192.168.1.1/policy/current/\&" directory: -->
-<B>Edit policy stored in the  /etc/ccs/192.168.1.1/policy/current/ directory:</B> <!-- .nf -->
-<PRE>
-ccs-editpolicy /etc/ccs/192.168.1.1/
-<!-- .fi -->
-</PRE>
-<!-- .PP -->
-<P>
-<!-- .B Edit policy via an agent connecting to 192.168.1.1 at port 10000: -->
-<B>Edit policy via an agent connecting to 192.168.1.1 at port 10000:</B> <!-- .nf -->
-<PRE>
-ccs-editpolicy 192.168.1.1:10000
-<!-- .fi -->
-</PRE>
-<!-- .PP -->
-<P>
-Usage with images are available at <A HREF="http://tomoyo.osdn.jp/1.8/tool-editpolicy.html">http://tomoyo.osdn.jp/1.8/tool-editpolicy.html</A>
-<!-- .SH "NOTES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set initial screen to be the Manager Editor.</p>
+</dd>
+<dt><strong><a name="s" class="item"><strong>s</strong></a></strong></dt>
 
-     <H3>NOTES</H3>
+<dd>
+<p>Set initial screen to be the Statistics.</p>
+</dd>
+<dt><strong><a name="n" class="item"><strong>n</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-Before this program can be invoked, it must be registered in <I>/proc/ccs/manager</I>. After initializing policy, this is usually as simple as rebooting the system.
-<!-- .SH "BUGS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set initial screen to be the Namespace Selector.</p>
+</dd>
+<dt><strong><a name="readonly" class="item"><strong>readonly</strong></a></strong></dt>
 
-     <H3>BUGS</H3>
+<dd>
+<p>Start the policy editor in browse-only mode. No editing is allowed.</p>
+</dd>
+<dt><strong><a name="refresh_integer" class="item"><strong>refresh</strong>=<em>integer</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</A>
-<!-- .SH "AUTHORS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Refresh the screen automatically at the interval specified in seconds.</p>
+</dd>
+<dt><strong><a name="directory" class="item"><em>directory</em></a></strong></dt>
 
-     <H3>AUTHORS</H3>
+<dd>
+<p>Edit policy stored in the <em class="file">directory</em>/policy/current/ directory, instead of the policy loaded in kernel memory. This must be the full path to the directory.</p>
+</dd>
+<dt><strong><a name="remote_ip_remote_port" class="item"><em>remote_ip:remote_port</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .sp -->
-Main authors:
-<BLOCKQUOTE>
-Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<BLOCKQUOTE>
-Other contributers:
-<BLOCKQUOTE>
-<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
-<P>Man pages, documentation and website.</P>
-<P>Yoshihiro Kusuno &lt;yocto AT users.osdn.me&gt;</P>
-<P>Line coloring feature.</P>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Edit policy on a remote system via an agent waiting at port <em>remote_port</em> on IP address <em>remote_ip</em>.</p>
+</dd>
+<dt><strong><a name="namespace" class="item"><em>&lt;namespace&gt;</em></a></strong></dt>
 
-     <H3>SEE ALSO</H3>
+<dd>
+<p>Set initial namespace to be the <em>&lt;namespace&gt;</em> namespace [default=<code>&lt;kernel&gt;</code>].</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="examples">EXAMPLES</a></h1>
+<dl>
+<dt><strong><a name="start_the_policy_editor" class="item"><strong>Start the policy editor</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>ccs-loadpolicy</B>(8), <B>ccs-editpolicy-agent</B>(8)
-<!-- .sp -->
-<P>
-See <A HREF="http://tomoyo.osdn.jp/">http://tomoyo.osdn.jp/</A> for more information.
-</BLOCKQUOTE>
-<P><HR>
-<TABLE width=100%><TR> <TD width=33%><I>ccs-editpolicy 1.8.1</I></TD> <TD width=33% align=center>CCS-EDITPOLICY (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from ccs-editpolicy using man macros.</FONT>
-</BODY></HTML>
+<dd>
+<pre>
+  ccs-editpolicy</pre>
+</dd>
+<dt><strong><a name="edit_policy_stored_in_the_etc_ccs_192_168_1_1_policy_current_directory" class="item"><strong>Edit policy stored in the <code>/etc/ccs/192.168.1.1/policy/current</code> directory</strong></a></strong></dt>
+
+<dd>
+<pre>
+  ccs-editpolicy /etc/ccs/192.168.1.1/</pre>
+</dd>
+<dt><strong><a name="edit_policy_via_an_agent_connecting_to_192_168_1_1_at_port_10000" class="item"><strong>Edit policy via an agent connecting to 192.168.1.1 at port 10000</strong></a></strong></dt>
+
+<dd>
+<pre>
+  ccs-editpolicy 192.168.1.1:10000</pre>
+</dd>
+</dl>
+<p>A usage guide with screenshots is available at &lt;<a href="http://tomoyo.osdn.jp/1.8/tool-editpolicy.html">http://tomoyo.osdn.jp/1.8/tool-editpolicy.html</a>&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>If you find any bugs, send an email to &lt;<a href="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</a>&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<dl>
+<dt><strong><a name="tetsuo_handa_penguin_kernel_i_love_sakura_ne_jp" class="item">Tetsuo Handa &lt;<a href="mailto:penguin-kernel@I-love.SAKURA.ne.jp">penguin-kernel@I-love.SAKURA.ne.jp</a>&gt;</a></strong></dt>
+
+<dd>
+<p>Main author.</p>
+</dd>
+<dt><strong><a name="jamie_nguyen_jamie_tomoyolinux_co_uk" class="item">Jamie Nguyen &lt;<a href="mailto:jamie@tomoyolinux.co.uk">jamie@tomoyolinux.co.uk</a>&gt;</a></strong></dt>
+
+<dd>
+<p>Documentation and website.</p>
+</dd>
+<dt><strong><a name="yoshihiro_kusuno_yocto_users_sourceforge_jp" class="item">Yoshihiro Kusuno &lt;<a href="mailto:yocto@users.osdn.me">yocto@users.osdn.me</a>&gt;</a></strong></dt>
+
+<dd>
+<p>Line coloring feature.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><strong>ccs-loadpolicy</strong>(8), <strong>ccs-editpolicy-agent</strong>(8)</p>
+<p>See &lt;<a href="http://tomoyo.osdn.jp">http://tomoyo.osdn.jp</a>&gt; for more information.</p>
+
+</body>
+
+</html>

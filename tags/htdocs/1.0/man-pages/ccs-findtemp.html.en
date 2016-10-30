@@ -1,126 +1,100 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html lang="en-US">
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="content-style-type" content="text/css">
-<TITLE>TOMOYO Linux : ccs-findtemp man page</TITLE>
+<title>ccs-findtemp</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
 </head>
 
-<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
-<!-- .\" -->
-<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
-<!-- .\" -->
-<!-- .\" You may distribute under the terms of the GNU General Public -->
-<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
-<!-- .\" ccs-tools source tarball. -->
-<!-- .\" -->
-<!-- .TH "CCS-FINDTEMP" "8" "April 2011" "ccs-findtemp 1.8.1" "System Administration Utilities" -->
-<CENTER>
-<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>CCS-FINDTEMP (8)</NOBR><HR></H1>
-</CENTER>
-<!-- .SH "NAME" -->
-<A name=>
+<body style="background-color: white">
 
-     <H3>NAME</H3>
 
-</A>
-<BLOCKQUOTE>
-ccs-findtemp - detect temporary pathnames in TOMOYO Linux policy
-<!-- .SH "SYNOPSIS" -->
-</BLOCKQUOTE>
-<A name=1>
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-     <H3>SYNOPSIS</H3>
+<ul>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B ccs-findtemp -->
-<B>ccs-findtemp</B> <!-- .SH "DESCRIPTION" -->
-</BLOCKQUOTE>
-<A name=>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#examples">EXAMPLES</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 
-     <H3>DESCRIPTION</H3>
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
-</A>
-<BLOCKQUOTE>
-This program reads a list of pathnames from standard input and checks the existence of these pathnames. Non-existent pathnames are likely to be temporary files and so are printed to standard output. This program can be used alongside wildcard expression rules to shorten and simplify policy.
-<!-- .SH "OPTIONS" -->
-</BLOCKQUOTE>
-<A name=>
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>ccs-findtemp - detect temporary pathnames in TOMOYO Linux policy</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p><strong>ccs-findtemp</strong> [<em>option</em>]</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>This program reads a list of pathnames from standard input and checks the existence of these pathnames. Non-existent pathnames are likely to be temporary files and so are printed to standard output. This program can be used alongside wildcard expression rules to shorten and simplify policy.</p>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<dl>
+<dt><strong><a name="with_domainname" class="item"><strong>--with-domainname</strong></a></strong></dt>
 
-     <H3>OPTIONS</H3>
+<dd>
+<p>Also print the domain name before the pathname.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="examples">EXAMPLES</a></h1>
+<dl>
+<dt><strong><a name="search_for_nonexistent_pathnames_in_domain_policy" class="item"><strong>Search for nonexistent pathnames in domain policy</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<B>--with-domainname</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Also print the domain name before the pathname.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .SH "EXAMPLES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<pre>
+  ccs-findtemp &lt; /proc/ccs/domain_policy</pre>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>If you find any bugs, send an email to &lt;<a href="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</a>&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<dl>
+<dt><strong><a name="tetsuo_handa_penguin_kernel_i_love_sakura_ne_jp" class="item">Tetsuo Handa &lt;<a href="mailto:penguin-kernel@I-love.SAKURA.ne.jp">penguin-kernel@I-love.SAKURA.ne.jp</a>&gt;</a></strong></dt>
 
-     <H3>EXAMPLES</H3>
+<dd>
+<p>Main author.</p>
+</dd>
+<dt><strong><a name="jamie_nguyen_jamie_tomoyolinux_co_uk" class="item">Jamie Nguyen &lt;<a href="mailto:jamie@tomoyolinux.co.uk">jamie@tomoyolinux.co.uk</a>&gt;</a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B Search for nonexistent pathnames in domain policy: -->
-<B>Search for nonexistent pathnames in domain policy:</B> <!-- .nf -->
-<PRE>
-ccs-findtemp &lt; /proc/ccs/domain_policy
-<!-- .PP -->
-<P>
-<!-- .B Search for nonexistent pathnames in domain policy, with the domain name being printed before the pathname: -->
-<B>Search for nonexistent pathnames in domain policy, with the domain name being printed before the pathname:</B> 
-<!-- .nf -->
-ccs-findtemp --with-domainname &lt; /proc/ccs/domain_policy
-<!-- .fi -->
-</PRE>
-<!-- .SH "BUGS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Documentation and website.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><strong>ccs-patternize</strong>(8)</p>
+<p>See &lt;<a href="http://tomoyo.osdn.jp">http://tomoyo.osdn.jp</a>&gt; for more information.</p>
 
-     <H3>BUGS</H3>
+</body>
 
-</A>
-<BLOCKQUOTE>
-If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</A>
-<!-- .SH "AUTHORS" -->
-</BLOCKQUOTE>
-<A name=>
-
-     <H3>AUTHORS</H3>
-
-</A>
-<BLOCKQUOTE>
-<!-- .sp -->
-Main authors:
-<BLOCKQUOTE>
-Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<BLOCKQUOTE>
-Other contributers:
-<BLOCKQUOTE>
-<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
-<P>Man pages, documentation and website.</P>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<A name=>
-
-     <H3>SEE ALSO</H3>
-
-</A>
-<BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>ccs-editpolicy-agent</B>(8)
-<!-- .sp -->
-<P>
-See <A HREF="http://tomoyo.osdn.jp/">http://tomoyo.osdn.jp/</A> for more information.
-</BLOCKQUOTE>
-<P><HR>
-<TABLE width=100%><TR> <TD width=33%><I>ccs-findtemp 1.8.1</I></TD> <TD width=33% align=center>CCS-FINDTEMP (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from ccs-findtemp using man macros.</FONT>
-</BODY></HTML>
+</html>

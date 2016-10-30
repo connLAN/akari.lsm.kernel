@@ -1,201 +1,151 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html lang="en-US">
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta http-equiv="content-style-type" content="text/css">
-<TITLE>TOMOYO Linux : init_policy man page</TITLE>
+<title>init_policy</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:root@localhost" />
 </head>
 
-<BODY bgcolor=#F0F0F0 text=#000000 link=#0000ff vlink=#C000C0 alink=#ff0000><A NAME=top></A>
-<!-- .\" -->
-<!-- .\" Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 NTT DATA Corporation. -->
-<!-- .\" -->
-<!-- .\" You may distribute under the terms of the GNU General Public -->
-<!-- .\" License as specified in the file COPYING.ccs that comes with the -->
-<!-- .\" ccs-tools source tarball. -->
-<!-- .\" -->
-<!-- .TH "INIT_POLICY" "8" "April 2011" "init_policy 1.8.1" "System Administration Utilities" -->
-<CENTER>
-<H1><HR><I>Manual Reference Pages &nbsp;-&nbsp;</I><NOBR>INIT_POLICY (8)</NOBR><HR></H1>
-</CENTER>
-<!-- .SH "NAME" -->
-<A name=>
+<body style="background-color: white">
 
-     <H3>NAME</H3>
 
-</A>
-<BLOCKQUOTE>
-init_policy - initialize TOMOYO Linux policy
-<!-- .SH "SYNOPSIS" -->
-</BLOCKQUOTE>
-<A name=1>
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-     <H3>SYNOPSIS</H3>
+<ul>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B init_policy [options] -->
-<B>init_policy [options]</B> <!-- .SH "DESCRIPTION" -->
-</BLOCKQUOTE>
-<A name=>
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<li><a href="#options">OPTIONS</a></li>
+	<li><a href="#examples">EXAMPLES</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#authors">AUTHORS</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
 
-     <H3>DESCRIPTION</H3>
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
-</A>
-<BLOCKQUOTE>
-Thie program generates templates for all policy files. However, the output should be reviewed because automatically generated exception policy may contain dangerous or redundant entries.
-<!-- .SH "OPTIONS" -->
-</BLOCKQUOTE>
-<A name=>
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>init_policy - initialize TOMOYO Linux policy</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<p><strong>init_policy</strong> [<em>option</em>]</p>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>This program generates templates for all policy files. However, the output should be reviewed because automatically generated exception policy may contain dangerous or redundant entries.</p>
+<p>This program only needs to be run once.</p>
+<p>
+</p>
+<hr />
+<h1><a name="options">OPTIONS</a></h1>
+<dl>
+<dt><strong><a name="file_only_profile" class="item"><strong>--file-only-profile</strong></a></strong></dt>
 
-     <H3>OPTIONS</H3>
+<dd>
+<p>Create profiles with only file-related functionality enabled.</p>
+</dd>
+<dt><strong><a name="full_profile" class="item"><strong>--full-profile</strong></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<B>--file-only-profile</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Create profiles with only file-related functionality enabled.
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--full-profile</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Create profiles with all functionality enabled [default].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--use_profile=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set the default profile number for the "&lt;kernel&gt;" domain to the specified integer, which must be between 0 and 255 [default=0].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--use_group=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set the default group number for the "&lt;kernel&gt;" domain to the specified integer, which must be between 0 and 255 [default=0].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--max_audit_log=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set the default maximal audit log entries that the kernel will spool in the <I>/proc/ccs/audit</I> interface. This value must be an integer, and can be set to 0 if audit logs are not required. Maximum memory used can also be controlled via the <I>/proc/ccs/stat</I> interface.
-<!-- .sp -->
-<P>
-[default=1024]
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--max_learning_entry=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set the maximum number of ACL entries automatically added to each domain by the kernel when using learning mode. This value must be an integer, and can be set to "0" if you do not wawnt to make use of the learning mode. Maximum memory used can also be controlled using the <I>/proc/ccs/stat</I> interface.
-<!-- .sp -->
-<P>
-[default=2048]
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--enforcing_penalty=&lt;integer&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set the default penalty for enforcing mode to the specified integer. This will force a process to sleep the specified number of deciseconds (1 deciseconds = 0.1 second). This is useful to prevent CPU consumption issues by processes that rapidly repeat many access requests [default=0].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--grant_log=&lt;value&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set whether grant logs should be audited. This value can be either "yes" or "no" [default=no].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>--reject_log=&lt;value&gt;</B>
-<!-- .RS 4 -->
-<BLOCKQUOTE>
-Set whether reject logs should be audited. This value can be either "yes" or "no" [default=yes].
-<!-- .RE -->
-</BLOCKQUOTE>
-<!-- .SH "EXAMPLES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Create profiles with all functionality enabled. [default]</p>
+</dd>
+<dt><strong><a name="use_profile_integer" class="item"><strong>--use_profile=</strong><em>integer</em></a></strong></dt>
 
-     <H3>EXAMPLES</H3>
+<dd>
+<p>Set the default profile number for the &quot;&lt;kernel&gt;&quot; domain to the specified integer, which must be between 0 and 255. [default=0]</p>
+</dd>
+<dt><strong><a name="use_group_integer" class="item"><strong>--use_group=</strong><em>integer</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .B Initialize policy: -->
-<B>Initialize policy:</B> <!-- .nf -->
-<PRE>
-/usr/lib/ccs/init_policy
-<!-- .fi -->
-</PRE>
-<!-- .SH "NOTES" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set the default group number for the &quot;&lt;kernel&gt;&quot; domain to the specified integer, which must be between 0 and 255. [default=0]</p>
+</dd>
+<dt><strong><a name="max_audit_log_integer" class="item"><strong>--max_audit_log=</strong><em>integer</em></a></strong></dt>
 
-     <H3>NOTES</H3>
+<dd>
+<p>Set the default maximal audit log entries that the kernel will spool in the <em class="file">/proc/ccs/audit</em> interface. This value must be an integer, and can be set to 0 if audit logs are not required. Maximum memory used can also be controlled via the <em class="file">/proc/ccs/stat</em> interface. [default=1024]</p>
+</dd>
+<dt><strong><a name="max_learning_entry_integer" class="item"><strong>--max_learning_entry=</strong><em>integer</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-This program does not have to be run again after you have successfully initialized policy.
-<!-- .SH "BUGS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set the default maximum number of ACL entries automatically added to each domain by the kernel when using learning mode. This value must be an integer, and can be set to o if you do not need learning mode. Maximum memory used can also be controlled using the <em class="file">/proc/ccs/stat</em> interface.</p>
+</dd>
+<dt><strong><a name="enforcing_penalty_integer" class="item"><strong>--enforcing_penalty=</strong><em>integer</em></a></strong></dt>
 
-     <H3>BUGS</H3>
+<dd>
+<p>Set the default penalty for enforcing mode to the specified integer. This will force a process to sleep the specified number of deciseconds (1 decisecond = 0.1 second). This is useful to prevent CPU consumption issues by processes that rapidly repeat many access requests. [default=0]</p>
+</dd>
+<dt><strong><a name="grant_log_value" class="item"><strong>--grant_log=</strong><em>value</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-If there are any bugs, send an email with as much detail as possible to <A HREF="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</A>
-<!-- .SH "AUTHORS" -->
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set whether grant logs should be audited. This value can either be <code>yes</code> or <code>no</code>. [default=no]</p>
+</dd>
+<dt><strong><a name="reject_log_value" class="item"><strong>--reject_log=</strong><em>value</em></a></strong></dt>
 
-     <H3>AUTHORS</H3>
+<dd>
+<p>Set whether reject logs should be audited. This value can either be <code>yes</code> or <code>no</code>. [default=yes]</p>
+</dd>
+<dt><strong><a name="module_name_value" class="item"><strong>--module_name=</strong><em>value</em></a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .sp -->
-Main authors:
-<BLOCKQUOTE>
-Tetsuo Handa &lt;penguin-kernel AT I-love.SAKURA.ne.jp&gt;
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<BLOCKQUOTE>
-Other contributers:
-<BLOCKQUOTE>
-<P>Jamie Nguyen &lt;jamie AT tomoyolinux.co.uk&gt;</P>
-<P>Man pages, documentation and website.</P>
-<P>Naohiro Aoto &lt;naoto AT namazu.org&gt;</P>
-<P>Bug fix for 64bit Gentoo.</P>
-</BLOCKQUOTE>
-</BLOCKQUOTE>
-<A name=>
+<dd>
+<p>Set the module name. This option is required when initializing policy for use with the AKARI module, in which case this value should be set to <code>akari</code>. [default=ccsecurity]</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="examples">EXAMPLES</a></h1>
+<dl>
+<dt><strong><a name="initialize_policy" class="item"><strong>Initialize policy</strong></a></strong></dt>
 
-     <H3>SEE ALSO</H3>
+<dd>
+<pre>
+  /usr/lib/ccs/init_policy</pre>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>If you find any bugs, send an email to &lt;<a href="mailto:tomoyo-users-en@lists.osdn.me">tomoyo-users-en@lists.osdn.me</a>&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="authors">AUTHORS</a></h1>
+<dl>
+<dt><strong><a name="tetsuo_handa_penguin_kernel_i_love_sakura_ne_jp" class="item">Tetsuo Handa &lt;<a href="mailto:penguin-kernel@I-love.SAKURA.ne.jp">penguin-kernel@I-love.SAKURA.ne.jp</a>&gt;</a></strong></dt>
 
-</A>
-<BLOCKQUOTE>
-<!-- .PP -->
-<P>
-<B>ccs-init</B>(8)
-<!-- .sp -->
-<P>
-See <A HREF="http://tomoyo.osdn.jp/">http://tomoyo.osdn.jp/</A> for more information.
-</BLOCKQUOTE>
-<P><HR>
-<TABLE width=100%><TR> <TD width=33%><I>init_policy 1.8.1</I></TD> <TD width=33% align=center>INIT_POLICY (8)</TD> <TD align=right width=33%><I>April 2011</I></TD> </TR></TABLE><FONT SIZE=-1>Generated by <A HREF="http://www.squarebox.co.uk/users/rolf/download/manServer.shtml">manServer 1.07+ma1</A> from init_policy using man macros.</FONT>
-</BODY></HTML>
+<dd>
+<p>Main author.</p>
+</dd>
+<dt><strong><a name="jamie_nguyen_jamie_tomoyolinux_co_uk" class="item">Jamie Nguyen &lt;<a href="mailto:jamie@tomoyolinux.co.uk">jamie@tomoyolinux.co.uk</a>&gt;</a></strong></dt>
+
+<dd>
+<p>Documentation and website.</p>
+</dd>
+<dt><strong><a name="naohiro_aoto_naoto_namazu_org" class="item">Naohiro Aoto &lt;<a href="mailto:naoto@namazu.org">naoto@namazu.org</a>&gt;</a></strong></dt>
+
+<dd>
+<p>Bug fix for 64bit Gentoo.</p>
+</dd>
+</dl>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p><strong>ccs-init</strong>(8)</p>
+<p>See &lt;<a href="http://tomoyo.osdn.jp">http://tomoyo.osdn.jp</a>&gt; for more information.</p>
+
+</body>
+
+</html>

@@ -73,10 +73,10 @@
 
 <table border="1">
 <tr><td>
-# wget -O akari-1.0.30-20140915.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz'<br>
-# wget -O akari-1.0.30-20140915.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.30-20140915.tar.gz.asc'<br>
-# gpg akari-1.0.30-20140915.tar.gz.asc<br>
-# tar -zxf akari-1.0.30-20140915.tar.gz<br>
+# wget -O akari-1.0.35-20161030.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161030.tar.gz'<br>
+# wget -O akari-1.0.35-20161030.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161030.tar.gz.asc'<br>
+# gpg akari-1.0.35-20161030.tar.gz.asc<br>
+# tar -zxf akari-1.0.35-20161030.tar.gz<br>
 # make SUBDIRS=$PWD/akari modules<br>
 # make SUBDIRS=$PWD/akari modules_install<br>
 # depmod ${VERSION}
@@ -103,10 +103,10 @@ You must choose CONFIG_MODULES=y for building this module.
 
 <table border="1">
 <tr><td>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz'<br>
-[user@tomoyo ~]$ wget -O ccs-tools-1.8.1-20110401.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.1-20110401.tar.gz.asc'<br>
-[user@tomoyo ~]$ gpg ccs-tools-1.8.1-20110401.tar.gz.asc<br>
-[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.1-20110401.tar.gz<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.5-20151111.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz'<br>
+[user@tomoyo ~]$ wget -O ccs-tools-1.8.5-20151111.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz.asc'<br>
+[user@tomoyo ~]$ gpg ccs-tools-1.8.5-20151111.tar.gz.asc<br>
+[user@tomoyo ~]$ tar -zxf ccs-tools-1.8.5-20151111.tar.gz<br>
 [user@tomoyo ~]$ cd ccstools/<br>
 [user@tomoyo ~]$ make -s<br>
 [user@tomoyo ~]$ su<br>
@@ -197,10 +197,10 @@ title CentOS (2.6.18-238.5.1.el5)<br>
 <pre>
 &amp;security_ops=c07cf204
 vfsmount_lock=c0702980
-AKARI: 1.0.14   2011/05/11
+AKARI: 1.0.35   2015/11/11
 Access Keeping And Regulating Instrument registered.
 Calling /sbin/ccs-init to load policy. Please wait.
-CCSecurity: 1.8.1+   2011/05/11
+CCSecurity: 1.8.5   2015/11/11
 Mandatory Access Control activated.
 </pre>
 

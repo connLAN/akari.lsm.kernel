@@ -96,12 +96,12 @@
 <p>以下のコマンドを実行して AKARI カーネルモジュールのソースコードを展開してください：</p>
 
 <pre class="command">
-# wget -O akari-1.0.35-20160808.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20160808.tar.gz'
-# wget -O akari-1.0.35-20160808.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20160808.tar.gz.asc'
+# wget -O akari-1.0.35-20161030.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161030.tar.gz'
+# wget -O akari-1.0.35-20161030.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161030.tar.gz.asc'
 # wget https://tomoyo.osdn.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.35-20160808.tar.gz.asc
-# tar -zxf akari-1.0.35-20160808.tar.gz
+# gpg akari-1.0.35-20161030.tar.gz.asc
+# tar -zxf akari-1.0.35-20161030.tar.gz
 </pre>
 
 <p>systemd を利用している環境では、 <code>/sbin/init</code> ではなく <code>/usr/lib/systemd/systemd</code> が実行されます。 systemd を利用しているシステムの場合、以下のように akari/config.h の CONFIG_CCSECURITY_ACTIVATION_TRIGGER 行を編集してください：</p>

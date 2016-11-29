@@ -1429,7 +1429,11 @@ bool ccs_dump_page(struct linux_binprm *bprm, unsigned long pos,
 	}
 	/* Same with get_arg_page(bprm, pos, 0) in fs/exec.c */
 #ifdef CCS_BPRM_MMU
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+	if (get_user_pages_remote(current, bprm->mm, pos, 1, FOLL_FORCE, &page,
+				  NULL, NULL) <= 0)
+		return false;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 0)
 	if (get_user_pages_remote(current, bprm->mm, pos, 1, FOLL_FORCE, &page,
 				  NULL) <= 0)
 		return false;

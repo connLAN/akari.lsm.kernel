@@ -60,7 +60,11 @@
 #include <linux/magic.h>
 #endif
 #include <stdarg.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
+#include <linux/uaccess.h>
+#else
 #include <asm/uaccess.h>
+#endif
 #include <net/sock.h>
 #include <net/af_unix.h>
 #include <net/ip.h>

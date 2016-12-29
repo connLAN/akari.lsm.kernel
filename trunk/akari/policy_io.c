@@ -1954,7 +1954,7 @@ done:
  *
  * Returns pointer to "struct ccs_condition" on success, NULL otherwise.
  */
-struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param)
+static struct ccs_condition *ccs_get_condition(struct ccs_acl_param *param)
 {
 	struct ccs_condition *entry = NULL;
 	struct ccs_condition_element *condp = NULL;

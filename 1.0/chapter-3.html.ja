@@ -206,10 +206,10 @@ Please contact the author.
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます。（必要に応じて、 USRLIBDIR=/usr/lib または USRLIBDIR=/usr/lib32 に変更してください。）：</p>
 
 <pre class="command">
-$ wget -O ccs-tools-1.8.5-20151111.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz'
-$ wget -O ccs-tools-1.8.5-20151111.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20151111.tar.gz.asc'
-$ gpg ccs-tools-1.8.5-20151111.tar.gz.asc
-$ tar -zxf ccs-tools-1.8.5-20151111.tar.gz
+$ wget -O ccs-tools-1.8.5-20170102.tar.gz 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20170102.tar.gz'
+$ wget -O ccs-tools-1.8.5-20170102.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/tomoyo/49693/ccs-tools-1.8.5-20170102.tar.gz.asc'
+$ gpg ccs-tools-1.8.5-20170102.tar.gz.asc
+$ tar -zxf ccs-tools-1.8.5-20170102.tar.gz
 $ cd ccs-tools/
 $ make -s USRLIBDIR=/usr/lib64
 $ su

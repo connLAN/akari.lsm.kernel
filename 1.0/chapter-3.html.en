@@ -181,7 +181,35 @@ ffffffff81082170 T find_task_by_pid_ns
 ffffffff811c8f10 T d_absolute_path
 </pre>
 
-<p>Please proceed if these addresses are correct. Otherwise, please contact the author since AKARI module will not work even if you continue.</p>
+<p>Please proceed if these addresses are correct.</p>
+
+<p>You might find some gap between guessed addresses from akari_test.ko and actual addresses from System.map file (like some examples shown below) if your kernel configuration uses CONFIG_RANDOMIZE_BASE=y. In this case, although guessed addresses will randomly change for every reboot, please proceed as long as the gap between guessed address and actual address is same for all guessed symbols. Otherwise, please contact the author since AKARI module will not work even if you continue.</p>
+
+<ul>
+<li>Actual addresses from System.map file<br>
+<pre class="command">
+# for i in security_hook_heads find_task_by_vpid find_task_by_pid_ns d_absolute_path; do grep $i /boot/System.map-${VERSION}; done
+</pre>
+<pre class="output">ffffffff81cdac40 D security_hook_heads
+ffffffff810b50a0 T find_task_by_vpid
+ffffffff810b5030 T find_task_by_pid_ns
+ffffffff812789f0 T d_absolute_path</pre></li>
+<li>Guessed addresses from one reboot. (Gap for this boot is 0x21000000)<br>
+<pre class="output">security_hook_heads=ffffffffa2cdac40
+find_task_by_vpid=ffffffffa20b50a0
+find_task_by_pid_ns=ffffffffa20b5030
+d_absolute_path=ffffffffa22789f0</pre></li>
+<li>Guessed addresses from another reboot. (Gap for this boot is 0x9000000)<br>
+<pre class="output">security_hook_heads=ffffffff8acdac40
+find_task_by_vpid=ffffffff8a0b50a0
+find_task_by_pid_ns=ffffffff8a0b5030
+d_absolute_path=ffffffff8a2789f0</pre></li>
+<li>Guessed addresses from yet another reboot. (Gap for this boot is 0x2f000000)<br>
+<pre class="output">security_hook_heads=ffffffffb0cdac40
+find_task_by_vpid=ffffffffb00b50a0
+find_task_by_pid_ns=ffffffffb00b5030
+d_absolute_path=ffffffffb02789f0</pre></li>
+</ul>
 
 <p>If akari_test.ko was not loaded successfully, error messages like below are printed. In this case, please contact the author since AKARI module will not work even if you continue:</p>
 

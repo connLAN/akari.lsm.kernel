@@ -181,7 +181,35 @@ ffffffff81082170 T find_task_by_pid_ns
 ffffffff811c8f10 T d_absolute_path
 </pre>
 
-<p>一致している場合には先へ進んでください。一致しなかった場合、このまま続行しても正常に動作しないので、作者にご連絡ください。</p>
+<p>一致している場合には先へ進んでください。</p>
+
+<p>カーネルコンフィグで CONFIG_RANDOMIZE_BASE=y という指定が行われている場合、 akari_test.ko が推定したアドレスと System.map ファイルに記録されている実際のアドレスとの間に（以下に示す例のように）差分が見つかることがあります。その場合、推定したアドレスは再起動する毎にランダムに変化しますが、差分の値が推定された各シンボルに対して同じであれば、先へ進んでください。それ以外の場合、このまま続行しても正常に動作しないので、作者にご連絡ください。</p>
+
+<ul>
+<li>System.map ファイルに記録されている実際のアドレス<br>
+<pre class="command">
+# for i in security_hook_heads find_task_by_vpid find_task_by_pid_ns d_absolute_path; do grep $i /boot/System.map-${VERSION}; done
+</pre>
+<pre class="output">ffffffff81cdac40 D security_hook_heads
+ffffffff810b50a0 T find_task_by_vpid
+ffffffff810b5030 T find_task_by_pid_ns
+ffffffff812789f0 T d_absolute_path</pre></li>
+<li>ある再起動時に推定されたアドレス（今回の差分は 0x21000000 ）<br>
+<pre class="output">security_hook_heads=ffffffffa2cdac40
+find_task_by_vpid=ffffffffa20b50a0
+find_task_by_pid_ns=ffffffffa20b5030
+d_absolute_path=ffffffffa22789f0</pre></li>
+<li>別の再起動時に推定されたアドレス（今回の差分は 0x9000000 ）<br>
+<pre class="output">security_hook_heads=ffffffff8acdac40
+find_task_by_vpid=ffffffff8a0b50a0
+find_task_by_pid_ns=ffffffff8a0b5030
+d_absolute_path=ffffffff8a2789f0</pre></li>
+<li>また別の再起動時に推定されたアドレス（今回の差分は 0x2f000000 ）<br>
+<pre class="output">security_hook_heads=ffffffffb0cdac40
+find_task_by_vpid=ffffffffb00b50a0
+find_task_by_pid_ns=ffffffffb00b5030
+d_absolute_path=ffffffffb02789f0</pre></li>
+</ul>
 
 <p>akari_test.ko のロードに失敗した場合、下記のようにエラーメッセージが表示されます。このまま続行しても正常に動作しないので、作者にご連絡ください：</p>
 

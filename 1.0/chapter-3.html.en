@@ -371,6 +371,8 @@ Mandatory Access Control activated.
 
 <p>Note that you won't be able to see AKARI's messages if you are using "quiet" or "rhgb" kernel boot option because these options prevent most of kernel messages from being printed.</p>
 
+<p>Depending on kernel configuration and/or kernel boot options, above messages might not be printed. In this case, please check whether /proc/ccs/ directory exists. If /proc/ccs/ directory exists, AKARI module is registered successfully.</p>
+
 <p>Although AKARI is a LSM module, AKARI can coexist with other LSM modules. However, you need to also add "selinux=0" to the kernel boot options if you disable SELinux by specifying SELINUX=disabled in /etc/selinux/config . This is because the init process unregisters LSM hooks which AKARI module depends on if SELINUX=disabled is specified in /etc/selinux/config .</p>
 
 <h3><a name="3.7">3.7. How can I disable/uninstall AKARI?</a></h3>

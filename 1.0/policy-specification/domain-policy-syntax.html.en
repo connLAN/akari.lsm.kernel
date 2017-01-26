@@ -372,7 +372,7 @@ file ioctl /dev/null 10000-20000
 
 <p>This directive allows the domain to mount a filesystem with the specified devices, pathnames and options.</p>
 
-<p>The syntax is: "<strong>file mount $DEVICE $MOUNTPOINT $FILESYSTEM $OPTIONS</strong>". If $FILESYSTEM requires a device file, a block device file's pathname is specified for $DEVICE. The $OPTIONS is a hexadecimal (or otcal or decimal) integer expression. The following options can also be specified for $FILESYSTEM:</p>
+<p>The syntax is: "<strong>file mount $DEVICE $MOUNTPOINT $FILESYSTEM $OPTIONS</strong>". If $FILESYSTEM requires a device file, a block device file's pathname is specified for $DEVICE. The $OPTIONS is a hexadecimal (or octal or decimal) integer expression. The following options can also be specified for $FILESYSTEM:</p>
 
 <ul>
 <li>--bind</li>

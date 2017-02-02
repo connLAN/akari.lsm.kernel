@@ -338,10 +338,26 @@ static bool ccs_domain_used_by_task(struct ccs_domain_info *domain)
 	in_use = ccs_used_by_cred(domain);
 out:
 	rcu_read_unlock();
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0) || defined(for_each_process_thread)
+	struct task_struct *g;
+	struct task_struct *t;
+	rcu_read_lock();
+	for_each_process_thread(g, t) {
+		if (!(t->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
+			smp_rmb(); /* Avoid out of order execution. */
+			if (t->ccs_domain_info != domain)
+				continue;
+		}
+		in_use = true;
+		goto out;
+	}
+out:
+	rcu_read_unlock();
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
 	struct task_struct *g;
 	struct task_struct *t;
-	ccs_tasklist_lock();
+	rcu_read_lock();
+	read_lock(&tasklist_lock);
 	do_each_thread(g, t) {
 		if (!(t->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
 			smp_rmb(); /* Avoid out of order execution. */
@@ -352,10 +368,11 @@ out:
 		goto out;
 	} while_each_thread(g, t);
 out:
-	ccs_tasklist_unlock();
+	read_unlock(&tasklist_lock);
+	rcu_read_unlock();
 #else
 	struct task_struct *p;
-	ccs_tasklist_lock();
+	read_lock(&tasklist_lock);
 	for_each_process(p) {
 		if (!(p->ccs_flags & CCS_TASK_IS_IN_EXECVE)) {
 			smp_rmb(); /* Avoid out of order execution. */
@@ -365,7 +382,7 @@ out:
 		in_use = true;
 		break;
 	}
-	ccs_tasklist_unlock();
+	read_unlock(&tasklist_lock);
 #endif
 	return in_use;
 }

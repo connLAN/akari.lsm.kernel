@@ -298,3 +298,10 @@ Version 1.0.35   2015/11/11   Minor update release.
    Use memory allocation flags used by TOMOYO 2.x.
 
    Limit wildcard recursion depth.
+
+Version 1.0.36   2017/02/20   Minor update release.
+
+   Synchronize with TOMOYO revision 6553.
+
+   The bug fixed in TOMOYO's GC does not affect AKARI because
+   AKARI always uses CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY.

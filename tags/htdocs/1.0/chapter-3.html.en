@@ -96,12 +96,12 @@
 <p>Run the following commands in order to extract source code of AKARI:</p>
 
 <pre class="command">
-# wget -O akari-1.0.35-20161229.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161229.tar.gz'
-# wget -O akari-1.0.35-20161229.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20161229.tar.gz.asc'
+# wget -O akari-1.0.35-20170220.tar.gz 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20170220.tar.gz'
+# wget -O akari-1.0.35-20170220.tar.gz.asc 'http://osdn.jp/frs/redir.php?f=/akari/49272/akari-1.0.35-20170220.tar.gz.asc'
 # wget https://tomoyo.osdn.jp/kumaneko-key
 # gpg --import kumaneko-key
-# gpg akari-1.0.35-20161229.tar.gz.asc
-# tar -zxf akari-1.0.35-20161229.tar.gz
+# gpg akari-1.0.35-20170220.tar.gz.asc
+# tar -zxf akari-1.0.35-20170220.tar.gz
 </pre>
 
 <p>On systemd environments, <code>/usr/lib/systemd/systemd</code> will be executed rather than <code>/sbin/init</code>. If your system is using systemd, please edit CONFIG_CCSECURITY_ACTIVATION_TRIGGER line in akari/config.h like below:</p>

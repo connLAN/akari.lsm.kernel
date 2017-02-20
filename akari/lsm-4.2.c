@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2015  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.35   2015/11/11
+ * Version: 1.0.36   2017/02/20
  */
 
 #include "internal.h"
@@ -1252,7 +1252,7 @@ static int __init ccs_init(void)
 	swap_hook(&akari_hooks[2], &original_cred_alloc_blank);
 	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
 		add_hook(&akari_hooks[idx]);
-	printk(KERN_INFO "AKARI: 1.0.35   2015/11/11\n");
+	printk(KERN_INFO "AKARI: 1.0.36   2017/02/20\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");
 	return 0;

@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">20th February, 2017</p>
+<h4>AKARI 1.0.36 released</h4>
+<p class="article">This release is only for version synchronization.</p>
+
+<br>
+
 <p class="timestamp">11th November, 2015</p>
 <h4>AKARI 1.0.35 released</h4>
 <p class="article">A new version of AKARI changed memory allocation rules.</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">21th April, 2015</p>
 <h4>AKARI 1.0.33 released</h4>
 <p class="article">A new version of AKARI fixes a bug where retry request check was wrong.</p>
-
-<br>
-
-<p class="timestamp">8th April, 2015</p>
-<h4>AKARI 1.0.32 released</h4>
-<p class="article">A new version of AKARI fixes a bug where conditional compilation was wrong.</p>
 
 <br>
 

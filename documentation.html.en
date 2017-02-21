@@ -56,7 +56,7 @@ No support from distributors unless shipped with their kernels.</p></td>
 <td><p>Agreed and approved by the Linux kernel developer's community.<br>
 No need to recompile the kernel if shipped with distributor's kernels.<br>
 Support from distributors if shipped with their kernels.</p></td>
-<td><p>Provides quite limited MAC functionality.</p></td>
+<td><p>Some MAC functionality in TOMOYO Linux 1.8 is not provided.</p></td>
 </tr>
 <tr>
 <td><p>AKARI</p></td>

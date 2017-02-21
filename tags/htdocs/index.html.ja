@@ -64,6 +64,12 @@
 
 <hr>
 
+<p class="timestamp">２０１７年２月２０日</p>
+<h4>AKARI 1.0.36 がリリースされました。</h4>
+<p class="article">バージョンを同期させる目的のリリースです。</p>
+
+<br>
+
 <p class="timestamp">２０１５年１１月１１日</p>
 <h4>AKARI 1.0.35 がリリースされました。</h4>
 <p class="article">メモリの割り当て方法を変更しました。</p>
@@ -79,12 +85,6 @@
 <p class="timestamp">２０１５年４月２１日</p>
 <h4>AKARI 1.0.33 がリリースされました。</h4>
 <p class="article">リトライ処理の間違いを修正しました。</p>
-
-<br>
-
-<p class="timestamp">２０１５年４月８日</p>
-<h4>AKARI 1.0.32 がリリースされました。</h4>
-<p class="article">条件付きコンパイルの間違いを修正しました。</p>
 
 <br>
 

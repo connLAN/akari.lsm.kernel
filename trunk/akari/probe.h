@@ -9,6 +9,9 @@
 #ifndef __init
 #include <linux/init.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
+#include <linux/cred.h>
+#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
 #error This module supports only 2.6.0 and later kernels.

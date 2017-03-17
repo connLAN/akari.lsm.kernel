@@ -65,6 +65,9 @@
 #else
 #include <asm/uaccess.h>
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
+#include <linux/sched/signal.h>
+#endif
 #include <net/sock.h>
 #include <net/af_unix.h>
 #include <net/ip.h>

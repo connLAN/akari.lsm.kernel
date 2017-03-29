@@ -8,7 +8,9 @@
 
 #include <linux/version.h>
 #include <linux/security.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
+#include "lsm-4.12.c"
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
 #include "lsm-4.7.c"
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 2, 0)
 #include "lsm-4.2.c"

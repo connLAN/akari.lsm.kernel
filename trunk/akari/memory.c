@@ -8,10 +8,8 @@
 
 #include "internal.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 /* Use functions in lsm.c */
 #undef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
-#endif
 
 /***** SECTION1: Constants definition *****/
 
@@ -56,12 +54,12 @@ struct list_head ccs_name_list[CCS_MAX_HASH];
 #ifdef CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-struct ccs_security ccs_oom_security = {
+static struct ccs_security ccs_oom_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 
 /* Dummy security context for avoiding NULL pointer dereference. */
-struct ccs_security ccs_default_security = {
+static struct ccs_security ccs_default_security = {
 	.ccs_domain_info = &ccs_kernel_domain
 };
 

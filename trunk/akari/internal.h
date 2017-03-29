@@ -1971,7 +1971,7 @@ extern struct ccsecurity_exports ccsecurity_exports;
  */
 struct ccs_security {
 	struct list_head list;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29) || LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
 	const struct task_struct *task;
 #else
 	struct pid *pid; /* Maybe NULL. */

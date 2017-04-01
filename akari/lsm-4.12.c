@@ -34,6 +34,7 @@ struct ccsecurity_exports ccsecurity_exports;
 struct ccsecurity_operations ccsecurity_ops;
 
 /* Original hooks. */
+static union security_list_options original_cred_prepare;
 static union security_list_options original_task_alloc;
 static union security_list_options original_task_free;
 
@@ -188,16 +189,26 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 }
 
 /**
- * ccs_bprm_set_creds - Target for security_bprm_set_creds().
+ * ccs_cred_prepare - Allocate memory for new credentials.
  *
- * @bprm: Pointer to "struct linux_binprm".
+ * @new: Pointer to "struct cred".
+ * @old: Pointer to "struct cred".
+ * @gfp: Memory allocation flags.
  *
- * Returns 0.
+ * Returns 0 on success, negative value otherwise.
  */
-static int ccs_bprm_set_creds(struct linux_binprm *bprm)
+static int ccs_cred_prepare(struct cred *new, const struct cred *old,
+			    gfp_t gfp)
 {
-	if (!bprm->cred_prepared)
-		ccs_current_security();
+	/*
+	 * For checking whether reverting domain transition is needed or not.
+	 *
+	 * See ccs_find_task_security() for reason.
+	 */
+	if (gfp == GFP_KERNEL)
+		ccs_find_task_security(current);
+	if (original_cred_prepare.cred_prepare)
+		return original_cred_prepare.cred_prepare(new, old, gfp);
 	return 0;
 }
 
@@ -971,9 +982,9 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 static struct security_hook_list akari_hooks[] = {
 	/* Security context allocator. */
 	MY_HOOK_INIT(task_free, ccs_task_free_security),
+	MY_HOOK_INIT(cred_prepare, ccs_cred_prepare),
 	MY_HOOK_INIT(task_alloc, ccs_task_alloc_security),
 	/* Security context updater for successful execve(). */
-	MY_HOOK_INIT(bprm_set_creds, ccs_bprm_set_creds),
 	MY_HOOK_INIT(bprm_check_security, ccs_bprm_check_security),
 	MY_HOOK_INIT(bprm_committing_creds, ccs_bprm_committing_creds),
 	/* Various permission checker. */
@@ -1071,8 +1082,9 @@ static int __init ccs_init(void)
 		INIT_LIST_HEAD(&ccs_task_security_list[idx]);
 	ccs_main_init();
 	swap_hook(&akari_hooks[0], &original_task_free);
-	swap_hook(&akari_hooks[1], &original_task_alloc);
-	for (idx = 2; idx < ARRAY_SIZE(akari_hooks); idx++)
+	swap_hook(&akari_hooks[1], &original_cred_prepare);
+	swap_hook(&akari_hooks[2], &original_task_alloc);
+	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
 		add_hook(&akari_hooks[idx]);
 	printk(KERN_INFO "AKARI: 1.0.36   2017/02/20\n");
 	printk(KERN_INFO

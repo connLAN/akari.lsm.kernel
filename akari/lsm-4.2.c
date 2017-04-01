@@ -759,19 +759,6 @@ static LIST_HEAD(ccs_accepted_socket_list);
 static DEFINE_SPINLOCK(ccs_accepted_socket_list_lock);
 
 /**
- * ccs_socket_rcu_free - RCU callback for releasing "struct ccs_socket_tag".
- *
- * @rcu: Pointer to "struct rcu_head".
- *
- * Returns nothing.
- */
-static void ccs_socket_rcu_free(struct rcu_head *rcu)
-{
-	struct ccs_socket_tag *ptr = container_of(rcu, typeof(*ptr), rcu);
-	kfree(ptr);
-}
-
-/**
  * ccs_update_socket_tag - Update tag associated with accept()ed sockets.
  *
  * @inode:  Pointer to "struct inode".
@@ -798,7 +785,7 @@ static void ccs_update_socket_tag(struct inode *inode, int status)
 		if (status)
 			break;
 		list_del_rcu(&ptr->list);
-		call_rcu(&ptr->rcu, ccs_socket_rcu_free);
+		kfree_rcu(ptr, rcu);
 		break;
 	}
 	rcu_read_unlock();

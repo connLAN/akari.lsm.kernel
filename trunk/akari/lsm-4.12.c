@@ -113,13 +113,11 @@ void ccs_audit_free_execve(const struct ccs_execve * const ee,
  */
 static void ccs_clear_execve(int ret, struct ccs_security *security)
 {
-	struct ccs_execve *ee;
-	if (security == &ccs_default_security || security == &ccs_oom_security)
+	struct ccs_execve *ee = security->ee;
+	if (security == &ccs_default_security || security == &ccs_oom_security
+	    || !ee)
 		return;
-	ee = security->ee;
 	security->ee = NULL;
-	if (!ee)
-		return;
 	ccs_finish_execve(ret, ee);
 }
 
@@ -182,10 +180,7 @@ static void ccs_task_free_security(struct task_struct *p)
  */
 static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 {
-	struct ccs_security *security = ccs_current_security();
-	if (security == &ccs_default_security || security == &ccs_oom_security)
-		return;
-	ccs_clear_execve(0, security);
+	ccs_clear_execve(0, ccs_current_security());
 }
 
 /**
@@ -596,19 +591,6 @@ static LIST_HEAD(ccs_accepted_socket_list);
 static DEFINE_SPINLOCK(ccs_accepted_socket_list_lock);
 
 /**
- * ccs_socket_rcu_free - RCU callback for releasing "struct ccs_socket_tag".
- *
- * @rcu: Pointer to "struct rcu_head".
- *
- * Returns nothing.
- */
-static void ccs_socket_rcu_free(struct rcu_head *rcu)
-{
-	struct ccs_socket_tag *ptr = container_of(rcu, typeof(*ptr), rcu);
-	kfree(ptr);
-}
-
-/**
  * ccs_update_socket_tag - Update tag associated with accept()ed sockets.
  *
  * @inode:  Pointer to "struct inode".
@@ -635,7 +617,7 @@ static void ccs_update_socket_tag(struct inode *inode, int status)
 		if (status)
 			break;
 		list_del_rcu(&ptr->list);
-		call_rcu(&ptr->rcu, ccs_socket_rcu_free);
+		kfree_rcu(ptr, rcu);
 		break;
 	}
 	rcu_read_unlock();
@@ -1224,19 +1206,6 @@ struct ccs_security *ccs_find_task_security(const struct task_struct *task)
 }
 
 /**
- * ccs_rcu_free - RCU callback for releasing "struct ccs_security".
- *
- * @rcu: Pointer to "struct rcu_head".
- *
- * Returns nothing.
- */
-static void ccs_rcu_free(struct rcu_head *rcu)
-{
-	struct ccs_security *ptr = container_of(rcu, typeof(*ptr), rcu);
-	kfree(ptr);
-}
-
-/**
  * __ccs_free_task_security - Release memory associated with "struct task_struct".
  *
  * @task: Pointer to "struct task_struct".
@@ -1252,5 +1221,5 @@ static void __ccs_free_task_security(const struct task_struct *task)
 	spin_lock_irqsave(&ccs_task_security_list_lock, flags);
 	list_del_rcu(&ptr->list);
 	spin_unlock_irqrestore(&ccs_task_security_list_lock, flags);
-	call_rcu(&ptr->rcu, ccs_rcu_free);
+	kfree_rcu(ptr, rcu);
 }

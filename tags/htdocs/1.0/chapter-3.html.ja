@@ -229,6 +229,15 @@ I need some changes for supporting your environment.
 Please contact the author.
 </pre>
 
+<p>もし、カーネルに /proc/sys/kernel/kptr_restrict という sysctl パラメータが存在し、値が 2 に設定されている場合、 akari_test.ko のロードは失敗します。その場合、ロードする前に 0 に変更し、ロードした後に 2 に戻すようにしてください。</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# echo 0 &gt; /proc/sys/kernel/kptr_restrict
+# modprobe akari_test
+# echo 2 &gt; /proc/sys/kernel/kptr_restrict
+</pre>
+
 <h3><a name="3.3">3.3. 管理ツールのインストール</a></h3>
 
 <p>前述した依存するパッケージがインストールされていることを確認してください。以下のコマンドを実行することによりコンパイルおよびインストールできます。（必要に応じて、 USRLIBDIR=/usr/lib または USRLIBDIR=/usr/lib32 に変更してください。）：</p>

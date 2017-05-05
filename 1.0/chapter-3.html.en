@@ -229,6 +229,15 @@ I need some changes for supporting your environment.
 Please contact the author.
 </pre>
 
+<p>If your kernel has /proc/sys/kernel/kptr_restrict sysctl parameter set to 2, loading of akari_test.ko will fail. In this case, please set /proc/sys/kernel/kptr_restrict to 0 before loading and restore /proc/sys/kernel/kptr_restrict to 2 after loading.</p>
+
+<pre class="command">
+# dmesg -c &gt; /dev/null
+# echo 0 &gt; /proc/sys/kernel/kptr_restrict
+# modprobe akari_test
+# echo 2 &gt; /proc/sys/kernel/kptr_restrict
+</pre>
+
 <h3><a name="3.3">3.3. Install the userspace tools</a></h3>
 
 <p>Make sure the dependencies described above have been installed. Compile and install the tools with the following commands. (Please use USRLIBDIR=<code>/usr/lib</code> or USRLIBDIR=<code>/usr/lib32</code> if needed):</p>

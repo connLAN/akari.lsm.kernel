@@ -1036,6 +1036,71 @@ static void __init swap_hook(struct security_hook_list *hook,
 	}
 }
 
+#if defined(CONFIG_STRICT_KERNEL_RWX) && !defined(SECURITY_WRITABLE_HOOKS)
+#include <linux/uaccess.h> /* probe_kernel_write() */
+#define NEED_TO_CHECK_HOOKS_ARE_WRITABLE
+
+#if defined(CONFIG_X86)
+#define MAX_RO_PAGES 1024
+static struct page *ro_pages[MAX_RO_PAGES] __initdata;
+static unsigned int ro_pages_len __initdata;
+
+static bool __init lsm_test_page_ro(void *addr)
+{
+	unsigned int i;
+	int unused;
+	struct page *page;
+
+	page = (struct page *) lookup_address((unsigned long) addr, &unused);
+	if (!page)
+		return false;
+	if (test_bit(_PAGE_BIT_RW, &(page->flags)))
+		return true;
+	for (i = 0; i < ro_pages_len; i++)
+		if (page == ro_pages[i])
+			return true;
+	if (ro_pages_len == MAX_RO_PAGES)
+		return false;
+	ro_pages[ro_pages_len++] = page;
+	return true;
+}
+
+static bool __init check_ro_pages(struct security_hook_heads *hooks)
+{
+	int i;
+	struct list_head *list = (struct list_head *) hooks;
+
+	if (!probe_kernel_write(&list->next, list->next, sizeof(void *)))
+		return true;
+	for (i = 0; i < ARRAY_SIZE(akari_hooks); i++) {
+		const unsigned int idx =
+			((unsigned long) akari_hooks[i].head
+			 - (unsigned long) hooks)
+			/ sizeof(struct list_head);
+		struct list_head *self = &list[idx];
+		struct list_head *prev = self->prev;
+
+		if (!lsm_test_page_ro(&prev->next) ||
+		    !lsm_test_page_ro(&self->prev))
+			return false;
+		if (!list_empty(self) &&
+		    !lsm_test_page_ro(&list_last_entry
+				      (self, struct security_hook_list,
+				       list)->hook))
+			return false;
+	}
+	return true;
+}
+#else
+static bool __init check_ro_pages(struct security_hook_heads *hooks)
+{
+	return !probe_kernel_write(&((struct list_head *) hooks)->next,
+				   ((struct list_head *) hooks)->next,
+				   sizeof(void *));
+}
+#endif
+#endif
+
 /**
  * ccs_init - Initialize this module.
  *
@@ -1051,6 +1116,12 @@ static int __init ccs_init(void)
 		akari_hooks[idx].head = ((void *) hooks)
 			+ ((unsigned long) akari_hooks[idx].head)
 			- ((unsigned long) &probe_dummy_security_hook_heads);
+#if defined(NEED_TO_CHECK_HOOKS_ARE_WRITABLE)
+	if (!check_ro_pages(hooks)) {
+		printk(KERN_INFO "Can't update security_hook_heads due to write protected. Retry with rodata=0 kernel command line option added.\n");
+		return -EINVAL;
+	}
+#endif
 	ccsecurity_exports.find_task_by_vpid = probe_find_task_by_vpid();
 	if (!ccsecurity_exports.find_task_by_vpid)
 		goto out;
@@ -1063,11 +1134,19 @@ static int __init ccs_init(void)
 	for (idx = 0; idx < CCS_MAX_TASK_SECURITY_HASH; idx++)
 		INIT_LIST_HEAD(&ccs_task_security_list[idx]);
 	ccs_main_init();
+#if defined(NEED_TO_CHECK_HOOKS_ARE_WRITABLE) && defined(CONFIG_X86)
+	for (idx = 0; idx < ro_pages_len; idx++)
+		set_bit(_PAGE_BIT_RW, &(ro_pages[idx]->flags));
+#endif
 	swap_hook(&akari_hooks[0], &original_task_free);
 	swap_hook(&akari_hooks[1], &original_cred_prepare);
 	swap_hook(&akari_hooks[2], &original_task_alloc);
 	for (idx = 3; idx < ARRAY_SIZE(akari_hooks); idx++)
 		add_hook(&akari_hooks[idx]);
+#if defined(NEED_TO_CHECK_HOOKS_ARE_WRITABLE) && defined(CONFIG_X86)
+	for (idx = 0; idx < ro_pages_len; idx++)
+		clear_bit(_PAGE_BIT_RW, &(ro_pages[idx]->flags));
+#endif
 	printk(KERN_INFO "AKARI: 1.0.36   2017/02/20\n");
 	printk(KERN_INFO
 	       "Access Keeping And Regulating Instrument registered.\n");

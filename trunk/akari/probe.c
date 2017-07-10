@@ -104,7 +104,7 @@ static void *__init probe_find_symbol(const char *keyline)
 			mntput(mnt);
 		else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-			struct path path = { mnt, dentry };
+			struct path path = { .mnt = mnt, .dentry = dentry };
 			file = dentry_open(&path, O_RDONLY, current_cred());
 #else
 			file = dentry_open(dentry, mnt, O_RDONLY

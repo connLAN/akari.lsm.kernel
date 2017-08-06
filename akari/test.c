@@ -1,5 +1,5 @@
 /*
- * akari_test.c
+ * test.c
  *
  * Copyright (C) 2010-2013  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  */
@@ -36,15 +36,12 @@ static int __init ccs_init(void)
 		goto out;
 #endif
 	printk(KERN_INFO "All dependent symbols have been guessed.\n");
-	printk(KERN_INFO "Please verify these addresses using System.map for "
-	       "this kernel (e.g. /boot/System.map-`uname -r` ).\n");
-	printk(KERN_INFO "If these addresses are correct, you can try loading "
-	       "AKARI module on this kernel.\n");
+	printk(KERN_INFO "Please verify these addresses using System.map for this kernel (e.g. /boot/System.map-`uname -r` ).\n");
+	printk(KERN_INFO "If these addresses are correct, you can try loading AKARI module on this kernel.\n");
 	return 0;
 out:
 	printk(KERN_INFO "Sorry, I couldn't guess dependent symbols.\n");
-	printk(KERN_INFO "I need some changes for supporting your "
-	       "environment.\n");
+	printk(KERN_INFO "I need some changes for supporting your environment.\n");
 	printk(KERN_INFO "Please contact the author.\n");
 	return -EINVAL;
 }

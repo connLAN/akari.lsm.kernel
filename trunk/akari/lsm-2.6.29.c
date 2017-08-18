@@ -261,7 +261,8 @@ static int ccs_task_create(unsigned long clone_flags)
 	struct cred *cred = prepare_creds();
 	if (!cred)
 		return -ENOMEM;
-	while (!original_security_ops.task_create);
+	while (!original_security_ops.task_create)
+		smp_rmb();
 	rc = original_security_ops.task_create(clone_flags);
 	if (rc) {
 		abort_creds(cred);
@@ -301,7 +302,8 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
 		return rc;
 	if (gfp == GFP_KERNEL)
 		ccs_task_security_gc();
-	while (!original_security_ops.cred_prepare);
+	while (!original_security_ops.cred_prepare)
+		smp_rmb();
 	rc = original_security_ops.cred_prepare(new, old, gfp);
 	if (rc)
 		ccs_del_security(ccs_find_cred_security(new));
@@ -317,7 +319,8 @@ static int ccs_cred_prepare(struct cred *new, const struct cred *old,
  */
 static void ccs_cred_free(struct cred *cred)
 {
-	while (!original_security_ops.cred_free);
+	while (!original_security_ops.cred_free)
+		smp_rmb();
 	original_security_ops.cred_free(cred);
 	ccs_del_security(ccs_find_cred_security(cred));
 }
@@ -356,7 +359,8 @@ static int ccs_cred_alloc_blank(struct cred *new, gfp_t gfp)
 	int rc = ccs_alloc_cred_security(new, gfp);
 	if (rc)
 		return rc;
-	while (!original_security_ops.cred_alloc_blank);
+	while (!original_security_ops.cred_alloc_blank)
+		smp_rmb();
 	rc = original_security_ops.cred_alloc_blank(new, gfp);
 	if (rc)
 		ccs_del_security(ccs_find_cred_security(new));
@@ -375,7 +379,8 @@ static void ccs_cred_transfer(struct cred *new, const struct cred *old)
 {
 	struct ccs_security *new_security;
 	struct ccs_security *old_security;
-	while (!original_security_ops.cred_transfer);
+	while (!original_security_ops.cred_transfer)
+		smp_rmb();
 	original_security_ops.cred_transfer(new, old);
 	new_security = ccs_find_cred_security(new);
 	old_security = ccs_find_cred_security(old);
@@ -401,7 +406,8 @@ static void ccs_bprm_committing_creds(struct linux_binprm *bprm)
 {
 	struct ccs_security *old_security;
 	struct ccs_security *new_security;
-	while (!original_security_ops.bprm_committing_creds);
+	while (!original_security_ops.bprm_committing_creds)
+		smp_rmb();
 	original_security_ops.bprm_committing_creds(bprm);
 	old_security = ccs_current_security();
 	if (old_security == &ccs_default_security ||
@@ -447,7 +453,8 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		if (rc)
 			return rc;
 	}
-	while (!original_security_ops.bprm_check_security);
+	while (!original_security_ops.bprm_check_security)
+		smp_rmb();
 	return original_security_ops.bprm_check_security(bprm);
 }
 
@@ -486,7 +493,8 @@ static int ccs_file_open(struct file *f, const struct cred *cred)
 	int rc = ccs_open(f);
 	if (rc)
 		return rc;
-	while (!original_security_ops.file_open);
+	while (!original_security_ops.file_open)
+		smp_rmb();
 	return original_security_ops.file_open(f, cred);
 }
 
@@ -505,7 +513,8 @@ static int ccs_dentry_open(struct file *f, const struct cred *cred)
 	int rc = ccs_open(f);
 	if (rc)
 		return rc;
-	while (!original_security_ops.dentry_open);
+	while (!original_security_ops.dentry_open)
+		smp_rmb();
 	return original_security_ops.dentry_open(f, cred);
 }
 
@@ -529,7 +538,8 @@ static int ccs_path_chown(struct path *path, kuid_t user, kgid_t group)
 	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chown);
+	while (!original_security_ops.path_chown)
+		smp_rmb();
 	return original_security_ops.path_chown(path, user, group);
 }
 
@@ -546,7 +556,8 @@ static int ccs_path_chmod(struct path *path, umode_t mode)
 	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chmod);
+	while (!original_security_ops.path_chmod)
+		smp_rmb();
 	return original_security_ops.path_chmod(path, mode);
 }
 
@@ -562,7 +573,8 @@ static int ccs_path_chroot(struct path *path)
 	int rc = ccs_chroot_permission(path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chroot);
+	while (!original_security_ops.path_chroot)
+		smp_rmb();
 	return original_security_ops.path_chroot(path);
 }
 
@@ -582,7 +594,8 @@ static int ccs_path_chown(struct path *path, uid_t user, gid_t group)
 	int rc = ccs_chown_permission(path->dentry, path->mnt, user, group);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chown);
+	while (!original_security_ops.path_chown)
+		smp_rmb();
 	return original_security_ops.path_chown(path, user, group);
 }
 
@@ -601,7 +614,8 @@ static int ccs_path_chmod(struct path *path, umode_t mode)
 	int rc = ccs_chmod_permission(path->dentry, path->mnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chmod);
+	while (!original_security_ops.path_chmod)
+		smp_rmb();
 	return original_security_ops.path_chmod(path, mode);
 }
 
@@ -622,7 +636,8 @@ static int ccs_path_chmod(struct dentry *dentry, struct vfsmount *vfsmnt,
 	int rc = ccs_chmod_permission(dentry, vfsmnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chmod);
+	while (!original_security_ops.path_chmod)
+		smp_rmb();
 	return original_security_ops.path_chmod(dentry, vfsmnt, mode);
 }
 
@@ -640,7 +655,8 @@ static int ccs_path_chroot(struct path *path)
 	int rc = ccs_chroot_permission(path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_chroot);
+	while (!original_security_ops.path_chroot)
+		smp_rmb();
 	return original_security_ops.path_chroot(path);
 }
 
@@ -660,7 +676,8 @@ static int ccs_path_truncate(struct path *path)
 	int rc = ccs_truncate_permission(path->dentry, path->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_truncate);
+	while (!original_security_ops.path_truncate)
+		smp_rmb();
 	return original_security_ops.path_truncate(path);
 }
 
@@ -681,7 +698,8 @@ static int ccs_path_truncate(struct path *path, loff_t length,
 	int rc = ccs_truncate_permission(path->dentry, path->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_truncate);
+	while (!original_security_ops.path_truncate)
+		smp_rmb();
 	return original_security_ops.path_truncate(path, length, time_attrs);
 }
 
@@ -723,7 +741,8 @@ static int ccs_inode_setattr(struct dentry *dentry, struct iattr *attr)
 #endif
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_setattr);
+	while (!original_security_ops.inode_setattr)
+		smp_rmb();
 	return original_security_ops.inode_setattr(dentry, attr);
 }
 
@@ -741,7 +760,8 @@ static int ccs_inode_getattr(const struct path *path)
 	int rc = ccs_getattr_permission(path->mnt, path->dentry);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_getattr);
+	while (!original_security_ops.inode_getattr)
+		smp_rmb();
 	return original_security_ops.inode_getattr(path);
 }
 
@@ -760,7 +780,8 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 	int rc = ccs_getattr_permission(mnt, dentry);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_getattr);
+	while (!original_security_ops.inode_getattr)
+		smp_rmb();
 	return original_security_ops.inode_getattr(mnt, dentry);
 }
 
@@ -786,7 +807,8 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_mknod);
+	while (!original_security_ops.path_mknod)
+		smp_rmb();
 	return original_security_ops.path_mknod(dir, dentry, mode, dev);
 }
 
@@ -805,7 +827,8 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry,
 	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_mkdir);
+	while (!original_security_ops.path_mkdir)
+		smp_rmb();
 	return original_security_ops.path_mkdir(dir, dentry, mode);
 }
 
@@ -827,7 +850,8 @@ static int ccs_path_mknod(struct path *dir, struct dentry *dentry, int mode,
 	int rc = ccs_mknod_permission(dentry, dir->mnt, mode, dev);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_mknod);
+	while (!original_security_ops.path_mknod)
+		smp_rmb();
 	return original_security_ops.path_mknod(dir, dentry, mode, dev);
 }
 
@@ -845,7 +869,8 @@ static int ccs_path_mkdir(struct path *dir, struct dentry *dentry, int mode)
 	int rc = ccs_mkdir_permission(dentry, dir->mnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_mkdir);
+	while (!original_security_ops.path_mkdir)
+		smp_rmb();
 	return original_security_ops.path_mkdir(dir, dentry, mode);
 }
 
@@ -864,7 +889,8 @@ static int ccs_path_rmdir(struct path *dir, struct dentry *dentry)
 	int rc = ccs_rmdir_permission(dentry, dir->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_rmdir);
+	while (!original_security_ops.path_rmdir)
+		smp_rmb();
 	return original_security_ops.path_rmdir(dir, dentry);
 }
 
@@ -881,7 +907,8 @@ static int ccs_path_unlink(struct path *dir, struct dentry *dentry)
 	int rc = ccs_unlink_permission(dentry, dir->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_unlink);
+	while (!original_security_ops.path_unlink)
+		smp_rmb();
 	return original_security_ops.path_unlink(dir, dentry);
 }
 
@@ -900,7 +927,8 @@ static int ccs_path_symlink(struct path *dir, struct dentry *dentry,
 	int rc = ccs_symlink_permission(dentry, dir->mnt, old_name);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_symlink);
+	while (!original_security_ops.path_symlink)
+		smp_rmb();
 	return original_security_ops.path_symlink(dir, dentry, old_name);
 }
 
@@ -920,7 +948,8 @@ static int ccs_path_rename(struct path *old_dir, struct dentry *old_dentry,
 	int rc = ccs_rename_permission(old_dentry, new_dentry, old_dir->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_rename);
+	while (!original_security_ops.path_rename)
+		smp_rmb();
 	return original_security_ops.path_rename(old_dir, old_dentry, new_dir,
 						 new_dentry);
 }
@@ -940,7 +969,8 @@ static int ccs_path_link(struct dentry *old_dentry, struct path *new_dir,
 	int rc = ccs_link_permission(old_dentry, new_dentry, new_dir->mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.path_link);
+	while (!original_security_ops.path_link)
+		smp_rmb();
 	return original_security_ops.path_link(old_dentry, new_dir,
 					       new_dentry);
 }
@@ -965,7 +995,8 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mknod);
+	while (!original_security_ops.inode_mknod)
+		smp_rmb();
 	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
 }
 
@@ -984,7 +1015,8 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mkdir_permission(dentry, NULL, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mkdir);
+	while (!original_security_ops.inode_mkdir)
+		smp_rmb();
 	return original_security_ops.inode_mkdir(dir, dentry, mode);
 }
 
@@ -1006,7 +1038,8 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry, int mode,
 	int rc = ccs_mknod_permission(dentry, NULL, mode, dev);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mknod);
+	while (!original_security_ops.inode_mknod)
+		smp_rmb();
 	return original_security_ops.inode_mknod(dir, dentry, mode, dev);
 }
 
@@ -1024,7 +1057,8 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry, int mode)
 	int rc = ccs_mkdir_permission(dentry, NULL, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mkdir);
+	while (!original_security_ops.inode_mkdir)
+		smp_rmb();
 	return original_security_ops.inode_mkdir(dir, dentry, mode);
 }
 
@@ -1043,7 +1077,8 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry)
 	int rc = ccs_rmdir_permission(dentry, NULL);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_rmdir);
+	while (!original_security_ops.inode_rmdir)
+		smp_rmb();
 	return original_security_ops.inode_rmdir(dir, dentry);
 }
 
@@ -1060,7 +1095,8 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry)
 	int rc = ccs_unlink_permission(dentry, NULL);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_unlink);
+	while (!original_security_ops.inode_unlink)
+		smp_rmb();
 	return original_security_ops.inode_unlink(dir, dentry);
 }
 
@@ -1079,7 +1115,8 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_symlink_permission(dentry, NULL, old_name);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_symlink);
+	while (!original_security_ops.inode_symlink)
+		smp_rmb();
 	return original_security_ops.inode_symlink(dir, dentry, old_name);
 }
 
@@ -1099,7 +1136,8 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 	int rc = ccs_rename_permission(old_dentry, new_dentry, NULL);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_rename);
+	while (!original_security_ops.inode_rename)
+		smp_rmb();
 	return original_security_ops.inode_rename(old_dir, old_dentry, new_dir,
 						  new_dentry);
 }
@@ -1119,7 +1157,8 @@ static int ccs_inode_link(struct dentry *old_dentry, struct inode *dir,
 	int rc = ccs_link_permission(old_dentry, new_dentry, NULL);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_link);
+	while (!original_security_ops.inode_link)
+		smp_rmb();
 	return original_security_ops.inode_link(old_dentry, dir, new_dentry);
 }
 
@@ -1140,7 +1179,8 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_create);
+	while (!original_security_ops.inode_create)
+		smp_rmb();
 	return original_security_ops.inode_create(dir, dentry, mode);
 }
 
@@ -1161,7 +1201,8 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, NULL, mode, 0);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_create);
+	while (!original_security_ops.inode_create)
+		smp_rmb();
 	return original_security_ops.inode_create(dir, dentry, mode);
 }
 
@@ -1313,7 +1354,8 @@ static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
 	ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
 		return -ENOMEM;
-	while (!original_security_ops.socket_accept);
+	while (!original_security_ops.socket_accept)
+		smp_rmb();
 	rc = original_security_ops.socket_accept(sock, newsock);
 	if (rc) {
 		kfree(ptr);
@@ -1349,7 +1391,8 @@ static int ccs_socket_listen(struct socket *sock, int backlog)
 	rc = ccs_socket_listen_permission(sock);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_listen);
+	while (!original_security_ops.socket_listen)
+		smp_rmb();
 	return original_security_ops.socket_listen(sock, backlog);
 }
 
@@ -1371,7 +1414,8 @@ static int ccs_socket_connect(struct socket *sock, struct sockaddr *addr,
 	rc = ccs_socket_connect_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_connect);
+	while (!original_security_ops.socket_connect)
+		smp_rmb();
 	return original_security_ops.socket_connect(sock, addr, addr_len);
 }
 
@@ -1393,7 +1437,8 @@ static int ccs_socket_bind(struct socket *sock, struct sockaddr *addr,
 	rc = ccs_socket_bind_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_bind);
+	while (!original_security_ops.socket_bind)
+		smp_rmb();
 	return original_security_ops.socket_bind(sock, addr, addr_len);
 }
 
@@ -1415,7 +1460,8 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 	rc = ccs_socket_sendmsg_permission(sock, msg, size);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_sendmsg);
+	while (!original_security_ops.socket_sendmsg)
+		smp_rmb();
 	return original_security_ops.socket_sendmsg(sock, msg, size);
 }
 
@@ -1435,7 +1481,8 @@ static int ccs_socket_recvmsg(struct socket *sock, struct msghdr *msg,
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_recvmsg);
+	while (!original_security_ops.socket_recvmsg)
+		smp_rmb();
 	return original_security_ops.socket_recvmsg(sock, msg, size, flags);
 }
 
@@ -1451,7 +1498,8 @@ static int ccs_socket_getsockname(struct socket *sock)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getsockname);
+	while (!original_security_ops.socket_getsockname)
+		smp_rmb();
 	return original_security_ops.socket_getsockname(sock);
 }
 
@@ -1467,7 +1515,8 @@ static int ccs_socket_getpeername(struct socket *sock)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getpeername);
+	while (!original_security_ops.socket_getpeername)
+		smp_rmb();
 	return original_security_ops.socket_getpeername(sock);
 }
 
@@ -1485,7 +1534,8 @@ static int ccs_socket_getsockopt(struct socket *sock, int level, int optname)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getsockopt);
+	while (!original_security_ops.socket_getsockopt)
+		smp_rmb();
 	return original_security_ops.socket_getsockopt(sock, level, optname);
 }
 
@@ -1503,7 +1553,8 @@ static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_setsockopt);
+	while (!original_security_ops.socket_setsockopt)
+		smp_rmb();
 	return original_security_ops.socket_setsockopt(sock, level, optname);
 }
 
@@ -1520,7 +1571,8 @@ static int ccs_socket_shutdown(struct socket *sock, int how)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_shutdown);
+	while (!original_security_ops.socket_shutdown)
+		smp_rmb();
 	return original_security_ops.socket_shutdown(sock, how);
 }
 
@@ -1537,7 +1589,8 @@ static int ccs_socket_shutdown(struct socket *sock, int how)
  */
 static void ccs_inode_free_security(struct inode *inode)
 {
-	while (!original_security_ops.inode_free_security);
+	while (!original_security_ops.inode_free_security)
+		smp_rmb();
 	original_security_ops.inode_free_security(inode);
 	if (inode->i_sb && inode->i_sb->s_magic == SOCKFS_MAGIC)
 		ccs_update_socket_tag(inode, 0);
@@ -1560,7 +1613,8 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 	int rc = ccs_pivot_root_permission(old_path, new_path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_pivotroot);
+	while (!original_security_ops.sb_pivotroot)
+		smp_rmb();
 	return original_security_ops.sb_pivotroot(old_path, new_path);
 }
 
@@ -1581,7 +1635,8 @@ static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
 	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_mount);
+	while (!original_security_ops.sb_mount)
+		smp_rmb();
 	return original_security_ops.sb_mount(dev_name, path, type, flags,
 					      data_page);
 }
@@ -1601,7 +1656,8 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 	int rc = ccs_pivot_root_permission(old_path, new_path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_pivotroot);
+	while (!original_security_ops.sb_pivotroot)
+		smp_rmb();
 	return original_security_ops.sb_pivotroot(old_path, new_path);
 }
 
@@ -1622,7 +1678,8 @@ static int ccs_sb_mount(const char *dev_name, struct path *path,
 	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_mount);
+	while (!original_security_ops.sb_mount)
+		smp_rmb();
 	return original_security_ops.sb_mount(dev_name, path, type, flags,
 					      data_page);
 }
@@ -1642,7 +1699,8 @@ static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 	int rc = ccs_umount_permission(mnt, flags);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_umount);
+	while (!original_security_ops.sb_umount)
+		smp_rmb();
 	return original_security_ops.sb_umount(mnt, flags);
 }
 
@@ -1661,7 +1719,8 @@ static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 	int rc = ccs_fcntl_permission(file, cmd, arg);
 	if (rc)
 		return rc;
-	while (!original_security_ops.file_fcntl);
+	while (!original_security_ops.file_fcntl)
+		smp_rmb();
 	return original_security_ops.file_fcntl(file, cmd, arg);
 }
 
@@ -1680,7 +1739,8 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 	int rc = ccs_ioctl_permission(filp, cmd, arg);
 	if (rc)
 		return rc;
-	while (!original_security_ops.file_ioctl);
+	while (!original_security_ops.file_ioctl)
+		smp_rmb();
 	return original_security_ops.file_ioctl(filp, cmd, arg);
 }
 
@@ -1726,7 +1786,8 @@ static int ccs_sysctl(struct ctl_table *table, int op)
 	int buflen;
 	char *buffer;
 	int idx;
-	while (!original_security_ops.sysctl);
+	while (!original_security_ops.sysctl)
+		smp_rmb();
 	error = original_security_ops.sysctl(table, op);
 	if (error)
 		return error;

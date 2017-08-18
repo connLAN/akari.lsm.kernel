@@ -148,7 +148,8 @@ static int ccs_task_alloc_security(struct task_struct *p)
 	int rc = __ccs_alloc_task_security(p);
 	if (rc)
 		return rc;
-	while (!original_security_ops.task_alloc_security);
+	while (!original_security_ops.task_alloc_security)
+		smp_rmb();
 	rc = original_security_ops.task_alloc_security(p);
 	if (rc)
 		__ccs_free_task_security(p);
@@ -164,7 +165,8 @@ static int ccs_task_alloc_security(struct task_struct *p)
  */
 static void ccs_task_free_security(struct task_struct *p)
 {
-	while (!original_security_ops.task_free_security);
+	while (!original_security_ops.task_free_security)
+		smp_rmb();
 	original_security_ops.task_free_security(p);
 	__ccs_free_task_security(p);
 }
@@ -179,7 +181,8 @@ static void ccs_task_free_security(struct task_struct *p)
 static int ccs_bprm_alloc_security(struct linux_binprm *bprm)
 {
 	int rc;
-	while (!original_security_ops.bprm_alloc_security);
+	while (!original_security_ops.bprm_alloc_security)
+		smp_rmb();
 	rc = original_security_ops.bprm_alloc_security(bprm);
 	if (bprm->security || rc)
 		return rc;
@@ -220,7 +223,8 @@ static void ccs_bprm_free_security(struct linux_binprm *bprm)
 	 * at &ccs_bprm_security .
 	 */
 	if (bprm->security != &ccs_bprm_security) {
-		while (!original_security_ops.bprm_free_security);
+		while (!original_security_ops.bprm_free_security)
+			smp_rmb();
 		original_security_ops.bprm_free_security(bprm);
 	}
 	/*
@@ -245,7 +249,8 @@ static void ccs_bprm_compute_creds(struct linux_binprm *bprm)
 {
 	if (bprm->security == &ccs_bprm_security)
 		bprm->security = NULL;
-	while (!original_security_ops.bprm_compute_creds);
+	while (!original_security_ops.bprm_compute_creds)
+		smp_rmb();
 	original_security_ops.bprm_compute_creds(bprm);
 	ccs_clear_execve(0, ccs_current_security());
 }
@@ -264,7 +269,8 @@ static void ccs_bprm_apply_creds(struct linux_binprm *bprm, int unsafe)
 {
 	if (bprm->security == &ccs_bprm_security)
 		bprm->security = NULL;
-	while (!original_security_ops.bprm_apply_creds);
+	while (!original_security_ops.bprm_apply_creds)
+		smp_rmb();
 	original_security_ops.bprm_apply_creds(bprm, unsafe);
 	ccs_clear_execve(0, ccs_current_security());
 }
@@ -293,7 +299,8 @@ static int ccs_bprm_check_security(struct linux_binprm *bprm)
 		if (rc)
 			return rc;
 	}
-	while (!original_security_ops.bprm_check_security);
+	while (!original_security_ops.bprm_check_security)
+		smp_rmb();
 	return original_security_ops.bprm_check_security(bprm);
 }
 
@@ -328,7 +335,8 @@ static int ccs_dentry_open(struct file *f)
 	int rc = ccs_open(f);
 	if (rc)
 		return rc;
-	while (!original_security_ops.dentry_open);
+	while (!original_security_ops.dentry_open)
+		smp_rmb();
 	return original_security_ops.dentry_open(f);
 }
 
@@ -390,7 +398,8 @@ static int ccs_inode_permission(struct inode *inode, int mask,
 	int rc = ccs_open(inode, mask, nd);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_permission);
+	while (!original_security_ops.inode_permission)
+		smp_rmb();
 	return original_security_ops.inode_permission(inode, mask, nd);
 }
 
@@ -419,7 +428,8 @@ static int ccs_inode_setattr(struct dentry *dentry, struct vfsmount *mnt,
 		rc = ccs_truncate_permission(dentry, mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_setattr);
+	while (!original_security_ops.inode_setattr)
+		smp_rmb();
 	return original_security_ops.inode_setattr(dentry, mnt, attr);
 }
 
@@ -436,7 +446,8 @@ static int ccs_inode_getattr(struct vfsmount *mnt, struct dentry *dentry)
 	int rc = ccs_getattr_permission(mnt, dentry);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_getattr);
+	while (!original_security_ops.inode_getattr)
+		smp_rmb();
 	return original_security_ops.inode_getattr(mnt, dentry);
 }
 
@@ -457,7 +468,8 @@ static int ccs_inode_mknod(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, mnt, mode, dev);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mknod);
+	while (!original_security_ops.inode_mknod)
+		smp_rmb();
 	return original_security_ops.inode_mknod(dir, dentry, mnt, mode, dev);
 }
 
@@ -477,7 +489,8 @@ static int ccs_inode_mkdir(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mkdir_permission(dentry, mnt, mode);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_mkdir);
+	while (!original_security_ops.inode_mkdir)
+		smp_rmb();
 	return original_security_ops.inode_mkdir(dir, dentry, mnt, mode);
 }
 
@@ -496,7 +509,8 @@ static int ccs_inode_rmdir(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_rmdir_permission(dentry, mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_rmdir);
+	while (!original_security_ops.inode_rmdir)
+		smp_rmb();
 	return original_security_ops.inode_rmdir(dir, dentry, mnt);
 }
 
@@ -515,7 +529,8 @@ static int ccs_inode_unlink(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_unlink_permission(dentry, mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_unlink);
+	while (!original_security_ops.inode_unlink)
+		smp_rmb();
 	return original_security_ops.inode_unlink(dir, dentry, mnt);
 }
 
@@ -535,7 +550,8 @@ static int ccs_inode_symlink(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_symlink_permission(dentry, mnt, old_name);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_symlink);
+	while (!original_security_ops.inode_symlink)
+		smp_rmb();
 	return original_security_ops.inode_symlink(dir, dentry, mnt, old_name);
 }
 
@@ -559,7 +575,8 @@ static int ccs_inode_rename(struct inode *old_dir, struct dentry *old_dentry,
 	int rc = ccs_rename_permission(old_dentry, new_dentry, new_mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_rename);
+	while (!original_security_ops.inode_rename)
+		smp_rmb();
 	return original_security_ops.inode_rename(old_dir, old_dentry, old_mnt,
 						  new_dir, new_dentry,
 						  new_mnt);
@@ -583,7 +600,8 @@ static int ccs_inode_link(struct dentry *old_dentry, struct vfsmount *old_mnt,
 	int rc = ccs_link_permission(old_dentry, new_dentry, new_mnt);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_link);
+	while (!original_security_ops.inode_link)
+		smp_rmb();
 	return original_security_ops.inode_link(old_dentry, old_mnt, dir,
 						new_dentry, new_mnt);
 }
@@ -604,7 +622,8 @@ static int ccs_inode_create(struct inode *dir, struct dentry *dentry,
 	int rc = ccs_mknod_permission(dentry, mnt, mode, 0);
 	if (rc)
 		return rc;
-	while (!original_security_ops.inode_create);
+	while (!original_security_ops.inode_create)
+		smp_rmb();
 	return original_security_ops.inode_create(dir, dentry, mnt, mode);
 }
 
@@ -775,7 +794,8 @@ static int ccs_socket_accept(struct socket *sock, struct socket *newsock)
 	ptr = kzalloc(sizeof(*ptr), GFP_KERNEL);
 	if (!ptr)
 		return -ENOMEM;
-	while (!original_security_ops.socket_accept);
+	while (!original_security_ops.socket_accept)
+		smp_rmb();
 	rc = original_security_ops.socket_accept(sock, newsock);
 	if (rc) {
 		kfree(ptr);
@@ -811,7 +831,8 @@ static int ccs_socket_listen(struct socket *sock, int backlog)
 	rc = ccs_socket_listen_permission(sock);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_listen);
+	while (!original_security_ops.socket_listen)
+		smp_rmb();
 	return original_security_ops.socket_listen(sock, backlog);
 }
 
@@ -833,7 +854,8 @@ static int ccs_socket_connect(struct socket *sock, struct sockaddr *addr,
 	rc = ccs_socket_connect_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_connect);
+	while (!original_security_ops.socket_connect)
+		smp_rmb();
 	return original_security_ops.socket_connect(sock, addr, addr_len);
 }
 
@@ -855,7 +877,8 @@ static int ccs_socket_bind(struct socket *sock, struct sockaddr *addr,
 	rc = ccs_socket_bind_permission(sock, addr, addr_len);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_bind);
+	while (!original_security_ops.socket_bind)
+		smp_rmb();
 	return original_security_ops.socket_bind(sock, addr, addr_len);
 }
 
@@ -877,7 +900,8 @@ static int ccs_socket_sendmsg(struct socket *sock, struct msghdr *msg,
 	rc = ccs_socket_sendmsg_permission(sock, msg, size);
 	if (rc)
 		return rc;
-	while (!original_security_ops.socket_sendmsg);
+	while (!original_security_ops.socket_sendmsg)
+		smp_rmb();
 	return original_security_ops.socket_sendmsg(sock, msg, size);
 }
 
@@ -897,7 +921,8 @@ static int ccs_socket_recvmsg(struct socket *sock, struct msghdr *msg,
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_recvmsg);
+	while (!original_security_ops.socket_recvmsg)
+		smp_rmb();
 	return original_security_ops.socket_recvmsg(sock, msg, size, flags);
 }
 
@@ -913,7 +938,8 @@ static int ccs_socket_getsockname(struct socket *sock)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getsockname);
+	while (!original_security_ops.socket_getsockname)
+		smp_rmb();
 	return original_security_ops.socket_getsockname(sock);
 }
 
@@ -929,7 +955,8 @@ static int ccs_socket_getpeername(struct socket *sock)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getpeername);
+	while (!original_security_ops.socket_getpeername)
+		smp_rmb();
 	return original_security_ops.socket_getpeername(sock);
 }
 
@@ -947,7 +974,8 @@ static int ccs_socket_getsockopt(struct socket *sock, int level, int optname)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_getsockopt);
+	while (!original_security_ops.socket_getsockopt)
+		smp_rmb();
 	return original_security_ops.socket_getsockopt(sock, level, optname);
 }
 
@@ -965,7 +993,8 @@ static int ccs_socket_setsockopt(struct socket *sock, int level, int optname)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_setsockopt);
+	while (!original_security_ops.socket_setsockopt)
+		smp_rmb();
 	return original_security_ops.socket_setsockopt(sock, level, optname);
 }
 
@@ -982,7 +1011,8 @@ static int ccs_socket_shutdown(struct socket *sock, int how)
 	int rc = ccs_validate_socket(sock);
 	if (rc < 0)
 		return rc;
-	while (!original_security_ops.socket_shutdown);
+	while (!original_security_ops.socket_shutdown)
+		smp_rmb();
 	return original_security_ops.socket_shutdown(sock, how);
 }
 
@@ -999,7 +1029,8 @@ static int ccs_socket_shutdown(struct socket *sock, int how)
  */
 static void ccs_inode_free_security(struct inode *inode)
 {
-	while (!original_security_ops.inode_free_security);
+	while (!original_security_ops.inode_free_security)
+		smp_rmb();
 	original_security_ops.inode_free_security(inode);
 	if (inode->i_sb && inode->i_sb->s_magic == SOCKFS_MAGIC)
 		ccs_update_socket_tag(inode, 0);
@@ -1022,7 +1053,8 @@ static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 	int rc = ccs_pivot_root_permission(old_nd, new_nd);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_pivotroot);
+	while (!original_security_ops.sb_pivotroot)
+		smp_rmb();
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
@@ -1043,7 +1075,8 @@ static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 	int rc = ccs_mount_permission(dev_name, nd, type, flags, data_page);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_mount);
+	while (!original_security_ops.sb_mount)
+		smp_rmb();
 	return original_security_ops.sb_mount(dev_name, nd, type, flags,
 					      data_page);
 }
@@ -1063,7 +1096,8 @@ static int ccs_sb_pivotroot(struct nameidata *old_nd, struct nameidata *new_nd)
 	int rc = ccs_pivot_root_permission(&old_nd->path, &new_nd->path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_pivotroot);
+	while (!original_security_ops.sb_pivotroot)
+		smp_rmb();
 	return original_security_ops.sb_pivotroot(old_nd, new_nd);
 }
 
@@ -1085,7 +1119,8 @@ static int ccs_sb_mount(char *dev_name, struct nameidata *nd, char *type,
 				      data_page);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_mount);
+	while (!original_security_ops.sb_mount)
+		smp_rmb();
 	return original_security_ops.sb_mount(dev_name, nd, type, flags,
 					      data_page);
 }
@@ -1105,7 +1140,8 @@ static int ccs_sb_pivotroot(struct path *old_path, struct path *new_path)
 	int rc = ccs_pivot_root_permission(old_path, new_path);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_pivotroot);
+	while (!original_security_ops.sb_pivotroot)
+		smp_rmb();
 	return original_security_ops.sb_pivotroot(old_path, new_path);
 }
 
@@ -1126,7 +1162,8 @@ static int ccs_sb_mount(char *dev_name, struct path *path, char *type,
 	int rc = ccs_mount_permission(dev_name, path, type, flags, data_page);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_mount);
+	while (!original_security_ops.sb_mount)
+		smp_rmb();
 	return original_security_ops.sb_mount(dev_name, path, type, flags,
 					      data_page);
 }
@@ -1146,7 +1183,8 @@ static int ccs_sb_umount(struct vfsmount *mnt, int flags)
 	int rc = ccs_umount_permission(mnt, flags);
 	if (rc)
 		return rc;
-	while (!original_security_ops.sb_umount);
+	while (!original_security_ops.sb_umount)
+		smp_rmb();
 	return original_security_ops.sb_umount(mnt, flags);
 }
 
@@ -1165,7 +1203,8 @@ static int ccs_file_fcntl(struct file *file, unsigned int cmd,
 	int rc = ccs_fcntl_permission(file, cmd, arg);
 	if (rc)
 		return rc;
-	while (!original_security_ops.file_fcntl);
+	while (!original_security_ops.file_fcntl)
+		smp_rmb();
 	return original_security_ops.file_fcntl(file, cmd, arg);
 }
 
@@ -1184,7 +1223,8 @@ static int ccs_file_ioctl(struct file *filp, unsigned int cmd,
 	int rc = ccs_ioctl_permission(filp, cmd, arg);
 	if (rc)
 		return rc;
-	while (!original_security_ops.file_ioctl);
+	while (!original_security_ops.file_ioctl)
+		smp_rmb();
 	return original_security_ops.file_ioctl(filp, cmd, arg);
 }
 
@@ -1230,7 +1270,8 @@ static int ccs_sysctl(struct ctl_table *table, int op)
 	int buflen;
 	char *buffer;
 	int idx;
-	while (!original_security_ops.sysctl);
+	while (!original_security_ops.sysctl)
+		smp_rmb();
 	error = original_security_ops.sysctl(table, op);
 	if (error)
 		return error;

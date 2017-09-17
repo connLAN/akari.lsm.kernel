@@ -305,3 +305,7 @@ Version 1.0.36   2017/02/20   Minor update release.
 
    The bug fixed in TOMOYO's GC does not affect AKARI because
    AKARI always uses CONFIG_CCSECURITY_USE_EXTERNAL_TASK_SECURITY.
+
+Version 1.0.37   2017/09/17   Minor update release.
+
+   Use smp_rmb() when waiting for hook readiness.

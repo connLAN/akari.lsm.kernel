@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010-2015  Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
  *
- * Version: 1.0.36   2017/02/20
+ * Version: 1.0.37   2017/09/17
  */
 
 #include <linux/version.h>

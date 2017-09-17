@@ -48,8 +48,11 @@ static int __init probe_kernel_read(struct file *file, unsigned long offset,
 	set_fs(old_fs);
 	file->f_pos = pos;
 	return result;
-#else
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0)
 	return kernel_read(file, offset, addr, count);
+#else
+	loff_t pos = offset;
+	return kernel_read(file, addr, count, &pos);
 #endif
 }
 
@@ -104,7 +107,7 @@ static void *__init probe_find_symbol(const char *keyline)
 			mntput(mnt);
 		else {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-			struct path path = { mnt, dentry };
+			struct path path = { .mnt = mnt, .dentry = dentry };
 			file = dentry_open(&path, O_RDONLY, current_cred());
 #else
 			file = dentry_open(dentry, mnt, O_RDONLY
